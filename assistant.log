@@ -185,3 +185,299 @@ Over the next period, expect a mix of conditions including primarily cloudy skie
 2025-03-15 00:25:51,748 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
 2025-03-15 00:25:52,888 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
 2025-03-15 00:25:52,888 - INFO - TTS: Ze wzglêdu na wysokie stê¿enie zanieczyszczeñ, wyjœcie na dwór mo¿e byæ niekorzystne, szczególnie dla osób z problemami zdrowotnymi. Zaleca siê ograniczenie aktywnoœci na œwie¿ym powietrzu.
+2025-03-15 00:31:05,520 - INFO - Assistant terminated by user.
+2025-03-15 00:37:24,805 - INFO - Za³adowano modu³: !screenshot -> Pozwala zobaczyæ, co jest na ekranie (zrzut ekranu).
+2025-03-15 00:37:25,555 - INFO - Oczekiwanie na aktywacjê...
+2025-03-15 00:37:25,557 - INFO - Powiedz 'Asystencie', aby rozpocz¹æ rozmowê.
+2025-03-15 00:37:28,611 - INFO - Wykryto s³owo kluczowe!
+2025-03-15 00:37:28,612 - INFO - Nas³uchiwanie komendy (fallback RMS z dynamiczn¹ kalibracj¹)...
+2025-03-15 00:37:28,620 - INFO - Kalibrujê poziom t³a przez 0.5 sekund...
+2025-03-15 00:37:29,120 - INFO - Dynamiczny próg ustawiony na: 8.74
+2025-03-15 00:37:33,765 - INFO - Zapytanie u¿ytkownika: co widzisz teraz na moim ekranie
+2025-03-15 00:37:37,527 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-15 00:37:38,418 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-15 00:37:38,419 - INFO - TTS: Przepraszam, nie mam mo¿liwoœci zobaczenia, co wyœwietla siê na Twoim ekranie. U¿yj funkcji `!screenshot`, aby zrobiæ zrzut ekranu i go zobaczyæ.
+2025-03-15 00:37:53,576 - INFO - Wykryto s³owo kluczowe (czêœciowy wynik)!
+2025-03-15 00:37:53,576 - INFO - Nas³uchiwanie komendy (fallback RMS z dynamiczn¹ kalibracj¹)...
+2025-03-15 00:37:53,581 - INFO - Kalibrujê poziom t³a przez 0.5 sekund...
+2025-03-15 00:37:54,134 - INFO - Dynamiczny próg ustawiony na: 6.53
+2025-03-15 00:38:01,976 - INFO - Zapytanie u¿ytkownika: wyszukaj informacje na temat gospodarki ameryki
+2025-03-15 00:38:01,976 - INFO - Search query: informacje na temat gospodarki ameryki
+2025-03-15 00:38:02,727 - INFO - response: https://html.duckduckgo.com/html 200
+2025-03-15 00:38:24,033 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-15 00:38:24,034 - INFO - TTS: Ten tekst to obszerny fragment, prawdopodobnie z podrêcznika lub raportu dotycz¹cego Stanów Zjednoczonych. Oto podsumowanie i kluczowe informacje, które mo¿na z niego wyci¹gn¹æ:
+
+**I. Spo³eczeñstwo i Kultura:**
+
+*   **Ró¿norodnoœæ Religijna:** Dominuj¹ ró¿ne religie, w tym chrzeœcijañstwo (ró¿ne wyznania), ale tak¿e znacz¹ca spo³ecznoœæ ludnoœci ¿ydowskiej. Wa¿na jest te¿ obecnoœæ mniejszoœci etnicznych i religijnych.
+*   **Grupy Etniczne:** Znacz¹ca obecnoœæ Amerykanów pochodzenia europejskiego, karaibskiego, latynoskiego, azjatyckiego i rdzennych Amerykanów.
+*   **Grupy Religijne:** Dominuj¹ ró¿ne wyznania chrzeœcijañskie, ale tak¿e znacz¹ca spo³ecznoœæ ludnoœci ¿ydowskiej.
+*   **Kultura:** Amerykañska kultura charakteryzuje siê du¿¹ ró¿norodnoœci¹, indywidualizmem, naciskiem na innowacje i przedsiêbiorczoœæ.
+
+**II. Edukacja:**
+
+*   **System Wy¿szych O \u0627\u0644\u062a\u0639\u0644\u064a\u0645:** Rozbudowany system uniwersytetów publicznych i prywatnych.
+*   **Uniwersytety:** Harvard i University of California (szczególnie UC Berkeley) s¹ uznawane za najlepsze uniwersytety na œwiecie, choæ rankingi uwzglêdniaj¹ g³ównie publikacje w jêzyku angielskim.
+*   **Koszty Edukacji:** Ceny studiów w uniwersytetach mog¹ siêgaæ od 3 do 50 tys. dolarów rocznie.
+*   **Biblioteki:** Rozbudowany system bibliotek publicznych, w tym najwiêksza biblioteka na œwiecie – Biblioteka Kongresu.
+
+**III. Ekonomia i Opieka Zdrowotna:**
+
+*   **System Ekonomiczny:** Gospodarka oparta na kapitalizmie, innowacjach i przedsiêbiorczoœci.
+*   **S³u¿ba Zdrowotna:**
+    *   **Miesza siê System:**  System oparty na prywatnych ubezpieczeniach (choæ w Massachusetts obowi¹zuje obowi¹zkowe ubezpieczenie od 2006 roku).
+    *   **Niedostêpnoœæ:** Ponad 41 milionów Amerykanów nie jest ubezpieczonych, w tym du¿a liczba nielegalnych imigrantów.
+    *   **Koszty:** Roczne wydatki na s³u¿bê zdrowia wynosz¹ 1,8 biliona dolarów.
+
+**IV. Media i Komunikacja:**
+
+*   **Kana³y Telewizyjne:**  Rozbudowany system kana³ów telewizyjnych, czêsto o zasiêgu lokalnym lub regionalnym.
+*   **Kana³y Narodowe:**  Dzia³aj¹ du¿e sieci telewizyjne (NBC, FOX, ABC, CBS), ale ich zasiêg jest ograniczony.
+*   **Kana³y Regionalne:** Dzia³aj¹ kana³y o zasiêgu lokalnym lub regionalnym.
+*   **Kana³y Hiszpañskie:** Dostêpne kana³y telewizyjne w jêzyku hiszpañskim, szczególnie w obszarach zamieszkanych przez Latynosów.
+
+**Podsumowanie:**
+
+Tekst przedstawia z³o¿ony obraz Stanów Zjednoczonych, podkreœlaj¹c jego ró¿norodnoœæ spo³eczn¹, rozwiniêty system edukacji, dynamiczn¹ gospodarkê i specyfikê systemu opieki zdrowotnej, który charakteryzuje siê du¿¹ nierównoœci¹ dostêpu.  Wa¿nym aspektem jest równie¿ rozbudowany system mediów i komunikacji.
+
+Czy chcia³byœ, ¿ebym skupi³ siê na konkretnym aspekcie tego tekstu, np. na systemie edukacji, s³u¿bie zdrowia, czy te¿ na kulturze i religii?
+2025-03-15 00:43:53,993 - INFO - Za³adowano modu³: !screenshot -> Pozwala zrobiæ zrzut ekranu. Pierwszy prompt potwierdza wykonanie, drugi zawiera œcie¿kê do pliku.
+2025-03-15 00:43:53,996 - INFO - Za³adowano modu³: !search -> Pozwala wyszukaæ informacje w internecie i podsumowaæ wyniki.
+2025-03-15 00:43:54,626 - INFO - Oczekiwanie na aktywacjê...
+2025-03-15 00:43:54,629 - INFO - Powiedz 'Asystencie', aby rozpocz¹æ rozmowê.
+2025-03-15 00:43:58,662 - INFO - Wykryto s³owo kluczowe!
+2025-03-15 00:43:58,662 - INFO - Nas³uchiwanie komendy (fallback RMS z dynamiczn¹ kalibracj¹)...
+2025-03-15 00:43:58,670 - INFO - Kalibrujê poziom t³a przez 0.5 sekund...
+2025-03-15 00:43:59,193 - INFO - Dynamiczny próg ustawiony na: 10.64
+2025-03-15 00:44:05,575 - INFO - Zapytanie u¿ytkownika: wyszukaj jaka jest pogoda w sosnowcu
+2025-03-15 00:44:05,705 - INFO - Search query: jaka jest pogoda w sosnowcu
+2025-03-15 00:44:06,350 - INFO - response: https://html.duckduckgo.com/html 200
+2025-03-15 00:44:15,641 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-15 00:44:15,645 - INFO - TTS: Funkcja !search wykonana. Wynik: Prognoza pogody w Sosnowcu na dzisiejsz¹ datê (Dzisiaj) wskazuje na temperaturê oko³o 4°C, odczuwaln¹ temperaturê 2°C, wiatr o prêdkoœci 11 km/h i 100% zachmurzenia.  Opadów (9.7 mm deszczu i gradu) nie przewiduje siê.  Warto równie¿ zwróciæ uwagê na wysokie stê¿enie PM2.5 (12.8 razy powy¿ej normy WHO) i potencjalne zagro¿enie dla osób wra¿liwych, zalecane jest ograniczenie aktywnoœci na œwie¿ym powietrzu. Maksymalna temperatura zanotowana w historii (15.5°C w 1991 roku) oraz minimalna (-12.1°C w 1963 roku) równie¿ zosta³y podane.
+2025-03-15 00:44:39,137 - INFO - Wykryto s³owo kluczowe (czêœciowy wynik)!
+2025-03-15 00:44:39,137 - INFO - Nas³uchiwanie komendy (fallback RMS z dynamiczn¹ kalibracj¹)...
+2025-03-15 00:44:39,144 - INFO - Kalibrujê poziom t³a przez 0.5 sekund...
+2025-03-15 00:44:39,647 - INFO - Dynamiczny próg ustawiony na: 15.96
+2025-03-15 00:44:45,050 - INFO - Zapytanie u¿ytkownika: a co teraz widaæ na moim ekranie
+2025-03-15 00:44:45,464 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-15 00:44:45,914 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-15 00:44:45,914 - INFO - TTS: !screenshot. Nie mam dostêpu do Twojego ekranu.
+2025-03-15 00:45:01,138 - INFO - Wykryto s³owo kluczowe (czêœciowy wynik)!
+2025-03-15 00:45:01,138 - INFO - Nas³uchiwanie komendy (fallback RMS z dynamiczn¹ kalibracj¹)...
+2025-03-15 00:45:01,145 - INFO - Kalibrujê poziom t³a przez 0.5 sekund...
+2025-03-15 00:45:01,700 - INFO - Dynamiczny próg ustawiony na: 15.29
+2025-03-15 00:45:08,060 - INFO - Zapytanie u¿ytkownika: wykonaj twórcy z kiedy ju¿ od i powiedz co na tym widaæ
+2025-03-15 00:45:08,629 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-15 00:45:09,154 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-15 00:45:09,154 - INFO - TTS: !search. Nie mam mo¿liwoœci zobaczenia, co widzisz na ekranie.
+2025-03-15 00:47:49,532 - INFO - U¿ywam PIL ImageGrab jako alternatywy dla pyautogui.
+2025-03-15 00:47:49,532 - INFO - Za³adowano modu³: !screenshot -> Pozwala zrobiæ zrzut ekranu. Pierwszy prompt potwierdza wykonanie, drugi zawiera œcie¿kê do pliku.
+2025-03-15 00:47:49,679 - INFO - Za³adowano modu³: !search -> Pozwala wyszukaæ informacje w internecie i podsumowaæ wyniki. DŸwiêk wyszukiwania gra przez ca³y czas wyszukiwania.
+2025-03-15 00:47:50,482 - INFO - Oczekiwanie na aktywacjê...
+2025-03-15 00:47:50,485 - INFO - Powiedz 'Asystencie', aby rozpocz¹æ rozmowê.
+2025-03-15 00:47:54,019 - INFO - Wykryto s³owo kluczowe!
+2025-03-15 00:47:54,019 - INFO - Nas³uchiwanie komendy (fallback RMS z dynamiczn¹ kalibracj¹)...
+2025-03-15 00:47:54,027 - INFO - Kalibrujê poziom t³a przez 0.5 sekund...
+2025-03-15 00:47:54,562 - INFO - Dynamiczny próg ustawiony na: 16.70
+2025-03-15 00:48:00,422 - INFO - Zapytanie u¿ytkownika: wyrzuty jaka pogoda jest w warszawie
+2025-03-15 00:48:01,004 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-15 00:48:01,268 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-15 00:48:01,268 - INFO - TTS: !search pogoda Warszawa
+
+2025-03-15 00:49:04,503 - INFO - Wykryto s³owo kluczowe (czêœciowy wynik)!
+2025-03-15 00:49:04,503 - INFO - Nas³uchiwanie komendy (fallback RMS z dynamiczn¹ kalibracj¹)...
+2025-03-15 00:49:04,510 - INFO - Kalibrujê poziom t³a przez 0.5 sekund...
+2025-03-15 00:49:05,057 - INFO - Dynamiczny próg ustawiony na: 7.52
+2025-03-15 00:49:11,236 - INFO - Zapytanie u¿ytkownika: co widzisz teraz na ekranie
+2025-03-15 00:49:11,775 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-15 00:49:11,967 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-15 00:49:11,968 - INFO - TTS: !screenshot
+
+2025-03-15 00:50:23,530 - INFO - U¿ywam PIL ImageGrab jako alternatywy dla pyautogui.
+2025-03-15 00:50:23,531 - INFO - Za³adowano modu³: !screenshot -> Pozwala zrobiæ zrzut ekranu. Pierwszy prompt potwierdza wykonanie, drugi zawiera œcie¿kê do pliku.
+2025-03-15 00:50:23,672 - INFO - Za³adowano modu³: !search -> Pozwala wyszukaæ informacje w internecie i podsumowaæ wyniki. DŸwiêk wyszukiwania gra przez ca³y czas wyszukiwania.
+2025-03-15 00:50:24,334 - INFO - Oczekiwanie na aktywacjê...
+2025-03-15 00:50:24,335 - INFO - Powiedz 'Asystencie', aby rozpocz¹æ rozmowê.
+2025-03-15 00:50:27,358 - INFO - Wykryto s³owo kluczowe (czêœciowy wynik)!
+2025-03-15 00:50:27,358 - INFO - Nas³uchiwanie komendy (fallback RMS z dynamiczn¹ kalibracj¹)...
+2025-03-15 00:50:27,365 - INFO - Kalibrujê poziom t³a przez 0.5 sekund...
+2025-03-15 00:50:27,867 - INFO - Dynamiczny próg ustawiony na: 10.64
+2025-03-15 00:50:32,695 - INFO - Zapytanie u¿ytkownika: jaka jest teraz pogoda w warszawie
+2025-03-15 00:50:33,167 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-15 00:50:33,406 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-15 00:50:33,406 - INFO - TTS: !search pogoda Warszawa
+
+2025-03-15 00:51:14,867 - INFO - Wykryto s³owo kluczowe (czêœciowy wynik)!
+2025-03-15 00:51:14,867 - INFO - Nas³uchiwanie komendy (fallback RMS z dynamiczn¹ kalibracj¹)...
+2025-03-15 00:51:14,873 - INFO - Kalibrujê poziom t³a przez 0.5 sekund...
+2025-03-15 00:51:15,428 - INFO - Dynamiczny próg ustawiony na: 23.52
+2025-03-15 00:51:19,239 - INFO - Zapytanie u¿ytkownika: co widaæ na ekranie
+2025-03-15 00:51:19,702 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-15 00:51:19,906 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-15 00:51:19,906 - INFO - TTS: !screenshot
+
+2025-03-15 00:52:16,800 - INFO - U¿ywam PIL ImageGrab jako alternatywy dla pyautogui.
+2025-03-15 00:52:16,801 - INFO - Za³adowano modu³: !screenshot -> Pozwala zrobiæ zrzut ekranu. Pierwszy prompt potwierdza wykonanie, drugi zawiera œcie¿kê do pliku.
+2025-03-15 00:52:16,934 - INFO - Za³adowano modu³: !search -> Pozwala wyszukaæ informacje w internecie i podsumowaæ wyniki. DŸwiêk wyszukiwania gra przez ca³y czas wyszukiwania.
+2025-03-15 00:52:17,584 - INFO - Oczekiwanie na aktywacjê...
+2025-03-15 00:52:18,109 - ERROR - Error: 'Assistant' object has no attribute 'process_audio'
+2025-03-15 00:52:25,174 - INFO - U¿ywam PIL ImageGrab jako alternatywy dla pyautogui.
+2025-03-15 00:52:25,175 - INFO - Za³adowano modu³: !screenshot -> Pozwala zrobiæ zrzut ekranu. Pierwszy prompt potwierdza wykonanie, drugi zawiera œcie¿kê do pliku.
+2025-03-15 00:52:25,318 - INFO - Za³adowano modu³: !search -> Pozwala wyszukaæ informacje w internecie i podsumowaæ wyniki. DŸwiêk wyszukiwania gra przez ca³y czas wyszukiwania.
+2025-03-15 00:52:26,104 - INFO - Oczekiwanie na aktywacjê...
+2025-03-15 00:52:26,622 - ERROR - Error: 'Assistant' object has no attribute 'process_audio'
+2025-03-15 00:53:55,906 - INFO - U¿ywam PIL ImageGrab jako alternatywy dla pyautogui.
+2025-03-15 00:53:55,906 - INFO - Za³adowano modu³: !screenshot -> Pozwala zrobiæ zrzut ekranu. Pierwszy prompt potwierdza wykonanie, drugi zawiera œcie¿kê do pliku.
+2025-03-15 00:53:56,038 - INFO - Za³adowano modu³: !search -> Pozwala wyszukaæ informacje w internecie i podsumowaæ wyniki. DŸwiêk wyszukiwania gra przez ca³y czas wyszukiwania.
+2025-03-15 00:53:56,708 - INFO - Oczekiwanie na aktywacjê...
+2025-03-15 00:53:57,233 - ERROR - B³¹d w run_async: 'Assistant' object has no attribute 'process_audio'
+2025-03-15 00:53:57,234 - ERROR - Error: 'Assistant' object has no attribute 'process_audio'
+2025-03-15 00:54:38,610 - INFO - U¿ywam PIL ImageGrab jako alternatywy dla pyautogui.
+2025-03-15 00:54:38,610 - INFO - Za³adowano modu³: !screenshot -> Pozwala zrobiæ zrzut ekranu. Pierwszy prompt potwierdza wykonanie, drugi zawiera œcie¿kê do pliku.
+2025-03-15 00:54:38,745 - INFO - Za³adowano modu³: !search -> Pozwala wyszukaæ informacje w internecie i podsumowaæ wyniki. DŸwiêk wyszukiwania gra przez ca³y czas wyszukiwania.
+2025-03-15 00:54:39,514 - INFO - Oczekiwanie na aktywacjê (stream uruchomiony)...
+2025-03-15 00:54:40,037 - ERROR - B³¹d w run_async: 'Assistant' object has no attribute 'process_audio'
+2025-03-15 00:54:40,038 - ERROR - Error: 'Assistant' object has no attribute 'process_audio'
+2025-03-15 00:56:12,567 - INFO - U¿ywam PIL ImageGrab jako alternatywy dla pyautogui.
+2025-03-15 00:56:12,567 - INFO - Za³adowano modu³: !screenshot -> Pozwala zrobiæ zrzut ekranu. Pierwszy prompt potwierdza wykonanie, drugi zawiera œcie¿kê do pliku.
+2025-03-15 00:56:12,717 - INFO - Za³adowano modu³: !search -> Pozwala wyszukaæ informacje w internecie i podsumowaæ wyniki. DŸwiêk wyszukiwania gra przez ca³y czas wyszukiwania.
+2025-03-15 00:56:13,362 - INFO - Oczekiwanie na aktywacjê (stream uruchomiony)...
+2025-03-15 00:56:13,887 - ERROR - B³¹d w run_async: 'Assistant' object has no attribute 'process_audio'
+2025-03-15 00:56:13,888 - ERROR - Error: 'Assistant' object has no attribute 'process_audio'
+2025-03-15 00:58:10,021 - INFO - U¿ywam PIL ImageGrab jako alternatywy dla pyautogui.
+2025-03-15 00:58:10,021 - INFO - Za³adowano modu³: !screenshot -> Pozwala zrobiæ zrzut ekranu. Pierwszy prompt potwierdza wykonanie, drugi zawiera œcie¿kê do pliku.
+2025-03-15 00:58:10,153 - INFO - Za³adowano modu³: !search -> Pozwala wyszukaæ informacje w internecie i podsumowaæ wyniki. DŸwiêk wyszukiwania gra przez ca³y czas wyszukiwania.
+2025-03-15 00:58:10,816 - INFO - Oczekiwanie na aktywacjê... Stream audio otwarty.
+2025-03-15 00:58:10,818 - INFO - Rozpoczynam obs³ugê audio w pêtli.
+2025-03-15 00:58:19,853 - INFO - Wykryto s³owo kluczowe!
+2025-03-15 00:58:19,853 - INFO - Nas³uchiwanie komendy (fallback RMS z dynamiczn¹ kalibracj¹)...
+2025-03-15 00:58:19,860 - INFO - Kalibrujê poziom t³a przez 0.5 sekund...
+2025-03-15 00:58:20,398 - INFO - Dynamiczny próg ustawiony na: 12.79
+2025-03-15 00:58:25,153 - INFO - Wykryto komendê: jaka jest teraz pogoda w warszawie
+2025-03-15 00:58:25,154 - INFO - User query received: jaka jest teraz pogoda w warszawie
+2025-03-15 00:58:28,379 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-15 00:58:28,380 - INFO - Refined query: Jaka jest pogoda w Warszawie?
+2025-03-15 00:58:28,615 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-15 00:58:28,615 - INFO - AI response: !search pogoda Warszawa
+
+2025-03-15 00:58:28,615 - INFO - TTS: !search pogoda Warszawa
+
+2025-03-15 00:58:50,347 - INFO - Wykryto s³owo kluczowe!
+2025-03-15 00:58:50,347 - INFO - Nas³uchiwanie komendy (fallback RMS z dynamiczn¹ kalibracj¹)...
+2025-03-15 00:58:50,353 - INFO - Kalibrujê poziom t³a przez 0.5 sekund...
+2025-03-15 00:58:50,880 - INFO - Dynamiczny próg ustawiony na: 11.31
+2025-03-15 00:58:55,154 - INFO - Wykryto komendê: jak siê teraz czujesz
+2025-03-15 00:58:55,155 - INFO - User query received: jak siê teraz czujesz
+2025-03-15 00:58:55,640 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-15 00:58:55,640 - INFO - Refined query: Jak siê czujesz?
+2025-03-15 00:58:56,380 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-15 00:58:56,380 - INFO - AI response: !screenshot - (Nie mogê generowaæ obrazów, ale mogê odpowiedzieæ tekstowo) - Dobrze, dziêkujê za pytanie!
+
+2025-03-15 00:58:56,380 - INFO - TTS: !screenshot - (Nie mogê generowaæ obrazów, ale mogê odpowiedzieæ tekstowo) - Dobrze, dziêkujê za pytanie!
+
+2025-03-15 01:00:41,873 - INFO - U¿ywam PIL ImageGrab jako alternatywy dla pyautogui.
+2025-03-15 01:00:41,873 - INFO - Loaded plugin: !screenshot -> Pozwala zrobiæ zrzut ekranu. Pierwszy prompt potwierdza wykonanie, drugi zawiera œcie¿kê do pliku.
+2025-03-15 01:00:42,003 - INFO - Loaded plugin: !search -> Pozwala wyszukaæ informacje w internecie i podsumowaæ wyniki. DŸwiêk wyszukiwania gra przez ca³y czas wyszukiwania.
+2025-03-15 01:00:42,641 - INFO - Audio stream opened. Waiting for activation...
+2025-03-15 01:00:42,644 - INFO - Starting audio processing loop.
+2025-03-15 01:00:48,666 - INFO - Wake word detected in full result.
+2025-03-15 01:00:48,667 - INFO - Nas³uchiwanie komendy (fallback RMS z dynamiczn¹ kalibracj¹)...
+2025-03-15 01:00:48,674 - INFO - Kalibrujê poziom t³a przez 0.5 sekund...
+2025-03-15 01:00:49,216 - INFO - Dynamiczny próg ustawiony na: 16.09
+2025-03-15 01:00:53,976 - INFO - Detected command: jaka teraz jest pogoda w warszawie
+2025-03-15 01:00:53,976 - INFO - User query received: jaka teraz jest pogoda w warszawie
+2025-03-15 01:00:54,536 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-15 01:00:54,537 - INFO - Refined query: Jak¹ jest pogodê w Warszawie?
+2025-03-15 01:00:54,781 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-15 01:00:54,781 - INFO - AI response: !search pogoda Warszawa
+
+2025-03-15 01:00:54,781 - INFO - TTS: !search pogoda Warszawa
+
+2025-03-15 01:03:37,319 - INFO - U¿ywam PIL ImageGrab jako alternatywy dla pyautogui.
+2025-03-15 01:03:37,319 - INFO - Loaded plugin: !screenshot -> Pozwala zrobiæ zrzut ekranu. Pierwszy prompt potwierdza wykonanie, drugi zawiera œcie¿kê do pliku.
+2025-03-15 01:03:37,443 - INFO - Loaded plugin: !search -> Pozwala wyszukaæ informacje w internecie i podsumowaæ wyniki. DŸwiêk wyszukiwania gra przez ca³y czas wyszukiwania.
+2025-03-15 01:03:38,077 - INFO - Audio stream opened. Waiting for activation...
+2025-03-15 01:03:38,079 - INFO - Starting audio processing loop.
+2025-03-15 01:03:41,088 - INFO - Wake word detected in partial result.
+2025-03-15 01:03:41,088 - INFO - Nas³uchiwanie komendy (fallback RMS z dynamiczn¹ kalibracj¹)...
+2025-03-15 01:03:41,095 - INFO - Kalibrujê poziom t³a przez 0.5 sekund...
+2025-03-15 01:03:41,598 - INFO - Dynamiczny próg ustawiony na: 9.46
+2025-03-15 01:03:45,969 - INFO - Detected command: jaka teraz jest pogoda w warszawie
+2025-03-15 01:03:45,969 - INFO - User query received: jaka teraz jest pogoda w warszawie
+2025-03-15 01:03:46,518 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-15 01:03:46,519 - INFO - Refined query: Jakie jest teraz tempo opadów w Warszawie?
+2025-03-15 01:03:46,801 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-15 01:03:46,801 - INFO - AI response: !search tempo opadów w Warszawie
+
+2025-03-15 01:03:46,801 - INFO - TTS: !search tempo opadów w Warszawie
+
+2025-03-15 01:04:05,098 - INFO - Wake word detected in partial result.
+2025-03-15 01:04:05,098 - INFO - Nas³uchiwanie komendy (fallback RMS z dynamiczn¹ kalibracj¹)...
+2025-03-15 01:04:05,102 - INFO - Kalibrujê poziom t³a przez 0.5 sekund...
+2025-03-15 01:04:05,649 - INFO - Dynamiczny próg ustawiony na: 8.24
+2025-03-15 01:04:09,705 - INFO - Detected command: co widzisz na moim monitorze
+2025-03-15 01:04:09,705 - INFO - User query received: co widzisz na moim monitorze
+2025-03-15 01:04:10,208 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-15 01:04:10,208 - INFO - Refined query: What's on my screen?
+2025-03-15 01:04:11,188 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-15 01:04:11,188 - INFO - AI response: I am a text-based AI and have no visual capabilities. I cannot see what's on your screen. 
+
+To describe what's on your screen, you would need to describe it to me. \U0001f60a
+
+2025-03-15 01:04:11,188 - INFO - TTS: I am a text-based AI and have no visual capabilities. I cannot see what's on your screen. 
+
+To describe what's on your screen, you would need to describe it to me. \U0001f60a
+
+2025-03-15 01:06:41,127 - INFO - U¿ywam PIL ImageGrab jako alternatywy dla pyautogui.
+2025-03-15 01:06:41,127 - INFO - Loaded plugin: !screenshot -> Pozwala zrobiæ zrzut ekranu. Pierwszy prompt potwierdza wykonanie, drugi zawiera œcie¿kê do pliku.
+2025-03-15 01:06:41,264 - INFO - Loaded plugin: !search -> Pozwala wyszukaæ informacje w internecie i podsumowaæ wyniki. DŸwiêk wyszukiwania gra przez ca³y czas wyszukiwania.
+2025-03-15 01:06:41,868 - INFO - Audio stream opened. Waiting for activation...
+2025-03-15 01:06:41,870 - INFO - Starting audio processing loop.
+2025-03-15 01:06:47,879 - INFO - Wake word detected in partial result.
+2025-03-15 01:06:47,879 - INFO - Nas³uchiwanie komendy (fallback RMS z dynamiczn¹ kalibracj¹)...
+2025-03-15 01:06:47,884 - INFO - Kalibrujê poziom t³a przez 0.5 sekund...
+2025-03-15 01:06:48,388 - INFO - Dynamiczny próg ustawiony na: 7.90
+2025-03-15 01:06:53,612 - INFO - Detected command: wysoka jaka pogoda jest teraz w warszawie
+2025-03-15 01:06:53,613 - INFO - User query received: wysoka jaka pogoda jest teraz w warszawie
+2025-03-15 01:06:54,141 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-15 01:06:54,141 - INFO - Refined query: Jaka jest pogoda w Warszawie?
+2025-03-15 01:06:54,348 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-15 01:06:54,349 - INFO - Initial AI response: !search pogoda Warszawa
+
+2025-03-15 01:06:54,349 - INFO - AI triggered module command: !search, params: pogoda Warszawa
+2025-03-15 01:06:54,350 - INFO - Rozpoczynam wyszukiwanie dla zapytania: pogoda Warszawa
+2025-03-15 01:06:54,350 - INFO - Odtwarzanie dŸwiêku wyszukiwania.
+2025-03-15 01:06:55,048 - INFO - response: https://html.duckduckgo.com/html 200
+2025-03-15 01:06:55,076 - INFO - Pobrano stronê: https://pogoda.interia.pl/prognoza-dlugoterminowa-warszawa,cId,36917
+2025-03-15 01:06:55,081 - INFO - Pobrano stronê: https://pogoda.interia.pl/prognoza-szczegolowa-warszawa,cId,36917
+2025-03-15 01:06:55,166 - WARNING - B³¹d pobierania strony https://www.accuweather.com/en/pl/warsaw/274663/weather-forecast/274663, status: 403
+2025-03-15 01:06:55,169 - WARNING - B³¹d pobierania strony https://www.accuweather.com/pl/pl/warsaw/274663/weather-forecast/274663, status: 403
+2025-03-15 01:06:55,377 - INFO - Pobrano stronê: https://pogoda.onet.pl/prognoza-pogody/warszawa-357732
+2025-03-15 01:06:56,256 - INFO - Podsumowywanie wyników wyszukiwania.
+2025-03-15 01:06:58,287 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-15 01:06:58,288 - INFO - Podsumowanie: W Dzisaju 1 marca, w Warszawie temperatura wyniesie 7°C, przy odczuwalnej wartoœci 7°C. Prognozowany jest wysoki poziom zachmurzenia (89%) i niewielki deszcz (1.5 mm). Wiatr bêdzie wia³ z prêdkoœci¹ 11 km/h, a w porywach mo¿e byæ szybszy.
+2025-03-15 01:06:58,288 - INFO - Zatrzymywanie dŸwiêku wyszukiwania.
+2025-03-15 01:06:58,290 - INFO - Module command !search executed with result: W Dzisaju 1 marca, w Warszawie temperatura wyniesie 7°C, przy odczuwalnej wartoœci 7°C. Prognozowany jest wysoki poziom zachmurzenia (89%) i niewielki deszcz (1.5 mm). Wiatr bêdzie wia³ z prêdkoœci¹ 11 km/h, a w porywach mo¿e byæ szybszy.
+2025-03-15 01:06:58,290 - INFO - Sending new prompt to AI: Based on the following data, provide an answer:
+
+W Dzisaju 1 marca, w Warszawie temperatura wyniesie 7°C, przy odczuwalnej wartoœci 7°C. Prognozowany jest wysoki poziom zachmurzenia (89%) i niewielki deszcz (1.5 mm). Wiatr bêdzie wia³ z prêdkoœci¹ 11 km/h, a w porywach mo¿e byæ szybszy.
+
+Answer briefly in no more than 2 sentences.
+2025-03-15 01:06:59,265 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-15 01:06:59,265 - INFO - New AI response after module call: 
+
+Today in Warsaw, the temperature will be 7°C with a high level of cloudiness (89%) and a small chance of rain (1.5 mm). The wind will be blowing at 11 km/h.
+2025-03-15 01:06:59,265 - INFO - TTS: 
+
+Today in Warsaw, the temperature will be 7°C with a high level of cloudiness (89%) and a small chance of rain (1.5 mm). The wind will be blowing at 11 km/h.
+2025-03-15 01:07:14,888 - INFO - Wake word detected in partial result.
+2025-03-15 01:07:14,889 - INFO - Nas³uchiwanie komendy (fallback RMS z dynamiczn¹ kalibracj¹)...
+2025-03-15 01:07:14,893 - INFO - Kalibrujê poziom t³a przez 0.5 sekund...
+2025-03-15 01:07:15,454 - INFO - Dynamiczny próg ustawiony na: 12.53
+2025-03-15 01:07:20,058 - INFO - Detected command: co widzisz na moim ekranie
+2025-03-15 01:07:20,059 - INFO - User query received: co widzisz na moim ekranie
+2025-03-15 01:07:20,517 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-15 01:07:20,517 - INFO - Refined query: What's on my screen?
+2025-03-15 01:07:21,205 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-15 01:07:21,205 - INFO - Initial AI response: I am sorry, I cannot fulfill this request. As a text-based AI, I have no ability to see or interpret images from your screen.
+2025-03-15 01:07:21,205 - INFO - TTS: I am sorry, I cannot fulfill this request. As a text-based AI, I have no ability to see or interpret images from your screen.
