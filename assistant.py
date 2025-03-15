@@ -4,120 +4,140 @@ import logging
 import os
 import glob
 import importlib.util
+
+import ollama  # Zakładamy, że ollama jest używane do komunikacji z modelem
+
 from tts_module import TTSModule
 from speech_recognition import SpeechRecognizer
-import ollama
+from prompts import (
+    CONVERT_QUERY_PROMPT, SYSTEM_PROMPT,
+    # Możesz dopisać inne, np. MODULE_RESULT_PROMPT, if needed
+)
 
 logger = logging.getLogger(__name__)
 
+# Ustalona liczba wiadomości przechowywanych w historii
+MAX_HISTORY_LENGTH = 20
+
 class Assistant:
-    def __init__(self, vosk_model_path: str, mic_device_id: int, wake_word: str, stt_silence_threshold: int = 600):
+    def __init__(
+        self,
+        vosk_model_path: str,
+        mic_device_id: int,
+        wake_word: str,
+        stt_silence_threshold: int = 600
+    ):
         self.wake_word = wake_word.lower()
         self.conversation_history = []
         self.tts = TTSModule()
-        self.speech_recognizer = SpeechRecognizer(vosk_model_path, mic_device_id, stt_silence_threshold)
-        self.modules = {}
+        self.speech_recognizer = SpeechRecognizer(
+            vosk_model_path,
+            mic_device_id,
+            stt_silence_threshold
+        )
+        self.modules = {}  # Tu załadujemy pluginy
         self.load_plugins()
-        self.loop = None
+        self.loop = None  # Pętla asynchroniczna
 
     def load_plugins(self):
+        """
+        Przeszukuje folder modules/ i ładuje każdy plik .py, który
+        posiada funkcję register(), zwracającą dict:
+          {
+            "command": "!nazwa",
+            "aliases": ["nazwa", "inna_nazwa"],
+            "description": "...",
+            "handler": <funkcja>,
+          }
+        """
         plugin_folder = "modules"
         if not os.path.exists(plugin_folder):
             os.makedirs(plugin_folder)
+
         for filepath in glob.glob(os.path.join(plugin_folder, "*.py")):
             module_name = os.path.splitext(os.path.basename(filepath))[0]
             spec = importlib.util.spec_from_file_location(module_name, filepath)
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
+
             if hasattr(module, "register"):
                 plugin_info = module.register()
                 command = plugin_info.get("command")
                 if command:
                     self.modules[command] = plugin_info
-                    logger.info("Loaded plugin: %s -> %s", command, plugin_info.get("description"))
+                    logger.info(
+                        "Loaded plugin: %s -> %s",
+                        command, plugin_info.get("description")
+                    )
+                else:
+                    logger.warning("Plugin %s nie zawiera klucza 'command'. Pomijam.", module_name)
+            else:
+                logger.debug("Plik %s nie zawiera funkcji register(). Pomijam.", filepath)
 
-    async def process_query(self, text_input: str):
-        # Przerwij bieżący TTS
-        self.tts.cancel()
-        logger.info("User query received: %s", text_input)
-        command = None
-        params = ""
+    def _detect_command(self, text_input: str):
+        """
+        Dynamicznie wykrywa, czy text_input zawiera jakąś komendę (zarówno z '!' jak i aliasy).
+        Zwraca (command, params) lub (None, "") jeśli brak dopasowania.
+        """
         lower_text = text_input.lower().strip()
-        logger.debug("Lowercase text: %s", lower_text)
 
-        # Wykrywanie komend – obsługa zarówno z wykrzyknikiem, jak i bez niego
+        # 1. Sprawdź, czy tekst zaczyna się od "!"
         if lower_text.startswith("!"):
             parts = text_input.strip().split(maxsplit=1)
-            command = parts[0]
+            possible_cmd = parts[0]  # np. "!search"
             params = parts[1] if len(parts) > 1 else ""
-            logger.info("Detected command with '!': %s, params: %s", command, params)
-        elif lower_text.startswith("search ") or lower_text.startswith("wyszukaj "):
-            command = "!search"
-            params = text_input[len("search "):] if lower_text.startswith("search ") else text_input[len("wyszukaj "):]
-            logger.info("Detected search command: %s, params: %s", command, params)
-        elif lower_text.startswith("screenshot"):
-            command = "!screenshot"
-            params = text_input[len("screenshot"):].strip()
-            logger.info("Detected screenshot command: %s, params: %s", command, params)
+            if possible_cmd in self.modules:
+                logger.info("Detected command with '!': %s, params: %s", possible_cmd, params)
+                return (possible_cmd, params)
 
-        # Jeśli użytkownik bezpośrednio wywołał komendę, wykonaj handler i zakończ działanie
+        # 2. Sprawdź aliasy – iteruj po wczytanych modułach
+        for cmd, plugin_info in self.modules.items():
+            aliases = plugin_info.get("aliases", [])
+            for alias in aliases:
+                alias_lower = alias.lower()
+                if lower_text == alias_lower:
+                    # np. user wpisał samo "search"
+                    logger.info("Detected alias command: %s -> real command: %s (no params)", alias, cmd)
+                    return (cmd, "")
+                if lower_text.startswith(alias_lower + " "):
+                    # user wpisał np. "search cośtam"
+                    params = text_input[len(alias):].strip()
+                    logger.info("Detected alias command: %s -> real command: %s, params: %s", alias, cmd, params)
+                    return (cmd, params)
+
+        # 3. Brak dopasowania
+        return (None, "")
+
+    async def process_query(self, text_input: str):
+        ...
+        # 1. Spróbuj dynamicznie wykryć komendę
+        command, params = self._detect_command(text_input)
+
+        # 2. Jeśli to komenda
         if command and command in self.modules:
-            logger.debug("Found module for command: %s", command)
             handler = self.modules[command]["handler"]
             try:
-                logger.info("Executing handler for command: %s", command)
                 module_result = await asyncio.to_thread(handler, params)
                 logger.info("Handler for command %s completed with result: %s", command, module_result)
             except Exception as e:
                 logger.error("Error executing handler for %s: %s", command, e)
-                module_result = f"Error executing command {command}: {e}"
+                module_result = f"Błąd wykonania komendy {command}: {e}"
 
+            # Dodaj do historii
             self.conversation_history.append({"role": "user", "content": text_input})
-            if command == "!screenshot":
-                confirm_text = f"Command {command} executed. Screenshot captured."
-                self.conversation_history.append({"role": "assistant", "content": confirm_text})
-                await self.tts.speak(confirm_text)
-                # Drugi prompt – zawiera ścieżkę do pliku
-                module_result_text = f"Screenshot file path: {module_result}"
-            else:
-                module_result_text = module_result
 
-            # Budujemy prompt z wynikiem modułu
-            prompt_with_module = (
-                f"Based on the following data, provide an answer:\n\n{module_result_text}\n\n"
-                "Answer briefly in no more than 2 sentences."
-            )
-            logger.info("Sending module result to AI prompt: %s", prompt_with_module)
-            self.conversation_history.append({"role": "assistant", "content": prompt_with_module})
-            try:
-                functions_info = ", ".join([f"{cmd} - {info['description']}" for cmd, info in self.modules.items()])
-                system_prompt = (
-                    "Answer briefly in no more than 2 sentences. "
-                    "To call a function, your input must start with its name preceded by an exclamation mark."
-                )
-                if functions_info:
-                    system_prompt += " Available functions: " + functions_info
-                messages = [{"role": "system", "content": system_prompt}]
-                messages.extend(self.conversation_history)
-                logger.debug("Sending messages to AI: %s", messages)
-                response = ollama.chat(model="gemma3", messages=messages)
-                ai_response = response["message"]["content"]
-                logger.info("AI response after module call: %s", ai_response)
-            except Exception as e:
-                logger.error("Error communicating with AI: %s", e)
-                ai_response = f"Error communicating with AI: {e}"
-
-            self.conversation_history.append({"role": "assistant", "content": ai_response})
-            await self.tts.speak(ai_response)
+            self.conversation_history.append({"role": "assistant", "content": module_result})
+            await self.tts.speak(module_result)
+            self.trim_conversation_history()
             return
 
-        # Standardowa obsługa zapytań – przetwarzamy zapytanie przez AI
+        # --- 3. Jeśli nie wykryto żadnej komendy, standardowa obsługa przez AI ---
+        # Najpierw "czyszczenie" (CONVERT_QUERY_PROMPT)
         try:
             response = ollama.chat(
                 model="gemma3",
                 messages=[
-                    {"role": "system",
-                     "content": "Convert the following query into a short, precise question without extra queries."},
+                    {"role": "system", "content": CONVERT_QUERY_PROMPT},
                     {"role": "user", "content": text_input}
                 ]
             )
@@ -128,25 +148,30 @@ class Assistant:
             refined_query = text_input
 
         self.conversation_history.append({"role": "user", "content": refined_query})
+
+        # Następnie właściwe zapytanie
         try:
-            functions_info = ", ".join([f"{cmd} - {info['description']}" for cmd, info in self.modules.items()])
-            system_prompt = (
-                "Answer briefly in no more than 2 sentences. "
-                "To call a function, your input must start with its name preceded by an exclamation mark (e.g. !screenshot, !search)."
-            )
+            # Zbuduj system prompt z listą dostępnych funkcji
+            functions_info = ", ".join([
+                f"{cmd} - {info['description']}"
+                for cmd, info in self.modules.items()
+            ])
+            system_prompt = SYSTEM_PROMPT
             if functions_info:
-                system_prompt += " Available functions: " + functions_info
+                system_prompt += " Dostępne funkcje: " + functions_info
+
             messages = [{"role": "system", "content": system_prompt}]
             messages.extend(self.conversation_history)
+
             logger.debug("Sending messages to AI: %s", messages)
             response = ollama.chat(model="gemma3", messages=messages)
             ai_response = response["message"]["content"]
             logger.info("Initial AI response: %s", ai_response)
         except Exception as e:
             logger.error("Error communicating with AI: %s", e)
-            ai_response = "Sorry, there was an error communicating with the AI."
+            ai_response = "Przepraszam, wystąpił błąd podczas komunikacji z AI."
 
-        # Jeśli odpowiedź AI zaczyna się od tagu funkcji, wykonaj ją automatycznie
+        # 4. Jeśli AI zwraca polecenie typu "!search", wywołaj je
         trimmed = ai_response.strip()
         if trimmed.startswith("!"):
             parts = trimmed.split(maxsplit=1)
@@ -156,62 +181,78 @@ class Assistant:
                 logger.info("AI triggered module command: %s, params: %s", ai_command, ai_params)
                 try:
                     module_result = await asyncio.to_thread(self.modules[ai_command]["handler"], ai_params)
-                    logger.info("Module command %s executed with result: %s", ai_command, module_result)
+                    self.conversation_history.append({"role": "assistant", "content": module_result})
+                    await self.tts.speak(module_result)
                 except Exception as e:
                     logger.error("Error executing module command triggered by AI: %s", e)
-                    module_result = f"Error executing command {ai_command}: {e}"
-                new_prompt = (
-                    f"Based on the following data, provide an answer:\n\n{module_result}\n\n"
-                    "Answer briefly in no more than 2 sentences."
-                )
-                logger.info("Sending new prompt to AI: %s", new_prompt)
-                self.conversation_history.append({"role": "assistant", "content": new_prompt})
-                try:
-                    functions_info = ", ".join([f"{cmd} - {info['description']}" for cmd, info in self.modules.items()])
-                    system_prompt = (
-                        "Answer briefly in no more than 2 sentences. "
-                        "To call a function, your input must start with its name preceded by an exclamation mark."
-                    )
-                    if functions_info:
-                        system_prompt += " Available functions: " + functions_info
-                    messages = [{"role": "system", "content": system_prompt}]
-                    messages.extend(self.conversation_history)
-                    logger.debug("Sending messages to AI for second prompt: %s", messages)
-                    response2 = ollama.chat(model="gemma3", messages=messages)
-                    new_ai_response = response2["message"]["content"]
-                    logger.info("New AI response after module call: %s", new_ai_response)
-                except Exception as e:
-                    logger.error("Error communicating with AI after module call: %s", e)
-                    new_ai_response = f"Error communicating with AI: {e}"
-                self.conversation_history.append({"role": "assistant", "content": new_ai_response})
-                await self.tts.speak(new_ai_response)
+                    error_text = f"Błąd wykonania komendy {ai_command}: {e}"
+                    self.conversation_history.append({"role": "assistant", "content": error_text})
+                    await self.tts.speak(error_text)
+
+                self.trim_conversation_history()
                 return
 
-        # Jeśli odpowiedź nie wywołuje funkcji, kontynuujemy normalnie
+        # 5. W przeciwnym razie odczytujemy zwykłą odpowiedź
         if ai_response.strip():
             self.conversation_history.append({"role": "assistant", "content": ai_response})
             await self.tts.speak(ai_response)
         else:
             logger.warning("AI did not generate a response.")
 
+        self.trim_conversation_history()
+
+    def _build_messages_for_screenshot(self, user_prompt: str):
+        """
+        Buduje listę wiadomości do AI w kontekście screenshotu.
+        Możesz dostosować np. dodać minimalną historię, albo większą.
+        """
+        system_prompt = (
+            "Odpowiedz maksymalnie w 2 zdaniach. Możesz nawiązywać do poprzednich wiadomości, "
+            "jeśli zawierają kontekst."
+        )
+        messages = [{"role": "system", "content": system_prompt}]
+
+        # Dodajemy do AI naszą dotychczasową historię (opcjonalnie)
+        messages.extend(self.conversation_history)
+
+        # Na koniec userowy prompt
+        messages.append({"role": "user", "content": user_prompt})
+        return messages
+
+    def trim_conversation_history(self):
+        """
+        Usuwa najstarsze wiadomości, jeśli jest ich za dużo.
+        """
+        if len(self.conversation_history) > MAX_HISTORY_LENGTH:
+            self.conversation_history = self.conversation_history[-MAX_HISTORY_LENGTH:]
+
     def process_audio(self):
+        """
+        Główna pętla przetwarzania audio (blokująca, uruchamiana w wątku),
+        nasłuchuje VOSK i w razie wykrycia wake word – wywołuje process_query().
+        """
         logger.info("Starting audio processing loop.")
         from vosk import KaldiRecognizer
         recognizer = KaldiRecognizer(self.speech_recognizer.model, 16000)
+
         while True:
             try:
                 data = self.speech_recognizer.audio_q.get()
             except Exception as e:
                 logger.error("Error getting audio data: %s", e)
                 continue
+
             try:
                 partial_result = json.loads(recognizer.PartialResult())
                 partial_text = partial_result.get("partial", "").lower()
             except Exception as e:
                 logger.error("Error processing partial result: %s", e)
                 partial_text = ""
+
+            # Wykrycie wake word w partial
             if self.wake_word in partial_text:
                 logger.info("Wake word detected in partial result.")
+                self.tts.cancel()  # przerwij TTS
                 command_text = self.speech_recognizer.listen_command()
                 if command_text:
                     logger.info("Detected command: %s", command_text)
@@ -220,6 +261,8 @@ class Assistant:
                     logger.warning("No command detected from partial result.")
                 recognizer = KaldiRecognizer(self.speech_recognizer.model, 16000)
                 continue
+
+            # Jeśli mamy pełny wynik do sprawdzenia
             if recognizer.AcceptWaveform(data):
                 try:
                     result = json.loads(recognizer.Result())
@@ -227,8 +270,10 @@ class Assistant:
                 except Exception as e:
                     logger.error("Error processing full result: %s", e)
                     text = ""
+
                 if self.wake_word in text:
                     logger.info("Wake word detected in full result.")
+                    self.tts.cancel()  # przerwij TTS
                     command_text = self.speech_recognizer.listen_command()
                     if command_text:
                         logger.info("Detected command: %s", command_text)
@@ -237,11 +282,17 @@ class Assistant:
                         logger.warning("No command detected from full result.")
                 else:
                     logger.debug("Speech detected but wake word not found.")
+
                 recognizer = KaldiRecognizer(self.speech_recognizer.model, 16000)
 
     async def run_async(self):
+        """
+        Główna metoda asynchroniczna – tworzy stream audio, uruchamia pętlę rozpoznawania mowy
+        i czeka w nieskończoność.
+        """
         self.loop = asyncio.get_running_loop()
         self.speech_recognizer.audio_q.queue.clear()
+
         import sounddevice as sd
         try:
             with sd.RawInputStream(
@@ -251,17 +302,31 @@ class Assistant:
                 channels=1,
                 device=self.speech_recognizer.mic_device_id,
                 callback=self.speech_recognizer.audio_callback
-            ) as stream:
+            ):
                 logger.info("Audio stream opened. Waiting for activation...")
                 await self.loop.run_in_executor(None, self.process_audio)
         except Exception as e:
             logger.error("Error in audio stream: %s", e)
+
         logger.info("Audio processing ended. Blocking main loop indefinitely.")
-        await asyncio.Future()  # Block forever
+        await asyncio.Future()  # Nie kończ – czekaj w nieskończoność
 
 if __name__ == "__main__":
     from config import VOSK_MODEL_PATH, MIC_DEVICE_ID, WAKE_WORD, STT_SILENCE_THRESHOLD
-    assistant = Assistant(VOSK_MODEL_PATH, MIC_DEVICE_ID, WAKE_WORD, STT_SILENCE_THRESHOLD)
+
+    logging.basicConfig(
+        level=logging.INFO,
+        filename="assistant.log",
+        filemode="a",
+        format="%(asctime)s - %(levelname)s - %(message)s"
+    )
+
+    assistant = Assistant(
+        VOSK_MODEL_PATH,
+        MIC_DEVICE_ID,
+        WAKE_WORD,
+        STT_SILENCE_THRESHOLD
+    )
     try:
         asyncio.run(assistant.run_async())
     except KeyboardInterrupt:

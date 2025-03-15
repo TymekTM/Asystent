@@ -1,5 +1,3 @@
-# modules/search_module.py
-
 import asyncio
 import logging
 import os
@@ -9,9 +7,12 @@ from duckduckgo_search import DDGS
 from bs4 import BeautifulSoup
 import ollama
 
+import assistant
+# Import promptu do podsumowania wyników wyszukiwania
+from prompts import SEARCH_SUMMARY_PROMPT
+
 logger = logging.getLogger(__name__)
 beep_process = None
-
 
 def play_search_beep():
     global beep_process
@@ -26,7 +27,6 @@ def play_search_beep():
     else:
         logger.warning("Plik dźwięku search_beep.mp3 nie został znaleziony.")
 
-
 def stop_search_beep():
     global beep_process
     if beep_process is not None:
@@ -36,7 +36,6 @@ def stop_search_beep():
         except Exception as e:
             logger.error("Błąd zatrzymywania dźwięku wyszukiwania: %s", e)
         beep_process = None
-
 
 def search_handler(params: str = "") -> str:
     if not params:
@@ -50,7 +49,7 @@ def search_handler(params: str = "") -> str:
                 with DDGS() as ddgs:
                     results = ddgs.text(params, max_results=10)
                 valid_urls = [res.get("href") for res in results if res.get("href")]
-                if len(valid_urls) < 3:
+                if len(valid_urls) < 1:
                     logger.warning("Nie znaleziono wystarczającej liczby wyników.")
                     return "Nie znaleziono minimum 3 wyników."
 
@@ -68,7 +67,6 @@ def search_handler(params: str = "") -> str:
                         logger.error("Wyjątek podczas pobierania strony %s: %s", url, e)
                         return ""
 
-                # Używamy równoległego pobierania np. 5 stron jednocześnie
                 tasks = [fetch_page(url) for url in valid_urls[:5]]
                 pages = await asyncio.gather(*tasks)
                 texts = []
@@ -85,8 +83,7 @@ def search_handler(params: str = "") -> str:
                     response = ollama.chat(
                         model="gemma3",
                         messages=[
-                            {"role": "system",
-                             "content": "Podsumuj poniższe wyniki wyszukiwania w jednym krótkim streszczeniu, podaj tylko esencję informacji."},
+                            {"role": "system", "content": SEARCH_SUMMARY_PROMPT},
                             {"role": "user", "content": combined_text}
                         ]
                     )
@@ -104,10 +101,10 @@ def search_handler(params: str = "") -> str:
 
     return asyncio.run(async_search())
 
-
 def register():
     return {
         "command": "!search",
-        "description": "Pozwala wyszukać informacje w internecie i podsumować wyniki. Dźwięk wyszukiwania gra przez cały czas wyszukiwania.",
+        "aliases": ["search", "wyszukaj"],
+        "description": "Pozwala wyszukać informacje w internecie i podsumować wyniki.",
         "handler": search_handler
     }

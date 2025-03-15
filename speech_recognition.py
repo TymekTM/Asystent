@@ -51,6 +51,8 @@ class SpeechRecognizer:
         if noise_values:
             avg_noise = sum(noise_values) / len(noise_values)
             dynamic_threshold = avg_noise * 1.5
+            # Ograniczamy maksymalną wartość progu, by nie była zbyt wysoka
+            dynamic_threshold = min(dynamic_threshold, self.stt_silence_threshold * 2)
             logger.info("Dynamiczny próg ustawiony na: %.2f", dynamic_threshold)
             return dynamic_threshold
         return self.stt_silence_threshold
