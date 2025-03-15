@@ -4,6 +4,7 @@ import logging
 import os
 import glob
 import importlib.util
+import re
 
 import ollama  # Zakładamy, że ollama jest używane do komunikacji z modelem
 
@@ -11,21 +12,32 @@ from tts_module import TTSModule
 from speech_recognition import SpeechRecognizer
 from prompts import (
     CONVERT_QUERY_PROMPT, SYSTEM_PROMPT,
-    # Możesz dopisać inne, np. MODULE_RESULT_PROMPT, if needed
 )
+from config import STT_MODEL, MAIN_MODEL, DEEP_MODEL  # <-- import modeli
 
 logger = logging.getLogger(__name__)
 
 # Ustalona liczba wiadomości przechowywanych w historii
 MAX_HISTORY_LENGTH = 20
 
+def remove_chain_of_thought(text: str) -> str:
+    """
+    Usuwa zawartość (wraz z tagami) dla wszystkich poniższych par:
+      - <think>...</think>
+      - <|begin_of_thought|>...</|end_of_thought|>
+      - <|begin_of_solution|>...</|end_of_solution|>
+    """
+    pattern = r"<think>.*?</think>|<\|begin_of_thought\|>.*?<\|end_of_thought\|>|<\|begin_of_solution\|>.*?<\|end_of_solution\|>"
+    # DOTALL sprawia, że kropka `.` łapie także znaki nowej linii
+    return re.sub(pattern, "", text, flags=re.DOTALL)
+
 class Assistant:
     def __init__(
-        self,
-        vosk_model_path: str,
-        mic_device_id: int,
-        wake_word: str,
-        stt_silence_threshold: int = 600
+            self,
+            vosk_model_path: str,
+            mic_device_id: int,
+            wake_word: str,
+            stt_silence_threshold: int = 600
     ):
         self.wake_word = wake_word.lower()
         self.conversation_history = []
@@ -42,13 +54,7 @@ class Assistant:
     def load_plugins(self):
         """
         Przeszukuje folder modules/ i ładuje każdy plik .py, który
-        posiada funkcję register(), zwracającą dict:
-          {
-            "command": "!nazwa",
-            "aliases": ["nazwa", "inna_nazwa"],
-            "description": "...",
-            "handler": <funkcja>,
-          }
+        posiada funkcję register().
         """
         plugin_folder = "modules"
         if not os.path.exists(plugin_folder):
@@ -100,7 +106,6 @@ class Assistant:
                     logger.info("Detected alias command: %s -> real command: %s (no params)", alias, cmd)
                     return (cmd, "")
                 if lower_text.startswith(alias_lower + " "):
-                    # user wpisał np. "search cośtam"
                     params = text_input[len(alias):].strip()
                     logger.info("Detected alias command: %s -> real command: %s, params: %s", alias, cmd, params)
                     return (cmd, params)
@@ -109,11 +114,17 @@ class Assistant:
         return (None, "")
 
     async def process_query(self, text_input: str):
-        ...
+        """
+        Główna logika przetwarzania poleceń:
+          - Jeśli wykryjemy komendę (!coś) to używamy modułu
+          - W innym wypadku normalna obsługa przez model AI
+            * Najpierw refine zapytania przez model STT_MODEL
+            * Potem finalna odpowiedź przez MAIN_MODEL
+        """
         # 1. Spróbuj dynamicznie wykryć komendę
         command, params = self._detect_command(text_input)
 
-        # 2. Jeśli to komenda
+        # 2. Jeśli to komenda, wołamy odpowiedni moduł
         if command and command in self.modules:
             handler = self.modules[command]["handler"]
             try:
@@ -125,17 +136,20 @@ class Assistant:
 
             # Dodaj do historii
             self.conversation_history.append({"role": "user", "content": text_input})
-
             self.conversation_history.append({"role": "assistant", "content": module_result})
-            await self.tts.speak(module_result)
+
+            # CHANGED: przed TTS usuwamy <think>...</think>
+            to_speak = remove_chain_of_thought(module_result)
+            await self.tts.speak(to_speak)
+
             self.trim_conversation_history()
             return
 
         # --- 3. Jeśli nie wykryto żadnej komendy, standardowa obsługa przez AI ---
-        # Najpierw "czyszczenie" (CONVERT_QUERY_PROMPT)
+        # Najpierw "czyszczenie" (CONVERT_QUERY_PROMPT) -> model STT_MODEL
         try:
             response = ollama.chat(
-                model="gemma3",
+                model=STT_MODEL,
                 messages=[
                     {"role": "system", "content": CONVERT_QUERY_PROMPT},
                     {"role": "user", "content": text_input}
@@ -144,12 +158,12 @@ class Assistant:
             refined_query = response["message"]["content"].strip()
             logger.info("Refined query: %s", refined_query)
         except Exception as e:
-            logger.error("Error processing query with Ollama: %s", e)
+            logger.error("Error processing query with Ollama (refine): %s", e)
             refined_query = text_input
 
         self.conversation_history.append({"role": "user", "content": refined_query})
 
-        # Następnie właściwe zapytanie
+        # Następnie właściwe zapytanie do MAIN_MODEL
         try:
             # Zbuduj system prompt z listą dostępnych funkcji
             functions_info = ", ".join([
@@ -164,11 +178,11 @@ class Assistant:
             messages.extend(self.conversation_history)
 
             logger.debug("Sending messages to AI: %s", messages)
-            response = ollama.chat(model="gemma3", messages=messages)
+            response = ollama.chat(model=MAIN_MODEL, messages=messages)
             ai_response = response["message"]["content"]
             logger.info("Initial AI response: %s", ai_response)
         except Exception as e:
-            logger.error("Error communicating with AI: %s", e)
+            logger.error("Error communicating with AI (final): %s", e)
             ai_response = "Przepraszam, wystąpił błąd podczas komunikacji z AI."
 
         # 4. Jeśli AI zwraca polecenie typu "!search", wywołaj je
@@ -182,7 +196,11 @@ class Assistant:
                 try:
                     module_result = await asyncio.to_thread(self.modules[ai_command]["handler"], ai_params)
                     self.conversation_history.append({"role": "assistant", "content": module_result})
-                    await self.tts.speak(module_result)
+
+                    # CHANGED: usuwamy <think> z module_result
+                    to_speak = remove_chain_of_thought(module_result)
+                    await self.tts.speak(to_speak)
+
                 except Exception as e:
                     logger.error("Error executing module command triggered by AI: %s", e)
                     error_text = f"Błąd wykonania komendy {ai_command}: {e}"
@@ -195,7 +213,9 @@ class Assistant:
         # 5. W przeciwnym razie odczytujemy zwykłą odpowiedź
         if ai_response.strip():
             self.conversation_history.append({"role": "assistant", "content": ai_response})
-            await self.tts.speak(ai_response)
+            # CHANGED: usuwamy <think> przed odczytem
+            to_speak = remove_chain_of_thought(ai_response)
+            await self.tts.speak(to_speak)
         else:
             logger.warning("AI did not generate a response.")
 
@@ -211,11 +231,7 @@ class Assistant:
             "jeśli zawierają kontekst."
         )
         messages = [{"role": "system", "content": system_prompt}]
-
-        # Dodajemy do AI naszą dotychczasową historię (opcjonalnie)
         messages.extend(self.conversation_history)
-
-        # Na koniec userowy prompt
         messages.append({"role": "user", "content": user_prompt})
         return messages
 
@@ -228,8 +244,7 @@ class Assistant:
 
     def process_audio(self):
         """
-        Główna pętla przetwarzania audio (blokująca, uruchamiana w wątku),
-        nasłuchuje VOSK i w razie wykrycia wake word – wywołuje process_query().
+        Główna pętla przetwarzania audio (blokująca, uruchamiana w wątku).
         """
         logger.info("Starting audio processing loop.")
         from vosk import KaldiRecognizer
@@ -296,12 +311,12 @@ class Assistant:
         import sounddevice as sd
         try:
             with sd.RawInputStream(
-                samplerate=16000,
-                blocksize=8000,
-                dtype="int16",
-                channels=1,
-                device=self.speech_recognizer.mic_device_id,
-                callback=self.speech_recognizer.audio_callback
+                    samplerate=16000,
+                    blocksize=8000,
+                    dtype="int16",
+                    channels=1,
+                    device=self.speech_recognizer.mic_device_id,
+                    callback=self.speech_recognizer.audio_callback
             ):
                 logger.info("Audio stream opened. Waiting for activation...")
                 await self.loop.run_in_executor(None, self.process_audio)
@@ -310,6 +325,7 @@ class Assistant:
 
         logger.info("Audio processing ended. Blocking main loop indefinitely.")
         await asyncio.Future()  # Nie kończ – czekaj w nieskończoność
+
 
 if __name__ == "__main__":
     from config import VOSK_MODEL_PATH, MIC_DEVICE_ID, WAKE_WORD, STT_SILENCE_THRESHOLD

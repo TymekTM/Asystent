@@ -1,3 +1,4 @@
+# see_screen_module.py
 import base64
 import os
 import datetime
@@ -17,6 +18,8 @@ if pyautogui is None:
     else:
         logging.info("Używam PIL ImageGrab jako alternatywy dla pyautogui.")
 
+from config import MAIN_MODEL  # <-- importujemy
+
 def encode_image_to_base64(image_path):
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode('utf-8')
@@ -33,8 +36,6 @@ def capture_screen(params: str = "") -> str:
         os.makedirs(folder, exist_ok=True)
         filepath = os.path.join(folder, filename)
 
-        abs_path = os.path.abspath(filepath)
-
         if pyautogui is not None:
             screenshot = pyautogui.screenshot()
             screenshot.save(filepath)
@@ -42,22 +43,27 @@ def capture_screen(params: str = "") -> str:
             screenshot = ImageGrab.grab()
             screenshot.save(filepath, "PNG")
 
+        abs_path = os.path.abspath(filepath)
         logging.info("Zrzut ekranu zapisany do: %s", filepath)
-        logging.info("Generowanie odpowiedzi z zrzutem ekranu")
 
         # Konwersja obrazu do base64
         image_base64 = encode_image_to_base64(abs_path)
 
-        # Ustawienie prompta z wiadomością użytkownika
-        prompt_text = f"Na podstawie tego zrzutu ekranu odpowiedz na pytanie: {params}" if params else "Co znajduje się na tym zrzucie ekranu?"
-
-        # Wywołanie modelu z obrazem i promptem użytkownika
-        response = ollama.generate(
-            model="gemma3",
-            prompt=prompt_text,
-            images=[image_base64]  # Przekazujemy obraz jako lista base64
+        # Wstępny prompt
+        prompt_text = (
+            f"Na podstawie tego zrzutu ekranu odpowiedz na pytanie: {params}"
+            if params.strip()
+            else "Co znajduje się na tym zrzucie ekranu?"
         )
 
+        # Wywołanie modelu (gamma3:4B)
+        response = ollama.generate(
+            model=MAIN_MODEL,
+            prompt=prompt_text,
+            images=[image_base64]
+        )
+
+        # Zwracamy finalną odpowiedź
         answer = response["response"].strip()
         return answer
 

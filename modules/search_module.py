@@ -6,6 +6,7 @@ import aiohttp
 from duckduckgo_search import DDGS
 from bs4 import BeautifulSoup
 import ollama
+from config import MAIN_MODEL
 
 import assistant
 # Import promptu do podsumowania wyników wyszukiwania
@@ -50,8 +51,8 @@ def search_handler(params: str = "") -> str:
                     results = ddgs.text(params, max_results=10)
                 valid_urls = [res.get("href") for res in results if res.get("href")]
                 if len(valid_urls) < 1:
-                    logger.warning("Nie znaleziono wystarczającej liczby wyników.")
-                    return "Nie znaleziono minimum 3 wyników."
+                    logger.warning("Nie znaleziono wyników.")
+                    return "Nie znaleziono żadnych wyników."
 
                 async def fetch_page(url: str) -> str:
                     try:
@@ -81,7 +82,7 @@ def search_handler(params: str = "") -> str:
                     combined_text = "\n\n".join(texts)
                     logger.info("Podsumowywanie wyników wyszukiwania.")
                     response = ollama.chat(
-                        model="gemma3",
+                        model=MAIN_MODEL,  # gamma3:4B
                         messages=[
                             {"role": "system", "content": SEARCH_SUMMARY_PROMPT},
                             {"role": "user", "content": combined_text}

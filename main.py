@@ -1,5 +1,4 @@
 # main.py
-
 import asyncio
 import logging
 from assistant import Assistant
@@ -29,5 +28,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-

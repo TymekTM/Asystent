@@ -12,5 +12,7 @@ WAKE_WORD = "asystencie"
 # Próg ciszy w STT
 STT_SILENCE_THRESHOLD = 600
 
-# Klucz API do integracji z dodatkowym API (np. OpenWeatherMap) – przykładowo
-OPENWEATHERMAP_API_KEY = ""
+# MODELE
+STT_MODEL = "gemma3:4B"     # do refinowania promptu ze stt
+MAIN_MODEL = "gemma3:4B"    # do zwykłych odpowiedzi
+DEEP_MODEL = "openthinker"  # do głębokiego rozumowania
