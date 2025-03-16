@@ -27,7 +27,7 @@ def remove_chain_of_thought(text: str) -> str:
       - <|begin_of_thought|>...</|end_of_thought|>
       - <|begin_of_solution|>...</|end_of_solution|>
     """
-    pattern = r"<think>.*?</think>|<\|begin_of_thought\|>.*?<\|end_of_thought\|>|<\|begin_of_solution\|>.*?<\|end_of_solution\|>"
+    pattern = r"<think>.*?</think>|<\|begin_of_thought\|>.*?<\|end_of_thought\|>|<\|begin_of_solution\|>.*?<\|end_of_solution\|>|<\|end\|>"
     # DOTALL sprawia, że kropka `.` łapie także znaki nowej linii
     return re.sub(pattern, "", text, flags=re.DOTALL)
 

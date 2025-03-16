@@ -3,6 +3,8 @@ import base64
 import os
 import datetime
 import logging
+import subprocess
+
 import ollama
 
 try:
@@ -24,12 +26,23 @@ def encode_image_to_base64(image_path):
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode('utf-8')
 
+def play_screenshot_beep():
+    beep_file = "screenshot_beep.mp3"
+    if os.path.exists(beep_file):
+        try:
+            subprocess.Popen(["ffplay", "-nodisp", "-loglevel", "quiet", "-autoexit", beep_file])
+        except Exception as e:
+            logging.error("Błąd odtwarzania dźwięku screenshot: %s", e)
+    else:
+        logging.warning("Plik screenshot_beep.mp3 nie został znaleziony.")
+
+
 def capture_screen(params: str = "") -> str:
     if pyautogui is None and ImageGrab is None:
         logging.error("Nie znaleziono ani pyautogui, ani PIL ImageGrab.")
         return "Nie można wykonać zrzutu ekranu - brak odpowiedniej biblioteki."
-
     try:
+        play_screenshot_beep()  # odtwarzamy dźwięk przed wykonaniem zrzutu
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"screenshot_{timestamp}.png"
         folder = "screenshots"
@@ -46,24 +59,18 @@ def capture_screen(params: str = "") -> str:
         abs_path = os.path.abspath(filepath)
         logging.info("Zrzut ekranu zapisany do: %s", filepath)
 
-        # Konwersja obrazu do base64
         image_base64 = encode_image_to_base64(abs_path)
-
-        # Wstępny prompt
         prompt_text = (
             f"Na podstawie tego zrzutu ekranu odpowiedz na pytanie: {params}"
             if params.strip()
             else "Co znajduje się na tym zrzucie ekranu?"
         )
 
-        # Wywołanie modelu (gamma3:4B)
         response = ollama.generate(
             model=MAIN_MODEL,
             prompt=prompt_text,
             images=[image_base64]
         )
-
-        # Zwracamy finalną odpowiedź
         answer = response["response"].strip()
         return answer
 

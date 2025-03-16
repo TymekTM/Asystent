@@ -1,19 +1,19 @@
 import asyncio
 import logging
 import os
+import re
 import subprocess
 import aiohttp
 from duckduckgo_search import DDGS
 from bs4 import BeautifulSoup
 import ollama
 from config import MAIN_MODEL
-
-import assistant
-# Import promptu do podsumowania wyników wyszukiwania
+import time
 from prompts import SEARCH_SUMMARY_PROMPT
 
 logger = logging.getLogger(__name__)
 beep_process = None
+search_cache = {}
 
 def play_search_beep():
     global beep_process
@@ -27,6 +27,22 @@ def play_search_beep():
             beep_process = None
     else:
         logger.warning("Plik dźwięku search_beep.mp3 nie został znaleziony.")
+
+def normalize_query(query: str) -> str:
+    query = query.lower().strip()
+    query = re.sub(r'[^\w\s]', '', query)  # usuń znaki interpunkcyjne
+    return query
+
+def is_similar(q1: str, q2: str, threshold=0.8) -> bool:
+    # Proste porównanie zbiorów słów – jeśli wspólnych słów jest dużo, uznajemy za podobne
+    set1 = set(q1.split())
+    set2 = set(q2.split())
+    if not set1 or not set2:
+        return False
+    intersection = set1.intersection(set2)
+    union = set1.union(set2)
+    ratio = len(intersection) / len(union)
+    return ratio >= threshold
 
 def stop_search_beep():
     global beep_process
@@ -43,6 +59,14 @@ def search_handler(params: str = "") -> str:
         return "Podaj zapytanie wyszukiwania po komendzie !search"
 
     async def async_search():
+        now = time.time()
+        normalized = normalize_query(params)
+        # Szukamy podobnego zapytania w cache
+        for cached_query, (cached_timestamp, original_query, cached_result) in search_cache.items():
+            if is_similar(normalized, cached_query) and now - cached_timestamp < 3600:
+                logger.info("Zwracam wynik z cache dla podobnego zapytania: %s", original_query)
+                return cached_result
+
         logger.info("Rozpoczynam wyszukiwanie dla zapytania: %s", params)
         play_search_beep()
         try:
@@ -81,16 +105,20 @@ def search_handler(params: str = "") -> str:
                 if texts:
                     combined_text = "\n\n".join(texts)
                     logger.info("Podsumowywanie wyników wyszukiwania.")
+                    # Dołączamy oryginalne zapytanie użytkownika do promptu
+                    prompt_text = f"{combined_text}\n\nUżytkownik zapytał: {params}"
                     response = ollama.chat(
-                        model=MAIN_MODEL,  # gamma3:4B
+                        model=MAIN_MODEL,
                         messages=[
                             {"role": "system", "content": SEARCH_SUMMARY_PROMPT},
-                            {"role": "user", "content": combined_text}
+                            {"role": "user", "content": prompt_text}
                         ]
                     )
                     summary = response["message"]["content"].strip()
-                    logger.info("Podsumowanie: %s", summary)
-                    return summary if summary else "Nie udało się wygenerować podsumowania."
+                    final_result = summary if summary else "Nie udało się wygenerować podsumowania."
+                    # Zapisz wynik w cache, używając znormalizowanego zapytania jako klucza
+                    search_cache[normalized] = (time.time(), params, final_result)
+                    return final_result
                 else:
                     logger.warning("Nie udało się pobrać treści stron.")
                     return "Nie udało się pobrać wyników."

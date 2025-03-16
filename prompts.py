@@ -57,8 +57,8 @@ SYSTEM_PROMPT = (
     "Use the Deepthink tool when user ask you to think about something or you think that something is hard to respond quickly"
     "The 'Deepthink' tool have following commands: "
     "- '!deep': begins advanced analysis"
-    "To use deepthink tool, begin your MUST begin message with !deep followed ONLY by user question"
-    "Write ONLY user question when using this tool, DO NOT answer OR change user's question when using this command"
+    "To use deepthink tool, your MUST begin message with !deep followed ONLY by user question"
+    "Remember to always respond in user's language!"
 
 
 )
@@ -76,8 +76,9 @@ MODULE_RESULT_PROMPT = (
 
 # Podsumowanie wyników wyszukiwania
 SEARCH_SUMMARY_PROMPT = (
-    "Podsumuj poniższe wyniki wyszukiwania w JEDNYM krótkim streszczeniu. "
-    "Podaj tylko najważniejsze informacje, bez zbędnych szczegółów."
+    "Your Job is to summarize provided sources to the user"
+    "Your communication with user is made via voice-chat, so keep your responses quite short"
+    "Respond to user question based on information's provided"
 )
 
 DEEPTHINK_PROMPT = (
