@@ -1,10 +1,4 @@
-# modules/deepseek_module.py
-
-import logging
-import ollama
-import subprocess
-import os
-
+import logging, subprocess, os, ollama
 from config import DEEP_MODEL
 from prompts import DEEPTHINK_PROMPT
 
@@ -16,15 +10,15 @@ def play_deepthink_beep():
         try:
             subprocess.Popen(["ffplay", "-nodisp", "-loglevel", "quiet", "-autoexit", beep_file])
         except Exception as e:
-            logger.error("Błąd odtwarzania dźwięku deepthink: %s", e)
+            logger.error("Error playing deepthink beep: %s", e)
     else:
-        logger.warning("Plik deepthink_beep.mp3 nie został znaleziony.")
+        logger.warning("deepthink_beep.mp3 not found.")
 
 def deep_reasoning_handler(params: str = "") -> str:
     if not params.strip():
         return "Podaj treść do głębokiego rozumowania po komendzie !deep"
     try:
-        play_deepthink_beep()  # odtwarzamy dźwięk
+        play_deepthink_beep()
         response = ollama.chat(
             model=DEEP_MODEL,
             messages=[
@@ -41,6 +35,6 @@ def register():
     return {
         "command": "!deep",
         "aliases": ["deep", "wgłęb"],
-        "description": "Wykonuje głębokie rozumowanie, zastanawia się nad podanym hasłem lub celem",
+        "description": "Wykonuje głębokie rozumowanie",
         "handler": deep_reasoning_handler
     }
