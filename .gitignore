@@ -1,3 +1,4 @@
 *.log
 /screenshots
 assistant.log
+*.pyc

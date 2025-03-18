@@ -1,85 +1,97 @@
-import json
-import logging
-import os
-import queue
-import subprocess
-import time
-
+import sounddevice as sd
 import numpy as np
+import logging
+import json
+from queue import Queue
 from vosk import Model, KaldiRecognizer
 
 logger = logging.getLogger(__name__)
 
 class SpeechRecognizer:
-    def __init__(self, model_path: str, mic_device_id: int, stt_silence_threshold: int = 600):
-        if not os.path.exists(model_path):
-            raise Exception("Model Vosk nie znaleziony!")
-        self.model = Model(model_path)
+    def __init__(self, model_path, mic_device_id, silence_threshold):
+        self.model = self.load_model(model_path)
         self.mic_device_id = mic_device_id
-        self.stt_silence_threshold = stt_silence_threshold
-        self.audio_q = queue.Queue()
-        # Nie używamy webrtcvad – fallback oparty na RMS z dynamiczną kalibracją
-        self.vad = None
+        self.silence_threshold = silence_threshold
+        self.audio_q = Queue()
 
-    def audio_callback(self, indata, frames, time_info, status):
+    def load_model(self, model_path):
+        return Model(model_path)
+
+    def audio_callback(self, indata, frames, time, status):
         if status:
-            logger.warning("Audio status: %s", status)
+            logger.warning("Audio callback status: %s", status)
         self.audio_q.put(bytes(indata))
 
-    def play_beep(self):
-        beep_file = "beep.mp3"
-        if os.path.exists(beep_file):
-            try:
-                subprocess.Popen(["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", beep_file])
-            except Exception as e:
-                logger.error("Error playing beep: %s", e)
-        else:
-            logger.warning("beep.mp3 nie został znaleziony.")
+    def listen_command(self, sample_rate=16000):
+        """
+        Nagrywa komendę dynamicznie i rozpoznaje ją przy użyciu Vosk.
+        Przed rozpoznaniem konwertujemy dane z float32 do int16,
+        a następnie po przesłaniu audio wywołujemy FinalResult() by uzyskać finalny wynik.
+        """
+        logger.info("Listening for command using Vosk method (dynamic recording)...")
+        audio_command = self.record_dynamic_command_audio(sample_rate=sample_rate)
+        # Konwersja z float32 (zakres -1.0 do 1.0) do int16 (zakres -32768 do 32767)
+        audio_int16 = (audio_command * 32767).astype(np.int16)
+        recognizer = KaldiRecognizer(self.model, sample_rate)
+        recognizer.AcceptWaveform(audio_int16.tobytes())
+        result = recognizer.FinalResult()
+        try:
+            res_json = json.loads(result)
+            recognized_text = res_json.get("text", "")
+            logger.info("Vosk recognized: %s", recognized_text)
+            return recognized_text
+        except Exception as e:
+            logger.error("Error in Vosk recognition: %s", e)
+            return ""
 
-    def calibrate_threshold(self, duration=0.5) -> float:
-        logger.info("Kalibruję poziom tła przez %.1f sekund...", duration)
-        noise_values = []
-        calib_start = time.time()
-        while time.time() - calib_start < duration:
-            try:
-                data = self.audio_q.get(timeout=0.05)
-            except queue.Empty:
-                continue
-            audio_array = np.frombuffer(data, dtype=np.int16)
-            rms = np.sqrt((audio_array ** 2).mean())
-            noise_values.append(rms)
-        if noise_values:
-            avg_noise = sum(noise_values) / len(noise_values)
-            dynamic_threshold = avg_noise * 1.5
-            # Ograniczamy maksymalną wartość progu, by nie była zbyt wysoka
-            dynamic_threshold = min(dynamic_threshold, self.stt_silence_threshold * 2)
-            logger.info("Dynamiczny próg ustawiony na: %.2f", dynamic_threshold)
-            return dynamic_threshold
-        return self.stt_silence_threshold
+    def record_command_audio(self, duration=5, sample_rate=16000, device=None):
+        if device is None:
+            device = self.mic_device_id
+        logger.info(f"Recording command audio for {duration} seconds using device {device}...")
+        audio = sd.rec(int(duration * sample_rate),
+                       samplerate=sample_rate,
+                       channels=1,
+                       dtype='float32',
+                       device=device)
+        sd.wait()
+        return audio.flatten()
 
-    def listen_command(self, min_command_duration=3.0, silence_duration=1.0, frame_duration_ms=30) -> str:
-        logger.info("Nasłuchiwanie komendy (fallback RMS z dynamiczną kalibracją)...")
-        self.play_beep()
-        dynamic_threshold = self.calibrate_threshold()
-        recognizer = KaldiRecognizer(self.model, 16000)
-        silence_start = None
-        start_time = time.time()
-        collected_audio = bytearray()
-        while True:
-            try:
-                data = self.audio_q.get(timeout=0.05)
-            except queue.Empty:
-                if silence_start and (time.time() - silence_start >= silence_duration) and (time.time() - start_time >= min_command_duration):
+    def record_dynamic_command_audio(self, sample_rate=16000, silence_threshold=0.01, silence_duration=0.5, max_duration=10, min_duration=2):
+        """
+        Nagrywa komendę dynamicznie – kończy nagrywanie, gdy przez określony czas poziom sygnału
+        spadnie poniżej zadanej wartości, ale gwarantuje nagranie przynajmniej min_duration sekund.
+        Używa małych fragmentów (chunków) do analizy.
+        """
+        logger.info("Dynamiczne nagrywanie komendy...")
+        chunk_duration = 0.1  # sekundy
+        chunk_frames = int(sample_rate * chunk_duration)
+        recorded_audio = []
+        silence_time = 0
+        total_time = 0
+
+        stream = sd.InputStream(samplerate=sample_rate, channels=1, device=self.mic_device_id, dtype='float32')
+        stream.start()
+
+        while total_time < max_duration:
+            data, _ = stream.read(chunk_frames)
+            data = np.squeeze(data)
+            recorded_audio.append(data)
+            total_time += chunk_duration
+
+            # Oblicz RMS dla chunku
+            rms = np.sqrt(np.mean(np.square(data.astype(np.float32))))
+            if total_time >= min_duration:
+                if rms < silence_threshold:
+                    silence_time += chunk_duration
+                else:
+                    silence_time = 0
+
+                if silence_time >= silence_duration:
+                    logger.info("Wykryto ciszę, kończę nagrywanie komendy.")
                     break
-                continue
-            collected_audio.extend(data)
-            audio_array = np.frombuffer(data, dtype=np.int16)
-            rms = np.sqrt((audio_array ** 2).mean())
-            if rms > dynamic_threshold:
-                silence_start = None
-            else:
-                if silence_start is None:
-                    silence_start = time.time()
-        recognizer.AcceptWaveform(bytes(collected_audio))
-        result = json.loads(recognizer.Result())
-        return result.get("text", "")
+            # Jeśli total_time < min_duration, ignorujemy ciszę
+
+        stream.stop()
+        stream.close()
+
+        return np.concatenate(recorded_audio)
