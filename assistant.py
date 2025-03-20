@@ -1,4 +1,4 @@
-import asyncio, json, logging, os, glob, importlib.util, re, subprocess
+import asyncio, json, logging, os, glob, importlib.util, re, subprocess, inspect
 import ollama
 
 from tts_module import TTSModule
@@ -16,6 +16,33 @@ def remove_chain_of_thought(text: str) -> str:
     pattern = r"<think>.*?</think>|<\|begin_of_thought\|>.*?<\|end_of_thought\|>|<\|begin_of_solution\|>.*?<\|end_of_solution\|>|<\|end\|>"
     return re.sub(pattern, "", text, flags=re.DOTALL)
 
+def extract_json(text: str) -> str:
+    """
+    Próbuje wyekstrahować fragment JSON z tekstu.
+    Usuwa znaczniki kodu (np. ```json) oraz inne otoczenia, jeśli występują.
+    """
+    text = text.strip()
+    if text.startswith("```"):
+        lines = text.splitlines()
+        if lines[0].startswith("```"):
+            if lines[-1].strip() == "```":
+                lines = lines[1:-1]
+            else:
+                lines = lines[1:]
+        text = "\n".join(lines).strip()
+    match = re.search(r'({.*})', text, re.DOTALL)
+    if match:
+        return match.group(1)
+    return text
+
+def detect_language(text: str) -> str:
+    """
+    Proste wykrywanie języka – jeśli tekst zawiera polskie znaki, przyjmujemy, że to polski.
+    """
+    if re.search(r"[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]", text):
+        return "pl"
+    return "en"
+
 class Assistant:
     def __init__(self, vosk_model_path: str, mic_device_id: int, wake_word: str, stt_silence_threshold: int = 600):
         self.wake_word = wake_word.lower()
@@ -25,10 +52,11 @@ class Assistant:
         self.modules = {}
         self.load_plugins()
         self.loop = None
-        self.use_whisper = USE_WHISPER_FOR_COMMAND
+        self.use_whisper = USE_WHISPER_FOR_COMMAND  # poprawiona literówka
         if self.use_whisper:
             from whisper_asr import WhisperASR
             self.whisper_asr = WhisperASR(model_name=WHISPER_MODEL)
+        self.language = "en"  # domyślnie
 
     def load_plugins(self):
         plugin_folder = "modules"
@@ -49,43 +77,8 @@ class Assistant:
             else:
                 logger.debug("File %s does not have register() function, skipping.", filepath)
 
-    def _detect_command(self, text_input: str):
-        lower_text = text_input.lower().strip()
-        if lower_text.startswith("!"):
-            parts = text_input.strip().split(maxsplit=1)
-            cmd = parts[0]
-            params = parts[1] if len(parts) > 1 else ""
-            if cmd in self.modules:
-                logger.info("Detected command: %s, params: %s", cmd, params)
-                return (cmd, params)
-        for cmd, info in self.modules.items():
-            for alias in info.get("aliases", []):
-                alias_lower = alias.lower()
-                if lower_text == alias_lower:
-                    logger.info("Detected alias: %s -> command: %s", alias, cmd)
-                    return (cmd, "")
-                if lower_text.startswith(alias_lower + " "):
-                    params = text_input[len(alias):].strip()
-                    logger.info("Detected alias: %s -> command: %s, params: %s", alias, cmd, params)
-                    return (cmd, params)
-        return (None, "")
-
     async def process_query(self, text_input: str):
-        command, params = self._detect_command(text_input)
-        if command and command in self.modules:
-            handler = self.modules[command]["handler"]
-            try:
-                result = await asyncio.to_thread(handler, params)
-                logger.info("Command %s executed with result: %s", command, result)
-            except Exception as e:
-                logger.error("Error executing command %s: %s", command, e)
-                result = f"Błąd wykonania komendy {command}: {e}"
-            self.conversation_history.append({"role": "user", "content": text_input})
-            self.conversation_history.append({"role": "assistant", "content": result})
-            await self.tts.speak(remove_chain_of_thought(result))
-            self.trim_conversation_history()
-            return
-
+        # Poprawiamy zapytanie i wykrywamy język
         try:
             response = ollama.chat(
                 model=STT_MODEL,
@@ -100,6 +93,8 @@ class Assistant:
             logger.error("Error refining query: %s", e)
             refined_query = text_input
 
+        # Ustawiamy język na podstawie treści zapytania
+        self.language = detect_language(refined_query)
         self.conversation_history.append({"role": "user", "content": refined_query})
         try:
             functions_info = ", ".join([f"{cmd} - {info['description']}" for cmd, info in self.modules.items()])
@@ -111,35 +106,55 @@ class Assistant:
             logger.info("AI response: %s", ai_response)
         except Exception as e:
             logger.error("Error communicating with AI: %s", e)
-            ai_response = "Przepraszam, wystąpił błąd podczas komunikacji z AI."
+            ai_response = '{"command": "", "params": "", "text": "Przepraszam, wystąpił błąd podczas komunikacji z AI."}'
 
-        if ai_response.strip().startswith("!"):
-            parts = ai_response.strip().split(maxsplit=1)
-            ai_command = parts[0]
-            ai_params = parts[1] if len(parts) > 1 else ""
-            if ai_command in self.modules:
+        # Wyekstrahuj poprawny fragment JSON
+        ai_response_extracted = extract_json(ai_response)
+        try:
+            structured_output = json.loads(ai_response_extracted)
+        except json.JSONDecodeError:
+            structured_output = None
+
+        if structured_output and isinstance(structured_output, dict):
+            # Jeśli pole "command" jest niepuste – wykonujemy komendę
+            if "command" in structured_output and structured_output["command"]:
+                ai_command = structured_output["command"]
+                ai_params = structured_output.get("params", "")
+                # Przed wykonaniem, wypowiedz informację zwrotną w odpowiednim języku (uruchamiamy TTS asynchronicznie)
+                if self.language == "pl":
+                    feedback = f"Ok, wyszukuję {ai_params}"
+                else:
+                    feedback = f"Ok, searching for {ai_params}"
+                asyncio.create_task(self.tts.speak(feedback))
+                # Sprawdź, czy handler obsługuje dodatkowy argument (język)
+                handler = self.modules[ai_command]["handler"]
+                sig = inspect.signature(handler)
                 try:
-                    result = await asyncio.to_thread(self.modules[ai_command]["handler"], ai_params)
+                    if len(sig.parameters) == 2:
+                        result = await asyncio.to_thread(handler, ai_params, self.language)
+                    else:
+                        result = await asyncio.to_thread(handler, ai_params)
                     self.conversation_history.append({"role": "assistant", "content": result})
-                    await self.tts.speak(remove_chain_of_thought(result))
+                    asyncio.create_task(self.tts.speak(remove_chain_of_thought(result)))
                 except Exception as e:
                     logger.error("Error executing AI-triggered command: %s", e)
                     error_text = f"Błąd wykonania komendy {ai_command}: {e}"
                     self.conversation_history.append({"role": "assistant", "content": error_text})
-                    await self.tts.speak(error_text)
+                    asyncio.create_task(self.tts.speak(error_text))
                 self.trim_conversation_history()
                 return
-
+            # Jeśli pole "text" jest obecne, używamy go jako odpowiedź głosową
+            if "text" in structured_output:
+                ai_response = structured_output["text"]
+            else:
+                ai_response = ""
+        # Jeśli nie udało się sparsować – traktujemy całość jako tekst odpowiedzi
         if ai_response.strip():
             self.conversation_history.append({"role": "assistant", "content": ai_response})
-            await self.tts.speak(remove_chain_of_thought(ai_response))
+            asyncio.create_task(self.tts.speak(remove_chain_of_thought(ai_response)))
         else:
             logger.warning("AI did not generate a response.")
         self.trim_conversation_history()
-
-    def _build_messages_for_screenshot(self, user_prompt: str):
-        system_prompt = "Odpowiedz maksymalnie w 2 zdaniach. Możesz nawiązywać do poprzednich wiadomości, jeśli zawierają kontekst."
-        return [{"role": "system", "content": system_prompt}] + self.conversation_history + [{"role": "user", "content": user_prompt}]
 
     def trim_conversation_history(self):
         if len(self.conversation_history) > MAX_HISTORY_LENGTH:

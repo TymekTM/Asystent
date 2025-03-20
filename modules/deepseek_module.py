@@ -33,7 +33,7 @@ def deep_reasoning_handler(params: str = "") -> str:
 
 def register():
     return {
-        "command": "!deep",
+        "command": "deep",
         "aliases": ["deep", "wgłęb"],
         "description": "Wykonuje głębokie rozumowanie",
         "handler": deep_reasoning_handler

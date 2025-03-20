@@ -42,26 +42,32 @@ SYSTEM_PROMPT = (
     "- Niche Information: If the answer would benefit from detailed information not widely known or understood (which might be found on the internet), use web sources directly rather than relying on the distilled knowledge from pretraining."
     "- Accuracy: If the cost of a small mistake or outdated information is high (e.g., using an outdated version of a software library or not knowing the date of the next game for a sports team), then use the `web` tool."
     "The `web` tool has the following commands:"
-    "- `!search`: Issues a new query to a search engine and outputs the response."
-    "To use the search tool, write !search at the beginning of your answer, after that, continue with your web search"
+    "- `search`: Issues a new query to a search engine and outputs the response."
+    "To use the search tool, write search at the beginning of your answer, after that, continue with your web search"
     "## Screen"
     "The Screen tool allows you to take a screenshot of what is shown on user display."
     "You can use this tool when user asks you about something that is shown to him"
     "The 'screen' tool have following functions: "
-    "- '!screenshot': takes a screenshot of user display and shows it to you."
-    "You CAN see what is on user computer, to do that, use screenshot tool at the beginning of your response"
-    "To use screenshot tool, begin your MUST begin message with !screenshot followed by user question"
-    "IF you want to see what is on user's screen you MUST start your message with !screenshot , if you do not do it it won't work!"
+    "- 'screenshot': takes a screenshot of user display and shows it to you."
     "## Deepthink"
     "Deepthink tool allows you to run 'thinking' agent which analyze request with more care"
     "Use the Deepthink tool when user ask you to think about something or you think that something is hard to respond quickly"
     "The 'Deepthink' tool have following commands: "
-    "- '!deep': begins advanced analysis"
-    "To use deepthink tool, your MUST begin message with !deep followed ONLY by user question"
+    "- 'deep': begins advanced analysis on topic provided"
     "Remember to always respond in user's language!"
+    "You MUST respond in following JSON format:\n"
+    "{\n"
+    '  "text": "<response text>" // NECESSARY\n'
+    '  "command": "<command_name>", // optional, use when using any command  \n'
+    '  "params": "<params>", // optional\n'
+    "}\n"
+    "Examples:\n"
+    '{ "command": "search", "params": "pogoda Sosnowiec 2025-03-20", "text": "Aktualna pogoda w Sosnowcu to..." };'
+    '{ "command": "", "params": "", "text": "As an AI I like to help people" }'
 
 
 )
+
 
 SEE_SCREEN_PROMPT = (
     "Describe what you can see on an image to an user"

@@ -111,7 +111,7 @@ def search_handler(params: str = "") -> str:
 
 def register():
     return {
-        "command": "!search",
+        "command": "search",
         "aliases": ["search", "wyszukaj"],
         "description": "Wyszukuje informacje w internecie i podsumowuje wyniki.",
         "handler": search_handler

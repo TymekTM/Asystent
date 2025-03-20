@@ -59,7 +59,7 @@ def capture_screen(params: str = "") -> str:
 
 def register():
     return {
-        "command": "!screenshot",
+        "command": "screenshot",
         "aliases": ["screenshot", "screen"],
         "description": "Wykonuje zrzut ekranu i analizuje go.",
         "handler": capture_screen
