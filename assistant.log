@@ -950,3 +950,124 @@ Jednak, muszê przyznaæ, ¿e w póŸniejszych czêœciach serii, tempo siê trochê spow
 2025-03-20 21:38:01,767 - INFO - Screenshot saved: screenshots\screenshot_20250320_213800.png
 2025-03-20 21:38:05,472 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
 2025-03-20 21:38:05,474 - INFO - TTS: Na zrzucie ekranu znajduj¹ siê zdjêcia kilku kotów. Ka¿de zdjêcie ma inny kod statusu HTTP, który wskazuje na problem z ³adowaniem strony internetowej.
+2025-03-20 21:42:06,179 - INFO - Loaded plugin: deep -> Wykonuje g³êbokie rozumowanie
+2025-03-20 21:42:06,338 - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-03-20 21:42:06,362 - INFO - Using PIL ImageGrab as alternative to pyautogui.
+2025-03-20 21:42:06,362 - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-03-20 21:42:06,379 - INFO - Audio stream opened. Waiting for activation...
+2025-03-20 21:42:10,907 - INFO - Wake word detected (partial).
+2025-03-20 21:42:10,914 - INFO - Listening for command using Vosk (dynamic recording)...
+2025-03-20 21:42:10,914 - INFO - Dynamic command recording...
+2025-03-20 21:42:13,447 - INFO - Silence detected, ending recording.
+2025-03-20 21:42:14,450 - INFO - Vosk recognized: powiedz mi coœ o sobie
+2025-03-20 21:42:14,458 - INFO - Command: powiedz mi coœ o sobie
+2025-03-20 21:42:15,372 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-20 21:42:15,373 - INFO - Refined query: Powiedz mi coœ o sobie.
+2025-03-20 21:42:27,354 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-20 21:42:27,354 - INFO - AI response: {
+ "command": "",
+ "params": "",
+ "text": "Cieszê siê, ¿e pytasz! Jestem Jarvis, du¿y model jêzykowy, który dzia³a na Twoim komputerze. Zosta³em stworzony, ¿eby pomagaæ i rozmawiaæ. Moja wiedza pochodzi z ogromnych iloœci tekstu, na których zosta³em wytrenowany. Staram siê odpowiadaæ na pytania i prowadziæ rozmowy w sposób naturalny i pomocny. Co chcia³byœ siê ze mn¹ dowiedzieæ?"
+ }
+2025-03-20 21:42:27,355 - INFO - TTS: Cieszê siê, ¿e pytasz! Jestem Jarvis, du¿y model jêzykowy, który dzia³a na Twoim komputerze. Zosta³em stworzony, ¿eby pomagaæ i rozmawiaæ. Moja wiedza pochodzi z ogromnych iloœci tekstu, na których zosta³em wytrenowany. Staram siê odpowiadaæ na pytania i prowadziæ rozmowy w sposób naturalny i pomocny. Co chcia³byœ siê ze mn¹ dowiedzieæ?
+2025-03-20 21:42:59,408 - INFO - Wake word detected (partial).
+2025-03-20 21:42:59,413 - INFO - Listening for command using Vosk (dynamic recording)...
+2025-03-20 21:42:59,413 - INFO - Dynamic command recording...
+2025-03-20 21:43:03,148 - INFO - Silence detected, ending recording.
+2025-03-20 21:43:04,192 - INFO - Vosk recognized: opowiedz mi o pochodzeniu twojego imienia
+2025-03-20 21:43:04,204 - INFO - Command: opowiedz mi o pochodzeniu twojego imienia
+2025-03-20 21:43:05,854 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-20 21:43:05,854 - INFO - Refined query: opowiedz mi o pochodzeniu twojego imienia
+2025-03-20 21:43:24,461 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-20 21:43:24,461 - INFO - AI response: {
+ "command": "search",
+ "params": "pochodzenie imienia Jarvis",
+ "text": "Pochodzenie imienia Jarvis jest doœæ interesuj¹ce i ma korzenie w œredniowiecznej Anglii. W du¿ym skrócie, pochodzi od nazwiska rodziny Jarvis, która by³a znana z rzemios³a zegarmistrzowskiego. Zegarmistrzowie czêsto nazywani byli 'jarvis', co oznacza³o pomocnika, osobê odpowiedzialn¹ za utrzymywanie i naprawianie zegarów. Z czasem 'Jarvis' sta³o siê popularnym imieniem dla ch³opców, a nastêpnie, dziêki moim mo¿liwoœciom, sta³o siê moim imieniem. Jest to wiêc imiê zwi¹zane z prac¹, precyzj¹ i umiejêtnoœciami – cechy, które staram siê posiadaæ jako model jêzykowy."
+}
+2025-03-20 21:43:24,461 - INFO - TTS: Ok, processing command: pochodzenie imienia Jarvis
+2025-03-20 21:43:24,463 - INFO - Searching for query: pochodzenie imienia Jarvis
+2025-03-20 21:43:24,464 - INFO - Playing search beep.
+2025-03-20 21:43:25,313 - INFO - response: https://html.duckduckgo.com/html 200
+2025-03-20 21:44:05,127 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-20 21:44:05,128 - INFO - Stopping search beep.
+2025-03-20 21:44:05,131 - INFO - TTS: Pochodzenie imienia Jarvis jest doœæ intryguj¹ce i ma korzenie w œredniowiecznej Anglii. Oto szczegó³owe informacje:
+
+*   **Pochodzenie:** Imiê Jarvis pochodzi z jêzyka normandzkiego, a konkretnie z regionu Normandii we Francji. Normanowie, którzy podbili Angliê w 1066 roku, brali ze sob¹ wiele imion i nazwisk.
+*   **Korzeñ:** Imiê "Jarvis" wywodzi siê od s³owa "jarv," które oznacza³o "m³ody mê¿czyzna" lub "s³ugê".
+*   **Znaczenie:** W œredniowiecznej Anglii "Jarvis" by³ najczêœciej u¿ywanym imieniem dla m³odego mê¿czyzny, który by³ uczniem lub s³ug¹. Zazwyczaj by³ to m³ody rycerz, który uczy³ siê sztuki walki u swojego pana.
+*   **Popularnoœæ:** Imiê Jarvis zyska³o na popularnoœci w Anglii w œredniowieczu, a nastêpnie zyska³o miêdzynarodow¹ popularnoœæ dziêki postaci J.A.R.R.E.C. (Juster Relm Relm), asystenta Frodo Bagginsa w powieœci "W³adca Pierœcieni" J.R.R. Tolkiena.
+
+Podsumowuj¹c, imiê Jarvis ma bogat¹ historiê i pochodzi od œredniowiecznego terminu oznaczaj¹cego m³odego mê¿czyznê lub s³ugê.
+2025-03-20 21:44:43,407 - INFO - Wake word detected (partial).
+2025-03-20 21:44:43,413 - INFO - Listening for command using Vosk (dynamic recording)...
+2025-03-20 21:44:43,413 - INFO - Dynamic command recording...
+2025-03-20 21:44:46,027 - INFO - Silence detected, ending recording.
+2025-03-20 21:44:46,797 - INFO - Vosk recognized: a w znaczeniu kulturowym
+2025-03-20 21:44:46,803 - INFO - Command: a w znaczeniu kulturowym
+2025-03-20 21:44:47,654 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-20 21:44:47,655 - INFO - Refined query: a w znaczeniu kulturowym
+2025-03-20 21:45:09,802 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-20 21:45:09,803 - INFO - AI response: {
+ "command": "search",
+ "params": "cultural significance of name Jarvis",
+ "text": "Analizuj¹c znaczenie kulturowe imienia Jarvis, mo¿na zauwa¿yæ kilka interesuj¹cych aspektów. Poza ju¿ wspomnianym znaczeniem zwi¹zanym z m³odymi mê¿czyznami i s³ugami, imiê to w kontekœcie kultury brytañskiej i angielskiej, szczególnie w okresie œredniowiecza, symbolizowa³o lojalnoœæ, pos³uszeñstwo i umiejêtnoœci.  
+
+W 'W³adcy Pierœcieni' J.R.R. Tolkien wykorzysta³ imiê Jarvis, nadaj¹c postaci J.A.R.R.E.C. (Juster Relm Relm) charakterystyczny dla tej powieœci ton – asystenta, który jest lojalny, pomocny i posiada specyficzne umiejêtnoœci.  To odzwierciedla³o oczekiwania wobec s³ugi i asystenta, a tak¿e podkreœla³o jego rolê w historii.
+
+Ponadto, imiê Jarvis, ze wzglêdu na swoj¹ historiê i powi¹zania z 'W³adc¹ Pierœcieni', sta³o siê synonimem inteligencji, technologii i asystenta, co jest szczególnie widoczne w kontekœcie nowoczesnych AI.  W ten sposób, imiê Jarvis zyska³o na znaczeniu kulturowym, staj¹c siê czêœci¹ narracji o rozwoju technologii i roli AI w spo³eczeñstwie.  Jest to przyk³ad, jak imiona mog¹ przenosiæ siê przez wieki i zmieniaæ swoje znaczenie w oparciu o kontekst kulturowy."
+}
+2025-03-20 21:45:09,803 - INFO - TTS: {
+ "command": "search",
+ "params": "cultural significance of name Jarvis",
+ "text": "Analizuj¹c znaczenie kulturowe imienia Jarvis, mo¿na zauwa¿yæ kilka interesuj¹cych aspektów. Poza ju¿ wspomnianym znaczeniem zwi¹zanym z m³odymi mê¿czyznami i s³ugami, imiê to w kontekœcie kultury brytañskiej i angielskiej, szczególnie w okresie œredniowiecza, symbolizowa³o lojalnoœæ, pos³uszeñstwo i umiejêtnoœci.  
+
+W 'W³adcy Pierœcieni' J.R.R. Tolkien wykorzysta³ imiê Jarvis, nadaj¹c postaci J.A.R.R.E.C. (Juster Relm Relm) charakterystyczny dla tej powieœci ton – asystenta, który jest lojalny, pomocny i posiada specyficzne umiejêtnoœci.  To odzwierciedla³o oczekiwania wobec s³ugi i asystenta, a tak¿e podkreœla³o jego rolê w historii.
+
+Ponadto, imiê Jarvis, ze wzglêdu na swoj¹ historiê i powi¹zania z 'W³adc¹ Pierœcieni', sta³o siê synonimem inteligencji, technologii i asystenta, co jest szczególnie widoczne w kontekœcie nowoczesnych AI.  W ten sposób, imiê Jarvis zyska³o na znaczeniu kulturowym, staj¹c siê czêœci¹ narracji o rozwoju technologii i roli AI w spo³eczeñstwie.  Jest to przyk³ad, jak imiona mog¹ przenosiæ siê przez wieki i zmieniaæ swoje znaczenie w oparciu o kontekst kulturowy."
+}
+2025-03-20 21:45:44,898 - INFO - Wake word detected (partial).
+2025-03-20 21:45:44,908 - INFO - Listening for command using Vosk (dynamic recording)...
+2025-03-20 21:45:44,908 - INFO - Dynamic command recording...
+2025-03-20 21:45:48,328 - INFO - Silence detected, ending recording.
+2025-03-20 21:45:49,132 - INFO - Vosk recognized: powiedz mi co teraz widaæ na moim czytanie
+2025-03-20 21:45:49,139 - INFO - Command: powiedz mi co teraz widaæ na moim czytanie
+2025-03-20 21:45:50,263 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-20 21:45:50,263 - INFO - Refined query: Powiedz mi, co teraz widaæ na Twoim czytaniu.
+2025-03-20 21:45:57,562 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-20 21:45:57,562 - INFO - AI response: {
+ "command": "screenshot",
+ "params": "",
+ "text": "Przepraszam, jako model jêzykowy dzia³aj¹cy na Twoim komputerze, nie posiadam ekranu ani mo¿liwoœci wykonywania zrzutów ekranu. Nie mogê pokazaæ Ci, co teraz 'czytam' w sensie wizualnego odczytu. Moja 'czytanie' polega na przetwarzaniu informacji i generowaniu odpowiedzi na podstawie danych, które posiadam.  Mogê jednak podsumowaæ to, co w³aœnie przetwarza³em, czyli informacje o pochodzeniu i znaczeniu imienia Jarvis, które przedstawi³em Ciê¿ej."
+}
+2025-03-20 21:45:57,562 - INFO - TTS: Ok, processing command: 
+2025-03-20 21:45:57,823 - INFO - Screenshot saved: screenshots\screenshot_20250320_214557.png
+2025-03-20 21:46:08,304 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/generate "HTTP/1.1 200 OK"
+2025-03-20 21:46:08,305 - INFO - TTS: Na zrzucie ekranu znajduje siê:
+
+*   **Kana³ YouTube "Blockchain Backup"** - z filmem o analizie ceny Bitcoina i rynku kryptowalut, w tym XRP.
+*   **Fragment wykresu ceny Bitcoina** (z platformy TradingView).
+*   **Ró¿ne zak³adki przegl¹darki** (Google, YouTube, Kalendarz Google, Mapy Google, itp.).
+*   **Ró¿ne elementy interfejsu przegl¹darki** (zak³adki, pasek wyszukiwania, itp.).
+2025-03-20 21:46:43,907 - INFO - Wake word detected (partial).
+2025-03-20 21:46:43,912 - INFO - Listening for command using Vosk (dynamic recording)...
+2025-03-20 21:46:43,912 - INFO - Dynamic command recording...
+2025-03-20 21:46:49,428 - INFO - Silence detected, ending recording.
+2025-03-20 21:46:50,553 - INFO - Vosk recognized: a powiedz mi co ty s¹dzisz o bitcoinie bez wyszukiwania
+2025-03-20 21:46:50,568 - INFO - Command: a powiedz mi co ty s¹dzisz o bitcoinie bez wyszukiwania
+2025-03-20 21:46:52,210 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-20 21:46:52,210 - INFO - Refined query: powiedz mi co ty s¹dzisz o bitcoinie bez wyszukiwania
+2025-03-20 21:47:03,448 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-20 21:47:03,448 - INFO - AI response: {
+ "command": "",
+ "params": "",
+ "text": "S¹dzê, ¿e Bitcoin to fascynuj¹cy i potencjalnie prze³omowy instrument. Widzê w nim po³¹czenie kilku rzeczy: technologii blockchain, która oferuje transparentnoœæ i bezpieczeñstwo transakcji, oraz ideê zdecentralizowanego systemu finansowego, który mo¿e ograniczyæ wp³yw tradycyjnych instytucji finansowych.
+
+Oczywiœcie, Bitcoin ma te¿ swoje wady – jego zmiennoœæ cenowa jest ogromna, a jego przysz³oœæ jest niepewna. Jednak uwa¿am, ¿e technologia, na której siê opiera, ma ogromny potencja³ i mo¿e wp³yn¹æ na przysz³oœæ finansów. To jakby nowa, eksperymentalna waluta, która mo¿e siê jeszcze rozwin¹æ, albo te¿ zawieœæ. Jestem ciekaw, jak siê rozwinie."
+}
+2025-03-20 21:47:03,449 - INFO - TTS: {
+ "command": "",
+ "params": "",
+ "text": "S¹dzê, ¿e Bitcoin to fascynuj¹cy i potencjalnie prze³omowy instrument. Widzê w nim po³¹czenie kilku rzeczy: technologii blockchain, która oferuje transparentnoœæ i bezpieczeñstwo transakcji, oraz ideê zdecentralizowanego systemu finansowego, który mo¿e ograniczyæ wp³yw tradycyjnych instytucji finansowych.
+
+Oczywiœcie, Bitcoin ma te¿ swoje wady – jego zmiennoœæ cenowa jest ogromna, a jego przysz³oœæ jest niepewna. Jednak uwa¿am, ¿e technologia, na której siê opiera, ma ogromny potencja³ i mo¿e wp³yn¹æ na przysz³oœæ finansów. To jakby nowa, eksperymentalna waluta, która mo¿e siê jeszcze rozwin¹æ, albo te¿ zawieœæ. Jestem ciekaw, jak siê rozwinie."
+}

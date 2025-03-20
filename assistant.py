@@ -35,14 +35,6 @@ def extract_json(text: str) -> str:
         return match.group(1)
     return text
 
-def detect_language(text: str) -> str:
-    """
-    Proste wykrywanie języka – jeśli tekst zawiera polskie znaki, przyjmujemy, że to polski.
-    """
-    if re.search(r"[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]", text):
-        return "pl"
-    return "en"
-
 class Assistant:
     def __init__(self, vosk_model_path: str, mic_device_id: int, wake_word: str, stt_silence_threshold: int = 600):
         self.wake_word = wake_word.lower()
@@ -52,11 +44,11 @@ class Assistant:
         self.modules = {}
         self.load_plugins()
         self.loop = None
-        self.use_whisper = USE_WHISPER_FOR_COMMAND  # poprawiona literówka
+        self.use_whisper = USE_WHISPER_FOR_COMMAND
         if self.use_whisper:
             from whisper_asr import WhisperASR
             self.whisper_asr = WhisperASR(model_name=WHISPER_MODEL)
-        self.language = "en"  # domyślnie
+        # Usunięto atrybut języka – kod jest teraz niezależny od specyficznego języka
 
     def load_plugins(self):
         plugin_folder = "modules"
@@ -78,7 +70,7 @@ class Assistant:
                 logger.debug("File %s does not have register() function, skipping.", filepath)
 
     async def process_query(self, text_input: str):
-        # Poprawiamy zapytanie i wykrywamy język
+        # Poprawiamy zapytanie – usunięto detekcję języka
         try:
             response = ollama.chat(
                 model=STT_MODEL,
@@ -93,8 +85,6 @@ class Assistant:
             logger.error("Error refining query: %s", e)
             refined_query = text_input
 
-        # Ustawiamy język na podstawie treści zapytania
-        self.language = detect_language(refined_query)
         self.conversation_history.append({"role": "user", "content": refined_query})
         try:
             functions_info = ", ".join([f"{cmd} - {info['description']}" for cmd, info in self.modules.items()])
@@ -120,20 +110,13 @@ class Assistant:
             if "command" in structured_output and structured_output["command"]:
                 ai_command = structured_output["command"]
                 ai_params = structured_output.get("params", "")
-                # Przed wykonaniem, wypowiedz informację zwrotną w odpowiednim języku (uruchamiamy TTS asynchronicznie)
-                if self.language == "pl":
-                    feedback = f"Ok, wyszukuję {ai_params}"
-                else:
-                    feedback = f"Ok, searching for {ai_params}"
+                # Używamy jednolitego komunikatu feedback – bez uwzględniania specyficznego języka
+                feedback = f"Ok, processing command: {ai_params}"
                 asyncio.create_task(self.tts.speak(feedback))
-                # Sprawdź, czy handler obsługuje dodatkowy argument (język)
                 handler = self.modules[ai_command]["handler"]
-                sig = inspect.signature(handler)
                 try:
-                    if len(sig.parameters) == 2:
-                        result = await asyncio.to_thread(handler, ai_params, self.language)
-                    else:
-                        result = await asyncio.to_thread(handler, ai_params)
+                    # Zawsze przekazujemy tylko parametr ai_params
+                    result = await asyncio.to_thread(handler, ai_params)
                     self.conversation_history.append({"role": "assistant", "content": result})
                     asyncio.create_task(self.tts.speak(remove_chain_of_thought(result)))
                 except Exception as e:
