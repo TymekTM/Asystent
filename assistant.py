@@ -1,5 +1,6 @@
 import asyncio, json, logging, os, glob, importlib.util, re, subprocess, inspect
 import ollama
+from sympy.codegen import Print
 
 from tts_module import TTSModule
 from speech_recognition import SpeechRecognizer
@@ -42,35 +43,60 @@ class Assistant:
         self.tts = TTSModule()
         self.speech_recognizer = SpeechRecognizer(vosk_model_path, mic_device_id, stt_silence_threshold)
         self.modules = {}
+        self.plugin_mod_times = {}  # słownik do przechowywania czasu modyfikacji plików pluginów
         self.load_plugins()
         self.loop = None
         self.use_whisper = USE_WHISPER_FOR_COMMAND
         if self.use_whisper:
             from whisper_asr import WhisperASR
             self.whisper_asr = WhisperASR(model_name=WHISPER_MODEL)
-        # Usunięto atrybut języka – kod jest teraz niezależny od specyficznego języka
 
     def load_plugins(self):
         plugin_folder = "modules"
         os.makedirs(plugin_folder, exist_ok=True)
+        new_modules = {}
+        # Przechodzimy przez wszystkie pliki z rozszerzeniem .py w folderze pluginów
         for filepath in glob.glob(os.path.join(plugin_folder, "*.py")):
+            mod_time = os.path.getmtime(filepath)
+            self.plugin_mod_times[filepath] = mod_time
             module_name = os.path.splitext(os.path.basename(filepath))[0]
             spec = importlib.util.spec_from_file_location(module_name, filepath)
             module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
+            try:
+                spec.loader.exec_module(module)
+            except Exception as e:
+                logger.error("Błąd przy ładowaniu pluginu %s: %s", module_name, e)
+                continue
             if hasattr(module, "register"):
                 plugin_info = module.register()
                 command = plugin_info.get("command")
                 if command:
-                    self.modules[command] = plugin_info
+                    new_modules[command] = plugin_info
                     logger.info("Loaded plugin: %s -> %s", command, plugin_info.get("description"))
                 else:
                     logger.warning("Plugin %s missing 'command' key, skipping.", module_name)
             else:
                 logger.debug("File %s does not have register() function, skipping.", filepath)
+        self.modules = new_modules
+
+    async def monitor_plugins(self, interval: int = 30):
+        plugin_folder = "modules"
+        while True:
+            updated = False
+            for filepath in glob.glob(os.path.join(plugin_folder, "*.py")):
+                try:
+                    mod_time = os.path.getmtime(filepath)
+                except Exception:
+                    continue
+                if filepath not in self.plugin_mod_times or self.plugin_mod_times[filepath] != mod_time:
+                    updated = True
+                    self.plugin_mod_times[filepath] = mod_time
+            if updated:
+                logger.info("Detected changes in plugins. Reloading plugins...")
+                self.load_plugins()
+            await asyncio.sleep(interval)
 
     async def process_query(self, text_input: str):
-        # Poprawiamy zapytanie – usunięto detekcję języka
         try:
             response = ollama.chat(
                 model=STT_MODEL,
@@ -98,7 +124,6 @@ class Assistant:
             logger.error("Error communicating with AI: %s", e)
             ai_response = '{"command": "", "params": "", "text": "Przepraszam, wystąpił błąd podczas komunikacji z AI."}'
 
-        # Wyekstrahuj poprawny fragment JSON
         ai_response_extracted = extract_json(ai_response)
         try:
             structured_output = json.loads(ai_response_extracted)
@@ -106,16 +131,13 @@ class Assistant:
             structured_output = None
 
         if structured_output and isinstance(structured_output, dict):
-            # Jeśli pole "command" jest niepuste – wykonujemy komendę
             if "command" in structured_output and structured_output["command"]:
                 ai_command = structured_output["command"]
                 ai_params = structured_output.get("params", "")
-                # Używamy jednolitego komunikatu feedback – bez uwzględniania specyficznego języka
                 feedback = f"Ok, processing command: {ai_params}"
                 asyncio.create_task(self.tts.speak(feedback))
                 handler = self.modules[ai_command]["handler"]
                 try:
-                    # Zawsze przekazujemy tylko parametr ai_params
                     result = await asyncio.to_thread(handler, ai_params)
                     self.conversation_history.append({"role": "assistant", "content": result})
                     asyncio.create_task(self.tts.speak(remove_chain_of_thought(result)))
@@ -126,12 +148,10 @@ class Assistant:
                     asyncio.create_task(self.tts.speak(error_text))
                 self.trim_conversation_history()
                 return
-            # Jeśli pole "text" jest obecne, używamy go jako odpowiedź głosową
             if "text" in structured_output:
                 ai_response = structured_output["text"]
             else:
                 ai_response = ""
-        # Jeśli nie udało się sparsować – traktujemy całość jako tekst odpowiedzi
         if ai_response.strip():
             self.conversation_history.append({"role": "assistant", "content": ai_response})
             asyncio.create_task(self.tts.speak(remove_chain_of_thought(ai_response)))
@@ -206,7 +226,10 @@ class Assistant:
                 recognizer = KaldiRecognizer(self.speech_recognizer.model, 16000)
 
     async def run_async(self):
+        logger.info("Bot is starting...")  # log przy starcie bota
         self.loop = asyncio.get_running_loop()
+        # Uruchomienie zadania monitorującego folder pluginów
+        asyncio.create_task(self.monitor_plugins())
         self.speech_recognizer.audio_q.queue.clear()
         import sounddevice as sd
         try:

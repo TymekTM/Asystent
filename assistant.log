@@ -1071,3 +1071,25 @@ Oczywiœcie, Bitcoin ma te¿ swoje wady – jego zmiennoœæ cenowa jest ogromna, a je
 
 Oczywiœcie, Bitcoin ma te¿ swoje wady – jego zmiennoœæ cenowa jest ogromna, a jego przysz³oœæ jest niepewna. Jednak uwa¿am, ¿e technologia, na której siê opiera, ma ogromny potencja³ i mo¿e wp³yn¹æ na przysz³oœæ finansów. To jakby nowa, eksperymentalna waluta, która mo¿e siê jeszcze rozwin¹æ, albo te¿ zawieœæ. Jestem ciekaw, jak siê rozwinie."
 }
+2025-03-20 22:15:44,638 - INFO - Loaded plugin: deep -> Wykonuje g³êbokie rozumowanie
+2025-03-20 22:15:44,758 - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-03-20 22:15:44,779 - INFO - Using PIL ImageGrab as alternative to pyautogui.
+2025-03-20 22:15:44,779 - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-03-20 22:15:44,780 - INFO - Bot is starting...
+2025-03-20 22:15:44,795 - INFO - Audio stream opened. Waiting for activation...
+2025-03-20 22:17:26,979 - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-03-20 22:17:27,001 - INFO - Using PIL ImageGrab as alternative to pyautogui.
+2025-03-20 22:17:27,001 - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-03-20 22:17:27,002 - INFO - Bot is starting...
+2025-03-20 22:17:27,018 - INFO - Audio stream opened. Waiting for activation...
+2025-03-20 22:18:07,092 - INFO - Detected changes in plugins. Reloading plugins...
+2025-03-20 22:18:07,093 - INFO - Loaded plugin: deep -> Wykonuje g³êbokie rozumowanie
+2025-03-20 22:18:07,094 - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-03-20 22:18:07,095 - INFO - Using PIL ImageGrab as alternative to pyautogui.
+2025-03-20 22:18:07,095 - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-03-20 22:20:55,365 - INFO - Loaded plugin: deep -> Wykonuje g³êbokie rozumowanie
+2025-03-20 22:20:55,483 - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-03-20 22:20:55,504 - INFO - Using PIL ImageGrab as alternative to pyautogui.
+2025-03-20 22:20:55,504 - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-03-20 22:20:55,505 - INFO - Bot is starting...
+2025-03-20 22:20:55,519 - INFO - Audio stream opened. Waiting for activation...
