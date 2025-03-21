@@ -13,8 +13,8 @@ WAKE_WORD = "asystencie"
 STT_SILENCE_THRESHOLD = 600
 
 # MODELE
-STT_MODEL = "gemma3:4B"     # do refinowania promptu ze stt
-MAIN_MODEL = "gemma3:4B"    # do zwykłych odpowiedzi
+STT_MODEL = "gemma3:4b-it-q4_K_M"     # do refinowania promptu ze stt
+MAIN_MODEL = "gemma3:4b-it-q4_K_M"    # do zwykłych odpowiedzi
 DEEP_MODEL = "openthinker"  # do głębokiego rozumowania
 
 # Ustawienia dla Whisper jako alternatywy STT

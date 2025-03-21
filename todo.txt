@@ -1,5 +1,3 @@
-Dynamiczne przeładowywanie pluginów: Dodanie możliwości monitorowania folderu z modułami i dynamicznego przeładowywania nowych lub zmodyfikowanych pluginów w trakcie działania asystenta.
-
 Wielomodalność: Integracja nie tylko głosowych, ale także tekstowych interfejsów użytkownika (np. webowy panel sterowania) czy komunikacji przez komunikatory.
 
 Zaawansowana analiza kontekstu: Rozbudowanie historii konwersacji o długoterminową pamięć, by asystent mógł lepiej reagować na wieloetapowe zapytania.
