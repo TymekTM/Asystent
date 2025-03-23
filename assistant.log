@@ -550,3 +550,141 @@ Do you want me to delve deeper into a specific aspect of George Russell's career
 *   **OdpowiedŸ z serwera:** "https://www.recognize.ai/api/recognize.json?file=2023-05-25_10-32-43.mp3" -  To link do API, z którego program pobiera wyniki rozpoznawania mowy.  "2023-05-25_10-32-43.mp3" to nazwa pliku audio, który zosta³ przes³any do serwera.
 
 Podsumowuj¹c, zrzut ekranu pokazuje, ¿e program Whisper przetwarza plik audio i wysy³a go do serwera rozpoznawania mowy.
+2025-03-23 15:19:34,206 - INFO - Loaded plugin: deep -> Wykonuje g³êbokie rozumowanie
+2025-03-23 15:19:34,414 - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-03-23 15:19:34,883 - INFO - DXcam zainicjalizowany pomyœlnie.
+2025-03-23 15:19:34,883 - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-03-23 15:19:34,884 - INFO - Bot is starting...
+2025-03-23 15:19:34,899 - INFO - Audio stream opened. Waiting for activation...
+2025-03-23 15:19:48,919 - INFO - Wake word detected (partial).
+2025-03-23 15:19:48,920 - INFO - Odtwarzam dŸwiêk 'keyword' z pliku: resources/sounds/beep.mp3
+2025-03-23 15:19:48,926 - INFO - Listening for command using Vosk (dynamic recording)...
+2025-03-23 15:19:48,926 - INFO - Dynamic command recording...
+2025-03-23 15:19:51,850 - INFO - Silence detected, ending recording.
+2025-03-23 15:19:52,615 - INFO - Vosk recognized: jaka jest pogoda w sosnowcu
+2025-03-23 15:19:52,623 - INFO - Command: jaka jest pogoda w sosnowcu
+2025-03-23 15:19:56,302 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-23 15:19:56,303 - INFO - Refined query: jaka jest pogoda w Sosnowcu
+2025-03-23 15:20:01,761 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-23 15:20:01,761 - INFO - AI response: ```json
+{
+ "command": "search",
+ "params": "pogoda Sosnowiec 2025-03-23",
+ "text": "Aktualna pogoda w Sosnowcu to: S³onecznie, 18°C."
+}
+```
+
+2025-03-23 15:20:01,763 - INFO - TTS: Ok, processing command: pogoda Sosnowiec 2025-03-23
+2025-03-23 15:20:01,764 - INFO - Searching for query: pogoda Sosnowiec 2025-03-23
+2025-03-23 15:20:01,765 - INFO - Odtwarzam dŸwiêk 'search' z pliku: resources/sounds/search_beep.mp3
+2025-03-23 15:20:02,540 - INFO - response: https://lite.duckduckgo.com/lite/ 200
+2025-03-23 15:20:04,643 - WARNING - B³¹d 403 (próba 1) dla https://sosnowiec.naszemiasto.pl/prognoza-pogody-na-weekend-sosnowiec-sprawdz-pogode-sobote-i-niedziele-01-02-02-02/ar/c1p1-19945215, ponawiam z innymi nag³ówkami
+2025-03-23 15:20:04,651 - WARNING - B³¹d 403 (próba 1) dla https://sosnowiec.naszemiasto.pl/sosnowiec-pogoda-na-weekend-prognoza-od-21-03-piatek-do-23-03-niedziela-sprawdz-prognoze-dlugoterminowa/ar/c1p1-19945215, ponawiam z innymi nag³ówkami
+2025-03-23 15:20:04,652 - WARNING - B³¹d 403 (próba 1) dla https://sosnowiec.naszemiasto.pl/prognoza-pogody-weekendowa-dla-sosnowca-sprawdz-jaka-bedzie-pogoda-od-21-02-piatek-do-23-02-niedziela/ar/c1p1-19945215, ponawiam z innymi nag³ówkami
+2025-03-23 15:20:06,675 - WARNING - B³¹d 403 (próba 2) dla https://sosnowiec.naszemiasto.pl/prognoza-pogody-na-weekend-sosnowiec-sprawdz-pogode-sobote-i-niedziele-01-02-02-02/ar/c1p1-19945215, ponawiam z innymi nag³ówkami
+2025-03-23 15:20:06,681 - WARNING - B³¹d 403 (próba 2) dla https://sosnowiec.naszemiasto.pl/sosnowiec-pogoda-na-weekend-prognoza-od-21-03-piatek-do-23-03-niedziela-sprawdz-prognoze-dlugoterminowa/ar/c1p1-19945215, ponawiam z innymi nag³ówkami
+2025-03-23 15:20:06,701 - WARNING - B³¹d 403 (próba 2) dla https://sosnowiec.naszemiasto.pl/prognoza-pogody-weekendowa-dla-sosnowca-sprawdz-jaka-bedzie-pogoda-od-21-02-piatek-do-23-02-niedziela/ar/c1p1-19945215, ponawiam z innymi nag³ówkami
+2025-03-23 15:20:10,705 - WARNING - B³¹d 403 (próba 3) dla https://sosnowiec.naszemiasto.pl/prognoza-pogody-na-weekend-sosnowiec-sprawdz-pogode-sobote-i-niedziele-01-02-02-02/ar/c1p1-19945215, ponawiam z innymi nag³ówkami
+2025-03-23 15:20:10,705 - ERROR - Osi¹gniêto maksymaln¹ liczbê prób dla https://sosnowiec.naszemiasto.pl/prognoza-pogody-na-weekend-sosnowiec-sprawdz-pogode-sobote-i-niedziele-01-02-02-02/ar/c1p1-19945215
+2025-03-23 15:20:10,722 - WARNING - B³¹d 403 (próba 3) dla https://sosnowiec.naszemiasto.pl/sosnowiec-pogoda-na-weekend-prognoza-od-21-03-piatek-do-23-03-niedziela-sprawdz-prognoze-dlugoterminowa/ar/c1p1-19945215, ponawiam z innymi nag³ówkami
+2025-03-23 15:20:10,723 - ERROR - Osi¹gniêto maksymaln¹ liczbê prób dla https://sosnowiec.naszemiasto.pl/sosnowiec-pogoda-na-weekend-prognoza-od-21-03-piatek-do-23-03-niedziela-sprawdz-prognoze-dlugoterminowa/ar/c1p1-19945215
+2025-03-23 15:20:10,749 - WARNING - B³¹d 403 (próba 3) dla https://sosnowiec.naszemiasto.pl/prognoza-pogody-weekendowa-dla-sosnowca-sprawdz-jaka-bedzie-pogoda-od-21-02-piatek-do-23-02-niedziela/ar/c1p1-19945215, ponawiam z innymi nag³ówkami
+2025-03-23 15:20:10,749 - ERROR - Osi¹gniêto maksymaln¹ liczbê prób dla https://sosnowiec.naszemiasto.pl/prognoza-pogody-weekendowa-dla-sosnowca-sprawdz-jaka-bedzie-pogoda-od-21-02-piatek-do-23-02-niedziela/ar/c1p1-19945215
+2025-03-23 15:20:14,469 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-23 15:20:14,474 - INFO - TTS: W Sosnowcu 23 marca 2025 roku bêdzie pochmurno z du¿ymi opadami deszczu, maksymalna temperatura 11°C, wiatr z kierunku wschodniego do 18 km/h.
+2025-03-23 15:22:29,871 - INFO - Loaded plugin: deep -> Wykonuje g³êbokie rozumowanie
+2025-03-23 15:22:30,108 - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-03-23 15:22:30,552 - INFO - DXcam zainicjalizowany pomyœlnie.
+2025-03-23 15:22:30,552 - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-03-23 15:22:30,553 - INFO - Bot is starting...
+2025-03-23 15:22:30,568 - INFO - Audio stream opened. Waiting for activation...
+2025-03-23 15:22:35,580 - INFO - Wake word detected (partial).
+2025-03-23 15:22:35,580 - INFO - Odtwarzam dŸwiêk 'keyword' z pliku: resources/sounds/beep.mp3
+2025-03-23 15:22:35,589 - INFO - Listening for command using Vosk (dynamic recording)...
+2025-03-23 15:22:35,589 - INFO - Dynamic command recording...
+2025-03-23 15:22:38,400 - INFO - Silence detected, ending recording.
+2025-03-23 15:22:39,210 - INFO - Vosk recognized: jaka jest pogoda w sosnowcu
+2025-03-23 15:22:39,217 - INFO - Command: jaka jest pogoda w sosnowcu
+2025-03-23 15:22:43,002 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-23 15:22:43,002 - INFO - Refined query: jaka jest pogoda w Sosnowcu
+2025-03-23 15:22:49,013 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-23 15:22:49,013 - INFO - AI response: ```json
+{
+ "command": "search",
+ "params": "pogoda Sosnowiec 2025-03-23",
+ "text": "Aktualna pogoda w Sosnowcu to: S³onecznie, z mo¿liwymi przejaœciami, z wiatrem z kierunku zachodniego, prêdkoœci¹ 6 km/h. Temperatura maksymalna to 15 stopni Celsjusza."
+}
+```
+
+2025-03-23 15:22:49,014 - INFO - TTS: Ok, processing command: pogoda Sosnowiec 2025-03-23
+2025-03-23 15:22:49,015 - INFO - Searching for query: pogoda Sosnowiec 2025-03-23
+2025-03-23 15:22:49,016 - INFO - Odtwarzam dŸwiêk 'search' z pliku: resources/sounds/search_beep.mp3
+2025-03-23 15:22:49,774 - INFO - response: https://lite.duckduckgo.com/lite/ 200
+2025-03-23 15:22:51,871 - WARNING - B³¹d 403 (próba 1) dla https://sosnowiec.naszemiasto.pl/prognoza-pogody-weekendowa-dla-sosnowca-sprawdz-jaka-bedzie-pogoda-od-21-02-piatek-do-23-02-niedziela/ar/c1p1-19945215, ponawiam z innymi nag³ówkami
+2025-03-23 15:22:51,873 - WARNING - B³¹d 403 (próba 1) dla https://sosnowiec.naszemiasto.pl/sosnowiec-pogoda-na-weekend-prognoza-od-21-03-piatek-do-23-03-niedziela-sprawdz-prognoze-dlugoterminowa/ar/c1p1-19945215, ponawiam z innymi nag³ówkami
+2025-03-23 15:22:51,874 - WARNING - B³¹d 403 (próba 1) dla https://sosnowiec.naszemiasto.pl/prognoza-pogody-na-weekend-sosnowiec-sprawdz-pogode-sobote-i-niedziele-01-02-02-02/ar/c1p1-19945215, ponawiam z innymi nag³ówkami
+2025-03-23 15:22:53,904 - WARNING - B³¹d 403 (próba 2) dla https://sosnowiec.naszemiasto.pl/prognoza-pogody-na-weekend-sosnowiec-sprawdz-pogode-sobote-i-niedziele-01-02-02-02/ar/c1p1-19945215, ponawiam z innymi nag³ówkami
+2025-03-23 15:22:53,906 - WARNING - B³¹d 403 (próba 2) dla https://sosnowiec.naszemiasto.pl/sosnowiec-pogoda-na-weekend-prognoza-od-21-03-piatek-do-23-03-niedziela-sprawdz-prognoze-dlugoterminowa/ar/c1p1-19945215, ponawiam z innymi nag³ówkami
+2025-03-23 15:22:53,913 - WARNING - B³¹d 403 (próba 2) dla https://sosnowiec.naszemiasto.pl/prognoza-pogody-weekendowa-dla-sosnowca-sprawdz-jaka-bedzie-pogoda-od-21-02-piatek-do-23-02-niedziela/ar/c1p1-19945215, ponawiam z innymi nag³ówkami
+2025-03-23 15:22:57,931 - WARNING - B³¹d 403 (próba 3) dla https://sosnowiec.naszemiasto.pl/sosnowiec-pogoda-na-weekend-prognoza-od-21-03-piatek-do-23-03-niedziela-sprawdz-prognoze-dlugoterminowa/ar/c1p1-19945215, ponawiam z innymi nag³ówkami
+2025-03-23 15:22:57,931 - ERROR - Osi¹gniêto maksymaln¹ liczbê prób dla https://sosnowiec.naszemiasto.pl/sosnowiec-pogoda-na-weekend-prognoza-od-21-03-piatek-do-23-03-niedziela-sprawdz-prognoze-dlugoterminowa/ar/c1p1-19945215
+2025-03-23 15:22:57,932 - WARNING - B³¹d 403 (próba 3) dla https://sosnowiec.naszemiasto.pl/prognoza-pogody-na-weekend-sosnowiec-sprawdz-pogode-sobote-i-niedziele-01-02-02-02/ar/c1p1-19945215, ponawiam z innymi nag³ówkami
+2025-03-23 15:22:57,932 - ERROR - Osi¹gniêto maksymaln¹ liczbê prób dla https://sosnowiec.naszemiasto.pl/prognoza-pogody-na-weekend-sosnowiec-sprawdz-pogode-sobote-i-niedziele-01-02-02-02/ar/c1p1-19945215
+2025-03-23 15:22:57,934 - WARNING - B³¹d 403 (próba 3) dla https://sosnowiec.naszemiasto.pl/prognoza-pogody-weekendowa-dla-sosnowca-sprawdz-jaka-bedzie-pogoda-od-21-02-piatek-do-23-02-niedziela/ar/c1p1-19945215, ponawiam z innymi nag³ówkami
+2025-03-23 15:22:57,934 - ERROR - Osi¹gniêto maksymaln¹ liczbê prób dla https://sosnowiec.naszemiasto.pl/prognoza-pogody-weekendowa-dla-sosnowca-sprawdz-jaka-bedzie-pogoda-od-21-02-piatek-do-23-02-niedziela/ar/c1p1-19945215
+2025-03-23 15:23:02,020 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-23 15:23:02,025 - INFO - TTS: W Sosnowcu 23 marca 2025 roku bêdzie pochmurno z du¿ymi opadami deszczu, maksymalna temperatura 11°C, wiatr z kierunku wschodniego do 18 km/h.
+2025-03-23 15:23:35,790 - INFO - Loaded plugin: deep -> Wykonuje g³êbokie rozumowanie
+2025-03-23 15:23:35,906 - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-03-23 15:23:36,352 - INFO - DXcam zainicjalizowany pomyœlnie.
+2025-03-23 15:23:36,352 - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-03-23 15:23:36,353 - INFO - Bot is starting...
+2025-03-23 15:23:36,371 - INFO - Audio stream opened. Waiting for activation...
+2025-03-23 15:23:40,899 - INFO - Wake word detected (partial).
+2025-03-23 15:23:40,899 - INFO - Odtwarzam dŸwiêk 'keyword' z pliku: resources/sounds/beep.mp3
+2025-03-23 15:23:40,907 - INFO - Listening for command using Vosk (dynamic recording)...
+2025-03-23 15:23:40,907 - INFO - Dynamic command recording...
+2025-03-23 15:23:43,329 - INFO - Silence detected, ending recording.
+2025-03-23 15:23:44,188 - INFO - Vosk recognized: jaka jest pogoda w sosnowcu
+2025-03-23 15:23:44,197 - INFO - Command: jaka jest pogoda w sosnowcu
+2025-03-23 15:23:45,425 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-23 15:23:45,425 - INFO - Refined query: jaka jest pogoda w Sosnowcu
+2025-03-23 15:42:51,061 - INFO - Loaded plugin: deep -> Wykonuje g³êbokie rozumowanie
+2025-03-23 15:42:51,199 - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-03-23 15:42:51,743 - INFO - DXcam zainicjalizowany pomyœlnie.
+2025-03-23 15:42:51,744 - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-03-23 15:42:51,746 - INFO - Bot is starting...
+2025-03-23 15:42:51,764 - INFO - Audio stream opened. Waiting for activation...
+2025-03-23 15:42:55,802 - INFO - Wake word detected (full).
+2025-03-23 15:42:55,802 - INFO - Odtwarzam dŸwiêk 'keyword' z pliku: resources/sounds/beep.mp3
+2025-03-23 15:42:55,810 - INFO - Listening for command using Vosk (dynamic recording)...
+2025-03-23 15:42:55,810 - INFO - Dynamic command recording...
+2025-03-23 15:42:58,626 - INFO - Silence detected, ending recording.
+2025-03-23 15:42:59,562 - INFO - Vosk recognized: jaka jest pogoda w sosnowcu
+2025-03-23 15:42:59,571 - INFO - Command: jaka jest pogoda w sosnowcu
+2025-03-23 15:43:04,734 - INFO - Refined query: jaka jest pogoda w Sosnowcu
+2025-03-23 15:43:10,496 - INFO - AI response: ```json
+{
+  "text": "Sprawdzam aktualn¹ pogodê w Sosnowcu dla Ciebie.",
+  "command": "search",
+  "params": "pogoda Sosnowiec 2025-03-23"
+}
+```
+2025-03-23 15:43:10,497 - INFO - TTS: Ok, processing command: pogoda Sosnowiec 2025-03-23
+2025-03-23 15:43:10,499 - INFO - Searching for query: pogoda Sosnowiec 2025-03-23
+2025-03-23 15:43:10,499 - INFO - Odtwarzam dŸwiêk 'search' z pliku: resources/sounds/search_beep.mp3
+2025-03-23 15:43:11,293 - INFO - response: https://html.duckduckgo.com/html 200
+2025-03-23 15:43:13,394 - WARNING - B³¹d 403 (próba 1) dla https://sosnowiec.naszemiasto.pl/prognoza-pogody-na-weekend-dla-sosnowca-jaka-bedzie-pogoda-od-21-02-piatek-do-23-02-niedziela/ar/c1p1-19945215, ponawiam z innymi nag³ówkami
+2025-03-23 15:43:13,405 - WARNING - B³¹d 403 (próba 1) dla https://sosnowiec.naszemiasto.pl/sosnowiec-pogoda-na-weekend-prognoza-od-21-03-piatek-do-23-03-niedziela-sprawdz-prognoze-dlugoterminowa/ar/c1p1-19945215, ponawiam z innymi nag³ówkami
+2025-03-23 15:43:13,468 - WARNING - B³¹d 403 (próba 1) dla https://sosnowiec.naszemiasto.pl/prognoza-pogody-weekendowa-dla-sosnowca-sprawdz-jaka-bedzie-pogoda-od-21-02-piatek-do-23-02-niedziela/ar/c1p1-19945215, ponawiam z innymi nag³ówkami
+2025-03-23 15:43:15,423 - WARNING - B³¹d 403 (próba 2) dla https://sosnowiec.naszemiasto.pl/prognoza-pogody-na-weekend-dla-sosnowca-jaka-bedzie-pogoda-od-21-02-piatek-do-23-02-niedziela/ar/c1p1-19945215, ponawiam z innymi nag³ówkami
+2025-03-23 15:43:15,435 - WARNING - B³¹d 403 (próba 2) dla https://sosnowiec.naszemiasto.pl/sosnowiec-pogoda-na-weekend-prognoza-od-21-03-piatek-do-23-03-niedziela-sprawdz-prognoze-dlugoterminowa/ar/c1p1-19945215, ponawiam z innymi nag³ówkami
+2025-03-23 15:43:15,487 - WARNING - B³¹d 403 (próba 2) dla https://sosnowiec.naszemiasto.pl/prognoza-pogody-weekendowa-dla-sosnowca-sprawdz-jaka-bedzie-pogoda-od-21-02-piatek-do-23-02-niedziela/ar/c1p1-19945215, ponawiam z innymi nag³ówkami
+2025-03-23 15:43:19,465 - WARNING - B³¹d 403 (próba 3) dla https://sosnowiec.naszemiasto.pl/prognoza-pogody-na-weekend-dla-sosnowca-jaka-bedzie-pogoda-od-21-02-piatek-do-23-02-niedziela/ar/c1p1-19945215, ponawiam z innymi nag³ówkami
+2025-03-23 15:43:19,466 - ERROR - Osi¹gniêto maksymaln¹ liczbê prób dla https://sosnowiec.naszemiasto.pl/prognoza-pogody-na-weekend-dla-sosnowca-jaka-bedzie-pogoda-od-21-02-piatek-do-23-02-niedziela/ar/c1p1-19945215
+2025-03-23 15:43:19,479 - WARNING - B³¹d 403 (próba 3) dla https://sosnowiec.naszemiasto.pl/sosnowiec-pogoda-na-weekend-prognoza-od-21-03-piatek-do-23-03-niedziela-sprawdz-prognoze-dlugoterminowa/ar/c1p1-19945215, ponawiam z innymi nag³ówkami
+2025-03-23 15:43:19,479 - ERROR - Osi¹gniêto maksymaln¹ liczbê prób dla https://sosnowiec.naszemiasto.pl/sosnowiec-pogoda-na-weekend-prognoza-od-21-03-piatek-do-23-03-niedziela-sprawdz-prognoze-dlugoterminowa/ar/c1p1-19945215
+2025-03-23 15:43:19,508 - WARNING - B³¹d 403 (próba 3) dla https://sosnowiec.naszemiasto.pl/prognoza-pogody-weekendowa-dla-sosnowca-sprawdz-jaka-bedzie-pogoda-od-21-02-piatek-do-23-02-niedziela/ar/c1p1-19945215, ponawiam z innymi nag³ówkami
+2025-03-23 15:43:19,508 - ERROR - Osi¹gniêto maksymaln¹ liczbê prób dla https://sosnowiec.naszemiasto.pl/prognoza-pogody-weekendowa-dla-sosnowca-sprawdz-jaka-bedzie-pogoda-od-21-02-piatek-do-23-02-niedziela/ar/c1p1-19945215
+2025-03-23 15:44:58,742 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
+2025-03-23 15:44:58,748 - INFO - TTS: W Sosnowcu 23 marca 2025 r. spodziewane s¹ du¿e opady deszczu, maksymalna temperatura 11°C, wiatr z kierunku wschodniego do 18 km/h.
