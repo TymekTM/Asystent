@@ -1,5 +1,6 @@
 import base64, os, datetime, logging, subprocess, ollama
 import numpy as np
+from audio_modules.beep_sounds import play_beep
 
 try:
     import dxcam  # Najszybsza biblioteka do przechwytywania ekranu dla Windows
@@ -32,23 +33,11 @@ def encode_image_to_base64(image_path):
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode('utf-8')
 
-
-def play_screenshot_beep():
-    beep_file = "screenshot_beep.mp3"
-    if os.path.exists(beep_file):
-        try:
-            subprocess.Popen(["ffplay", "-nodisp", "-loglevel", "quiet", "-autoexit", beep_file])
-        except Exception as e:
-            logging.error("Błąd podczas odtwarzania dźwięku: %s", e)
-    else:
-        logging.warning("screenshot_beep.mp3 nie znaleziono.")
-
-
 def capture_screen(params: str = "") -> str:
     global dxcam_device
 
     try:
-        play_screenshot_beep()  # Zachowujemy dźwięk
+        play_beep("screenshot")  # Zachowujemy dźwięk
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"screenshot_{timestamp}.png"
         folder = "screenshots"

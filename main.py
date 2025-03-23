@@ -1,3 +1,4 @@
+# main.py
 import asyncio, logging
 from assistant import Assistant
 from config import VOSK_MODEL_PATH, MIC_DEVICE_ID, WAKE_WORD, STT_SILENCE_THRESHOLD

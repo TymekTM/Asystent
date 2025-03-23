@@ -9,3 +9,5 @@ Integracja z zewnętrznymi API: Rozszerzenie funkcjonalności o obsługę dodatk
 Personalizacja głosu i TTS: Wprowadzenie opcji wyboru głosu i języka dla TTS, by użytkownik mógł dostosować asystenta do swoich preferencji.
 
 Bezpieczeństwo i prywatność: Dodanie mechanizmów autoryzacji oraz lepszego logowania, aby chronić dane użytkownika i zapewnić bezpieczeństwo komunikacji.
+
+Automatyczne testy jednostkowe: Wtyczka, która pozwala przetestować każdą (wybraną) funkcjonalność.
