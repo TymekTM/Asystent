@@ -1,25 +1,80 @@
 # config.py
+import json
+import os
+import logging
 
-# Ścieżka do modelu Vosk
-VOSK_MODEL_PATH = "vosk_model"
+logger = logging.getLogger(__name__)
 
-# Numer urządzenia mikrofonu
-MIC_DEVICE_ID = 5
+CONFIG_FILE = "config.json"
+DEFAULT_CONFIG = {
+  "VOSK_MODEL_PATH": "vosk_model",
+  "MIC_DEVICE_ID": 13, # Default back to 13
+  "WAKE_WORD": "asystencie",
+  "STT_SILENCE_THRESHOLD": 600,
+  "STT_MODEL": "gemma3:4b-it-q4_K_M",
+  "MAIN_MODEL": "gemma3:4b-it-q4_K_M",
+  "DEEP_MODEL": "openthinker",
+  "PROVIDER": "lmstudio",
+  "USE_WHISPER_FOR_COMMAND": False,
+  "WHISPER_MODEL": "openai/whisper-small",
+  "MAX_HISTORY_LENGTH": 20,
+  "PLUGIN_MONITOR_INTERVAL": 30,
+  "API_KEYS": {
+    "OPENAI_API_KEY": None,
+    "DEEPSEEK_API_KEY": None,
+    "ANTHROPIC_API_KEY": None
+  }
+}
 
-# Słowo kluczowe aktywujące asystenta
-WAKE_WORD = "asystencie"
+def load_config():
+    if os.path.exists(CONFIG_FILE):
+        try:
+            with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+                # Ensure all default keys exist
+                for key, value in DEFAULT_CONFIG.items():
+                    if key not in config:
+                        config[key] = value
+                    elif isinstance(value, dict): # Handle nested dicts like API_KEYS
+                         for sub_key, sub_value in value.items():
+                              if sub_key not in config[key]:
+                                   config[key][sub_key] = sub_value
+                return config
+        except (json.JSONDecodeError, IOError) as e:
+            logger.error(f"Error loading {CONFIG_FILE}: {e}. Using default config.")
+            return DEFAULT_CONFIG
+    else:
+        logger.warning(f"{CONFIG_FILE} not found. Creating with default values.")
+        save_config(DEFAULT_CONFIG)
+        return DEFAULT_CONFIG
 
-# Próg ciszy w STT
-STT_SILENCE_THRESHOLD = 600
+def save_config(config_data):
+    try:
+        with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+            json.dump(config_data, f, indent=2, ensure_ascii=False)
+    except IOError as e:
+        logger.error(f"Error saving {CONFIG_FILE}: {e}")
 
-# MODELE
-STT_MODEL = "gemma3:4b-it-q4_K_M"     # do refinowania promptu ze stt
-MAIN_MODEL = "gemma3:4b-it-q4_K_M"    # do zwykłych odpowiedzi
-DEEP_MODEL = "openthinker"  # do głębokiego rozumowania
+# Load configuration once at startup
+_config = load_config()
 
-# Wybór dostawcy: dostępne opcje: "ollama", "lmstudio", "openai", "deepseek", "anthropic", "transformer"
-PROVIDER = "lmstudio"  # <- zmień tutaj na wybranego dostawcę
+# --- Accessor variables ---
+VOSK_MODEL_PATH = _config.get("VOSK_MODEL_PATH")
+MIC_DEVICE_ID = _config.get("MIC_DEVICE_ID")
+WAKE_WORD = _config.get("WAKE_WORD")
+STT_SILENCE_THRESHOLD = _config.get("STT_SILENCE_THRESHOLD")
+STT_MODEL = _config.get("STT_MODEL")
+MAIN_MODEL = _config.get("MAIN_MODEL")
+DEEP_MODEL = _config.get("DEEP_MODEL")
+PROVIDER = _config.get("PROVIDER")
+USE_WHISPER_FOR_COMMAND = _config.get("USE_WHISPER_FOR_COMMAND")
+WHISPER_MODEL = _config.get("WHISPER_MODEL")
+MAX_HISTORY_LENGTH = _config.get("MAX_HISTORY_LENGTH")
+PLUGIN_MONITOR_INTERVAL = _config.get("PLUGIN_MONITOR_INTERVAL")
 
-# Ustawienia dla Whisper jako alternatywy STT
-USE_WHISPER_FOR_COMMAND = False # Jak nie działa ci cuda, gigantyczne zużycie CPU, wyniki o wiele lepsze (wszystkie językie nie tylko polski)
-WHISPER_MODEL = "openai/whisper-small"
+# Load API keys into environment variables if they exist in the config and are not None
+# This maintains compatibility with how ai_module checks for keys
+api_keys = _config.get("API_KEYS", {})
+for key, value in api_keys.items():
+    if value and value != f"YOUR_{key}_HERE": # Don't set if it's None or the placeholder
+        os.environ[key] = value

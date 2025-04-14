@@ -1,7 +1,8 @@
 # main.py
 import asyncio, logging
 from assistant import Assistant
-from config import VOSK_MODEL_PATH, MIC_DEVICE_ID, WAKE_WORD, STT_SILENCE_THRESHOLD
+# Config is loaded when assistant is imported, no need for direct config imports here
+# from config import VOSK_MODEL_PATH, MIC_DEVICE_ID, WAKE_WORD, STT_SILENCE_THRESHOLD
 
 logging.basicConfig(
     level=logging.INFO,
@@ -12,7 +13,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 def main():
-    assistant = Assistant(VOSK_MODEL_PATH, MIC_DEVICE_ID, WAKE_WORD, STT_SILENCE_THRESHOLD)
+    # Assistant now initializes with defaults from the loaded config
+    assistant = Assistant()
     try:
         asyncio.run(assistant.run_async())
     except KeyboardInterrupt:

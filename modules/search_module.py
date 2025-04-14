@@ -3,8 +3,9 @@ from duckduckgo_search import DDGS
 from bs4 import BeautifulSoup
 import ollama
 from config import MAIN_MODEL
-from prompts import SEARCH_SUMMARY_PROMPT
+from prompts import SEARCH_SUMMARY_PROMPT, SEE_SCREEN_PROMPT
 from audio_modules.beep_sounds import play_beep
+from ai_module import chat_with_providers, remove_chain_of_thought
 
 
 logger = logging.getLogger(__name__)
@@ -63,107 +64,131 @@ def stop_search_beep():
         beep_process = None
 
 
-def search_handler(params: str = "") -> str:
+# Modify handler to be async
+async def search_handler(params: str = "", conversation_history: list = None) -> str:
     if not params:
         return "Podaj zapytanie wyszukiwania po komendzie !search"
 
-    async def async_search():
-        now = time.time()
-        normalized = normalize_query(params)
-        for cached_query, (cached_timestamp, original_query, cached_result) in search_cache.items():
-            if is_similar(normalized, cached_query) and now - cached_timestamp < 3600:
-                logger.info("Returning cached result for: %s", original_query)
-                return cached_result
+    # No need for inner async_search, the handler is now async
+    now = time.time()
+    normalized = normalize_query(params)
+    # Check cache
+    for cached_query, (cached_timestamp, original_query, cached_result) in search_cache.items():
+        if is_similar(normalized, cached_query) and now - cached_timestamp < 3600:
+            logger.info("Returning cached result for: %s", original_query)
+            return cached_result
 
-        logger.info("Searching for query: %s", params)
-        play_beep("search")
-        try:
-            # Konfiguracja sesji z obsługą ciasteczek
-            cookie_jar = aiohttp.CookieJar(unsafe=True)
-            connector = aiohttp.TCPConnector(ssl=False)
-            timeout = aiohttp.ClientTimeout(total=30, connect=10, sock_read=10)
+    logger.info("Searching for query: %s", params)
+    # Consider making play_beep async or running in executor if it blocks significantly
+    play_beep("search")
+    try:
+        cookie_jar = aiohttp.CookieJar(unsafe=True)
+        connector = aiohttp.TCPConnector(ssl=False)
+        timeout = aiohttp.ClientTimeout(total=30, connect=10, sock_read=10)
 
-            async with aiohttp.ClientSession(cookie_jar=cookie_jar, connector=connector, timeout=timeout) as session:
-                with DDGS() as ddgs:
-                    results = ddgs.text(params, max_results=10)
-                valid_urls = [res.get("href") for res in results if res.get("href")]
-                if not valid_urls:
-                    logger.warning("No results found.")
-                    return "Nie znaleziono żadnych wyników."
+        async with aiohttp.ClientSession(cookie_jar=cookie_jar, connector=connector, timeout=timeout) as session:
+            try:
+                # Run synchronous DDGS search in an executor thread
+                loop = asyncio.get_running_loop()
+                results = await loop.run_in_executor(None, lambda: list(DDGS().text(params, max_results=10)))
+            except Exception as e:
+                logger.error("DuckDuckGo search error: %s", e)
+                return "Błąd podczas wyszukiwania (DuckDuckGo)."
 
-                async def fetch_page(url: str, max_retries=3) -> str:
-                    for attempt in range(max_retries):
-                        try:
-                            # Świeże nagłówki dla każdego żądania
-                            headers = get_random_headers()
+            valid_urls = [res.get("href") for res in results if res.get("href")]
+            if not valid_urls:
+                logger.warning("No results found.")
+                return "Nie znaleziono żadnych wyników."
 
-                            # Opóźnienie między próbami
-                            if attempt > 0:
-                                await asyncio.sleep(2 * attempt)  # Wykładnicze zwiększanie opóźnienia
-
-                            async with session.get(url, headers=headers, timeout=10, allow_redirects=True) as response:
-                                if response.status == 200:
-                                    return await response.text()
-                                elif response.status == 403:
-                                    logger.warning(
-                                        f"Błąd 403 (próba {attempt + 1}) dla {url}, ponawiam z innymi nagłówkami")
-                                    if attempt < max_retries - 1:
-                                        continue
+            async def fetch_page(url: str, max_retries=3) -> str:
+                # ... (fetch_page logic remains the same)
+                for attempt in range(max_retries):
+                    try:
+                        headers = get_random_headers()
+                        if attempt > 0:
+                            await asyncio.sleep(2 * attempt)
+                        async with session.get(url, headers=headers, timeout=10, allow_redirects=True) as response:
+                            if response.status == 200:
+                                # Handle potential encoding issues more robustly
+                                try:
+                                    content = await response.read() # Read bytes first
+                                    # Attempt decoding with detected encoding or fallbacks
+                                    detected_encoding = response.charset
+                                    if detected_encoding:
+                                        return content.decode(detected_encoding, errors='replace')
                                     else:
-                                        logger.error(f"Osiągnięto maksymalną liczbę prób dla {url}")
-                                        return ""
+                                        # Try common encodings if detection fails
+                                        try:
+                                            return content.decode('utf-8', errors='replace')
+                                        except UnicodeDecodeError:
+                                            return content.decode('iso-8859-1', errors='replace') # Fallback
+                                except Exception as decode_err:
+                                     logger.warning(f"Error decoding {url}: {decode_err}")
+                                     return "" # Return empty on decode error
+                            elif response.status == 403:
+                                logger.warning(
+                                    f"Błąd 403 (próba {attempt + 1}) dla {url}, ponawiam z innymi nagłówkami")
+                                if attempt < max_retries - 1:
+                                    continue
                                 else:
-                                    logger.warning(f"Błąd podczas pobierania {url}, status: {response.status}")
+                                    logger.error(f"Osiągnięto maksymalną liczbę prób dla {url}")
                                     return ""
-                        except asyncio.TimeoutError:
-                            logger.warning(f"Timeout podczas pobierania {url} (próba {attempt + 1})")
-                        except Exception as e:
-                            logger.error(f"Wyjątek podczas pobierania {url} (próba {attempt + 1}): {e}")
+                            else:
+                                logger.warning(f"Błąd podczas pobierania {url}, status: {response.status}")
+                                return ""
+                    except asyncio.TimeoutError:
+                        logger.warning(f"Timeout podczas pobierania {url} (próba {attempt + 1})")
+                    except aiohttp.ClientConnectorError as e:
+                        logger.error(f"Connection error dla {url} (próba {attempt + 1}): {e}")
+                    except ConnectionRefusedError as e:
+                        logger.error(f"Connection refused dla {url} (próba {attempt + 1}): {e}")
+                    except Exception as e:
+                        # Log the specific exception type and message
+                        logger.error(f"Wyjątek {type(e).__name__} podczas pobierania {url} (próba {attempt + 1}): {e}")
+                    if attempt < max_retries - 1:
+                        continue
+                    else:
+                        return ""
 
-                        if attempt < max_retries - 1:
-                            continue
-                        else:
-                            return ""
+            tasks = []
+            for i, url in enumerate(valid_urls[:5]): # Limit to first 5 URLs
+                tasks.append(fetch_page(url))
+                if i < len(valid_urls[:5]) - 1:
+                    await asyncio.sleep(0.5) # Small delay between starting fetches
+            pages = await asyncio.gather(*tasks)
 
-                # Dodanie opóźnień między zadaniami
-                tasks = []
-                for i, url in enumerate(valid_urls[:5]):
-                    tasks.append(fetch_page(url))
-                    if i < len(valid_urls[:5]) - 1:
-                        await asyncio.sleep(0.5)  # 500ms opóźnienia między uruchomieniem każdego fetch
+            texts = []
+            for page_content in pages:
+                if page_content:
+                    # Run synchronous BeautifulSoup parsing in an executor thread
+                    loop = asyncio.get_running_loop()
+                    text_content = await loop.run_in_executor(None, lambda pc=page_content: " ".join(p.get_text(separator=" ", strip=True) for p in BeautifulSoup(pc, "html.parser").find_all("p")))
+                    texts.append(" ".join(text_content.split()))
 
-                pages = await asyncio.gather(*tasks)
-                texts = []
-                for page in pages:
-                    if page:
-                        soup = BeautifulSoup(page, "html.parser")
-                        paragraphs = soup.find_all("p")
-                        text_content = " ".join(p.get_text(separator=" ", strip=True) for p in paragraphs)
-                        texts.append(" ".join(text_content.split()))
-                if texts:
-                    combined_text = "\n\n".join(texts)
-                    prompt_text = f"{combined_text}\n\nUżytkownik zapytał: {params}"
-                    response = ollama.chat(
-                        model=MAIN_MODEL,
-                        messages=[
-                            {"role": "system", "content": SEARCH_SUMMARY_PROMPT},
-                            {"role": "user", "content": prompt_text}
-                        ]
-                    )
-                    summary = response["message"]["content"].strip()
-                    final_result = summary if summary else "Nie udało się wygenerować podsumowania."
-                    search_cache[normalized] = (time.time(), params, final_result)
-                    return final_result
-                else:
-                    logger.warning("Failed to fetch page content.")
-                    return "Nie udało się pobrać wyników."
-        except Exception as e:
-            logger.error("Search error: %s", e)
-            return "Błąd podczas wyszukiwania."
-        finally:
-            stop_search_beep()
+            if texts:
+                combined_text = "\n\n".join(texts)
+                summary_messages = [
+                    {"role": "system", "content": SEARCH_SUMMARY_PROMPT},
+                    {"role": "user", "content": f"Summarize the following text based on the user query: '{params}'\n\nText:\n{combined_text}"}
+                ]
 
-    return asyncio.run(async_search())
+                # Assuming chat_with_providers is synchronous, run it in an executor
+                loop = asyncio.get_running_loop()
+                response = await loop.run_in_executor(None, lambda: chat_with_providers(MAIN_MODEL, summary_messages))
+
+                summary = remove_chain_of_thought(response["message"]["content"].strip())
+                final_result = summary if summary else "Nie udało się wygenerować podsumowania."
+                search_cache[normalized] = (time.time(), params, final_result)
+                return final_result
+            else:
+                logger.warning("Failed to fetch or parse page content.")
+                return "Nie udało się pobrać ani przetworzyć treści stron."
+    except Exception as e:
+        logger.error("Search handler error: %s", e, exc_info=True)
+        return "Błąd podczas przetwarzania wyszukiwania."
+    finally:
+        # Consider making stop_search_beep async or running in executor
+        stop_search_beep()
 
 
 def register():
@@ -171,5 +196,6 @@ def register():
         "command": "search",
         "aliases": ["search", "wyszukaj"],
         "description": "Wyszukuje informacje w internecie i podsumowuje wyniki.",
-        "handler": search_handler
+        "handler": search_handler,
+        "prompt": SEARCH_SUMMARY_PROMPT
     }

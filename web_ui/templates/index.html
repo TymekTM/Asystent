@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Dashboard</h1>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-header">
+                    Assistant Status
+                </div>
+                <div class="card-body">
+                    {# TODO: Add dynamic status indicators (e.g., Listening, Processing, Idle) #}
+                    <p>Status: <span class="badge bg-success">Running</span> (Placeholder)</p>
+                    <p>Wake Word: <span class="badge bg-info">{{ config.get('WAKE_WORD', 'N/A') }}</span> (Placeholder - needs dynamic update)</p>
+                    {# Add more status info as needed #}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-header">
+                    Quick Actions
+                </div>
+                <div class="card-body">
+                    <button id="manual-activate-btn" class="btn btn-primary me-2">
+                        <i class="fas fa-microphone"></i> Activate Manually
+                    </button>
+                    <span id="manual-activate-status" class="ms-2"></span>
+                    {# Add other quick actions like restart, stop? Be careful with these #}
+                </div>
+            </div>
+        </div>
+    </div>
+
+     <div class="row">
+        <div class="col-12">
+             <div class="card">
+                <div class="card-header">
+                    Recent Activity (Placeholder)
+                </div>
+                <div class="card-body">
+                    <p>Display recent log entries or key events here.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Manual Activation Button
+    const activateBtn = document.getElementById('manual-activate-btn');
+    const activateStatus = document.getElementById('manual-activate-status');
+
+    if (activateBtn) {
+        activateBtn.addEventListener('click', () => {
+            activateStatus.textContent = 'Activating...';
+            activateBtn.disabled = true;
+            fetch('/api/activate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                activateStatus.textContent = data.message || data.error || 'Request sent.';
+                console.log('Manual activation response:', data);
+                 // Re-enable button after a short delay
+                setTimeout(() => {
+                    activateBtn.disabled = false;
+                    activateStatus.textContent = '';
+                }, 2000);
+            })
+            .catch(error => {
+                activateStatus.textContent = 'Error sending request.';
+                console.error('Error activating manually:', error);
+                activateBtn.disabled = false;
+            });
+        });
+    }
+
+    // TODO: Add WebSocket or polling for real-time status updates
+</script>
+{% endblock %}

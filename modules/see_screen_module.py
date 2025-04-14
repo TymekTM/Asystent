@@ -1,6 +1,10 @@
 import base64, os, datetime, logging, subprocess, ollama
 import numpy as np
+from pyexpat.errors import messages
+
+from ai_module import chat_with_providers, remove_chain_of_thought
 from audio_modules.beep_sounds import play_beep
+from prompts import SEE_SCREEN_PROMPT
 
 try:
     import dxcam  # Najszybsza biblioteka do przechwytywania ekranu dla Windows
@@ -33,27 +37,25 @@ def encode_image_to_base64(image_path):
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode('utf-8')
 
-def capture_screen(params: str = "") -> str:
+def capture_screen(params: str = "", conversation_history: list = None) -> str:
     global dxcam_device
 
     try:
-        play_beep("screenshot")  # Zachowujemy dźwięk
+        play_beep("screenshot")
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"screenshot_{timestamp}.png"
         folder = "screenshots"
         os.makedirs(folder, exist_ok=True)
         filepath = os.path.join(folder, filename)
 
-        # Próba użycia DXcam jako najszybszej metody
         if dxcam_device is not None:
-            screenshot = dxcam_device.grab()  # Znacznie szybsza metoda przechwytywania
+            screenshot = dxcam_device.grab()
             if screenshot is not None:
                 import cv2
                 cv2.imwrite(filepath, screenshot)
                 logging.info("Zrzut ekranu wykonany z DXcam")
             else:
                 raise Exception("DXcam zwrócił None")
-        # Fallback do innych metod
         elif pyautogui is not None:
             screenshot = pyautogui.screenshot()
             screenshot.save(filepath)
@@ -65,18 +67,28 @@ def capture_screen(params: str = "") -> str:
 
         abs_path = os.path.abspath(filepath)
         image_base64 = encode_image_to_base64(abs_path)
-
         prompt_text = f"Na podstawie tego zrzutu ekranu odpowiedz na pytanie: {params}" if params.strip() else "Co znajduje się na tym zrzucie ekranu?"
 
-        response = ollama.generate(
+        # Jeśli dostępny jest kontekst rozmowy, dołączamy go
+        messages = []
+        if conversation_history:
+            messages.extend(conversation_history)
+        messages.extend([
+            {"role": "system", "content": SEE_SCREEN_PROMPT},
+            {"role": "user", "content": prompt_text}
+        ])
+
+        response = chat_with_providers(
             model=MAIN_MODEL,
-            prompt=prompt_text,
+            messages=messages,
             images=[image_base64]
         )
 
-        return response["response"].strip()
+        result_text = remove_chain_of_thought(response["message"]["content"].strip())
+        return result_text
+
     except Exception as e:
-        logging.error("Błąd przy wykonywaniu zrzutu ekranu: %s", e)
+        logging.error("Błąd przy wykonywaniu zrzutu ekranu: %s", e, exc_info=True)
         return f"Błąd przy wykonywaniu zrzutu ekranu: {str(e)}"
 
 
@@ -85,5 +97,6 @@ def register():
         "command": "screenshot",
         "aliases": ["screenshot", "screen"],
         "description": "Wykonuje zrzut ekranu i analizuje go.",
-        "handler": capture_screen
+        "handler": capture_screen,
+        "prompt": SEE_SCREEN_PROMPT
     }

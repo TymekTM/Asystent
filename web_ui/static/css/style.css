@@ -1,0 +1,55 @@
+/* General Styles */
+body {
+    padding-top: 56px; /* Adjust based on navbar height */
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1; /* Allows main content to grow and push footer down */
+}
+
+.footer {
+    flex-shrink: 0; /* Prevent footer from shrinking */
+}
+
+
+/* Theme Switching */
+[data-bs-theme="dark"] {
+    /* Dark theme overrides */
+    .footer {
+        background-color: #212529 !important; /* Match dark navbar */
+        color: #adb5bd;
+    }
+     .list-group-item {
+        background-color: #343a40; /* Darker list items */
+        border-color: #495057;
+    }
+    .card {
+         background-color: #2b3035;
+         border-color: #495057;
+    }
+}
+
+/* Style for history entries */
+#history-log .list-group-item {
+    word-wrap: break-word; /* Prevent long lines from overflowing */
+}
+
+/* Navbar adjustments */
+.navbar-brand {
+    font-weight: bold;
+}
+
+/* Ensure theme toggle button icons switch correctly */
+[data-bs-theme="light"] #theme-icon-light { display: inline-block; }
+[data-bs-theme="light"] #theme-icon-dark { display: none; }
+[data-bs-theme="dark"] #theme-icon-light { display: none; }
+[data-bs-theme="dark"] #theme-icon-dark { display: inline-block; }
+
+/* Config page adjustments */
+#config-form .form-check-input {
+    height: 1.5em; /* Make switches a bit larger */
+    width: 3em;
+}

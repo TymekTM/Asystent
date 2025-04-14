@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Configuration</h1>
+    <p>Modify the assistant's settings below. Changes require a restart of the assistant to take full effect in most cases.</p>
+
+    <form id="config-form">
+        {# Iterate through config items - this is basic, needs refinement for different types #}
+        {% for key, value in config.items() %}
+        <div class="mb-3 row">
+            <label for="config-{{ key }}" class="col-sm-3 col-form-label">{{ key.replace('_', ' ').title() }}</label>
+            <div class="col-sm-9">
+                {% if value is boolean %}
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" role="switch" id="config-{{ key }}" name="{{ key }}" {% if value %}checked{% endif %}>
+                </div>
+                {% elif value is number %}
+                <input type="number" class="form-control" id="config-{{ key }}" name="{{ key }}" value="{{ value }}">
+                {% elif value is list %}
+                 <input type="text" class="form-control" id="config-{{ key }}" name="{{ key }}" value="{{ value|join(', ') }}" placeholder="Comma-separated values">
+                 <small class="form-text text-muted">Enter values separated by commas.</small>
+                {% else %}
+                <input type="text" class="form-control" id="config-{{ key }}" name="{{ key }}" value="{{ value }}">
+                {% endif %}
+                 {# TODO: Add descriptions for each config option #}
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="d-flex justify-content-end">
+             <button type="submit" class="btn btn-primary">Save Configuration</button>
+             <span id="save-status" class="ms-3 align-self-center"></span>
+        </div>
+    </form>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const configForm = document.getElementById('config-form');
+    const saveStatus = document.getElementById('save-status');
+
+    configForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        saveStatus.textContent = 'Saving...';
+        saveStatus.className = 'ms-3 align-self-center text-info';
+
+        const formData = new FormData(configForm);
+        const configData = {};
+
+        formData.forEach((value, key) => {
+            const inputElement = document.getElementById(`config-${key}`);
+            const originalValue = {{ config|tojson }}[key]; // Get original value to infer type
+
+            // Handle checkboxes (booleans)
+            if (inputElement.type === 'checkbox') {
+                configData[key] = inputElement.checked;
+            }
+            // Handle numbers
+            else if (typeof originalValue === 'number') {
+                 // Try converting to number, fallback to string if fails
+                 const numValue = parseFloat(value);
+                 configData[key] = isNaN(numValue) ? value : numValue;
+            }
+             // Handle lists (simple comma-separated for now)
+            else if (Array.isArray(originalValue)) {
+                configData[key] = value.split(',').map(item => item.trim()).filter(item => item); // Split, trim, remove empty
+            }
+            // Handle strings and others
+            else {
+                configData[key] = value;
+            }
+        });
+
+        console.log("Saving config:", configData);
+
+        fetch('/api/config', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(configData),
+        })
+        .then(response => response.json().then(data => ({ status: response.status, body: data })))
+        .then(({ status, body }) => {
+            if (status === 200) {
+                saveStatus.textContent = 'Saved successfully!';
+                saveStatus.className = 'ms-3 align-self-center text-success';
+                 // Optionally reload or show a persistent success message
+                 // alert('Configuration saved! Restart the assistant for changes to take effect.');
+            } else {
+                saveStatus.textContent = `Error: ${body.error || 'Failed to save.'}`;
+                saveStatus.className = 'ms-3 align-self-center text-danger';
+            }
+        })
+        .catch(error => {
+            console.error('Error saving config:', error);
+            saveStatus.textContent = 'Error saving configuration.';
+            saveStatus.className = 'ms-3 align-self-center text-danger';
+        });
+    });
+</script>
+{% endblock %}
