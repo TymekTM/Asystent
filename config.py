@@ -74,7 +74,13 @@ PLUGIN_MONITOR_INTERVAL = _config.get("PLUGIN_MONITOR_INTERVAL")
 
 # Load API keys into environment variables if they exist in the config and are not None
 # This maintains compatibility with how ai_module checks for keys
-api_keys = _config.get("API_KEYS", {})
-for key, value in api_keys.items():
+API_KEYS = _config.get("API_KEYS", {})
+if isinstance(API_KEYS, str):
+    try:
+        import ast
+        API_KEYS = ast.literal_eval(API_KEYS)
+    except Exception:
+        API_KEYS = {}
+for key, value in API_KEYS.items():
     if value and value != f"YOUR_{key}_HERE": # Don't set if it's None or the placeholder
         os.environ[key] = value

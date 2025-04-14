@@ -11,10 +11,10 @@
                     Assistant Status
                 </div>
                 <div class="card-body">
-                    {# TODO: Add dynamic status indicators (e.g., Listening, Processing, Idle) #}
-                    <p>Status: <span class="badge bg-success">Running</span> (Placeholder)</p>
-                    <p>Wake Word: <span class="badge bg-info">{{ config.get('WAKE_WORD', 'N/A') }}</span> (Placeholder - needs dynamic update)</p>
-                    {# Add more status info as needed #}
+                    {# TODO: DASHBOARD: Implement real-time status updates via WebSockets or polling #}
+                    <p>Status: <span id="assistant-status-badge" class="badge bg-secondary">{{ status.get('status', 'Unknown') }}</span></p>
+                    <p>Wake Word: <span class="badge bg-info">{{ config.get('WAKE_WORD', 'N/A') }}</span></p>
+                    {# Add more status info as needed, fetched dynamically #}
                 </div>
             </div>
         </div>
@@ -28,7 +28,7 @@
                         <i class="fas fa-microphone"></i> Activate Manually
                     </button>
                     <span id="manual-activate-status" class="ms-2"></span>
-                    {# Add other quick actions like restart, stop? Be careful with these #}
+                    {# TODO: Consider adding other actions like restart/stop, but ensure proper IPC and security #}
                 </div>
             </div>
         </div>
@@ -38,10 +38,12 @@
         <div class="col-12">
              <div class="card">
                 <div class="card-header">
-                    Recent Activity (Placeholder)
+                    Recent Activity
                 </div>
                 <div class="card-body">
-                    <p>Display recent log entries or key events here.</p>
+                    <ul id="recent-activity-list" class="list-group">
+                        <!-- Recent log entries will be inserted here -->
+                    </ul>
                 </div>
             </div>
         </div>
@@ -58,7 +60,8 @@
 
     if (activateBtn) {
         activateBtn.addEventListener('click', () => {
-            activateStatus.textContent = 'Activating...';
+            activateStatus.textContent = 'Sending activation...';
+            activateStatus.className = 'ms-2 text-info';
             activateBtn.disabled = true;
             fetch('/api/activate', {
                 method: 'POST',
@@ -66,24 +69,79 @@
                     'Content-Type': 'application/json'
                 }
             })
-            .then(response => response.json())
-            .then(data => {
-                activateStatus.textContent = data.message || data.error || 'Request sent.';
-                console.log('Manual activation response:', data);
+            .then(response => response.json().then(data => ({ status: response.status, body: data })))
+            .then(({ status, body }) => {
+                if (status === 202 || status === 200) { // 202 Accepted or 200 OK
+                    activateStatus.textContent = body.message || 'Activation request sent.';
+                    activateStatus.className = 'ms-2 text-success';
+                } else {
+                    activateStatus.textContent = `Error: ${body.error || 'Failed to send request.'}`;
+                    activateStatus.className = 'ms-2 text-danger';
+                }
+                console.log('Manual activation response:', status, body);
                  // Re-enable button after a short delay
                 setTimeout(() => {
                     activateBtn.disabled = false;
                     activateStatus.textContent = '';
-                }, 2000);
+                }, 3000);
             })
             .catch(error => {
                 activateStatus.textContent = 'Error sending request.';
+                activateStatus.className = 'ms-2 text-danger';
                 console.error('Error activating manually:', error);
                 activateBtn.disabled = false;
+                 setTimeout(() => {
+                    activateStatus.textContent = '';
+                }, 3000);
             });
         });
     }
 
-    // TODO: Add WebSocket or polling for real-time status updates
+    // DASHBOARD: Polling for assistant status
+    function fetchAssistantStatus() {
+        fetch('/api/status')
+            .then(response => response.json())
+            .then(data => {
+                const badge = document.getElementById('assistant-status-badge');
+                if (badge) {
+                    badge.textContent = data.status || 'Unknown';
+                    badge.className = 'badge ' + (data.status === 'Online' ? 'bg-success' : 'bg-secondary');
+                }
+                // Optionally update other status fields
+            })
+            .catch(err => {
+                const badge = document.getElementById('assistant-status-badge');
+                if (badge) {
+                    badge.textContent = 'Offline';
+                    badge.className = 'badge bg-danger';
+                }
+            });
+    }
+    setInterval(fetchAssistantStatus, 5000); // Poll every 5 seconds
+    fetchAssistantStatus(); // Initial fetch
+
+    // DASHBOARD: Fetch and display recent activity
+    function fetchRecentActivity() {
+        fetch('/api/history?limit=5')
+            .then(response => response.json())
+            .then(data => {
+                const list = document.getElementById('recent-activity-list');
+                if (list) {
+                    list.innerHTML = '';
+                    (data || []).slice(-5).forEach(entry => {
+                        const li = document.createElement('li');
+                        li.className = 'list-group-item';
+                        li.textContent = `[${entry.role}] ${entry.content}`;
+                        list.appendChild(li);
+                    });
+                }
+            });
+    }
+    setInterval(fetchRecentActivity, 5000);
+    fetchRecentActivity();
+
+    // TODO: DASHBOARD: Implement WebSocket or polling logic here for real-time status updates
+    // e.g., connect to a WebSocket endpoint provided by the Flask app
+    // and update #assistant-status-badge and other elements based on received messages.
 </script>
 {% endblock %}

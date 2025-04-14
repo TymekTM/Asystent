@@ -25,13 +25,15 @@
                         <li class="nav-item">
                             <a class="nav-link {% if request.endpoint == 'history_page' %}active{% endif %}" href="{{ url_for('history_page') }}">History</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'logs_page' %}active{% endif %}" href="{{ url_for('logs_page') }}">Logi</a>
+                        </li>
                         {% if session.role == 'dev' %}
                         <li class="nav-item">
                             <a class="nav-link {% if request.endpoint == 'config_page' %}active{% endif %}" href="{{ url_for('config_page') }}">Configuration</a>
                         </li>
                         <li class="nav-item">
-                            {# Placeholder for future LTM page #}
-                            <a class="nav-link" href="#">Long-Term Memory</a>
+                            <a class="nav-link {% if request.endpoint == 'ltm_page' %}active{% endif %}" href="{{ url_for('ltm_page') }}">Long-Term Memory</a>
                         </li>
                         {% endif %}
                     {% endif %}

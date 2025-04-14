@@ -1,290 +1,80 @@
-2025-04-14 16:24:58,281 - INFO - Assistant terminated by user.
-2025-04-14 16:26:19,230 - INFO - Loaded plugin: api -> Obs³uguje zapytania API na podstawie konfiguracji w JSON.
-2025-04-14 16:26:19,231 - INFO - Loaded plugin: deep -> Wykonuje g³êbokie rozumowanie
-2025-04-14 16:26:19,232 - ERROR - B³¹d przy ³adowaniu pluginu search_module: No module named 'duckduckgo_search'
-2025-04-14 16:26:19,254 - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
-2025-04-14 16:26:19,255 - INFO - Bot is starting...
-2025-04-14 16:26:19,267 - INFO - Audio stream opened. Waiting for activation...
-2025-04-14 16:29:38,039 - INFO - Loaded plugin: api -> Obs³uguje zapytania API na podstawie konfiguracji w JSON.
-2025-04-14 16:29:38,042 - INFO - Loaded plugin: deep -> Wykonuje g³êbokie rozumowanie
-2025-04-14 16:29:38,047 - ERROR - B³¹d przy ³adowaniu pluginu search_module: No module named 'duckduckgo_search'
-2025-04-14 16:29:38,072 - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
-2025-04-14 16:29:38,073 - INFO - Bot is starting...
-2025-04-14 16:29:38,087 - INFO - Audio stream opened. Waiting for activation...
-2025-04-14 16:32:57,086 - INFO - Assistant terminated by user.
-2025-04-14 16:33:05,969 - INFO - Loaded plugin: api -> Obs³uguje zapytania API na podstawie konfiguracji w JSON.
-2025-04-14 16:33:05,969 - INFO - Loaded plugin: deep -> Wykonuje g³êbokie rozumowanie
-2025-04-14 16:33:05,970 - ERROR - B³¹d przy ³adowaniu pluginu search_module: No module named 'duckduckgo_search'
-2025-04-14 16:33:05,992 - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
-2025-04-14 16:33:05,993 - INFO - Bot is starting...
-2025-04-14 16:33:06,006 - INFO - Audio stream opened. Waiting for activation...
-2025-04-14 16:33:12,532 - INFO - Wake word detected (full).
-2025-04-14 16:33:12,532 - INFO - Odtwarzam dŸwiêk 'keyword' z pliku: resources/sounds/beep.mp3
-2025-04-14 16:33:12,539 - INFO - Listening for command using Vosk (dynamic recording)...
-2025-04-14 16:33:12,539 - INFO - Dynamic command recording...
-2025-04-14 16:33:15,459 - INFO - Silence detected, ending recording.
-2025-04-14 16:33:16,518 - INFO - Vosk recognized: jaka jest pogoda w sosnowcu
-2025-04-14 16:33:16,525 - INFO - Command: jaka jest pogoda w sosnowcu
-2025-04-14 16:33:30,051 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
-2025-04-14 16:33:30,051 - INFO - Refined query: jaka jest pogoda w Sosnowcu
-2025-04-14 16:33:39,193 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
-2025-04-14 16:33:39,194 - INFO - AI response: { "command": "search", "params": "pogoda Sosnowiec 2025-03-20", "text": "Aktualna pogoda w Sosnowcu to..." }
-2025-04-14 16:33:39,194 - WARNING - Nie znaleziono handlera dla komendy: search
-2025-04-14 16:33:39,194 - INFO - TTS: Ok, processing command: pogoda Sosnowiec 2025-03-20
-2025-04-14 16:35:28,194 - INFO - Loaded plugin: api -> Obs³uguje zapytania API na podstawie konfiguracji w JSON.
-2025-04-14 16:35:28,195 - INFO - Loaded plugin: deep -> Wykonuje g³êbokie rozumowanie
-2025-04-14 16:35:28,792 - ERROR - B³¹d przy ³adowaniu pluginu search_module: No module named 'bs4'
-2025-04-14 16:35:28,818 - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
-2025-04-14 16:35:28,819 - INFO - Bot is starting...
-2025-04-14 16:35:28,830 - INFO - Audio stream opened. Waiting for activation...
-2025-04-14 16:36:30,329 - INFO - Wake word detected (partial).
-2025-04-14 16:36:30,330 - INFO - Odtwarzam dŸwiêk 'keyword' z pliku: resources/sounds/beep.mp3
-2025-04-14 16:36:30,336 - INFO - Listening for command using Vosk (dynamic recording)...
-2025-04-14 16:36:30,336 - INFO - Dynamic command recording...
-2025-04-14 16:36:32,759 - INFO - Silence detected, ending recording.
-2025-04-14 16:36:33,744 - INFO - Vosk recognized: jaka jest pogoda w sosnowcu
-2025-04-14 16:36:33,751 - INFO - Command: jaka jest pogoda w sosnowcu
-2025-04-14 16:36:40,705 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
-2025-04-14 16:36:40,706 - INFO - Refined query: jaka jest pogoda w Sosnowcu
-2025-04-14 16:36:49,145 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
-2025-04-14 16:36:49,146 - INFO - AI response: { "command": "search", "params": "pogoda Sosnowiec 2025-03-20", "text": "Aktualna pogoda w Sosnowcu to..." }
-2025-04-14 16:36:49,146 - WARNING - Nie znaleziono handlera dla komendy: search
-2025-04-14 16:36:49,146 - INFO - TTS: Ok, processing command: pogoda Sosnowiec 2025-03-20
-2025-04-14 16:37:09,827 - INFO - Wake word detected (partial).
-2025-04-14 16:37:09,827 - INFO - Odtwarzam dŸwiêk 'keyword' z pliku: resources/sounds/beep.mp3
-2025-04-14 16:37:09,832 - INFO - Listening for command using Vosk (dynamic recording)...
-2025-04-14 16:37:09,832 - INFO - Dynamic command recording...
-2025-04-14 16:37:12,257 - INFO - Silence detected, ending recording.
-2025-04-14 16:37:12,904 - INFO - Vosk recognized: powiedz mi coœ o sobie
-2025-04-14 16:37:12,909 - INFO - Command: powiedz mi coœ o sobie
-2025-04-14 16:37:19,764 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
-2025-04-14 16:37:19,764 - INFO - Refined query: Powiedz mi coœ o sobie
-2025-04-14 16:37:34,327 - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 200 OK"
-2025-04-14 16:37:34,328 - INFO - AI response: {
-  "command": "search",
-  "params": "pogoda Sosnowiec 2025-04-14",
-  "text": "Aktualna pogoda w Sosnowcu to 15 stopni Celsjusza i s³onecznie."
-}
-
-No i co, jak Ci siê podoba Sosnowiec? A co do mnie... Jestem Jarvis, sztuczna inteligencja uruchomiona na Twoim komputerze. Wci¹¿ siê uczê i staram siê byæ pomocnym towarzyszem. Czego jeszcze chcia³byœ siê dowiedzieæ?
-2025-04-14 16:37:34,328 - WARNING - Nie znaleziono handlera dla komendy: search
-2025-04-14 16:37:34,328 - INFO - TTS: Ok, processing command: pogoda Sosnowiec 2025-04-14
-2025-04-14 16:47:07,428 - INFO - Assistant terminated by user.
-2025-04-14 16:48:44,268 - INFO - Loaded plugin: api -> Obs³uguje zapytania API na podstawie konfiguracji w JSON.
-2025-04-14 16:48:44,270 - INFO - Loaded plugin: deep -> Wykonuje g³êbokie rozumowanie
-2025-04-14 16:48:44,424 - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
-2025-04-14 16:48:44,449 - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
-2025-04-14 16:48:44,450 - INFO - Bot is starting...
-2025-04-14 16:48:44,464 - INFO - Audio stream opened. Waiting for activation...
-2025-04-14 16:48:57,966 - INFO - Wake word detected (partial).
-2025-04-14 16:48:57,967 - INFO - Odtwarzam dŸwiêk 'keyword' z pliku: resources/sounds/beep.mp3
-2025-04-14 16:48:57,990 - INFO - Listening for command using Vosk (dynamic recording)...
-2025-04-14 16:48:57,990 - INFO - Dynamic command recording...
-2025-04-14 16:49:00,474 - INFO - Silence detected, ending recording.
-2025-04-14 16:49:01,399 - INFO - Vosk recognized: jaka jest pogoda w sosnowcu
-2025-04-14 16:49:01,407 - INFO - Command: jaka jest pogoda w sosnowcu
-2025-04-14 16:49:03,451 - INFO - Attempting to use configured provider: lmstudio
-2025-04-14 16:49:06,055 - INFO - Refined query: jak¹ jest pogoda w Sosnowcu
-2025-04-14 16:49:08,123 - INFO - Attempting to use configured provider: lmstudio
-2025-04-14 16:49:11,622 - INFO - AI response: ```json
-{
-  "text": "Chwila, sprawdzê pogodê w Sosnowcu.",
-  "command": "search",
-  "params": "pogoda Sosnowiec 2025-04-14"
-}
-```
-2025-04-14 16:49:11,624 - INFO - TTS: Ok, processing command: pogoda Sosnowiec 2025-04-14
-2025-04-14 16:49:11,626 - INFO - Searching for query: pogoda Sosnowiec 2025-04-14
-2025-04-14 16:49:11,626 - INFO - Odtwarzam dŸwiêk 'search' z pliku: resources/sounds/search_beep.mp3
-2025-04-14 16:49:12,502 - INFO - response: https://html.duckduckgo.com/html 200
-2025-04-14 16:49:14,702 - ERROR - Wyj¹tek podczas pobierania https://pogoda.eska.pl/slaskie/zmienna-aura-w-sosnowcu-sprawdz-kiedy-zlapac-slonce-a-kiedy-schowac-sie-przed-deszczem-14-04-2025-aa-g992-ow3C-B2Js.html (próba 1): 400, message='Can not decode content-encoding: brotli (br). Please install `Brotli`', url='https://pogoda.eska.pl/slaskie/zmienna-aura-w-sosnowcu-sprawdz-kiedy-zlapac-slonce-a-kiedy-schowac-sie-przed-deszczem-14-04-2025-aa-g992-ow3C-B2Js.html'
-2025-04-14 16:49:14,827 - ERROR - Wyj¹tek podczas pobierania https://meteoatlas.pl/artykuly/jaka-bedzie-pogoda-w-sosnowcu-14-kwietnia-2025-r-zobacz-najnowsze-informacje-o-opadach-i-temperaturze (próba 1): 400, message='Can not decode content-encoding: brotli (br). Please install `Brotli`', url='https://meteoatlas.pl/artykuly/jaka-bedzie-pogoda-w-sosnowcu-14-kwietnia-2025-r-zobacz-najnowsze-informacje-o-opadach-i-temperaturze'
-2025-04-14 16:49:16,785 - ERROR - Wyj¹tek podczas pobierania https://pogoda.eska.pl/slaskie/zmienna-aura-w-sosnowcu-sprawdz-kiedy-zlapac-slonce-a-kiedy-schowac-sie-przed-deszczem-14-04-2025-aa-g992-ow3C-B2Js.html (próba 2): 400, message='Can not decode content-encoding: brotli (br). Please install `Brotli`', url='https://pogoda.eska.pl/slaskie/zmienna-aura-w-sosnowcu-sprawdz-kiedy-zlapac-slonce-a-kiedy-schowac-sie-przed-deszczem-14-04-2025-aa-g992-ow3C-B2Js.html'
-2025-04-14 16:49:16,930 - ERROR - Wyj¹tek podczas pobierania https://meteoatlas.pl/artykuly/jaka-bedzie-pogoda-w-sosnowcu-14-kwietnia-2025-r-zobacz-najnowsze-informacje-o-opadach-i-temperaturze (próba 2): 400, message='Can not decode content-encoding: brotli (br). Please install `Brotli`', url='https://meteoatlas.pl/artykuly/jaka-bedzie-pogoda-w-sosnowcu-14-kwietnia-2025-r-zobacz-najnowsze-informacje-o-opadach-i-temperaturze'
-2025-04-14 16:49:21,045 - ERROR - Wyj¹tek podczas pobierania https://meteoatlas.pl/artykuly/jaka-bedzie-pogoda-w-sosnowcu-14-kwietnia-2025-r-zobacz-najnowsze-informacje-o-opadach-i-temperaturze (próba 3): 400, message='Can not decode content-encoding: brotli (br). Please install `Brotli`', url='https://meteoatlas.pl/artykuly/jaka-bedzie-pogoda-w-sosnowcu-14-kwietnia-2025-r-zobacz-najnowsze-informacje-o-opadach-i-temperaturze'
-2025-04-14 16:49:21,136 - ERROR - Wyj¹tek podczas pobierania https://pogoda.eska.pl/slaskie/zmienna-aura-w-sosnowcu-sprawdz-kiedy-zlapac-slonce-a-kiedy-schowac-sie-przed-deszczem-14-04-2025-aa-g992-ow3C-B2Js.html (próba 3): 400, message='Can not decode content-encoding: brotli (br). Please install `Brotli`', url='https://pogoda.eska.pl/slaskie/zmienna-aura-w-sosnowcu-sprawdz-kiedy-zlapac-slonce-a-kiedy-schowac-sie-przed-deszczem-14-04-2025-aa-g992-ow3C-B2Js.html'
-2025-04-14 16:49:23,608 - INFO - Attempting to use configured provider: lmstudio
-2025-04-14 16:49:26,825 - INFO - TTS: The image shows a webpage displaying weather information for Sosnowiec on April 14, 2025. It predicts a rainy weekend with temperatures around 13°C and 18°C respectively, alongside links to webcam views and travel resources.
-2025-04-14 16:52:34,557 - INFO - Assistant terminated by user.
-2025-04-14 16:59:38,092 - INFO - Loaded plugin: api -> Obs³uguje zapytania API na podstawie konfiguracji w JSON.
-2025-04-14 16:59:38,095 - INFO - Loaded plugin: deep -> Wykonuje g³êbokie rozumowanie
-2025-04-14 16:59:38,213 - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
-2025-04-14 16:59:38,238 - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
-2025-04-14 16:59:38,239 - INFO - Bot is starting...
-2025-04-14 16:59:38,252 - INFO - Audio stream opened. Waiting for activation...
-2025-04-14 17:00:24,751 - INFO - Wake word detected (partial).
-2025-04-14 17:00:24,752 - INFO - Odtwarzam dŸwiêk 'keyword' z pliku: resources/sounds/beep.mp3
-2025-04-14 17:00:24,757 - INFO - Listening for command using Vosk (dynamic recording)...
-2025-04-14 17:00:24,757 - INFO - Dynamic command recording...
-2025-04-14 17:00:30,491 - INFO - Silence detected, ending recording.
-2025-04-14 17:00:31,593 - INFO - Vosk recognized: ile potrzeba osób ¿eby œcigaj¹c do wielkiego kanionu go wype³niæ
-2025-04-14 17:00:31,604 - INFO - Command: ile potrzeba osób ¿eby œcigaj¹c do wielkiego kanionu go wype³niæ
-2025-04-14 17:00:33,635 - INFO - Attempting to use configured provider: lmstudio
-2025-04-14 17:00:36,198 - INFO - Refined query: ile potrzebuje osób, ¿eby go wylewnie
-2025-04-14 17:00:38,254 - INFO - Attempting to use configured provider: lmstudio
-2025-04-14 17:00:42,193 - INFO - AI response: { "command": "deep", "params": "", "text": "That's a really interesting question! When you say 'it,' I assume you’re referring to something that needs to be ‘cleaned up’ or dealt with – perhaps a mess, a problem, or even an idea. The number of people needed really depends on what exactly we’re talking about. A small spill might just need one person, but a massive oil cleanup would require hundreds, if not thousands."}
-2025-04-14 17:00:42,193 - INFO - TTS: That's a really interesting question! When you say 'it,' I assume you’re referring to something that needs to be ‘cleaned up’ or dealt with – perhaps a mess, a problem, or even an idea. The number of people needed really depends on what exactly we’re talking about. A small spill might just need one person, but a massive oil cleanup would require hundreds, if not thousands.
-2025-04-14 17:00:42,698 - INFO - TTS: Podaj treœæ do g³êbokiego rozumowania po komendzie !deep
-2025-04-14 17:01:01,250 - INFO - Wake word detected (partial).
-2025-04-14 17:01:01,251 - INFO - Odtwarzam dŸwiêk 'keyword' z pliku: resources/sounds/beep.mp3
-2025-04-14 17:01:01,255 - INFO - Listening for command using Vosk (dynamic recording)...
-2025-04-14 17:01:01,255 - INFO - Dynamic command recording...
-2025-04-14 17:01:03,790 - INFO - Silence detected, ending recording.
-2025-04-14 17:01:04,601 - INFO - Vosk recognized: jaka jest pogoda w sosnowcu
-2025-04-14 17:01:04,608 - INFO - Command: jaka jest pogoda w sosnowcu
-2025-04-14 17:01:06,679 - INFO - Attempting to use configured provider: lmstudio
-2025-04-14 17:01:09,159 - INFO - Refined query: jaka jest pogoda w Sosnowcu
-2025-04-14 17:01:11,199 - INFO - Attempting to use configured provider: lmstudio
-2025-04-14 17:01:14,942 - INFO - AI response: { "command": "search", "params": "pogoda Sosnowiec 2025-04-14", "text": "Dzisiaj w Sosnowcu jest s³onecznie z mo¿liwymi przejaœciami, z temperatur¹ maksymaln¹ 18 stopni Celsjusza." }
-2025-04-14 17:01:14,943 - INFO - TTS: Dzisiaj w Sosnowcu jest s³onecznie z mo¿liwymi przejaœciami, z temperatur¹ maksymaln¹ 18 stopni Celsjusza.
-2025-04-14 17:01:15,578 - ERROR - Error executing command 'search': There is no current event loop in thread 'asyncio_1'.
-Traceback (most recent call last):
-  File "F:\Asystent\assistant.py", line 153, in process_query
-    tool_result = await asyncio.to_thread(handler, **args_to_pass)
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\asyncio\threads.py", line 25, in to_thread
-    return await loop.run_in_executor(None, func_call)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
-    result = self.fn(*self.args, **self.kwargs)
-  File "F:\Asystent\modules\search_module.py", line 165, in search_handler
-    loop = asyncio.get_event_loop()
-  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\asyncio\events.py", line 716, in get_event_loop
-    raise RuntimeError('There is no current event loop in thread %r.'
-                       % threading.current_thread().name)
-RuntimeError: There is no current event loop in thread 'asyncio_1'.
-2025-04-14 17:01:15,597 - INFO - TTS: Przepraszam, wyst¹pi³ b³¹d podczas wykonywania komendy search.
-2025-04-14 17:03:36,423 - INFO - Loaded plugin: api -> Obs³uguje zapytania API na podstawie konfiguracji w JSON.
-2025-04-14 17:03:36,424 - INFO - Loaded plugin: deep -> Wykonuje g³êbokie rozumowanie
-2025-04-14 17:03:36,546 - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
-2025-04-14 17:03:36,569 - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
-2025-04-14 17:03:36,570 - INFO - Bot is starting...
-2025-04-14 17:03:36,582 - INFO - Audio stream opened. Waiting for activation...
-2025-04-14 17:04:07,082 - INFO - Wake word detected (partial).
-2025-04-14 17:04:07,082 - INFO - Odtwarzam dŸwiêk 'keyword' z pliku: resources/sounds/beep.mp3
-2025-04-14 17:04:07,089 - INFO - Listening for command using Vosk (dynamic recording)...
-2025-04-14 17:04:07,089 - INFO - Dynamic command recording...
-2025-04-14 17:04:09,621 - INFO - Silence detected, ending recording.
-2025-04-14 17:04:10,574 - INFO - Vosk recognized: jaka jest pogoda w sosnowcu
-2025-04-14 17:04:10,583 - INFO - Command: jaka jest pogoda w sosnowcu
-2025-04-14 17:04:12,627 - INFO - Attempting to use configured provider: lmstudio
-2025-04-14 17:04:15,146 - INFO - Refined query: jaka jest pogoda w Sosnowcu
-2025-04-14 17:04:17,200 - INFO - Attempting to use configured provider: lmstudio
-2025-04-14 17:04:20,782 - INFO - AI response: ```json
-{
-  "text": "Chwila, sprawdzê pogodê w Sosnowcu dla Ciebie.",
-  "command": "search",
-  "params": "pogoda Sosnowiec 2025-04-14"
-}
-```
-2025-04-14 17:04:20,782 - INFO - TTS: Chwila, sprawdzê pogodê w Sosnowcu dla Ciebie.
-2025-04-14 17:04:21,532 - INFO - Searching for query: pogoda Sosnowiec 2025-04-14
-2025-04-14 17:04:21,533 - INFO - Odtwarzam dŸwiêk 'search' z pliku: resources/sounds/search_beep.mp3
-2025-04-14 17:04:22,278 - INFO - response: https://lite.duckduckgo.com/lite/ 200
-2025-04-14 17:04:32,604 - INFO - Attempting to use configured provider: lmstudio
-2025-04-14 17:04:37,338 - INFO - TTS: Dzisiaj, 14 kwietnia 2025 roku w Sosnowcu bêdzie ciep³o – maksymalna temperatura wyniesie 23°C oko³o godziny 14:00. Minimalna to 11°C o godzinie 6:00. Prognoza przewiduje s³aby wiatr z po³udnia i bez opadów. Temperatura wzroœnie do 21 stopni Celsjusza w po³udnie, a wieczorem mog¹ byæ lekkie opady deszczu.
-2025-04-14 17:05:19,077 - INFO - Wake word detected (partial).
-2025-04-14 17:05:19,078 - INFO - Odtwarzam dŸwiêk 'keyword' z pliku: resources/sounds/beep.mp3
-2025-04-14 17:05:19,082 - INFO - Listening for command using Vosk (dynamic recording)...
-2025-04-14 17:05:19,082 - INFO - Dynamic command recording...
-2025-04-14 17:05:21,507 - INFO - Silence detected, ending recording.
-2025-04-14 17:05:22,250 - INFO - Vosk recognized: co widaæ na moje pytanie
-2025-04-14 17:05:22,256 - INFO - Command: co widaæ na moje pytanie
-2025-04-14 17:05:24,304 - INFO - Attempting to use configured provider: lmstudio
-2025-04-14 17:05:26,847 - INFO - Refined query: co widzisz na moim pytaniu
-2025-04-14 17:05:28,913 - INFO - Attempting to use configured provider: lmstudio
-2025-04-14 17:05:32,169 - INFO - AI response: { "command": "screenshot", "params": "", "text": "Widzê Twoje pytanie: 'jaka jest pogoda w Sosnowcu'"}
-2025-04-14 17:05:32,170 - INFO - TTS: Widzê Twoje pytanie: 'jaka jest pogoda w Sosnowcu'
-2025-04-14 17:05:32,730 - INFO - Odtwarzam dŸwiêk 'screenshot' z pliku: resources/sounds/screenshot_beep.mp3
-2025-04-14 17:05:35,109 - INFO - Attempting to use configured provider: lmstudio
-2025-04-14 17:05:38,461 - INFO - TTS: Na zrzutcie ekranu widzê pogodê w Sosnowcu. Pokazuje siê prognoza pogody na 14 kwietnia 2025 roku, z informacj¹ o temperaturze, czasie i prognoz¹ opadów.
-2025-04-14 17:20:17,928 - INFO - Loaded plugin: api -> Obs³uguje zapytania API na podstawie konfiguracji w JSON.
-2025-04-14 17:20:17,930 - INFO - Loaded plugin: deep -> Wykonuje g³êbokie rozumowanie
-2025-04-14 17:20:18,036 - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
-2025-04-14 17:20:18,058 - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
-2025-04-14 17:20:18,059 - INFO - Bot is starting...
-2025-04-14 17:20:18,072 - INFO - Audio stream opened. Waiting for activation...
-2025-04-14 17:20:44,574 - INFO - Wake word detected (partial).
-2025-04-14 17:20:44,575 - INFO - Odtwarzam dŸwiêk 'keyword' z pliku: resources/sounds/beep.mp3
-2025-04-14 17:20:44,582 - INFO - Listening for command using Vosk (dynamic recording)...
-2025-04-14 17:20:44,582 - INFO - Dynamic command recording...
-2025-04-14 17:20:47,824 - INFO - Silence detected, ending recording.
-2025-04-14 17:20:48,519 - INFO - Vosk recognized: ok tutaj oraz tutaj
-2025-04-14 17:20:48,525 - INFO - Command: ok tutaj oraz tutaj
-2025-04-14 17:20:50,591 - INFO - Attempting to use configured provider: lmstudio
-2025-04-14 17:20:53,131 - INFO - Refined query: ok tutaj oraz tutaj
-2025-04-14 17:20:55,166 - INFO - Attempting to use configured provider: lmstudio
-2025-04-14 17:20:58,439 - INFO - AI response: ```json
-{
-  "text": "Hey there! It's good to chat with you today. How’s your day going so far?",
-  "command": "",
-  "params": ""
-}
-```
-2025-04-14 17:20:58,440 - INFO - TTS: Hey there! It's good to chat with you today. How’s your day going so far?
-2025-04-14 17:24:23,198 - INFO - Loaded plugin: api -> Obs³uguje zapytania API na podstawie konfiguracji w JSON.
-2025-04-14 17:24:23,199 - INFO - Loaded plugin: deep -> Wykonuje g³êbokie rozumowanie
-2025-04-14 17:24:23,303 - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
-2025-04-14 17:24:23,324 - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
-2025-04-14 17:24:23,325 - INFO - Bot is starting...
-2025-04-14 17:24:23,338 - INFO - Audio stream opened. Waiting for activation...
-2025-04-14 17:25:16,857 - INFO - Wake word detected (full).
-2025-04-14 17:25:16,857 - INFO - Odtwarzam dŸwiêk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: True)
-2025-04-14 17:25:16,864 - INFO - Listening for command using Vosk (dynamic recording)...
-2025-04-14 17:25:16,864 - INFO - Dynamic command recording...
-2025-04-14 17:25:22,391 - INFO - Silence detected, ending recording.
-2025-04-14 17:25:23,405 - INFO - Vosk recognized: i kiedy jest najbli¿szy seans filmu mick nawet w kinach
-2025-04-14 17:25:23,413 - INFO - Command: i kiedy jest najbli¿szy seans filmu mick nawet w kinach
-2025-04-14 17:25:25,459 - INFO - Attempting to use configured provider: lmstudio
-2025-04-14 17:25:27,954 - INFO - Refined query: i kiedy jest najbli¿szy seans filmu Mick w kinach
-2025-04-14 17:25:29,994 - INFO - Attempting to use configured provider: lmstudio
-2025-04-14 17:25:33,351 - INFO - AI response: ```json
-{
-  "text": "Heej! Z ciekawoœci, o jakim filmie Mick chodzi? I gdzie mieszkasz, ¿eby sprawdziæ, które kina w okolicy maj¹ ten seans?",
-  "command": "",
-  "params": ""
-}
-```
-2025-04-14 17:25:33,352 - INFO - TTS: Heej! Z ciekawoœci, o jakim filmie Mick chodzi? I gdzie mieszkasz, ¿eby sprawdziæ, które kina w okolicy maj¹ ten seans?
-2025-04-14 17:27:34,430 - INFO - Loaded plugin: api -> Obs³uguje zapytania API na podstawie konfiguracji w JSON.
-2025-04-14 17:27:34,431 - INFO - Loaded plugin: deep -> Wykonuje g³êbokie rozumowanie
-2025-04-14 17:27:34,536 - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
-2025-04-14 17:27:34,557 - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
-2025-04-14 17:27:34,558 - INFO - Bot is starting...
-2025-04-14 17:27:34,572 - INFO - Audio stream opened. Waiting for activation...
-2025-04-14 17:27:58,574 - INFO - Wake word detected (partial).
-2025-04-14 17:27:58,574 - INFO - Odtwarzam dŸwiêk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: True)
-2025-04-14 17:27:58,581 - INFO - Listening for command using Vosk (dynamic recording)...
-2025-04-14 17:27:58,581 - INFO - Dynamic command recording...
-2025-04-14 17:28:03,294 - INFO - Silence detected, ending recording.
-2025-04-14 17:28:04,233 - INFO - Vosk recognized: kiedy w kinach w sosnowcu w najbli¿szym czasie leci firma it craft
-2025-04-14 17:28:04,240 - INFO - Command: kiedy w kinach w sosnowcu w najbli¿szym czasie leci firma it craft
-2025-04-14 17:28:06,325 - INFO - Attempting to use configured provider: lmstudio
-2025-04-14 17:28:09,011 - INFO - Refined query: kiedy w kinach w sosnowcu w najbli¿szym czasie leci firma It Craft
-2025-04-14 17:28:11,058 - INFO - Attempting to use configured provider: lmstudio
-2025-04-14 17:28:14,856 - INFO - AI response: { "command": "search", "params": "filmy It Craft Sosnowiec", "text": "Okay, let's see what’s playing at the cinemas in Sosnowiec showing films from It Craft.  I just did a quick search and it looks like 'It Chapter Two' is currently screening at Kinoklub Sosnowiec!"}
-2025-04-14 17:28:14,857 - INFO - TTS: Okay, let's see what’s playing at the cinemas in Sosnowiec showing films from It Craft.  I just did a quick search and it looks like 'It Chapter Two' is currently screening at Kinoklub Sosnowiec!
-2025-04-14 17:28:15,481 - INFO - Searching for query: filmy It Craft Sosnowiec
-2025-04-14 17:28:15,482 - INFO - Odtwarzam dŸwiêk 'search' z pliku: resources/sounds/search_beep.mp3 (Loop: True)
-2025-04-14 17:28:16,193 - INFO - response: https://lite.duckduckgo.com/lite/ 200
-2025-04-14 17:28:20,938 - INFO - Attempting to use configured provider: lmstudio
-2025-04-14 17:28:25,264 - INFO - TTS: "Filmy w 'MyCinema City' obejmuj¹ m.in. 'Minecraft: Film', a tak¿e seanse VIP z przek¹skami i specjalnymi ofertami."
-2025-04-14 17:29:28,405 - INFO - Loaded plugin: api -> Obs³uguje zapytania API na podstawie konfiguracji w JSON.
-2025-04-14 17:29:28,407 - INFO - Loaded plugin: deep -> Wykonuje g³êbokie rozumowanie
-2025-04-14 17:29:28,518 - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
-2025-04-14 17:29:28,540 - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
-2025-04-14 17:29:28,541 - INFO - Bot is starting...
-2025-04-14 17:29:28,555 - INFO - Audio stream opened. Waiting for activation...
-2025-04-14 17:29:42,059 - INFO - Wake word detected (partial).
-2025-04-14 17:29:42,060 - INFO - Odtwarzam dŸwiêk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: True)
-2025-04-14 17:29:42,066 - INFO - Listening for command using Vosk (dynamic recording)...
-2025-04-14 17:29:42,066 - INFO - Dynamic command recording...
-2025-04-14 17:29:45,299 - INFO - Silence detected, ending recording.
-2025-04-14 17:29:46,269 - INFO - Vosk recognized: jaka jest pogoda w sosnowcu picia dalej
-2025-04-14 17:29:46,279 - INFO - Command: jaka jest pogoda w sosnowcu picia dalej
-2025-04-14 17:37:12,628 - INFO - Loaded plugin: api -> Obs³uguje zapytania API na podstawie konfiguracji w JSON.
-2025-04-14 17:37:12,628 - INFO - Loaded plugin: deep -> Wykonuje g³êbokie rozumowanie
-2025-04-14 17:37:12,785 - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
-2025-04-14 17:37:12,814 - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
-2025-04-14 17:37:12,817 - INFO - Bot is starting...
-2025-04-14 17:37:12,838 - INFO - Audio stream opened. Waiting for activation...
+2025-04-14 23:14:44,525 - MainProcess - __main__ - INFO - Initializing application...
+2025-04-14 23:14:44,532 - MainProcess - __main__ - INFO - Starting child processes...
+2025-04-14 23:14:49,293 - AssistantProcess - __mp_main__ - INFO - Starting Assistant process...
+2025-04-14 23:14:49,297 - FlaskProcess - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-04-14 23:14:49,298 - FlaskProcess - web_ui.app - INFO - Flask app created and configured.
+2025-04-14 23:14:49,329 - FlaskProcess - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.25:5000
+2025-04-14 23:14:49,329 - FlaskProcess - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-04-14 23:14:50,048 - AssistantProcess - assistant - INFO - Loaded plugin: api -> ObsÅ‚uguje zapytania API na podstawie konfiguracji w JSON.
+2025-04-14 23:14:50,049 - AssistantProcess - assistant - INFO - Loaded plugin: deep -> Wykonuje gÅ‚Ä™bokie rozumowanie
+2025-04-14 23:14:50,175 - AssistantProcess - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-04-14 23:14:50,204 - AssistantProcess - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-04-14 23:14:50,205 - AssistantProcess - assistant - INFO - Bot is starting...
+2025-04-14 23:14:50,220 - AssistantProcess - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-04-14 23:14:50,221 - AssistantProcess - assistant - INFO - Starting command queue processing task...
+2025-04-14 23:14:52,038 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:14:52] "[32mGET /api/status HTTP/1.1[0m" 302 -
+2025-04-14 23:14:52,040 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:14:52] "[32mGET /api/history?limit=5 HTTP/1.1[0m" 302 -
+2025-04-14 23:14:52,079 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:14:52] "GET /login HTTP/1.1" 200 -
+2025-04-14 23:14:52,085 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:14:52] "GET /login HTTP/1.1" 200 -
+2025-04-14 23:14:52,893 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:14:52] "[32mGET / HTTP/1.1[0m" 302 -
+2025-04-14 23:14:52,902 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:14:52] "GET /login HTTP/1.1" 200 -
+2025-04-14 23:14:53,085 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:14:53] "GET /static/css/style.css HTTP/1.1" 200 -
+2025-04-14 23:14:53,089 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:14:53] "GET /static/js/script.js HTTP/1.1" 200 -
+2025-04-14 23:14:53,464 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:14:53] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-04-14 23:14:56,904 - FlaskProcess - web_ui.app - INFO - User 'dev' logged in successfully.
+2025-04-14 23:14:56,906 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:14:56] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-04-14 23:14:56,919 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:14:56] "GET / HTTP/1.1" 200 -
+2025-04-14 23:14:56,992 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:14:56] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+2025-04-14 23:14:56,995 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:14:56] "[36mGET /static/js/script.js HTTP/1.1[0m" 304 -
+2025-04-14 23:14:57,728 - FlaskProcess - web_ui.app - INFO - History requested by user 'dev'.
+2025-04-14 23:14:57,758 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:14:57] "GET /api/status HTTP/1.1" 200 -
+2025-04-14 23:14:57,779 - FlaskProcess - web_ui.app - INFO - Retrieved 0 history entries.
+2025-04-14 23:14:57,785 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:14:57] "GET /api/history?limit=5 HTTP/1.1" 200 -
+2025-04-14 23:14:59,095 - FlaskProcess - web_ui.app - INFO - Manual activation requested via Web UI by user 'dev'.
+2025-04-14 23:14:59,096 - FlaskProcess - web_ui.app - INFO - Sent 'activate' command to assistant process.
+2025-04-14 23:14:59,096 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:14:59] "[35m[1mPOST /api/activate HTTP/1.1[0m" 202 -
+2025-04-14 23:14:59,354 - AssistantProcess - assistant - INFO - Received command from queue: activate
+2025-04-14 23:14:59,354 - AssistantProcess - assistant - INFO - Manual listen trigger requested via queue.
+2025-04-14 23:15:03,174 - FlaskProcess - web_ui.app - INFO - History requested by user 'dev'.
+2025-04-14 23:15:03,174 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:15:03] "GET /api/status HTTP/1.1" 200 -
+2025-04-14 23:15:03,188 - FlaskProcess - web_ui.app - INFO - Retrieved 0 history entries.
+2025-04-14 23:15:03,192 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:15:03] "GET /api/history?limit=5 HTTP/1.1" 200 -
+2025-04-14 23:15:07,166 - FlaskProcess - web_ui.app - INFO - Retrieved 0 history entries.
+2025-04-14 23:15:07,171 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:15:07] "GET /history HTTP/1.1" 200 -
+2025-04-14 23:15:07,233 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:15:07] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+2025-04-14 23:15:07,243 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:15:07] "[36mGET /static/js/script.js HTTP/1.1[0m" 304 -
+2025-04-14 23:15:08,333 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:15:08] "GET /logs HTTP/1.1" 200 -
+2025-04-14 23:15:08,386 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:15:08] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+2025-04-14 23:15:08,387 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:15:08] "[36mGET /static/js/script.js HTTP/1.1[0m" 304 -
+2025-04-14 23:15:09,252 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:15:09] "GET /api/logs?level=ALL HTTP/1.1" 200 -
+2025-04-14 23:15:13,745 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:15:13] "GET /api/logs?level=WARNING HTTP/1.1" 200 -
+2025-04-14 23:15:14,863 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:15:14] "GET /api/logs?level=ERROR HTTP/1.1" 200 -
+2025-04-14 23:15:15,626 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:15:15] "GET /api/logs?level=INFO HTTP/1.1" 200 -
+2025-04-14 23:15:16,354 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:15:16] "GET /api/logs?level=ALL HTTP/1.1" 200 -
+2025-04-14 23:15:37,218 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:15:37] "GET / HTTP/1.1" 200 -
+2025-04-14 23:15:37,279 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:15:37] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+2025-04-14 23:15:37,281 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:15:37] "[36mGET /static/js/script.js HTTP/1.1[0m" 304 -
+2025-04-14 23:15:37,885 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:15:37] "GET /api/status HTTP/1.1" 200 -
+2025-04-14 23:15:37,886 - FlaskProcess - web_ui.app - INFO - History requested by user 'dev'.
+2025-04-14 23:15:37,916 - FlaskProcess - web_ui.app - INFO - Retrieved 0 history entries.
+2025-04-14 23:15:37,917 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:15:37] "GET /api/history?limit=5 HTTP/1.1" 200 -
+2025-04-14 23:15:41,361 - FlaskProcess - web_ui.app - INFO - Manual activation requested via Web UI by user 'dev'.
+2025-04-14 23:15:41,361 - FlaskProcess - web_ui.app - INFO - Sent 'activate' command to assistant process.
+2025-04-14 23:15:41,362 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:15:41] "[35m[1mPOST /api/activate HTTP/1.1[0m" 202 -
+2025-04-14 23:15:41,653 - AssistantProcess - assistant - INFO - Received command from queue: activate
+2025-04-14 23:15:41,653 - AssistantProcess - assistant - INFO - Manual listen trigger requested via queue.
+2025-04-14 23:15:42,857 - FlaskProcess - web_ui.app - INFO - History requested by user 'dev'.
+2025-04-14 23:15:42,857 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:15:42] "GET /api/status HTTP/1.1" 200 -
+2025-04-14 23:15:42,873 - FlaskProcess - web_ui.app - INFO - Retrieved 0 history entries.
+2025-04-14 23:15:42,874 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:15:42] "GET /api/history?limit=5 HTTP/1.1" 200 -
+2025-04-14 23:15:48,176 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:15:48] "GET /api/status HTTP/1.1" 200 -
+2025-04-14 23:15:48,176 - FlaskProcess - web_ui.app - INFO - History requested by user 'dev'.
+2025-04-14 23:15:48,192 - FlaskProcess - web_ui.app - INFO - Retrieved 0 history entries.
+2025-04-14 23:15:48,193 - FlaskProcess - werkzeug - INFO - 127.0.0.1 - - [14/Apr/2025 23:15:48] "GET /api/history?limit=5 HTTP/1.1" 200 -
+2025-04-14 23:15:50,217 - FlaskProcess - __mp_main__ - INFO - Flask process finished.
+2025-04-14 23:15:51,253 - AssistantProcess - __mp_main__ - INFO - Assistant process received KeyboardInterrupt. Exiting.
+2025-04-14 23:15:51,254 - AssistantProcess - __mp_main__ - INFO - Assistant process finished.
+2025-04-14 23:15:51,547 - MainProcess - __main__ - WARNING - Main process received KeyboardInterrupt. Terminating child processes...

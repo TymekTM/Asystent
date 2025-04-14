@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Long-Term Memory</h1>
+    <div class="mb-3">
+        <form id="ltm-form" class="d-flex">
+            <input type="text" class="form-control me-2" id="ltm-input" placeholder="Add new memory...">
+            <button type="submit" class="btn btn-primary">Add</button>
+        </form>
+        <span id="ltm-status" class="ms-2"></span>
+    </div>
+    <div class="card">
+        <div class="card-header">Stored Memories</div>
+        <ul class="list-group list-group-flush" id="ltm-list">
+            <!-- LTM entries will be loaded here -->
+        </ul>
+    </div>
+    <button class="btn btn-danger mt-3" id="ltm-clear-btn">Clear All</button>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function fetchLTM() {
+    fetch('/api/long_term_memory')
+        .then(r => r.json())
+        .then(data => {
+            const list = document.getElementById('ltm-list');
+            list.innerHTML = '';
+            (data || []).forEach(entry => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item';
+                li.textContent = entry.content;
+                list.appendChild(li);
+            });
+        });
+}
+
+document.getElementById('ltm-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const input = document.getElementById('ltm-input');
+    const status = document.getElementById('ltm-status');
+    fetch('/api/long_term_memory', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: input.value })
+    })
+    .then(r => r.json())
+    .then(data => {
+        status.textContent = data.message || data.error;
+        status.className = data.message ? 'ms-2 text-success' : 'ms-2 text-danger';
+        if (data.message) {
+            input.value = '';
+            fetchLTM();
+        }
+        setTimeout(() => { status.textContent = ''; }, 2000);
+    });
+});
+
+document.getElementById('ltm-clear-btn').addEventListener('click', function() {
+    if (!confirm('Clear all long-term memory entries?')) return;
+    fetch('/api/long_term_memory', { method: 'DELETE' })
+        .then(r => r.json())
+        .then(data => {
+            fetchLTM();
+        });
+});
+
+fetchLTM();
+</script>
+{% endblock %}

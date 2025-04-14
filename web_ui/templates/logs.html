@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Logi systemowe</h1>
+    <div class="mb-3">
+        <label for="log-level" class="form-label">Filtruj po poziomie:</label>
+        <select id="log-level" class="form-select" onchange="filterLogs()">
+            <option value="ALL">Wszystkie</option>
+            <option value="INFO">INFO</option>
+            <option value="WARNING">WARNING</option>
+            <option value="ERROR">ERROR</option>
+        </select>
+    </div>
+    <pre id="logs-content" class="bg-light p-3 rounded" style="max-height: 600px; overflow-y: auto; font-size: 0.95em;"></pre>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+function filterLogs() {
+    const level = document.getElementById('log-level').value;
+    fetch(`/api/logs?level=${level}`)
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('logs-content').textContent = data.logs.join('\n');
+        });
+}
+window.onload = filterLogs;
+</script>
+{% endblock %}

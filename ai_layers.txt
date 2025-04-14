@@ -1,0 +1,41 @@
+AI Layers in the Asystent Project
+================================
+
+1. Wake Word Detection
+   - Module: audio_modules/wakeword_detector.py
+   - Listens for a specific keyword to activate the assistant using microphone input.
+
+2. Speech-to-Text (STT)
+   - Modules: audio_modules/speech_recognition.py, audio_modules/whisper_asr.py
+   - Converts spoken user input into text using Vosk or Whisper.
+
+3. Query Refinement
+   - Module: ai_module.py (function: refine_query)
+   - Uses an LLM to correct, clarify, and improve the raw STT result for better intent understanding.
+
+4. Conversation History Management
+   - Module: assistant.py
+   - Maintains a list of user and assistant messages for context-aware responses.
+
+5. Main LLM Response Generation
+   - Module: ai_module.py (function: generate_response)
+   - Uses the refined query and conversation history to generate a response via an LLM (e.g., LM Studio, Ollama).
+
+6. Tool/Command Execution
+   - Modules: modules/api_module.py, modules/search_module.py, modules/deepseek_module.py, modules/see_screen_module.py
+   - Executes specific commands (search, API calls, screenshots, deep reasoning) as requested by the LLM.
+
+7. Text-to-Speech (TTS)
+   - Module: audio_modules/tts_module.py
+   - Converts the assistant's text response into spoken audio output.
+
+8. Web UI Integration
+   - Directory: web_ui/
+   - Provides a Flask-based web interface for configuration, history, status, and manual activation.
+
+9. Logging and Monitoring
+   - Files: assistant.log, web_ui/app.py
+   - Logs all key events, queries, responses, and errors for debugging and transparency.
+
+---
+Each layer is modular and can be improved or replaced independently. The pipeline flows from wake word → STT → refinement → LLM → tool use → TTS → UI/logging.

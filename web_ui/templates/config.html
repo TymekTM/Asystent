@@ -2,35 +2,55 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h1 class="mb-4">Configuration</h1>
-    <p>Modify the assistant's settings below. Changes require a restart of the assistant to take full effect in most cases.</p>
+    <h1 class="mb-4">Konfiguracja</h1>
+    <p>Zmodyfikuj ustawienia asystenta poniżej. Zmiany wymagają restartu asystenta, aby w pełni zadziałały.</p>
 
     <form id="config-form">
-        {# Iterate through config items - this is basic, needs refinement for different types #}
-        {% for key, value in config.items() %}
-        <div class="mb-3 row">
-            <label for="config-{{ key }}" class="col-sm-3 col-form-label">{{ key.replace('_', ' ').title() }}</label>
-            <div class="col-sm-9">
-                {% if value is boolean %}
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" role="switch" id="config-{{ key }}" name="{{ key }}" {% if value %}checked{% endif %}>
+        {% for section, section_cfg in config.items() %}
+        <div class="card mb-4">
+            <div class="card-header fw-bold" data-bs-toggle="collapse" data-bs-target="#collapse-{{ section }}" style="cursor:pointer;">
+                {{ section|capitalize }}
+            </div>
+            <div id="collapse-{{ section }}" class="collapse show">
+                <div class="card-body">
+                    {% if section_cfg is mapping %}
+                        {% for key, value in section_cfg.items() %}
+                        <div class="mb-3 row">
+                            <label for="config-{{ section }}-{{ key }}" class="col-sm-3 col-form-label">
+                                {{ key.replace('_', ' ').title() }}
+                                <i class="fas fa-info-circle text-secondary ms-1" title="{{ value.__doc__ if value.__doc__ else '' }}"></i>
+                            </label>
+                            <div class="col-sm-9">
+                                {% if value is boolean %}
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="config-{{ section }}-{{ key }}" name="{{ section }}.{{ key }}" {% if value %}checked{% endif %}>
+                                </div>
+                                {% elif value is number %}
+                                <input type="number" class="form-control" id="config-{{ section }}-{{ key }}" name="{{ section }}.{{ key }}" value="{{ value }}">
+                                {% elif value is iterable and value is not string and value is not mapping %}
+                                <input type="text" class="form-control" id="config-{{ section }}-{{ key }}" name="{{ section }}.{{ key }}" value="{{ value|join(', ') }}" placeholder="Wartości oddzielone przecinkami" title="Wprowadź jedną lub więcej wartości, oddzielonych przecinkami.">
+                                <small class="form-text text-muted">Wprowadź wartości oddzielone przecinkami.</small>
+                                {% else %}
+                                <input type="text" class="form-control" id="config-{{ section }}-{{ key }}" name="{{ section }}.{{ key }}" value="{{ value }}">
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="mb-3 row">
+                            <label class="col-sm-3 col-form-label">Wartość</label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" value="{{ section_cfg }}" readonly>
+                            </div>
+                        </div>
+                    {% endif %}
                 </div>
-                {% elif value is number %}
-                <input type="number" class="form-control" id="config-{{ key }}" name="{{ key }}" value="{{ value }}">
-                {% elif value is list %}
-                 <input type="text" class="form-control" id="config-{{ key }}" name="{{ key }}" value="{{ value|join(', ') }}" placeholder="Comma-separated values">
-                 <small class="form-text text-muted">Enter values separated by commas.</small>
-                {% else %}
-                <input type="text" class="form-control" id="config-{{ key }}" name="{{ key }}" value="{{ value }}">
-                {% endif %}
-                 {# TODO: Add descriptions for each config option #}
             </div>
         </div>
         {% endfor %}
-
         <div class="d-flex justify-content-end">
-             <button type="submit" class="btn btn-primary">Save Configuration</button>
-             <span id="save-status" class="ms-3 align-self-center"></span>
+            <button type="submit" class="btn btn-primary">Zapisz konfigurację</button>
+            <span id="save-status" class="ms-3 align-self-center"></span>
         </div>
     </form>
 
@@ -39,8 +59,29 @@
 
 {% block extra_js %}
 <script>
+    // Rozwijanie/zwijanie sekcji
+    const cards = document.querySelectorAll('.card-header');
+    cards.forEach(card => {
+        card.addEventListener('click', () => {
+            const target = card.getAttribute('data-bs-target');
+            const collapse = document.querySelector(target);
+            if (collapse) {
+                collapse.classList.toggle('show');
+            }
+        });
+    });
+
     const configForm = document.getElementById('config-form');
     const saveStatus = document.getElementById('save-status');
+    // Safely parse the config JSON passed from Flask
+    let originalConfig = {};
+    try {
+        originalConfig = JSON.parse('{{ config|tojson|safe }}');
+    } catch (e) {
+        console.error("Error parsing initial config JSON:", e);
+        saveStatus.textContent = 'Error loading initial config.';
+        saveStatus.className = 'ms-3 align-self-center text-danger';
+    }
 
     configForm.addEventListener('submit', (event) => {
         event.preventDefault();
@@ -52,7 +93,10 @@
 
         formData.forEach((value, key) => {
             const inputElement = document.getElementById(`config-${key}`);
-            const originalValue = {{ config|tojson }}[key]; // Get original value to infer type
+            // Use the parsed originalConfig to infer type
+            const originalValue = originalConfig[key];
+
+            if (!inputElement) return; // Skip if element not found
 
             // Handle checkboxes (booleans)
             if (inputElement.type === 'checkbox') {
@@ -88,6 +132,8 @@
             if (status === 200) {
                 saveStatus.textContent = 'Saved successfully!';
                 saveStatus.className = 'ms-3 align-self-center text-success';
+                // Update originalConfig with saved data
+                originalConfig = JSON.parse(JSON.stringify(configData));
                  // Optionally reload or show a persistent success message
                  // alert('Configuration saved! Restart the assistant for changes to take effect.');
             } else {
@@ -99,6 +145,12 @@
             console.error('Error saving config:', error);
             saveStatus.textContent = 'Error saving configuration.';
             saveStatus.className = 'ms-3 align-self-center text-danger';
+        })
+        .finally(() => {
+             // Optionally re-enable the button or clear status after a delay
+             setTimeout(() => {
+                 saveStatus.textContent = '';
+             }, 3000);
         });
     });
 </script>

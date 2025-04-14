@@ -24,7 +24,7 @@ def run_wakeword_detection(speech_recognizer, wake_word, tts, use_whisper, proce
         if wake_word in partial:
             logger.info("Wake word detected (partial).")
             tts.cancel()
-            play_beep("keyword")
+            play_beep("keyword", loop=False)  # Ensure beep plays only once
             if use_whisper:
                 audio_command = speech_recognizer.record_dynamic_command_audio()
                 import soundfile as sf
@@ -50,7 +50,7 @@ def run_wakeword_detection(speech_recognizer, wake_word, tts, use_whisper, proce
             if wake_word in result:
                 logger.info("Wake word detected (full).")
                 tts.cancel()
-                play_beep("keyword")
+                play_beep("keyword", loop=False)  # Ensure beep plays only once
                 if use_whisper:
                     audio_command = speech_recognizer.record_dynamic_command_audio()
                     import soundfile as sf

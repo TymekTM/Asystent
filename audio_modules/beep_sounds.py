@@ -12,7 +12,7 @@ BEEP_SOUNDS = {
     "deep": "resources/sounds/deepthink_beep.mp3"
 }
 
-def play_beep(sound_type: str = "keyword", loop: bool = True) -> subprocess.Popen | None:
+def play_beep(sound_type: str = "keyword", loop: bool = False) -> subprocess.Popen | None:
     """
     Odtwarza dźwięk z odpowiedniego pliku na podstawie podanego typu.
     Zwraca obiekt Popen procesu odtwarzania lub None w przypadku błędu.
@@ -20,7 +20,7 @@ def play_beep(sound_type: str = "keyword", loop: bool = True) -> subprocess.Pope
     :param sound_type: Typ dźwięku do odtworzenia ("keyword", "search", "screenshot", "deep", "api").
                        Domyślnie "keyword".
     :param loop: Czy dźwięk ma być odtwarzany w pętli (True) czy tylko raz (False).
-                 Domyślnie True (dla dźwięków narzędzi).
+                 Domyślnie False (dla pojedynczego odtwarzania).
     :return: Obiekt subprocess.Popen lub None.
     """
     # Fallback for unknown tool types to a default sound or silence?

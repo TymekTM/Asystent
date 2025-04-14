@@ -4,8 +4,8 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Conversation History</h1>
-        <button id="clear-history-btn" class="btn btn-danger btn-sm">
-            <i class="fas fa-trash"></i> Clear History
+        <button id="clear-history-btn" class="btn btn-warning btn-sm">
+            <i class="fas fa-archive"></i> Archive History
         </button>
     </div>
 
@@ -21,13 +21,13 @@
                                 <i class="fas fa-robot text-success me-2"></i>Assistant
                             {% endif %}
                         </h5>
-                        {# <small>Timestamp (TODO)</small> #}
+                        {# <small>Timestamp (TODO: Extract from log if available)</small> #}
                     </div>
                     <p class="mb-1">{{ entry.content }}</p>
                 </div>
             {% endfor %}
         {% else %}
-            <p class="text-muted">No conversation history found.</p>
+            <p class="text-muted">No conversation history found in the current log file.</p>
         {% endif %}
     </div>
      <span id="clear-status" class="ms-2 text-muted"></span>
@@ -42,31 +42,38 @@
     const historyLog = document.getElementById('history-log');
 
     clearBtn.addEventListener('click', () => {
-        if (confirm('Are you sure you want to clear the entire conversation history? This action cannot be undone.')) {
-            clearStatus.textContent = 'Clearing...';
+        if (confirm('Are you sure you want to archive the current conversation history log? The current log will be moved to an archive folder.')) {
+            clearStatus.textContent = 'Archiving...';
+            clearStatus.className = 'ms-2 text-info';
             clearBtn.disabled = true;
 
             fetch('/api/history', {
-                method: 'DELETE'
+                method: 'DELETE' // Still using DELETE method as per the API route
             })
             .then(response => response.json().then(data => ({ status: response.status, body: data })))
             .then(({ status, body }) => {
                 if (status === 200) {
-                    clearStatus.textContent = 'History cleared.';
-                    historyLog.innerHTML = '<p class="text-muted">Conversation history cleared.</p>'; // Update UI
+                    clearStatus.textContent = 'History archived successfully.';
+                    clearStatus.className = 'ms-2 text-success';
+                    historyLog.innerHTML = '<p class="text-muted">Conversation history archived. New log file started (refresh may be needed to see new entries).</p>'; // Update UI
                 } else {
-                    clearStatus.textContent = `Error: ${body.error || 'Failed to clear.'}`;
+                    clearStatus.textContent = `Error: ${body.error || 'Failed to archive.'}`;
+                    clearStatus.className = 'ms-2 text-danger';
                 }
                  // Re-enable button after a short delay
                 setTimeout(() => {
                     clearBtn.disabled = false;
                     clearStatus.textContent = '';
-                }, 2000);
+                }, 3000);
             })
             .catch(error => {
-                console.error('Error clearing history:', error);
+                console.error('Error archiving history:', error);
                 clearStatus.textContent = 'Error sending request.';
+                clearStatus.className = 'ms-2 text-danger';
                 clearBtn.disabled = false;
+                 setTimeout(() => {
+                    clearStatus.textContent = '';
+                }, 3000);
             });
         }
     });
