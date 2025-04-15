@@ -57,3 +57,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
         }, 5000); // Close after 5 seconds
     });
 });
+
+// --- Testy jednostkowe Dev tab ---
+// (Logika dynamiczna jest w dev.html, ale można tu dodać obsługę WebSocket/pollingu globalnie w przyszłości)

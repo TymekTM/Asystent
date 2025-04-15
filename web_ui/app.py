@@ -8,6 +8,15 @@ import time # Import time for potential timestamping or delays
 import shutil # Import shutil for potential file operations like archiving
 import multiprocessing # Import multiprocessing for the queue
 import re # Import re for log parsing
+import subprocess
+import threading
+import queue
+import sounddevice as sd # Import sounddevice
+
+# Import the main config loading/saving functions
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from config import load_config as load_main_config, save_config as save_main_config, CONFIG_FILE as MAIN_CONFIG_FILE, DEFAULT_CONFIG
 
 # --- Configuration ---
 # TODO: SECURITY: Replace with a more robust secret key management (e.g., environment variables)
@@ -17,7 +26,8 @@ USERS = {
     "user": {"password": "password", "role": "user"},
     "dev": {"password": "devpassword", "role": "dev"}
 }
-CONFIG_FILE = os.path.join(os.path.dirname(__file__), '..', 'config.json') # Path relative to app.py
+# Use the config file path from the main config module
+CONFIG_FILE = MAIN_CONFIG_FILE
 HISTORY_FILE = os.path.join(os.path.dirname(__file__), '..', 'assistant.log') # Path to log file for now
 HISTORY_ARCHIVE_DIR = os.path.join(os.path.dirname(__file__), '..', 'history_archive') # Directory for archived logs
 LTM_FILE = os.path.join(os.path.dirname(__file__), '..', 'long_term_memory.json')
@@ -29,43 +39,151 @@ assistant_queue = None
 # Logging setup moved inside create_app to avoid issues with multiple processes
 logger = logging.getLogger(__name__) # Use a specific logger for the web UI
 
+# --- Test Runner State ---
+test_status = {
+    'running': False,
+    'result': None,
+    'log': '',
+    'summary': '',
+    'ai_summary': ''
+}
+test_status_lock = threading.Lock()
+
+def run_unit_tests():
+    """Run unit tests and update test_status dict."""
+    global test_status
+    with test_status_lock:
+        test_status['running'] = True
+        test_status['result'] = None
+        test_status['log'] = ''
+        test_status['summary'] = ''
+        test_status['ai_summary'] = ''
+        test_status['tests'] = []
+    try:
+        proc = subprocess.Popen([
+            'python', '-m', 'unittest', 'discover', '-s', 'tests_unit', '-p', 'test_*.py'
+        ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        output, _ = proc.communicate()
+        passed = proc.returncode == 0
+        summary = parse_test_summary(output)
+        ai_summary = generate_ai_summary(output)
+        tests = parse_individual_tests(output)
+        with test_status_lock:
+            test_status['running'] = False
+            test_status['result'] = 'passed' if passed else 'failed'
+            test_status['log'] = output
+            test_status['summary'] = summary
+            test_status['ai_summary'] = ai_summary
+            test_status['tests'] = tests
+    except Exception as e:
+        with test_status_lock:
+            test_status['running'] = False
+            test_status['result'] = 'error'
+            test_status['log'] = str(e)
+            test_status['summary'] = ''
+            test_status['ai_summary'] = ''
+            test_status['tests'] = []
+
+def parse_individual_tests(output):
+    """Parse unittest output for individual test results (robust for dots and verbose, with real test names and status)."""
+    import re
+    tests = []
+    # Try verbose output first
+    test_line_re = re.compile(r'^(test_\w+) \(([^)]+)\) \.+ (ok|FAIL|ERROR)$', re.MULTILINE)
+    for match in test_line_re.finditer(output):
+        name = match.group(1)
+        cls = match.group(2)
+        status = match.group(3)
+        tests.append({'name': name, 'class': cls, 'status': status, 'details': ''})
+    # If no verbose output, try to parse from summary and match to discovered test names
+    if not tests:
+        try:
+            import subprocess
+            proc = subprocess.Popen([
+                'python', '-m', 'unittest', 'discover', '-s', 'tests_unit', '-p', 'test_*.py', '-v'
+            ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+            discover_out, _ = proc.communicate(timeout=10)
+            discovered = re.findall(r'^(test_\w+) \(([^)]+)\)', discover_out, re.MULTILINE)
+            summary_line = None
+            for line in output.splitlines():
+                if re.match(r'^[.FE]+$', line.strip()) and len(line.strip()) > 2:
+                    summary_line = line.strip()
+                    break
+            for idx, (name, cls) in enumerate(discovered):
+                status = None
+                if summary_line and idx < len(summary_line):
+                    status = {'F': 'FAIL', 'E': 'ERROR', '.': 'ok'}.get(summary_line[idx], summary_line[idx])
+                else:
+                    status = 'ok'  # Default to ok if not found
+                tests.append({'name': name, 'class': cls, 'status': status, 'details': ''})
+        except Exception:
+            summary_line = None
+            for line in output.splitlines():
+                if re.match(r'^[.FE]+$', line.strip()) and len(line.strip()) > 2:
+                    summary_line = line.strip()
+                    break
+            for idx, ch in enumerate(summary_line or ''):
+                status = {'F': 'FAIL', 'E': 'ERROR', '.': 'ok'}.get(ch, ch)
+                tests.append({'name': f'test_{idx+1}', 'class': '', 'status': status, 'details': ''})
+    # Find error/failure details
+    fail_blocks = re.split(r'={10,}', output)
+    for block in fail_blocks:
+        fail_match = re.search(r'(FAIL|ERROR): (test_\w+) \(([^)]+)\)', block)
+        if fail_match:
+            status = fail_match.group(1)
+            name = fail_match.group(2)
+            cls = fail_match.group(3)
+            details = block.strip()
+            for t in tests:
+                if t['name'] == name and (not t['class'] or t['class'] == cls):
+                    t['details'] = details
+    # Mark tests as 'unknown' only if status is not ok/FAIL/ERROR
+    for t in tests:
+        if t['status'] not in ('ok', 'FAIL', 'ERROR'):
+            t['status'] = 'ok'
+    return tests
+
+def parse_test_summary(output):
+    """Extracts a simple summary from unittest output."""
+    import re
+    match = re.search(r'Ran (\d+) tests? in ([\d\.]+)s', output)
+    if match:
+        total = match.group(1)
+        time = match.group(2)
+        failed = 'FAILED' in output or 'ERROR' in output
+        return f"Wykonano {total} testów w {time}s. {'Błędy!' if failed else 'Wszystkie zaliczone.'}"
+    return 'Brak podsumowania.'
+
+def generate_ai_summary(output):
+    """Placeholder for AI-generated summary. Można podpiąć model AI tutaj."""
+    if 'FAILED' in output or 'ERROR' in output:
+        return 'Niektóre testy nie przeszły. Sprawdź szczegóły poniżej.'
+    if 'OK' in output:
+        return 'Wszystkie testy zaliczone pomyślnie.'
+    return 'Brak szczegółowego podsumowania.'
+
 # --- Helper Functions ---
 
-def load_config():
-    """Load advanced config with nested sections and type validation."""
+def get_audio_input_devices():
+    """Gets a list of available audio input devices."""
+    devices = []
     try:
-        with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
-            config = json.load(f)
-        # Optionally: validate config structure here
-        return config
+        sd_devices = sd.query_devices()
+        default_input_device_index = sd.default.device[0] # Get default input device index
+        for i, device in enumerate(sd_devices):
+            if device['max_input_channels'] > 0:
+                is_default = (i == default_input_device_index)
+                devices.append({
+                    'id': i,
+                    'name': device['name'],
+                    'is_default': is_default
+                })
+        logger.info(f"Found audio input devices: {devices}")
     except Exception as e:
-        logger.error(f"Failed to load config: {e}")
-        return {}
-
-def save_config(config_data):
-    """Saves configuration to config.json."""
-    global assistant_queue # Access the global queue
-    logger.debug(f"Attempting to save config to: {CONFIG_FILE}")
-    try:
-        with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
-            json.dump(config_data, f, indent=4, ensure_ascii=False)
-        logger.info("Configuration saved successfully.")
-        # Notify the main assistant process about the config change
-        if assistant_queue:
-            try:
-                assistant_queue.put({"action": "config_updated"})
-                logger.info("Sent config_updated notification to assistant process.")
-            except Exception as q_err:
-                 logger.error(f"Failed to send config_updated notification via queue: {q_err}")
-        else:
-            logger.warning("Assistant queue not available, cannot notify assistant of config change.")
-        return True
-    except IOError as e:
-        logger.error(f"IOError saving configuration to {CONFIG_FILE}: {e}")
-        return False
-    except Exception as e:
-        logger.error(f"Unexpected error saving config: {e}")
-        return False
+        logger.error(f"Could not query audio devices: {e}")
+        # Return a dummy entry or empty list if query fails
+        devices.append({'id': -1, 'name': "Error querying devices", 'is_default': False})
+    return devices
 
 def load_ltm():
     if not os.path.exists(LTM_FILE):
@@ -315,7 +433,7 @@ def create_app(queue: multiprocessing.Queue):
     @login_required()
     def index():
         """Main dashboard page."""
-        current_config = load_config()
+        current_config = load_main_config() # Use main config loader
         # TODO: DASHBOARD: Fetch real-time status from the assistant (requires more IPC)
         # For now, just show basic info from config
         assistant_status = {
@@ -330,8 +448,9 @@ def create_app(queue: multiprocessing.Queue):
     @login_required(role="dev")
     def config_page():
         """Configuration management page."""
-        current_config = load_config()
-        return render_template('config.html', config=current_config)
+        current_config = load_main_config() # Use main config loader
+        audio_devices = get_audio_input_devices() # Get the list of devices
+        return render_template('config.html', config=current_config, audio_devices=audio_devices)
 
     @app.route('/history')
     @login_required()
@@ -350,6 +469,13 @@ def create_app(queue: multiprocessing.Queue):
     def logs_page():
         return render_template('logs.html')
 
+    @app.route('/dev')
+    def dev_page():
+        if not session.get('username') or session.get('role') != 'dev':
+            flash('Brak dostępu do zakładki Dev.', 'danger')
+            return redirect(url_for('index'))
+        return render_template('dev.html')
+
     # --- API Routes --- (Registered within create_app)
     @app.route('/api/config', methods=['GET', 'POST'])
     @login_required(role="dev")
@@ -361,26 +487,41 @@ def create_app(queue: multiprocessing.Queue):
                  logger.warning("Received invalid config data (not a dictionary).")
                  return jsonify({"error": "Invalid configuration format."}), 400
 
-            logger.info(f"Received request to update configuration by user '{session.get('username')}'.")
+            logger.info(f"Received request to update configuration by user '{session.get('username')}' with data: {new_config_data}")
             # Basic validation (optional, enhance as needed)
-            # e.g., check if MIC_DEVICE_ID is an integer
             if 'MIC_DEVICE_ID' in new_config_data:
                 try:
-                    # Allow empty string or integer
                     if new_config_data['MIC_DEVICE_ID'] != '':
                          int(new_config_data['MIC_DEVICE_ID'])
                 except (ValueError, TypeError):
                      logger.warning("Invalid MIC_DEVICE_ID received.")
                      return jsonify({"error": "Invalid MIC_DEVICE_ID format (must be an integer or empty)."}), 400
 
-            if save_config(new_config_data):
+            try:
+                # Use the main save function
+                save_main_config(new_config_data)
+                logger.info("Configuration saved successfully via save_main_config.")
+
+                # Notify the main assistant process about the config change
+                if assistant_queue:
+                    try:
+                        assistant_queue.put({"action": "config_updated"})
+                        logger.info("Sent config_updated notification to assistant process.")
+                    except Exception as q_err:
+                         logger.error(f"Failed to send config_updated notification via queue: {q_err}")
+                         # Continue even if queue fails, config was saved
+                else:
+                    logger.warning("Assistant queue not available, cannot notify assistant of config change.")
+
                 return jsonify({"message": "Configuration saved successfully."}), 200
-            else:
-                # Be specific about the error if possible, but avoid leaking details
+            except Exception as e:
+                # Log the specific error during saving or queue notification
+                logger.error(f"Error during save_main_config or queue notification: {e}", exc_info=True)
                 return jsonify({"error": "Failed to save configuration due to a server issue."}), 500
+
         else: # GET
-            logger.info(f"Configuration requested by user '{session.get('username')}'.")
-            current_config = load_config()
+            logger.info(f"Configuration requested by user '{session.get('username')}' via GET.")
+            current_config = load_main_config() # Use main config loader
             return jsonify(current_config)
 
     @app.route('/api/history', methods=['GET', 'DELETE'])
@@ -452,7 +593,7 @@ def create_app(queue: multiprocessing.Queue):
         """API endpoint for assistant status (for dashboard polling)."""
         # In a real implementation, fetch live status from the assistant process via IPC.
         # For now, return config-based info and a dummy status.
-        current_config = load_config()
+        current_config = load_main_config() # Use main config loader
         status = {
             "status": "Online",  # Could be dynamic if IPC is implemented
             "wake_word": current_config.get('WAKE_WORD', 'N/A'),
@@ -476,6 +617,33 @@ def create_app(queue: multiprocessing.Queue):
             return jsonify({'logs': logs})
         except Exception as e:
             return jsonify({'logs': [f'Błąd odczytu logów: {e}']}), 500
+
+    # --- API endpoints for test running ---
+    from flask import Blueprint
+    api_bp = Blueprint('api', __name__)
+
+    @api_bp.route('/api/run_tests', methods=['POST'])
+    def api_run_tests():
+        with test_status_lock:
+            if test_status['running']:
+                return jsonify({'status': 'already_running'}), 409
+            # Start test runner in background thread
+            thread = threading.Thread(target=run_unit_tests, daemon=True)
+            thread.start()
+            test_status['running'] = True
+            test_status['result'] = None
+            test_status['log'] = ''
+            test_status['summary'] = ''
+            test_status['ai_summary'] = ''
+        return jsonify({'status': 'started'})
+
+    @api_bp.route('/api/test_status', methods=['GET'])
+    def api_test_status():
+        with test_status_lock:
+            return jsonify(test_status)
+
+    # Register blueprint in create_app or directly if app is global
+    app.register_blueprint(api_bp)
 
     return app
 

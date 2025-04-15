@@ -1,1 +1,19 @@
-{}
+{
+  "API_KEYS": {
+    "ANTHROPIC_API_KEY": "",
+    "DEEPSEEK_API_KEY": "",
+    "OPENAI_API_KEY": ""
+  },
+  "DEEP_MODEL": "openthinker",
+  "MAIN_MODEL": "gemma3:4b-it-q4_K_M",
+  "MAX_HISTORY_LENGTH": 20,
+  "MIC_DEVICE_ID": 14,
+  "PLUGIN_MONITOR_INTERVAL": 30,
+  "PROVIDER": "lmstudio",
+  "STT_MODEL": "gemma3:4b-it-q4_K_M",
+  "STT_SILENCE_THRESHOLD": 600,
+  "USE_WHISPER_FOR_COMMAND": false,
+  "VOSK_MODEL_PATH": "vosk_model",
+  "WAKE_WORD": "asystencie",
+  "WHISPER_MODEL": "openai/whisper-small"
+}

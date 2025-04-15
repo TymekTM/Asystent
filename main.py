@@ -3,6 +3,7 @@ import asyncio
 import logging
 import sys
 import os
+import time # Import the time module
 from threading import Thread
 
 # Ensure the web_ui directory is in the Python path if running main.py from the root
@@ -74,40 +75,58 @@ def main():
     # Create a multiprocessing queue for IPC
     command_queue = multiprocessing.Queue()
 
-    # Create processes
-    assistant_proc = multiprocessing.Process(
-        target=run_assistant_process,
-        args=(command_queue,),
-        name="AssistantProcess" # Assign a name for easier logging
-    )
+    # --- Flask Process (runs once) ---
     flask_proc = multiprocessing.Process(
         target=run_flask_process,
         args=(command_queue,),
-        name="FlaskProcess" # Assign a name for easier logging
+        name="FlaskProcess"
     )
+    logger.info("Starting Flask process...")
+    flask_proc.start()
+
+    # --- Assistant Process (runs in a loop for restarts) ---
+    assistant_proc = None
+    restart_assistant = True
 
     try:
-        # Start processes
-        logger.info("Starting child processes...")
-        assistant_proc.start()
-        flask_proc.start()
+        while restart_assistant:
+            logger.info("Starting Assistant process...")
+            assistant_proc = multiprocessing.Process(
+                target=run_assistant_process,
+                args=(command_queue,),
+                name="AssistantProcess"
+            )
+            assistant_proc.start()
 
-        # Wait for processes to finish (e.g., on KeyboardInterrupt)
-        # You might want more sophisticated monitoring/restart logic here
-        assistant_proc.join()
-        flask_proc.join()
+            # Wait for the assistant process to finish
+            assistant_proc.join()
+
+            # Check if the process exited normally (exitcode 0)
+            # We assume a normal exit (like after config update) means restart
+            if assistant_proc.exitcode == 0:
+                logger.info("Assistant process finished cleanly (exit code 0). Restarting...")
+                restart_assistant = True
+                time.sleep(2) # Short delay before restarting
+            else:
+                logger.warning(f"Assistant process terminated unexpectedly with exit code {assistant_proc.exitcode}. Not restarting automatically.")
+                restart_assistant = False # Stop looping if it crashed
+
+        # If the loop finishes (e.g., assistant crashed), wait for Flask to finish (or be interrupted)
+        logger.info("Assistant restart loop finished. Waiting for Flask process...")
+        if flask_proc.is_alive():
+            flask_proc.join()
 
     except KeyboardInterrupt:
         logger.warning("Main process received KeyboardInterrupt. Terminating child processes...")
         # Terminate processes gracefully if possible, forcefully if needed
-        if flask_proc.is_alive():
-            flask_proc.terminate() # Send SIGTERM
-            flask_proc.join(timeout=5) # Wait a bit
+        if flask_proc and flask_proc.is_alive():
+            flask_proc.terminate()
+            flask_proc.join(timeout=5)
             if flask_proc.is_alive():
                  logger.warning("Flask process did not terminate gracefully, killing.")
-                 flask_proc.kill() # Send SIGKILL
+                 flask_proc.kill()
 
-        if assistant_proc.is_alive():
+        if assistant_proc and assistant_proc.is_alive():
             assistant_proc.terminate()
             assistant_proc.join(timeout=5)
             if assistant_proc.is_alive():

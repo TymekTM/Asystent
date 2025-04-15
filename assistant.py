@@ -1,6 +1,7 @@
 import asyncio, json, logging, os, glob, importlib.util, re, subprocess, multiprocessing, time
 import ollama
 import inspect # Add inspect import
+import queue # Import queue for Empty exception
 
 # Import modułów audio z nowej lokalizacji
 from audio_modules.tts_module import TTSModule
@@ -287,12 +288,14 @@ class Assistant:
             self.conversation_history = self.conversation_history[-self.max_history_length:]
 
     def trigger_manual_listen(self):
-        """Sets a flag to indicate manual listening should be triggered."""
-        # This is a simplified approach. True integration requires interrupting
-        # the blocking wake word detection or injecting audio.
-        logger.info("Manual listen trigger requested via queue.")
-        self.manual_listen_triggered = True
-        # Ideally, this would signal the process_audio loop more directly.
+        """Puts a special marker onto the audio queue to trigger manual listening."""
+        logger.info("Manual listen trigger requested via queue. Sending signal.")
+        try:
+            # Put a special marker onto the audio queue to interrupt the detector
+            self.speech_recognizer.audio_q.put("__MANUAL_TRIGGER__")
+        except Exception as e:
+            logger.error(f"Failed to put manual trigger signal onto audio queue: {e}")
+        # self.manual_listen_triggered = True # Flag is no longer needed
 
     async def process_command_queue(self):
         """Processes commands received from the web UI queue."""
@@ -309,52 +312,154 @@ class Assistant:
                     if action == "activate":
                         self.trigger_manual_listen()
                     elif action == "config_updated":
-                        self.reload_config_values()
+                        logger.warning("Configuration updated via web UI. Initiating assistant restart.")
+                        # Stop the main loop to allow the process to exit cleanly
+                        if self.loop:
+                            self.loop.stop()
+                        # No need to call reload_config_values() here, restart will load fresh config
+                        break # Exit the queue processing loop
                     # Add more actions as needed
                 await asyncio.sleep(1) # Check queue periodically
-            except multiprocessing.queues.Empty:
+            except queue.Empty:
                  await asyncio.sleep(1) # Wait if queue is empty
             except Exception as e:
                 logger.error(f"Error processing command queue: {e}", exc_info=True)
                 await asyncio.sleep(5) # Wait longer after an error
+        logger.info("Command queue processing task stopped.")
 
     def process_audio(self):
         """
         Główna pętla audio: obsługuje zarówno wake word, jak i ręczne wywołanie nasłuchu.
+        Refactored logic for handling manual trigger interruption.
         """
+        wake_word_task = None
+        perform_manual_listen = False # Flag to indicate manual listen needed after task check
+
         while True:
+            # --- Check for Manual Trigger Request ---
             if self.manual_listen_triggered:
-                logger.info("Manual trigger flag set, attempting to listen for command directly.")
-                self.manual_listen_triggered = False # Reset flag
-                play_beep("keyword", loop=False) # Play beep as if wake word detected
+                logger.info("Manual trigger flag is set.")
+                self.manual_listen_triggered = False # Reset flag immediately
+                perform_manual_listen = True # Set flag to perform listen below
+
+                # If wake word task is running, attempt to interrupt it
+                if wake_word_task and not wake_word_task.done():
+                    logger.info("Attempting to interrupt running wake word task...")
+                    try:
+                        # Use put_nowait to avoid blocking if queue is full (shouldn't happen here)
+                        self.speech_recognizer.audio_q.put_nowait("__MANUAL_TRIGGER__")
+                        logger.info("Sent interruption signal to wake word detector queue.")
+                        # Give it a moment to potentially stop or process the signal
+                        time.sleep(0.3)
+                    except queue.Full:
+                         logger.error("Audio queue is full, cannot send interruption signal.")
+                    except Exception as q_err:
+                        logger.error(f"Failed to send interruption signal: {q_err}")
+                else:
+                    logger.info("Wake word task not running or already done when manual trigger checked.")
+
+
+            # --- Check Wake Word Task Status ---
+            # Check if task exists and is done
+            if wake_word_task and wake_word_task.done():
+                logger.info("Wake word task has finished.")
+                interrupted_by_signal = False
+                try:
+                    result = wake_word_task.result() # Get result or raise exception if task failed
+                    if result == "MANUAL_TRIGGER_REQUESTED":
+                        logger.info("Wake word task confirmed interruption via signal.")
+                        interrupted_by_signal = True
+                        # If manual trigger wasn't already requested externally, set the flag now
+                        if not perform_manual_listen:
+                             logger.warning("Wake word task interrupted but manual flag wasn't set? Performing listen anyway.")
+                             perform_manual_listen = True
+                    # else: # Task finished normally (e.g., after processing a command)
+                    #     logger.debug("Wake word task finished without manual trigger signal.")
+                except Exception as e:
+                    logger.error(f"Wake word detection task failed with exception: {e}", exc_info=True)
+                    time.sleep(2) # Delay before restart after error
+
+                wake_word_task = None # Reset task so it restarts later in the loop if needed
+
+            # --- Perform Manual Listen (if flagged) ---
+            if perform_manual_listen:
+                logger.info("Proceeding with manual listen block.")
+                perform_manual_listen = False # Reset flag for next iteration
+
+                play_beep("keyword", loop=False)
                 command_text = None
                 try:
                     if self.use_whisper and self.whisper_asr:
-                        logger.warning("Direct Whisper listening after manual trigger not fully implemented in executor thread. Trying Vosk.")
-                        command_text = self.speech_recognizer.listen_for_command_dynamic()
-                    else:
-                        command_text = self.speech_recognizer.listen_for_command_dynamic()
+                        logger.info("Recording audio for Whisper command (manual trigger)...")
+                        # NOTE: This still requires record_dynamic_command_audio() to be implemented
+                        # in SpeechRecognizer for Whisper to work on manual trigger.
+                        try:
+                            # TODO: Implement record_dynamic_command_audio in SpeechRecognizer
+                            # audio_command = self.speech_recognizer.record_dynamic_command_audio() # Assuming this exists
+                            # For now, log error as it's not implemented
+                            logger.error("Whisper manual trigger failed: 'record_dynamic_command_audio' method not found in SpeechRecognizer.")
+                            audio_command = None # Explicitly set to None
+
+                            if audio_command is not None:
+                                import soundfile as sf
+                                import io
+                                buffer = io.BytesIO()
+                                sf.write(buffer, audio_command, 16000, format='WAV')
+                                buffer.seek(0)
+                                logger.info("Transcribing command with Whisper (manual trigger)...")
+                                command_text = self.whisper_asr.transcribe(buffer)
+                                buffer.close()
+                            # else: # Already logged warning/error above
+                            #    logger.warning("Failed to record audio for Whisper command (manual trigger).")
+                        except AttributeError:
+                             logger.error("Whisper manual trigger failed: 'record_dynamic_command_audio' method not found in SpeechRecognizer.")
+                             # Fallback or inform user? For now, just log error.
+
+                    else: # Use Vosk
+                        logger.info("Listening for command with Vosk after manual trigger...")
+                        # Corrected method name here based on traceback
+                        command_text = self.speech_recognizer.listen_command()
+
+                    # Process the command if recognized
                     if command_text:
                         logger.info("Command (after manual trigger): %s", command_text)
+                        # Schedule the async process_query in the event loop
                         asyncio.run_coroutine_threadsafe(self.process_query(command_text), self.loop)
                     else:
                         logger.info("No command detected after manual trigger.")
-                except Exception as e:
-                    logger.error(f"Error during manually triggered listen: {e}", exc_info=True)
-                logger.info("Resuming wake word detection.")
-                continue  # Po ręcznym nasłuchu wracamy do pętli
 
-            # Wake word detection (blokujące, ale przerywane przez manual trigger)
-            run_wakeword_detection(
-                speech_recognizer=self.speech_recognizer,
-                wake_word=self.wake_word,
-                tts=self.tts,
-                use_whisper=self.use_whisper,
-                process_query_callback=self.process_query, # Callback remains the same
-                loop=self.loop, # Pass the loop for scheduling callbacks
-                whisper_asr=self.whisper_asr
-            )
-            # Po zakończeniu wakeword detection wracamy do pętli (np. po błędzie)
+                except Exception as e:
+                    logger.error(f"Error during manually triggered listen execution: {e}", exc_info=True)
+
+                logger.info("Manual listening block finished.")
+                # Loop will continue and restart wake word task if wake_word_task is None
+
+
+            # --- Start Wake Word Task (if needed) ---
+            # Check if task is None (meaning it finished or never started)
+            if wake_word_task is None:
+                # Ensure we don't restart immediately after manual listen if wake word task was already running
+                # This check might be redundant with the perform_manual_listen logic above, but adds safety
+                if not perform_manual_listen:
+                    logger.info("Starting/Restarting wake word detection task...")
+                    # Run wake word detection in an executor thread
+                    wake_word_task = self.loop.run_in_executor(
+                        None, # Use default executor
+                        run_wakeword_detection,
+                        self.speech_recognizer,
+                        self.wake_word,
+                        self.tts,
+                        self.use_whisper,
+                        self.process_query, # Pass the async function directly
+                        self.loop,
+                        self.whisper_asr
+                    )
+                    # logger.info("Wake word detection task submitted to executor.")
+
+
+            # --- Wait / Yield ---
+            # Prevent tight loop; allow other asyncio tasks and checks to run
+            time.sleep(0.1) # Small sleep in the main sync loop
 
     async def run_async(self):
         logger.info("Bot is starting...")
