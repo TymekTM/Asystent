@@ -14,3 +14,4 @@ gTTS # Uncomment or replace with the specific TTS library used
 PyAudio # Uncomment if needed by sounddevice/speech libraries
 edge_tts # Uncomment if needed by edge-tts library
 Flask # Added for Web UI
+langid # For fast language detection

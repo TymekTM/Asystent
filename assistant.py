@@ -278,6 +278,8 @@ class Assistant:
                         args_to_pass['params'] = actual_params
                     if 'conversation_history' in sig.parameters:
                         args_to_pass['conversation_history'] = self.conversation_history
+                    if 'user_lang' in sig.parameters:
+                        args_to_pass['user_lang'] = lang_code
                     if 'user' in sig.parameters:
                         args_to_pass['user'] = 'assistant'
                     tool_result = None
