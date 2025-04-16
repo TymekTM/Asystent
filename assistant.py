@@ -94,6 +94,17 @@ class Assistant:
         self.command_queue = command_queue
         self.manual_listen_triggered = False # Flag for manual activation
 
+        # --- Load all memories for assistant user at startup ---
+        try:
+            from modules.memory_module import retrieve_memories
+            result, success = retrieve_memories(params="", user="assistant")
+            if success and result.strip():
+                logger.info(f"Loaded assistant long-term memory at startup:\n{result}")
+            else:
+                logger.info("No long-term memory found for assistant at startup.")
+        except Exception as e:
+            logger.error(f"Failed to load assistant long-term memory at startup: {e}")
+
         if self.use_whisper:
             from audio_modules.whisper_asr import WhisperASR
             self.whisper_asr = WhisperASR(model_name=self.whisper_model)
@@ -215,85 +226,95 @@ class Assistant:
         ai_response_text = structured_output.get("text", "") # Text AI wants to say *before* or *instead* of tool use
 
         # --- Tool Execution Logic ---
-        if ai_command and ai_command in self.modules:
-            plugin_info = self.modules[ai_command]
-            handler = plugin_info.get("handler")
+        main_command = None
+        sub_command_key = None
+        actual_params = ai_params
+
+        if ai_command and ' ' in ai_command:
+            parts = ai_command.split(' ', 1)
+            main_command = parts[0]
+            sub_command_key = parts[1]
+        elif ai_command:
+            main_command = ai_command
+
+        if main_command and main_command in self.modules:
+            plugin_info = self.modules[main_command]
+            handler = None
+            is_sub_command = False
+
+            if sub_command_key and "sub_commands" in plugin_info and sub_command_key in plugin_info["sub_commands"]:
+                handler = plugin_info["sub_commands"][sub_command_key].get("function")
+                is_sub_command = True
+                logger.info(f"Identified sub-command: {main_command} {sub_command_key}")
+            elif not is_sub_command and "handler" in plugin_info:
+                handler = plugin_info.get("handler")
+                logger.info(f"Identified top-level command: {main_command}")
+            else:
+                logger.warning(f"No valid handler found for command '{ai_command}' (main: '{main_command}', sub: '{sub_command_key}')")
 
             # Speak the AI's preliminary text if provided, before running the tool
             if ai_response_text:
-                 # Add AI's preliminary text to history
-                 self.conversation_history.append({"role": "assistant", "content": ai_response_text})
-                 self.trim_conversation_history()
-                 asyncio.create_task(self.tts.speak(remove_chain_of_thought(ai_response_text)))
-                 # Optional: Add a small delay so TTS can start before tool runs
-                 await asyncio.sleep(0.5)
+                self.conversation_history.append({"role": "assistant", "content": ai_response_text})
+                self.trim_conversation_history()
+                asyncio.create_task(self.tts.speak(remove_chain_of_thought(ai_response_text)))
+                await asyncio.sleep(0.5)
 
             if handler:
+                logger.info(f"Attempting to execute handler: {getattr(handler, '__name__', str(handler))} for command '{ai_command}' with params: '{actual_params}'")
                 try:
-                    # Prepare context for the tool handler
-                    tool_context = {
-                        "params": ai_params,
-                        "conversation_history": self.conversation_history,
-                        # Pass the main system prompt, tools can use/ignore it
-                        "system_prompt": SYSTEM_PROMPT,
-                        # Optionally add tool-specific prompt if defined in register()
-                        "tool_prompt": plugin_info.get("prompt")
-                    }
-
-                    # Check handler signature and call appropriately
+                    import inspect
                     sig = inspect.signature(handler)
                     args_to_pass = {}
                     if 'params' in sig.parameters:
-                         args_to_pass['params'] = ai_params
+                        args_to_pass['params'] = actual_params
                     if 'conversation_history' in sig.parameters:
-                         args_to_pass['conversation_history'] = self.conversation_history
-                    # Add more checks if needed (e.g., for system_prompt)
-
-                    # Check if the handler is async or sync
+                        args_to_pass['conversation_history'] = self.conversation_history
+                    # Optionally pass user if supported
+                    if 'user' in sig.parameters:
+                        args_to_pass['user'] = 'assistant'
+                    tool_result = None
                     if inspect.iscoroutinefunction(handler):
-                        # Await async handler directly
-                        if args_to_pass:
-                             tool_result = await handler(**args_to_pass)
-                        else: # Handle case where async handler takes no expected args
-                             tool_result = await handler() # Or adjust based on expected signature
+                        tool_result = await handler(**args_to_pass)
                     else:
-                        # Run sync handler in a thread
-                        if args_to_pass:
-                            tool_result = await asyncio.to_thread(handler, **args_to_pass)
-                        else: # Handle case where sync handler takes no expected args
-                            tool_result = await asyncio.to_thread(handler) # Or adjust
-
-                    # Add tool result to history (as assistant response)
-                    if tool_result:
-                        # Ensure result is string before adding/speaking
+                        tool_result = await asyncio.to_thread(handler, **args_to_pass)
+                    logger.info(f"Handler {getattr(handler, '__name__', str(handler))} returned: {tool_result}")
+                    tool_result_str = ""
+                    success = True
+                    if isinstance(tool_result, tuple) and len(tool_result) == 2:
+                        tool_result_str = str(tool_result[0])
+                        success = bool(tool_result[1])
+                    elif tool_result is not None:
                         tool_result_str = str(tool_result)
+                        success = bool(tool_result_str)
+                    else:
+                        success = False
+                    if tool_result_str:
+                        log_level = logging.INFO if success else logging.WARNING
+                        logger.log(log_level, f"Tool '{ai_command}' result (Success: {success}): {tool_result_str}")
                         self.conversation_history.append({"role": "assistant", "content": tool_result_str})
                         self.trim_conversation_history()
-                        # Speak the final result from the tool
-                        # Ensure TTS gets the final string result
                         asyncio.create_task(self.tts.speak(remove_chain_of_thought(tool_result_str)))
+                    elif success:
+                        logger.info(f"Tool '{ai_command}' executed successfully but returned no specific message.")
                     else:
-                        logger.warning(f"Handler for command '{ai_command}' returned no result.")
-
+                        logger.warning(f"Handler for command '{ai_command}' failed and returned no message.")
+                        error_text = f"Nie udało się wykonać komendy {ai_command}."
+                        self.conversation_history.append({"role": "assistant", "content": error_text})
+                        self.trim_conversation_history()
+                        asyncio.create_task(self.tts.speak(error_text))
                 except Exception as e:
                     logger.error(f"Error executing command '{ai_command}': {e}", exc_info=True)
                     error_text = f"Przepraszam, wystąpił błąd podczas wykonywania komendy {ai_command}."
                     self.conversation_history.append({"role": "assistant", "content": error_text})
                     self.trim_conversation_history()
                     asyncio.create_task(self.tts.speak(error_text))
-            else:
-                logger.warning(f"No handler found for command: {ai_command}")
-                # Speak the AI text even if handler is missing
-                if ai_response_text:
-                     # Already added to history and spoken above
-                     pass
-                else: # If AI only returned a command but no text and handler is missing
-                     fallback_text = f"Nie wiem jak wykonać komendę {ai_command}."
-                     self.conversation_history.append({"role": "assistant", "content": fallback_text})
-                     self.trim_conversation_history()
-                     asyncio.create_task(self.tts.speak(fallback_text))
-
-        # --- No Tool Execution ---
+            elif ai_command:
+                logger.warning(f"Handler not found or not callable for command '{ai_command}'.")
+                if not ai_response_text:
+                    fallback_text = f"Nie wiem jak wykonać komendę {ai_command}."
+                    self.conversation_history.append({"role": "assistant", "content": fallback_text})
+                    self.trim_conversation_history()
+                    asyncio.create_task(self.tts.speak(fallback_text))
         else:
             # If AI response text exists and no valid command was issued
             if ai_response_text:
@@ -540,6 +561,16 @@ class Assistant:
             logger.error("Error in audio stream: %s", e)
         logger.info("Audio processing ended. Blocking main loop indefinitely.")
         await asyncio.Future() # Keep running
+
+    def get_all_memories_for_user(self, user: str = "assistant") -> list:
+        """
+        Zwraca wszystkie treści wspomnień dla danego użytkownika (bez metadanych).
+        """
+        from modules.memory_module import retrieve_memories
+        result, success = retrieve_memories(params="", user=user)
+        if not success:
+            return []
+        return [line for line in result.split("\n") if line.strip()]
 
 # Remove the old listen_and_process method if it exists, run_async is the main entry point now.
 

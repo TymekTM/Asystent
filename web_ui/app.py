@@ -18,6 +18,8 @@ import collections # Import collections for deque
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from config import load_config as load_main_config, save_config as save_main_config, CONFIG_FILE as MAIN_CONFIG_FILE, DEFAULT_CONFIG
+# Import memory functions
+from database_manager import get_memories_db, add_memory_db, delete_memory_db, get_db_connection # Added get_db_connection
 
 # --- Configuration ---
 # TODO: SECURITY: Replace with a more robust secret key management (e.g., environment variables)
@@ -489,9 +491,17 @@ def create_app(queue: multiprocessing.Queue):
         return render_template('history.html', history=history)
 
     @app.route('/ltm')
-    @login_required(role="dev")
     def ltm_page():
-        return render_template('ltm_page.html')
+        if 'username' not in session:
+            return redirect(url_for('login'))
+        try:
+            search_query = request.args.get('q', '')
+            memories = get_memories_db(query=search_query, limit=100)
+            return render_template('ltm_page.html', memories=memories, search_query=search_query)
+        except Exception as e:
+            logger.error(f"Error loading LTM page: {e}")
+            flash("Wystąpił błąd podczas ładowania strony pamięci.", "danger")
+            return render_template('ltm_page.html', memories=[], search_query='')
 
     @app.route('/logs')
     @login_required()
@@ -732,6 +742,83 @@ def create_app(queue: multiprocessing.Queue):
 
     # Register blueprint in create_app or directly if app is global
     app.register_blueprint(api_bp)
+
+
+
+    # API endpoint to get memories (for dynamic updates/search)
+    @app.route('/api/ltm/get', methods=['GET'])
+    def api_get_memories():
+        if 'username' not in session:
+            return jsonify({"error": "Unauthorized"}), 401
+        try:
+            query = request.args.get('query', '')
+            memories = get_memories_db(query=query, limit=100)
+            # Convert Row objects to dictionaries for JSON serialization
+            memories_dict = [dict(mem) for mem in memories]
+            return jsonify(memories_dict)
+        except Exception as e:
+            logger.error(f"Error fetching memories via API: {e}")
+            return jsonify({"error": "Failed to fetch memories"}), 500
+
+
+    # API endpoint to add a memory
+    @app.route('/api/ltm/add', methods=['POST'])
+    def api_add_memory():
+        if 'username' not in session:
+            return jsonify({"error": "Unauthorized"}), 401
+        try:
+            data = request.json
+            content = data.get('content')
+            user = data.get('user') or session.get('username', 'web_ui_user')
+            if not content:
+                return jsonify({"error": "Content cannot be empty"}), 400
+            # Check for duplicate: do not add if identical content from same user in last 10 seconds
+            recent = get_memories_db(query=content, limit=3)
+            for mem in recent:
+                if mem['content'] == content and mem['user'] == user:
+                    # If timestamp is very recent, treat as duplicate
+                    from datetime import datetime, timedelta
+                    ts = datetime.strptime(mem['timestamp'].split('.')[0], '%Y-%m-%d %H:%M:%S')
+                    if (datetime.now() - ts).total_seconds() < 10:
+                        return jsonify({"error": "Duplikat zgłoszenia. Odczekaj chwilę."}), 409
+            memory_id = add_memory_db(content=content, user=user)
+            if memory_id:
+                logger.info(f"Memory added via Web UI by {user}. ID: {memory_id}")
+                conn = get_db_connection()
+                if conn:
+                    new_memory = conn.execute('SELECT * FROM memories WHERE id = ?', (memory_id,)).fetchone()
+                    conn.close()
+                    if new_memory:
+                         return jsonify(dict(new_memory)), 201 # Return the created memory
+                    else:
+                        # Should not happen if add_memory_db returned an ID, but handle defensively
+                        return jsonify({"message": "Memory added, but failed to retrieve details."}), 200
+                else:
+                     return jsonify({"message": "Memory added, but failed to retrieve details due to DB connection issue."}), 200
+            else:
+                logger.error(f"Failed to add memory via Web UI by {user}. Content: {content[:50]}...")
+                return jsonify({"error": "Failed to add memory to database"}), 500
+        except Exception as e:
+            logger.error(f"Error adding memory via API: {e}")
+            return jsonify({"error": "Server error"}), 500
+
+
+    # API endpoint to delete a memory
+    @app.route('/api/ltm/delete/<int:memory_id>', methods=['DELETE'])
+    def api_delete_memory(memory_id):
+        if 'username' not in session:
+            return jsonify({"error": "Unauthorized"}), 401
+        try:
+            success = delete_memory_db(memory_id)
+            if success:
+                logger.info(f"Memory ID {memory_id} deleted via Web UI by {session.get('username', 'unknown')}")
+                return jsonify({"message": "Memory deleted successfully"}), 200
+            else:
+                logger.warning(f"Failed to delete memory ID {memory_id} via Web UI (not found or DB error).")
+                return jsonify({"error": "Memory not found or failed to delete"}), 404
+        except Exception as e:
+            logger.error(f"Error deleting memory {memory_id} via API: {e}")
+            return jsonify({"error": "Server error"}), 500
 
     return app
 

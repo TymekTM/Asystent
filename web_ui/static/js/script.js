@@ -47,6 +47,97 @@ prefersDarkScheme.addEventListener('change', (e) => {
 // --- Other Global JS (if any) ---
 console.log("Assistant CP UI script loaded.");
 
+// --- LTM Page Specific Functions ---
+
+function fetchAndDisplayMemories(query = '') {
+    const memoryList = document.getElementById('memory-list');
+    const url = `/api/ltm/get${query ? '?query=' + encodeURIComponent(query) : ''}`;
+
+    fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(memories => {
+            memoryList.innerHTML = ''; // Clear current list
+            if (memories.length > 0) {
+                const ul = document.createElement('ul');
+                ul.className = 'list-group';
+                memories.forEach(memory => {
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item d-flex justify-content-between align-items-start';
+                    li.dataset.id = memory.id;
+
+                    const timestamp = memory.timestamp ? memory.timestamp.split('.')[0] : 'N/A'; // Format timestamp
+
+                    li.innerHTML = `
+                        <div class="ms-2 me-auto">
+                            <div class="fw-bold">ID: ${memory.id} | User: ${memory.user || 'N/A'}</div>
+                            <small class="text-muted">${timestamp}</small>
+                            <p class="mb-1">${escapeHtml(memory.content)}</p>
+                        </div>
+                        <button class="btn btn-danger btn-sm delete-memory-button" data-id="${memory.id}">Usuń</button>
+                    `;
+                    ul.appendChild(li);
+                });
+                memoryList.appendChild(ul);
+                // Re-attach delete listeners after updating list
+                attachDeleteMemoryListeners();
+            } else {
+                memoryList.innerHTML = '<p>Brak zapisanych wspomnień' + (query ? ' pasujących do wyszukiwania.' : '.') + '</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching memories:', error);
+            memoryList.innerHTML = '<p class="text-danger">Wystąpił błąd podczas pobierania wspomnień.</p>';
+        });
+}
+
+function attachDeleteMemoryListeners() {
+    document.querySelectorAll('.delete-memory-button').forEach(button => {
+        // Remove existing listener to prevent duplicates if re-attaching
+        button.replaceWith(button.cloneNode(true));
+    });
+    // Add new listeners
+    document.querySelectorAll('.delete-memory-button').forEach(button => {
+        button.addEventListener('click', function() {
+            const memoryId = this.dataset.id;
+            const statusDiv = document.getElementById('delete-memory-status');
+            statusDiv.textContent = ''; // Clear previous status
+
+            if (confirm(`Czy na pewno chcesz usunąć wspomnienie o ID ${memoryId}?`)) {
+                fetch(`/api/ltm/delete/${memoryId}`, {
+                    method: 'DELETE',
+                })
+                .then(response => response.json().then(data => ({ status: response.status, body: data })))
+                .then(({ status, body }) => {
+                    if (status === 200) {
+                        statusDiv.textContent = `Usunięto wspomnienie ID ${memoryId}.`;
+                        statusDiv.className = 'mt-2 text-success';
+                        // Remove the item from the list visually
+                        const listItem = document.querySelector(`li[data-id="${memoryId}"]`);
+                        if (listItem) {
+                            listItem.remove();
+                        }
+                        // Optional: Refresh the whole list if needed, though removing is often sufficient
+                        // fetchAndDisplayMemories(document.getElementById('search-memory-input').value);
+                    } else {
+                        statusDiv.textContent = `Błąd: ${body.error || 'Nie udało się usunąć wspomnienia.'}`;
+                        statusDiv.className = 'mt-2 text-danger';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting memory:', error);
+                    statusDiv.textContent = 'Wystąpił błąd sieciowy podczas usuwania.';
+                     statusDiv.className = 'mt-2 text-danger';
+                });
+            }
+        });
+    });
+}
+
 // Example: Close flash messages after a delay
 document.addEventListener('DOMContentLoaded', (event) => {
     const alerts = document.querySelectorAll('.alert-dismissible');
@@ -57,6 +148,373 @@ document.addEventListener('DOMContentLoaded', (event) => {
         }, 5000); // Close after 5 seconds
     });
 });
+
+    // --- LTM Page Specific Functions ---
+    
+    function fetchAndDisplayMemories(query = '') {
+        const memoryList = document.getElementById('memory-list');
+        const url = `/api/ltm/get${query ? '?query=' + encodeURIComponent(query) : ''}`;
+    
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(memories => {
+                memoryList.innerHTML = ''; // Clear current list
+                if (memories.length > 0) {
+                    const ul = document.createElement('ul');
+                    ul.className = 'list-group';
+                    memories.forEach(memory => {
+                        const li = document.createElement('li');
+                        li.className = 'list-group-item d-flex justify-content-between align-items-start';
+                        li.dataset.id = memory.id;
+    
+                        const timestamp = memory.timestamp ? memory.timestamp.split('.')[0] : 'N/A'; // Format timestamp
+    
+                        li.innerHTML = `
+                            <div class="ms-2 me-auto">
+                                <div class="fw-bold">ID: ${memory.id} | User: ${memory.user || 'N/A'}</div>
+                                <small class="text-muted">${timestamp}</small>
+                                <p class="mb-1">${escapeHtml(memory.content)}</p>
+                            </div>
+                            <button class="btn btn-danger btn-sm delete-memory-button" data-id="${memory.id}">Usuń</button>
+                        `;
+                        ul.appendChild(li);
+                    });
+                    memoryList.appendChild(ul);
+                    // Re-attach delete listeners after updating list
+                    attachDeleteMemoryListeners();
+                } else {
+                    memoryList.innerHTML = '<p>Brak zapisanych wspomnień' + (query ? ' pasujących do wyszukiwania.' : '.') + '</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching memories:', error);
+                memoryList.innerHTML = '<p class="text-danger">Wystąpił błąd podczas pobierania wspomnień.</p>';
+            });
+    }
+    
+    function attachDeleteMemoryListeners() {
+        document.querySelectorAll('.delete-memory-button').forEach(button => {
+            // Remove existing listener to prevent duplicates if re-attaching
+            button.replaceWith(button.cloneNode(true));
+        });
+        // Add new listeners
+        document.querySelectorAll('.delete-memory-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const memoryId = this.dataset.id;
+                const statusDiv = document.getElementById('delete-memory-status');
+                statusDiv.textContent = ''; // Clear previous status
+    
+                if (confirm(`Czy na pewno chcesz usunąć wspomnienie o ID ${memoryId}?`)) {
+                    fetch(`/api/ltm/delete/${memoryId}`, {
+                        method: 'DELETE',
+                    })
+                    .then(response => response.json().then(data => ({ status: response.status, body: data })))
+                    .then(({ status, body }) => {
+                        if (status === 200) {
+                            statusDiv.textContent = `Usunięto wspomnienie ID ${memoryId}.`;
+                            statusDiv.className = 'mt-2 text-success';
+                            // Remove the item from the list visually
+                            const listItem = document.querySelector(`li[data-id="${memoryId}"]`);
+                            if (listItem) {
+                                listItem.remove();
+                            }
+                            // Optional: Refresh the whole list if needed, though removing is often sufficient
+                            // fetchAndDisplayMemories(document.getElementById('search-memory-input').value);
+                        } else {
+                            statusDiv.textContent = `Błąd: ${body.error || 'Nie udało się usunąć wspomnienia.'}`;
+                            statusDiv.className = 'mt-2 text-danger';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error deleting memory:', error);
+                        statusDiv.textContent = 'Wystąpił błąd sieciowy podczas usuwania.';
+                         statusDiv.className = 'mt-2 text-danger';
+                    });
+                }
+            });
+        });
+    }
+    
+    // --- Event Listeners ---
+    document.addEventListener('DOMContentLoaded', function() {
+        // ... existing listeners ...
+    
+        // --- LTM Page Listeners ---
+        const addMemoryForm = document.getElementById('add-memory-form');
+        const addMemoryStatus = document.getElementById('add-memory-status');
+        const searchMemoryInput = document.getElementById('search-memory-input');
+        const searchMemoryButton = document.getElementById('search-memory-button');
+        const clearSearchButton = document.getElementById('clear-search-button'); // Added clear button
+    
+        if (addMemoryForm) {
+            addMemoryForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                addMemoryStatus.textContent = '';
+                addMemoryStatus.className = '';
+                // Disable button to prevent double submit
+                const submitBtn = addMemoryForm.querySelector('button[type="submit"]');
+                if (submitBtn) submitBtn.disabled = true;
+                const formData = new FormData(addMemoryForm);
+                const content = formData.get('content');
+                const user = formData.get('user') || null;
+                fetch('/api/ltm/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: content, user: user }),
+                })
+                .then(response => response.json().then(data => ({ status: response.status, body: data })))
+                .then(({ status, body }) => {
+                    if (status === 201) {
+                        addMemoryStatus.textContent = `Dodano wspomnienie (ID: ${body.id}).`;
+                        addMemoryStatus.className = 'mt-2 text-success';
+                        addMemoryForm.reset();
+                        fetchAndDisplayMemories(searchMemoryInput ? searchMemoryInput.value : '');
+                    } else {
+                        addMemoryStatus.textContent = `Błąd: ${body.error || 'Nie udało się dodać wspomnienia.'}`;
+                        addMemoryStatus.className = 'mt-2 text-danger';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error adding memory:', error);
+                    addMemoryStatus.textContent = 'Wystąpił błąd sieciowy podczas dodawania.';
+                    addMemoryStatus.className = 'mt-2 text-danger';
+                })
+                .finally(() => {
+                    if (submitBtn) submitBtn.disabled = false;
+                });
+            });
+        }
+    
+        if (searchMemoryButton && searchMemoryInput) {
+            searchMemoryButton.addEventListener('click', function() {
+                fetchAndDisplayMemories(searchMemoryInput.value);
+            });
+    
+            // Allow searching on pressing Enter in the input field
+            searchMemoryInput.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault(); // Prevent potential form submission if it were in a form
+                    fetchAndDisplayMemories(searchMemoryInput.value);
+                }
+            });
+        }
+    
+         if (clearSearchButton && searchMemoryInput) { // Added listener for clear button
+            clearSearchButton.addEventListener('click', function() {
+                searchMemoryInput.value = ''; // Clear the input
+                fetchAndDisplayMemories(); // Fetch all memories
+            });
+        }
+    
+        // Initial attachment of delete listeners if memories are loaded initially
+        if (document.getElementById('memory-list')) {
+           attachDeleteMemoryListeners();
+        }
+    
+    });
+    
+    // Helper function to escape HTML (prevent XSS)
+    function escapeHtml(unsafe) {
+        if (unsafe === null || unsafe === undefined) {
+            return '';
+        }
+        return unsafe
+             .toString()
+             .replace(/&/g, "&amp;")
+             .replace(/</g, "&lt;")
+             .replace(/>/g, "&gt;")
+             .replace(/"/g, "&quot;")
+             .replace(/'/g, "&#039;");
+    }
+  
+    // --- LTM Page Specific Functions ---
+    
+    function fetchAndDisplayMemories(query = '') {
+        const memoryList = document.getElementById('memory-list');
+        const url = `/api/ltm/get${query ? '?query=' + encodeURIComponent(query) : ''}`;
+    
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(memories => {
+                memoryList.innerHTML = ''; // Clear current list
+                if (memories.length > 0) {
+                    const ul = document.createElement('ul');
+                    ul.className = 'list-group';
+                    memories.forEach(memory => {
+                        const li = document.createElement('li');
+                        li.className = 'list-group-item d-flex justify-content-between align-items-start';
+                        li.dataset.id = memory.id;
+    
+                        const timestamp = memory.timestamp ? memory.timestamp.split('.')[0] : 'N/A'; // Format timestamp
+    
+                        li.innerHTML = `
+                            <div class="ms-2 me-auto">
+                                <div class="fw-bold">ID: ${memory.id} | User: ${memory.user || 'N/A'}</div>
+                                <small class="text-muted">${timestamp}</small>
+                                <p class="mb-1">${escapeHtml(memory.content)}</p>
+                            </div>
+                            <button class="btn btn-danger btn-sm delete-memory-button" data-id="${memory.id}">Usuń</button>
+                        `;
+                        ul.appendChild(li);
+                    });
+                    memoryList.appendChild(ul);
+                    // Re-attach delete listeners after updating list
+                    attachDeleteMemoryListeners();
+                } else {
+                    memoryList.innerHTML = '<p>Brak zapisanych wspomnień' + (query ? ' pasujących do wyszukiwania.' : '.') + '</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching memories:', error);
+                memoryList.innerHTML = '<p class="text-danger">Wystąpił błąd podczas pobierania wspomnień.</p>';
+            });
+    }
+    
+    function attachDeleteMemoryListeners() {
+        document.querySelectorAll('.delete-memory-button').forEach(button => {
+            // Remove existing listener to prevent duplicates if re-attaching
+            button.replaceWith(button.cloneNode(true));
+        });
+        // Add new listeners
+        document.querySelectorAll('.delete-memory-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const memoryId = this.dataset.id;
+                const statusDiv = document.getElementById('delete-memory-status');
+                statusDiv.textContent = ''; // Clear previous status
+    
+                if (confirm(`Czy na pewno chcesz usunąć wspomnienie o ID ${memoryId}?`)) {
+                    fetch(`/api/ltm/delete/${memoryId}`, {
+                        method: 'DELETE',
+                    })
+                    .then(response => response.json().then(data => ({ status: response.status, body: data })))
+                    .then(({ status, body }) => {
+                        if (status === 200) {
+                            statusDiv.textContent = `Usunięto wspomnienie ID ${memoryId}.`;
+                            statusDiv.className = 'mt-2 text-success';
+                            // Remove the item from the list visually
+                            const listItem = document.querySelector(`li[data-id="${memoryId}"]`);
+                            if (listItem) {
+                                listItem.remove();
+                            }
+                            // Optional: Refresh the whole list if needed, though removing is often sufficient
+                            // fetchAndDisplayMemories(document.getElementById('search-memory-input').value);
+                        } else {
+                            statusDiv.textContent = `Błąd: ${body.error || 'Nie udało się usunąć wspomnienia.'}`;
+                            statusDiv.className = 'mt-2 text-danger';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error deleting memory:', error);
+                        statusDiv.textContent = 'Wystąpił błąd sieciowy podczas usuwania.';
+                         statusDiv.className = 'mt-2 text-danger';
+                    });
+                }
+            });
+        });
+    }
+    
+    // --- Event Listeners ---
+    document.addEventListener('DOMContentLoaded', function() {
+        // ... existing listeners ...
+    
+        // --- LTM Page Listeners ---
+        const addMemoryForm = document.getElementById('add-memory-form');
+        const addMemoryStatus = document.getElementById('add-memory-status');
+        const searchMemoryInput = document.getElementById('search-memory-input');
+        const searchMemoryButton = document.getElementById('search-memory-button');
+        const clearSearchButton = document.getElementById('clear-search-button'); // Added clear button
+    
+        if (addMemoryForm) {
+            addMemoryForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                addMemoryStatus.textContent = '';
+                addMemoryStatus.className = '';
+                // Disable button to prevent double submit
+                const submitBtn = addMemoryForm.querySelector('button[type="submit"]');
+                if (submitBtn) submitBtn.disabled = true;
+                const formData = new FormData(addMemoryForm);
+                const content = formData.get('content');
+                const user = formData.get('user') || null;
+                fetch('/api/ltm/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: content, user: user }),
+                })
+                .then(response => response.json().then(data => ({ status: response.status, body: data })))
+                .then(({ status, body }) => {
+                    if (status === 201) {
+                        addMemoryStatus.textContent = `Dodano wspomnienie (ID: ${body.id}).`;
+                        addMemoryStatus.className = 'mt-2 text-success';
+                        addMemoryForm.reset();
+                        fetchAndDisplayMemories(searchMemoryInput ? searchMemoryInput.value : '');
+                    } else {
+                        addMemoryStatus.textContent = `Błąd: ${body.error || 'Nie udało się dodać wspomnienia.'}`;
+                        addMemoryStatus.className = 'mt-2 text-danger';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error adding memory:', error);
+                    addMemoryStatus.textContent = 'Wystąpił błąd sieciowy podczas dodawania.';
+                    addMemoryStatus.className = 'mt-2 text-danger';
+                })
+                .finally(() => {
+                    if (submitBtn) submitBtn.disabled = false;
+                });
+            });
+        }
+    
+        if (searchMemoryButton && searchMemoryInput) {
+            searchMemoryButton.addEventListener('click', function() {
+                fetchAndDisplayMemories(searchMemoryInput.value);
+            });
+    
+            // Allow searching on pressing Enter in the input field
+            searchMemoryInput.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault(); // Prevent potential form submission if it were in a form
+                    fetchAndDisplayMemories(searchMemoryInput.value);
+                }
+            });
+        }
+    
+         if (clearSearchButton && searchMemoryInput) { // Added listener for clear button
+            clearSearchButton.addEventListener('click', function() {
+                searchMemoryInput.value = ''; // Clear the input
+                fetchAndDisplayMemories(); // Fetch all memories
+            });
+        }
+    
+        // Initial attachment of delete listeners if memories are loaded initially
+        if (document.getElementById('memory-list')) {
+           attachDeleteMemoryListeners();
+        }
+    
+    });
+    
+    // Helper function to escape HTML (prevent XSS)
+    function escapeHtml(unsafe) {
+        if (unsafe === null || unsafe === undefined) {
+            return '';
+        }
+        return unsafe
+             .toString()
+             .replace(/&/g, "&amp;")
+             .replace(/</g, "&lt;")
+             .replace(/>/g, "&gt;")
+             .replace(/"/g, "&quot;")
+             .replace(/'/g, "&#039;");
+    }
+
 
 // --- Testy jednostkowe Dev tab ---
 // (Logika dynamiczna jest w dev.html, ale można tu dodać obsługę WebSocket/pollingu globalnie w przyszłości)

@@ -59,6 +59,15 @@ SYSTEM_PROMPT = (
     "Use the Deepthink tool when user ask you to think about something or you think that something is hard to respond quickly"
     "The 'Deepthink' tool have following commands: "
     "- 'deep': begins advanced analysis on topic provided"
+    "## Memory"
+    "The Memory tool allows you to save, retrieve, and delete information in your long-term memory."
+    "Use this tool when the user asks you to remember something ('zapamiętaj', 'zapisz'), recall information ('przypomnij', 'co pamiętasz o...', 'jakie słowo miałeś zapamiętać'), or forget a specific piece of memory ('zapomnij', 'usuń wpis')."
+    "The 'memory' tool has the following subcommands:"
+    "- `add <content>`: Saves the provided <content> to memory. Use when asked to REMEMBER something new. Aliases: `zapamietaj`, `zapisz`."
+    "- `get [keywords]`: Retrieves memories, optionally filtered by [keywords]. Use when asked to RECALL something. If no keywords are given, retrieves recent memories. Aliases: `przypomnij`, `pokaz_pamiec`."
+    "- `del <ID>`: Deletes the memory entry with the specified <ID>. Use when asked to FORGET something specific by its ID. Aliases: `usun_pamiec`, `zapomnij`."
+    "To use the memory tool, structure the command like 'memory add', 'memory get', or 'memory del'."
+
     "Remember to always respond in user's language!"
     "You MUST respond in following JSON format:\n"
     "{\n"
@@ -67,8 +76,12 @@ SYSTEM_PROMPT = (
     '  "params": "<params>", // optional\n'
     "}\n"
     "Examples:\n"
-    '{ "command": "search", "params": "pogoda Sosnowiec 2025-03-20", "text": "Aktualna pogoda w Sosnowcu to..." };'
-    '{ "command": "", "params": "", "text": "As an AI I like to help people" }'
+    'User: Zapamiętaj, że lubię kawę.\nAI: { "command": "memory add", "params": "Użytkownik lubi kawę", "text": "OK, zapamiętałem, że lubisz kawę." };\n'
+    'User: Co o mnie pamiętasz?\nAI: { "command": "memory get", "params": "użytkownik", "text": "Sprawdzam, co o Tobie pamiętam..." };\n'
+    'User: Jakie słowo miałeś zapamiętać?\nAI: { "command": "memory get", "params": "słowo", "text": "Już sprawdzam, jakie słowo miałem zapamiętać..." };\n'
+    'User: Usuń wpis numer 5.\nAI: { "command": "memory del", "params": "5", "text": "Dobrze, usuwam wpis numer 5." };\n'
+    'User: Jaka jest pogoda?\nAI: { "command": "search", "params": "pogoda", "text": "Sprawdzam pogodę..." };\n'
+    'User: Opowiedz mi dowcip.\nAI: { "command": "", "params": "", "text": "Jasne, oto dowcip: ..." }'
 
 
 )
