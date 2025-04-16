@@ -34,14 +34,8 @@ def run_wakeword_detection(speech_recognizer, wake_word, tts, use_whisper, proce
                         logger.info("Recording audio for Whisper command (manual trigger)...")
                         audio_command = speech_recognizer.record_dynamic_command_audio()
                         if audio_command is not None:
-                            import soundfile as sf
-                            import io
-                            buffer = io.BytesIO()
-                            sf.write(buffer, audio_command, 16000, format='WAV')
-                            buffer.seek(0)
                             logger.info("Transcribing command with Whisper (manual trigger)...")
-                            command_text = whisper_asr.transcribe(buffer)
-                            buffer.close()
+                            command_text = whisper_asr.transcribe(audio_command, sample_rate=16000)
                         else:
                             logger.warning("Failed to record audio for Whisper command (manual trigger).")
                     else:
@@ -83,14 +77,8 @@ def run_wakeword_detection(speech_recognizer, wake_word, tts, use_whisper, proce
                         logger.info("Recording audio for Whisper command...")
                         audio_command = speech_recognizer.record_dynamic_command_audio()
                         if audio_command is not None:
-                            import soundfile as sf
-                            import io
-                            buffer = io.BytesIO()
-                            sf.write(buffer, audio_command, 16000, format='WAV')
-                            buffer.seek(0)
                             logger.info("Transcribing command with Whisper...")
-                            command_text = whisper_asr.transcribe(buffer)
-                            buffer.close()
+                            command_text = whisper_asr.transcribe(audio_command, sample_rate=16000)
                         else:
                              logger.warning("Failed to record audio for Whisper command.")
                     else: # Use Vosk
@@ -126,14 +114,8 @@ def run_wakeword_detection(speech_recognizer, wake_word, tts, use_whisper, proce
                             logger.info("Recording audio for Whisper command...")
                             audio_command = speech_recognizer.record_dynamic_command_audio()
                             if audio_command is not None:
-                                import soundfile as sf
-                                import io
-                                buffer = io.BytesIO()
-                                sf.write(buffer, audio_command, 16000, format='WAV')
-                                buffer.seek(0)
                                 logger.info("Transcribing command with Whisper...")
-                                command_text = whisper_asr.transcribe(buffer)
-                                buffer.close()
+                                command_text = whisper_asr.transcribe(audio_command, sample_rate=16000)
                             else:
                                 logger.warning("Failed to record audio for Whisper command.")
                         else: # Use Vosk

@@ -78,76 +78,59 @@ def main():
     # Create a multiprocessing queue for IPC
     command_queue = multiprocessing.Queue()
 
-    # --- Flask Process (runs once) ---
-    flask_proc = multiprocessing.Process(
-        target=run_flask_process,
-        args=(command_queue,),
-        name="FlaskProcess"
-    )
+    config = load_config()
+    exit_with_console = config.get('EXIT_WITH_CONSOLE', True)
+    
+    # Usuń stare pliki lock przy starcie, jeśli istnieją
+    stop_lock_path = os.path.join(os.path.dirname(__file__), 'assistant_stop.lock')
+    restart_lock_path = os.path.join(os.path.dirname(__file__), 'assistant_restarting.lock')
+    if os.path.exists(stop_lock_path):
+        os.remove(stop_lock_path)
+    if os.path.exists(restart_lock_path):
+        os.remove(restart_lock_path)
+        
     logger.info("Starting Flask process...")
-    flask_proc.start()
 
-    # --- Assistant Process (runs in a loop for restarts) ---
-    assistant_proc = None
-    restart_assistant = True
+    # --- Assistant Process ---
+    assistant_process = multiprocessing.Process(target=run_assistant_process, args=(command_queue,))
+    assistant_process.start()
+
+    # --- Flask Process ---
+    flask_process = multiprocessing.Process(target=run_flask_process, args=(command_queue,))
+    flask_process.start()
 
     try:
-        while restart_assistant:
-            logger.info("Starting Assistant process...")
-            assistant_proc = multiprocessing.Process(
-                target=run_assistant_process,
-                args=(command_queue,),
-                name="AssistantProcess"
-            )
-            assistant_proc.start()
-
-            # Wait for the assistant process to finish
-            assistant_proc.join()
-
-            # Check if the process exited normally (exitcode 0)
-            # We assume a normal exit (like after config update) means restart
-            if assistant_proc.exitcode == 0:
-                logger.info("Assistant process finished cleanly (exit code 0). Restarting...")
-                restart_assistant = True
-                time.sleep(2) # Short delay before restarting
+        while True:
+            # Sprawdź, czy istnieje plik stop_lock
+            if os.path.exists(stop_lock_path):
+                logger.warning("Detected stop signal via lock file. Shutting down.")
+                os.remove(stop_lock_path)  # Usuń plik lock
+                break
+                
+            if exit_with_console:
+                # Wait for both processes, exit if parent dies
+                assistant_process.join(0.5)
+                flask_process.join(0.5)
+                if not assistant_process.is_alive() or not flask_process.is_alive():
+                    logger.warning("Detected process exit, shutting down main.")
+                    break
             else:
-                logger.warning(f"Assistant process terminated unexpectedly with exit code {assistant_proc.exitcode}. Not restarting automatically.")
-                restart_assistant = False # Stop looping if it crashed
-
-        # If the loop finishes (e.g., assistant crashed), wait for Flask to finish (or be interrupted)
-        logger.info("Assistant restart loop finished. Waiting for Flask process...")
-        if flask_proc.is_alive():
-            flask_proc.join()
-
+                time.sleep(1)
     except KeyboardInterrupt:
-        logger.warning("Main process received KeyboardInterrupt. Terminating child processes...")
-        # Terminate processes gracefully if possible, forcefully if needed
-        if flask_proc and flask_proc.is_alive():
-            flask_proc.terminate()
-            flask_proc.join(timeout=5)
-            if flask_proc.is_alive():
-                 logger.warning("Flask process did not terminate gracefully, killing.")
-                 flask_proc.kill()
-
-        if assistant_proc and assistant_proc.is_alive():
-            assistant_proc.terminate()
-            assistant_proc.join(timeout=5)
-            if assistant_proc.is_alive():
-                 logger.warning("Assistant process did not terminate gracefully, killing.")
-                 assistant_proc.kill()
-
-    except Exception as e:
-        logger.error(f"An error occurred in the main process: {e}", exc_info=True)
-        # Attempt to terminate child processes on main process error
-        if flask_proc.is_alive(): flask_proc.kill()
-        if assistant_proc.is_alive(): assistant_proc.kill()
-
+        logger.info("Main process received KeyboardInterrupt. Exiting.")
     finally:
-        logger.info("Application shutting down.")
-        # Clean up queue if necessary (usually handled by process exit)
-        command_queue.close()
-        command_queue.join_thread()
-
+        logger.info("Terminating child processes...")
+        # Usuń pliki lock przy zamykaniu, jeśli istnieją
+        if os.path.exists(stop_lock_path):
+            os.remove(stop_lock_path)
+        if os.path.exists(restart_lock_path):
+            os.remove(restart_lock_path)
+        # Zamknij procesy
+        assistant_process.terminate()
+        flask_process.terminate()
+        assistant_process.join()
+        flask_process.join()
+        logger.info("All processes terminated.")
 
 if __name__ == "__main__":
     # Required for multiprocessing to work correctly on Windows when freezing apps

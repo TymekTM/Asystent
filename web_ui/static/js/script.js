@@ -242,7 +242,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
     
     // --- Event Listeners ---
     document.addEventListener('DOMContentLoaded', function() {
-        // ... existing listeners ...
     
         // --- LTM Page Listeners ---
         const addMemoryForm = document.getElementById('add-memory-form');
@@ -425,7 +424,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
     
     // --- Event Listeners ---
     document.addEventListener('DOMContentLoaded', function() {
-        // ... existing listeners ...
     
         // --- LTM Page Listeners ---
         const addMemoryForm = document.getElementById('add-memory-form');

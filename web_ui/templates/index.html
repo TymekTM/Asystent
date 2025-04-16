@@ -28,6 +28,20 @@
                         <i class="fas fa-microphone"></i> Activate Manually
                     </button>
                     <span id="manual-activate-status" class="ms-2"></span>
+                    <button id="restart-assistant-btn" class="btn btn-warning me-2">
+                        <i class="fas fa-sync-alt"></i> Restart Assistant
+                    </button>
+                    <button id="restart-web-btn" class="btn btn-secondary me-2">
+                        <i class="fas fa-sync-alt"></i> Restart Web Panel
+                    </button>
+                    <button id="restart-all-btn" class="btn btn-danger">
+                        <i class="fas fa-sync-alt"></i> Restart All
+                    </button>
+                    <span id="restart-status" class="ms-2"></span>
+                    <button id="stop-assistant-btn" class="btn btn-outline-danger me-2">
+                        <i class="fas fa-power-off"></i> Stop Assistant
+                    </button>
+                    <span id="stop-status" class="ms-2"></span>
                     {# TODO: Consider adding other actions like restart/stop, but ensure proper IPC and security #}
                 </div>
             </div>
@@ -105,6 +119,70 @@
         });
     }
 
+    // Restart buttons logic
+    const restartAssistantBtn = document.getElementById('restart-assistant-btn');
+    const restartWebBtn = document.getElementById('restart-web-btn');
+    const restartAllBtn = document.getElementById('restart-all-btn');
+    const restartStatus = document.getElementById('restart-status');
+
+    function handleRestart(url, label) {
+        if (restartStatus) {
+            restartStatus.textContent = `Wysyłanie żądania: ${label}...`;
+            restartStatus.className = 'ms-2 text-info';
+        }
+        fetch(url, { method: 'POST' })
+            .then(response => response.json().then(data => ({ status: response.status, body: data })))
+            .then(({ status, body }) => {
+                if (status === 202 || status === 200) {
+                    restartStatus.textContent = body.message || `${label} wysłane!`;
+                    restartStatus.className = 'ms-2 text-success';
+                } else {
+                    restartStatus.textContent = `Błąd: ${body.error || 'Nie udało się zrestartować.'}`;
+                    restartStatus.className = 'ms-2 text-danger';
+                }
+            })
+            .catch(() => {
+                restartStatus.textContent = 'Błąd wysyłania żądania restartu.';
+                restartStatus.className = 'ms-2 text-danger';
+            });
+    }
+    if (restartAssistantBtn) restartAssistantBtn.onclick = () => handleRestart('/api/restart/assistant', 'Restart Assistant');
+    if (restartWebBtn) restartWebBtn.onclick = () => handleRestart('/api/restart/web', 'Restart Web Panel');
+    if (restartAllBtn) restartAllBtn.onclick = () => handleRestart('/api/restart/all', 'Restart All');
+
+    // Update status badge for Restarting
+    function fetchAssistantStatus() {
+        fetch('/api/status')
+            .then(response => response.json())
+            .then(data => {
+                const badge = document.getElementById('assistant-status-badge');
+                if (badge) {
+                    if (data.status === 'Online') {
+                        badge.textContent = 'Online';
+                        badge.className = 'badge bg-success';
+                    } else if (data.status === 'Restarting') {
+                        badge.textContent = 'Restarting';
+                        badge.className = 'badge bg-warning text-dark';
+                    } else if (data.status === 'Offline') {
+                        badge.textContent = 'Offline';
+                        badge.className = 'badge bg-danger';
+                    } else {
+                        badge.textContent = data.status || 'Unknown';
+                        badge.className = 'badge bg-secondary';
+                    }
+                }
+            })
+            .catch(() => {
+                const badge = document.getElementById('assistant-status-badge');
+                if (badge) {
+                    badge.textContent = 'Offline';
+                    badge.className = 'badge bg-danger';
+                }
+            });
+    }
+    setInterval(fetchAssistantStatus, 5000);
+    fetchAssistantStatus();
+
     // DASHBOARD: Polling for assistant status
     function fetchAssistantStatus() {
         fetch('/api/status')
@@ -173,6 +251,31 @@
     }
     setInterval(fetchAnalytics, 5000);
     fetchAnalytics();
+
+    // Stop Assistant logic
+    const stopAssistantBtn = document.getElementById('stop-assistant-btn');
+    const stopStatus = document.getElementById('stop-status');
+    if (stopAssistantBtn) stopAssistantBtn.onclick = () => {
+        if (stopStatus) {
+            stopStatus.textContent = 'Wysyłanie żądania zatrzymania...';
+            stopStatus.className = 'ms-2 text-info';
+        }
+        fetch('/api/stop/assistant', { method: 'POST' })
+            .then(response => response.json().then(data => ({ status: response.status, body: data })))
+            .then(({ status, body }) => {
+                if (status === 202 || status === 200) {
+                    stopStatus.textContent = body.message || 'Asystent zatrzymany!';
+                    stopStatus.className = 'ms-2 text-success';
+                } else {
+                    stopStatus.textContent = `Błąd: ${body.error || 'Nie udało się zatrzymać asystenta.'}`;
+                    stopStatus.className = 'ms-2 text-danger';
+                }
+            })
+            .catch(() => {
+                stopStatus.textContent = 'Błąd wysyłania żądania zatrzymania.';
+                stopStatus.className = 'ms-2 text-danger';
+            });
+    };
 
     // TODO: DASHBOARD: Implement WebSocket or polling logic here for real-time status updates
     // e.g., connect to a WebSocket endpoint provided by the Flask app

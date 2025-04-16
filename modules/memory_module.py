@@ -28,6 +28,18 @@ def add_memory(params: str, conversation_history: list = None, user: str = "assi
     # For now, assume AI calls always use 'assistant' unless logic changes
     calling_user = "assistant" # Hardcode for now, can be refined if needed
 
+    # Nie zapisuj do pamięci, jeśli treść jest powtarzana lub nieistotna
+    if content:
+        # Pobierz ostatnie 3 wspomnienia tego użytkownika
+        recent_memories = get_memories_db(query=None, limit=3)
+        if any(m.get('content', '').strip().lower() == content.lower() for m in recent_memories if m.get('user') == calling_user):
+            logger.info("Próba zapisu powtarzającej się informacji do pamięci - pomijam.")
+            return "Ta informacja już jest zapisana w pamięci.", False
+        # Opcjonalnie: filtruj nieistotne treści (np. bardzo krótkie)
+        if len(content) < 4:
+            logger.info("Próba zapisu zbyt krótkiej informacji do pamięci - pomijam.")
+            return "Podana informacja jest zbyt krótka, by ją zapamiętać.", False
+
     logger.info(f"Attempting to add memory via command: '{content[:50]}...' by user '{calling_user}'")
     memory_id = add_memory_db(content=content, user=calling_user)
 

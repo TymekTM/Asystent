@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 CONFIG_FILE = "config.json"
 DEFAULT_CONFIG = {
   "VOSK_MODEL_PATH": "vosk_model",
-  "MIC_DEVICE_ID": 13, # Default back to 13
+  "MIC_DEVICE_ID": 14,
   "WAKE_WORD": "asystencie",
   "STT_SILENCE_THRESHOLD": 600,
   "STT_MODEL": "gemma3:4b-it-q4_K_M",
@@ -19,6 +19,7 @@ DEFAULT_CONFIG = {
   "WHISPER_MODEL": "openai/whisper-small",
   "MAX_HISTORY_LENGTH": 20,
   "PLUGIN_MONITOR_INTERVAL": 30,
+  "EXIT_WITH_CONSOLE": True,  # Jeśli true, bot wyłącza się razem z konsolą/rodzicem
   "API_KEYS": {
     "OPENAI_API_KEY": None,
     "DEEPSEEK_API_KEY": None,

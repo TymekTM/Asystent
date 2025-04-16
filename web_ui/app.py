@@ -13,6 +13,7 @@ import threading
 import queue
 import sounddevice as sd # Import sounddevice
 import collections # Import collections for deque
+import platform
 
 # Import the main config loading/saving functions
 import sys
@@ -540,8 +541,10 @@ def create_app(queue: multiprocessing.Queue):
             # Basic validation (optional, enhance as needed)
             if 'MIC_DEVICE_ID' in new_config_data:
                 try:
-                    if new_config_data['MIC_DEVICE_ID'] != '':
-                         int(new_config_data['MIC_DEVICE_ID'])
+                    if new_config_data['MIC_DEVICE_ID'] == '' or new_config_data['MIC_DEVICE_ID'] is None:
+                        new_config_data['MIC_DEVICE_ID'] = None
+                    else:
+                        new_config_data['MIC_DEVICE_ID'] = int(new_config_data['MIC_DEVICE_ID'])
                 except (ValueError, TypeError):
                      logger.warning("Invalid MIC_DEVICE_ID received.")
                      return jsonify({"error": "Invalid MIC_DEVICE_ID format (must be an integer or empty)."}), 400
@@ -640,16 +643,63 @@ def create_app(queue: multiprocessing.Queue):
     @login_required()
     def api_status():
         """API endpoint for assistant status (for dashboard polling)."""
-        # In a real implementation, fetch live status from the assistant process via IPC.
-        # For now, return config-based info and a dummy status.
+        # Check for restart lock file
+        lock_path = os.path.join(os.path.dirname(__file__), '..', 'assistant_restarting.lock')
+        if os.path.exists(lock_path):
+            status_str = "Restarting"
+        else:
+            # In a real implementation, fetch live status from the assistant process via IPC.
+            # For now, return config-based info and a dummy status.
+            status_str = "Online"
         current_config = load_main_config() # Use main config loader
         status = {
-            "status": "Online",  # Could be dynamic if IPC is implemented
+            "status": status_str,
             "wake_word": current_config.get('WAKE_WORD', 'N/A'),
             "stt_engine": "Whisper" if current_config.get('USE_WHISPER_FOR_COMMAND') else "Vosk",
             "mic_id": current_config.get('MIC_DEVICE_ID', 'N/A')
         }
         return jsonify(status)
+
+    @app.route('/api/restart/assistant', methods=['POST'])
+    @login_required()
+    def restart_assistant():
+        """Endpoint to restart the assistant process."""
+        logger.warning("[WEB] Restart assistant requested via dashboard API.")
+        lock_path = os.path.join(os.path.dirname(__file__), '..', 'assistant_restarting.lock')
+        with open(lock_path, 'w') as f:
+            f.write('restarting')
+        # Cross-platform restart
+        if platform.system() == 'Windows':
+            subprocess.Popen(['powershell.exe', '-Command', 'Start-Process', 'python', 'main.py', '-WindowStyle', 'Hidden'])
+        else:
+            subprocess.Popen(['nohup', 'python3', 'main.py', '&'])
+        logger.warning("[WEB] Attempted to start new assistant process. Uwaga: stary proces nie jest automatycznie zamykany!")
+        return jsonify({"message": "Restarting assistant..."}), 202
+
+    @app.route('/api/restart/web', methods=['POST'])
+    @login_required()
+    def restart_web():
+        logger.warning("[WEB] Restart web panel requested via dashboard API.")
+        lock_path = os.path.join(os.path.dirname(__file__), '..', 'assistant_restarting.lock')
+        with open(lock_path, 'w') as f:
+            f.write('restarting')
+        os._exit(3)  # This will cause most process managers to restart Flask
+        return jsonify({"message": "Restarting web panel..."}), 202
+
+    @app.route('/api/restart/all', methods=['POST'])
+    @login_required()
+    def restart_all():
+        logger.warning("[WEB] Restart all (assistant + web) requested via dashboard API.")
+        lock_path = os.path.join(os.path.dirname(__file__), '..', 'assistant_restarting.lock')
+        with open(lock_path, 'w') as f:
+            f.write('restarting')
+        if platform.system() == 'Windows':
+            subprocess.Popen(['powershell.exe', '-Command', 'Start-Process', 'python', 'main.py', '-WindowStyle', 'Hidden'])
+        else:
+            subprocess.Popen(['nohup', 'python3', 'main.py', '&'])
+        logger.warning("[WEB] Attempted to start new assistant process. Uwaga: stary proces nie jest automatycznie zamykany!")
+        os._exit(3)
+        return jsonify({"message": "Restarting assistant and web panel..."}), 202
 
     @app.route('/api/logs')
     @login_required()
@@ -819,6 +869,16 @@ def create_app(queue: multiprocessing.Queue):
         except Exception as e:
             logger.error(f"Error deleting memory {memory_id} via API: {e}")
             return jsonify({"error": "Server error"}), 500
+
+    @app.route('/api/stop/assistant', methods=['POST'])
+    @login_required()
+    def stop_assistant():
+        logger.warning("[WEB] Stop assistant requested via dashboard API.")
+        # Wysyłamy sygnał do procesu asystenta przez plik lock
+        lock_path = os.path.join(os.path.dirname(__file__), '..', 'assistant_stop.lock')
+        with open(lock_path, 'w') as f:
+            f.write('stop')
+        return jsonify({"message": "Wysłano żądanie zatrzymania asystenta."}), 202
 
     return app
 

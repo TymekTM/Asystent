@@ -1,7 +1,7 @@
 {
   "VOSK_MODEL_PATH": "vosk_model",
   "WAKE_WORD": "asystencie",
-  "MIC_DEVICE_ID": "14",
+  "MIC_DEVICE_ID": 14,
   "STT_SILENCE_THRESHOLD": 600,
   "PROVIDER": "lmstudio",
   "STT_MODEL": "gemma3:4b-it-q4_K_M",
