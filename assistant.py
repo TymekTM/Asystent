@@ -3,6 +3,7 @@ import ollama
 import inspect # Add inspect import
 import queue # Import queue for Empty exception
 import threading
+import logging.handlers  # Add this import
 
 # Import modułów audio z nowej lokalizacji
 from audio_modules.tts_module import TTSModule
@@ -25,7 +26,7 @@ from prompts import CONVERT_QUERY_PROMPT, SYSTEM_PROMPT
 
 
 logger = logging.getLogger(__name__)
-# MAX_HISTORY_LENGTH is now loaded from config
+# Usuwamy konfigurację handlerów, polegamy na main.py
 
 PLUGINS_STATE_FILE = os.path.join(os.path.dirname(__file__), 'plugins_state.json')
 plugins_state_lock = threading.Lock()

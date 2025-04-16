@@ -1,6 +1,7 @@
 import multiprocessing
 import asyncio
 import logging
+import logging.handlers  # Add this import
 import sys
 import os
 import time # Import the time module
@@ -22,14 +23,15 @@ log_filename = "assistant.log"
 log_level = logging.INFO # Zmieniono z INFO na WARNING
 log_format = "%(asctime)s - %(processName)s - %(name)s - %(levelname)s - %(message)s"
 
-# Use basicConfig for simplicity, or add handlers as needed
+# Use RotatingFileHandler for log rotation
+rotating_handler = logging.handlers.RotatingFileHandler(
+    log_filename, maxBytes=5*1024*1024, backupCount=5, encoding='utf-8', mode='a'
+)
+stream_handler = logging.StreamHandler(sys.stdout)
 logging.basicConfig(
     level=log_level,
     format=log_format,
-    handlers=[
-        logging.FileHandler(log_filename, mode='a', encoding='utf-8'), # Log to file
-        logging.StreamHandler(sys.stdout) # Also log to console
-    ]
+    handlers=[rotating_handler, stream_handler]
 )
 logger = logging.getLogger(__name__)
 

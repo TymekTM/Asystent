@@ -3,7 +3,6 @@
 ## Priority Tasks
 - [WIP] Multi-provider AI support (OpenAI, DeepSeek, Anthropic, Ollama, LM Studio)
 - [TODO] Manual activation improvements (add button in web UI, keyboard shortcut)
-- [TODO] Enhanced error handling and logging (log rotation, in-UI log viewer, export logs)
 
 ## Feature Enhancements
 - TTS and voice personalization (user-selectable voice, language, speed, test preview)
@@ -14,9 +13,8 @@
 
 ## Web UI and UX
 - Advanced user authentication and role management (roles, password reset, etc.)
-- Accessibility improvements (screen reader support, keyboard navigation, color contrast)
 - Documentation and onboarding (user guide, developer setup, API docs)
-- Internationalization (multi-language UI, easy translation)
+- Internationalizationok, (multi-language UI, easy translation)
 - Mobile-friendly/responsive UI improvements
 
 ## Integration and Security

@@ -1,7 +1,7 @@
 import os
 import json
 import asyncio
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash, send_file
 from functools import wraps
 import logging
 import time # Import time for potential timestamping or delays
@@ -749,17 +749,23 @@ def create_app(queue: multiprocessing.Queue):
     @login_required()
     def api_logs():
         level = request.args.get('level', 'ALL')
+        page = int(request.args.get('page', 1))
+        page_size = int(request.args.get('page_size', 100))
         log_path = os.path.join(os.path.dirname(__file__), '..', 'assistant.log')
         try:
             with open(log_path, 'r', encoding='utf-8') as f:
                 lines = f.readlines()
             if level != 'ALL':
                 lines = [l for l in lines if f'- {level} -' in l]
-            # Limit to last 500 lines for performance
-            logs = lines[-500:]
-            return jsonify({'logs': logs})
+            total_lines = len(lines)
+            total_pages = max(1, (total_lines + page_size - 1) // page_size)
+            page = max(1, min(page, total_pages))
+            start = (page - 1) * page_size
+            end = start + page_size
+            logs = lines[start:end]
+            return jsonify({'logs': logs, 'page': page, 'total_pages': total_pages, 'total_lines': total_lines})
         except Exception as e:
-            return jsonify({'logs': [f'Błąd odczytu logów: {e}']}), 500
+            return jsonify({'logs': [f'Błąd odczytu logów: {e}'], 'page': 1, 'total_pages': 1, 'total_lines': 0}), 500
 
     @app.route('/api/analytics', methods=['GET'])
     @login_required()
@@ -1084,6 +1090,21 @@ def create_app(queue: multiprocessing.Queue):
         conn.commit()
         conn.close()
         return jsonify({'success': True})
+
+    @app.route('/api/logs/download')
+    @login_required()
+    def download_logs():
+        """Download the current and rotated log files as a zip archive."""
+        import zipfile, io, glob
+        log_dir = os.path.dirname(os.path.dirname(__file__))
+        log_files = glob.glob(os.path.join(log_dir, 'assistant.log*'))
+        mem_zip = io.BytesIO()
+        with zipfile.ZipFile(mem_zip, 'w', zipfile.ZIP_DEFLATED) as zf:
+            for log_file in log_files:
+                arcname = os.path.basename(log_file)
+                zf.write(log_file, arcname)
+        mem_zip.seek(0)
+        return send_file(mem_zip, mimetype='application/zip', as_attachment=True, download_name='logs.zip')
 
     return app
 
