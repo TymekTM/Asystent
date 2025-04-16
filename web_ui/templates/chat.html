@@ -8,7 +8,9 @@
         <button type="submit" class="btn btn-primary ms-2">Wyślij</button>
         <button type="button" class="btn btn-secondary ms-2" id="voice-btn"><i class="fas fa-microphone"></i></button>
         <button type="button" class="btn btn-outline-danger ms-2" id="clear-chat-btn">Wyczyść</button>
+        <button type="button" class="btn btn-primary ms-2" id="manual-activate-btn"><i class="fas fa-bolt"></i> Aktywuj asystenta</button>
     </form>
+    <div id="manual-activate-status" class="mt-2"></div>
     <div id="chat-status" class="mt-2"></div>
 </div>
 <script>
@@ -88,6 +90,52 @@ document.getElementById('clear-chat-btn').onclick = function() {
         .then(r => r.json())
         .then(data => { if (data.success) loadHistory(); });
 };
+
+// Manual Activation Button logic
+const manualActivateBtn = document.getElementById('manual-activate-btn');
+const manualActivateStatus = document.getElementById('manual-activate-status');
+if (manualActivateBtn) {
+    manualActivateBtn.addEventListener('click', () => {
+        manualActivateStatus.textContent = 'Wysyłanie żądania aktywacji...';
+        manualActivateStatus.className = 'ms-2 text-info';
+        manualActivateBtn.disabled = true;
+        fetch('/api/activate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(response => response.json().then(data => ({ status: response.status, body: data })))
+        .then(({ status, body }) => {
+            if (status === 202 || status === 200) {
+                manualActivateStatus.textContent = body.message || 'Aktywacja wysłana!';
+                manualActivateStatus.className = 'ms-2 text-success';
+            } else {
+                manualActivateStatus.textContent = `Błąd: ${body.error || 'Nie udało się wysłać żądania.'}`;
+                manualActivateStatus.className = 'ms-2 text-danger';
+            }
+            setTimeout(() => {
+                manualActivateBtn.disabled = false;
+                manualActivateStatus.textContent = '';
+            }, 3000);
+        })
+        .catch(() => {
+            manualActivateStatus.textContent = 'Błąd wysyłania żądania.';
+            manualActivateStatus.className = 'ms-2 text-danger';
+            manualActivateBtn.disabled = false;
+            setTimeout(() => {
+                manualActivateStatus.textContent = '';
+            }, 3000);
+        });
+    });
+}
+// Keyboard shortcut: Ctrl+M for manual activation
+window.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'm') {
+        if (manualActivateBtn && !manualActivateBtn.disabled) {
+            manualActivateBtn.click();
+            e.preventDefault();
+        }
+    }
+});
 
 loadHistory();
 </script>

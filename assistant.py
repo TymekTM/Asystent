@@ -359,14 +359,8 @@ class Assistant:
                                 logger.info("Recording audio for Whisper command (manual trigger)...")
                                 audio_command = self.speech_recognizer.record_dynamic_command_audio()
                                 if audio_command is not None:
-                                    import soundfile as sf
-                                    import io
-                                    buffer = io.BytesIO()
-                                    sf.write(buffer, audio_command, 16000, format='WAV')
-                                    buffer.seek(0)
-                                    logger.info("Transcribing command with Whisper (manual trigger)...")
-                                    command_text = self.whisper_asr.transcribe(buffer)
-                                    buffer.close()
+                                    # Przekazujemy numpy.ndarray bezpośrednio do transcribe
+                                    command_text = self.whisper_asr.transcribe(audio_command)
                                 else:
                                     logger.warning("Failed to record audio for Whisper command (manual trigger).")
                             else:
