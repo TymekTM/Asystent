@@ -1106,6 +1106,44 @@ def create_app(queue: multiprocessing.Queue):
         mem_zip.seek(0)
         return send_file(mem_zip, mimetype='application/zip', as_attachment=True, download_name='logs.zip')
 
+    @app.route('/api/voice_upload', methods=['POST'])
+    def voice_upload():
+        """Przyjmuje plik audio z web UI (np. z telefonu), rozpoznaje tekst i zwraca go do UI."""
+        if 'audio' not in request.files:
+            return jsonify({'error': 'Brak pliku audio.'}), 400
+        audio_file = request.files['audio']
+        # Zapisz plik tymczasowo
+        temp_path = os.path.join('temp_voice_upload.webm')
+        audio_file.save(temp_path)
+        # Przekonwertuj do WAV jeśli potrzeba (np. ffmpeg)
+        wav_path = temp_path.replace('.webm', '.wav')
+        try:
+            import subprocess
+            subprocess.run([
+                'ffmpeg', '-y', '-i', temp_path, '-ar', '16000', '-ac', '1', wav_path
+            ], check=True, capture_output=True)
+        except Exception as e:
+            return jsonify({'error': f'Błąd konwersji audio: {e}'}), 500
+        # Rozpoznaj tekst (Whisper lub Vosk)
+        try:
+            from assistant import get_assistant_instance
+            assistant = get_assistant_instance()  # Musisz mieć funkcję singletona lub globalny obiekt
+            if hasattr(assistant, 'whisper_asr') and assistant.whisper_asr:
+                text = assistant.whisper_asr.transcribe(wav_path)
+            elif hasattr(assistant, 'speech_recognizer') and assistant.speech_recognizer:
+                text = assistant.speech_recognizer.transcribe_file(wav_path)
+            else:
+                text = ''
+        except Exception as e:
+            text = ''
+        # Usuń pliki tymczasowe
+        try:
+            os.remove(temp_path)
+            os.remove(wav_path)
+        except Exception:
+            pass
+        return jsonify({'text': text})
+
     return app
 
 # --- Main Execution (for standalone testing) ---
