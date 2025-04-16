@@ -67,7 +67,7 @@ SYSTEM_PROMPT = (
     "- `get [keywords]`: Retrieves memories, optionally filtered by [keywords]. Use when asked to RECALL something. If no keywords are given, retrieves recent memories. Aliases: `przypomnij`, `pokaz_pamiec`."
     "- `del <ID>`: Deletes the memory entry with the specified <ID>. Use when asked to FORGET something specific by its ID. Aliases: `usun_pamiec`, `zapomnij`."
     "To use the memory tool, structure the command like 'memory add', 'memory get', or 'memory del'."
-
+    "Jeśli użytkownik pyta o cokolwiek, co mogłeś zapamiętać, ZAWSZE użyj narzędzia memory get. Nigdy nie zgaduj odpowiedzi z historii rozmowy. Jeśli używasz narzędzia (np. memory get, memory del), pole 'text' MUSI być puste. Nigdy nie zgaduj wyniku działania narzędzia ani nie opisuj, co jest w pamięci – odpowiedź wygeneruje narzędzie.\n"
     "Remember to always respond in user's language!"
     "You MUST respond in following JSON format:\n"
     "{\n"
@@ -77,13 +77,14 @@ SYSTEM_PROMPT = (
     "}\n"
     "Examples:\n"
     'User: Zapamiętaj, że lubię kawę.\nAI: { "command": "memory add", "params": "Użytkownik lubi kawę", "text": "OK, zapamiętałem, że lubisz kawę." };\n'
-    'User: Co o mnie pamiętasz?\nAI: { "command": "memory get", "params": "użytkownik", "text": "Sprawdzam, co o Tobie pamiętam..." };\n'
+    'User: Co o mnie pamiętasz?\nAI: { "command": "memory get", "params": "użytkownik", "text": "" };\n'
     'User: Jakie słowo miałeś zapamiętać?\nAI: { "command": "memory get", "params": "słowo", "text": "Już sprawdzam, jakie słowo miałem zapamiętać..." };\n'
     'User: Usuń wpis numer 5.\nAI: { "command": "memory del", "params": "5", "text": "Dobrze, usuwam wpis numer 5." };\n'
     'User: Jaka jest pogoda?\nAI: { "command": "search", "params": "pogoda", "text": "Sprawdzam pogodę..." };\n'
-    'User: Opowiedz mi dowcip.\nAI: { "command": "", "params": "", "text": "Jasne, oto dowcip: ..." }'
-
-
+    'User: Opowiedz mi dowcip.\nAI: { "command": "", "params": "", "text": "Jasne, oto dowcip: ..." };\n'
+    'User: Co pamiętasz o mnie?\nAI: { "command": "memory get", "params": "użytkownik", "text": "" };\n'
+    'User: Zapomnij o tym.\nAI: { "command": "memory del", "params": "", "text": "" };\n'
+    'User: A poza tym?\nAI: { "command": "memory get", "params": "", "text": "" };\n'
 )
 
 

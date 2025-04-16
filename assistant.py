@@ -237,6 +237,14 @@ class Assistant:
         elif ai_command:
             main_command = ai_command
 
+        # --- Heurystyka: jeśli AI nie wywołało narzędzia, a pytanie użytkownika zawiera słowa kluczowe pamięci ---
+        memory_keywords = ["pamiętasz", "przypomnij", "zapamiętałeś", "zapamiętać", "zapomniałeś", "a poza tym", "co jeszcze", "co miałeś zapamiętać"]
+        if not main_command and any(kw in refined_query.lower() for kw in memory_keywords):
+            main_command = "memory"
+            sub_command_key = "get"
+            actual_params = ""
+            logger.info("Heurystyka: automatyczne wywołanie memory get na podstawie pytania użytkownika.")
+
         if main_command and main_command in self.modules:
             plugin_info = self.modules[main_command]
             handler = None
@@ -252,13 +260,8 @@ class Assistant:
             else:
                 logger.warning(f"No valid handler found for command '{ai_command}' (main: '{main_command}', sub: '{sub_command_key}')")
 
-            # Speak the AI's preliminary text if provided, before running the tool
-            if ai_response_text:
-                self.conversation_history.append({"role": "assistant", "content": ai_response_text})
-                self.trim_conversation_history()
-                asyncio.create_task(self.tts.speak(remove_chain_of_thought(ai_response_text)))
-                await asyncio.sleep(0.5)
-
+            tool_result_str = ""
+            success = True
             if handler:
                 logger.info(f"Attempting to execute handler: {getattr(handler, '__name__', str(handler))} for command '{ai_command}' with params: '{actual_params}'")
                 try:
@@ -269,7 +272,6 @@ class Assistant:
                         args_to_pass['params'] = actual_params
                     if 'conversation_history' in sig.parameters:
                         args_to_pass['conversation_history'] = self.conversation_history
-                    # Optionally pass user if supported
                     if 'user' in sig.parameters:
                         args_to_pass['user'] = 'assistant'
                     tool_result = None
@@ -278,8 +280,6 @@ class Assistant:
                     else:
                         tool_result = await asyncio.to_thread(handler, **args_to_pass)
                     logger.info(f"Handler {getattr(handler, '__name__', str(handler))} returned: {tool_result}")
-                    tool_result_str = ""
-                    success = True
                     if isinstance(tool_result, tuple) and len(tool_result) == 2:
                         tool_result_str = str(tool_result[0])
                         success = bool(tool_result[1])
@@ -288,33 +288,19 @@ class Assistant:
                         success = bool(tool_result_str)
                     else:
                         success = False
-                    if tool_result_str:
-                        log_level = logging.INFO if success else logging.WARNING
-                        logger.log(log_level, f"Tool '{ai_command}' result (Success: {success}): {tool_result_str}")
-                        self.conversation_history.append({"role": "assistant", "content": tool_result_str})
-                        self.trim_conversation_history()
-                        asyncio.create_task(self.tts.speak(remove_chain_of_thought(tool_result_str)))
-                    elif success:
-                        logger.info(f"Tool '{ai_command}' executed successfully but returned no specific message.")
-                    else:
-                        logger.warning(f"Handler for command '{ai_command}' failed and returned no message.")
-                        error_text = f"Nie udało się wykonać komendy {ai_command}."
-                        self.conversation_history.append({"role": "assistant", "content": error_text})
-                        self.trim_conversation_history()
-                        asyncio.create_task(self.tts.speak(error_text))
                 except Exception as e:
                     logger.error(f"Error executing command '{ai_command}': {e}", exc_info=True)
-                    error_text = f"Przepraszam, wystąpił błąd podczas wykonywania komendy {ai_command}."
-                    self.conversation_history.append({"role": "assistant", "content": error_text})
-                    self.trim_conversation_history()
-                    asyncio.create_task(self.tts.speak(error_text))
-            elif ai_command:
-                logger.warning(f"Handler not found or not callable for command '{ai_command}'.")
-                if not ai_response_text:
-                    fallback_text = f"Nie wiem jak wykonać komendę {ai_command}."
-                    self.conversation_history.append({"role": "assistant", "content": fallback_text})
-                    self.trim_conversation_history()
-                    asyncio.create_task(self.tts.speak(fallback_text))
+                    tool_result_str = f"Przepraszam, wystąpił błąd podczas wykonywania komendy {ai_command}."
+                    success = False
+            # --- ZAWSZE wypowiedz tylko wynik narzędzia jeśli istnieje ---
+            if tool_result_str:
+                self.conversation_history.append({"role": "assistant", "content": tool_result_str})
+                self.trim_conversation_history()
+                asyncio.create_task(self.tts.speak(remove_chain_of_thought(tool_result_str)))
+            elif ai_response_text:
+                self.conversation_history.append({"role": "assistant", "content": ai_response_text})
+                self.trim_conversation_history()
+                asyncio.create_task(self.tts.speak(remove_chain_of_thought(ai_response_text)))
         else:
             # If AI response text exists and no valid command was issued
             if ai_response_text:

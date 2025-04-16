@@ -32,7 +32,7 @@ def add_memory(params: str, conversation_history: list = None, user: str = "assi
     memory_id = add_memory_db(content=content, user=calling_user)
 
     if memory_id is not None:
-        return f"Zapamiętałem informację (ID: {memory_id}).", True # Return True for success
+        return f"Zapamiętałem: {content}", True # Return True for success
     else:
         return "Nie udało mi się zapisać informacji.", False
 
@@ -55,9 +55,12 @@ def retrieve_memories(params: str = "", conversation_history: list = None, user:
     if not memories:
         result = "Nie znalazłem żadnych pasujących wspomnień." if query else "Brak zapisanych wspomnień."
         return result, True
-    # Zwracaj tylko treść wspomnień, nie metadane
-    response_lines = [m['content'] for m in memories if m.get('content')]
-    return "\n".join(response_lines), True
+    if len(memories) == 1:
+        return f"Pamiętam: {memories[0]['content']}", True
+    else:
+        contents = [m['content'] for m in memories if m.get('content')]
+        joined = "; ".join(contents)
+        return f"Pamiętam: {joined}", True
 
 def delete_memory(params: str, conversation_history: list = None) -> str:
     """
@@ -66,21 +69,30 @@ def delete_memory(params: str, conversation_history: list = None) -> str:
     """
     try:
         param = params.strip()
-        # Jeśli to liczba, traktuj jako ID
+        found = []
+        content = None
         if param.isdigit():
             memory_id = int(param)
+            found = get_memories_db(query=None, limit=1000)
+            content = next((m['content'] for m in found if m['id'] == memory_id), None)
         else:
-            # Spróbuj znaleźć wpis po treści
             found = get_memories_db(query=param, limit=1)
             if found:
                 memory_id = found[0]['id']
+                content = found[0]['content']
             else:
-                return f"Nie znalazłem wpisu pasującego do: {param}", False
+                # Jeśli nie znaleziono, usuń ostatni wpis
+                all_memories = get_memories_db(query=None, limit=1)
+                if all_memories:
+                    memory_id = all_memories[0]['id']
+                    content = all_memories[0]['content']
+                else:
+                    return "Nie mam już nic do zapomnienia.", False
         logger.info(f"Attempting to delete memory via command with ID: {memory_id}")
         if delete_memory_db(memory_id):
-            return f"Usunąłem wspomnienie o ID {memory_id}.", True
+            return f"Zapomniałem: {content}", True
         else:
-            return f"Nie udało się usunąć wspomnienia o ID {memory_id} (mogło nie istnieć).", False
+            return f"Nie udało mi się zapomnieć tej informacji.", False
     except Exception as e:
         logger.error(f"Error during memory deletion command (ID: {params}): {e}")
         return "Wystąpił błąd podczas usuwania wspomnienia.", False

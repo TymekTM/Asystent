@@ -684,3 +684,380 @@ Mam zapamiętać słowo Banan
 2025-04-16 17:18:21,805 - AssistantProcess - assistant - INFO - Handler add_memory returned: ('Zapamiętałem informację (ID: 10).', True)
 2025-04-16 17:18:21,805 - AssistantProcess - assistant - INFO - Tool 'memory add' result (Success: True): Zapamiętałem informację (ID: 10).
 2025-04-16 17:18:21,805 - AssistantProcess - audio_modules.tts_module - INFO - TTS: Zapamiętałem informację (ID: 10).
+2025-04-16 17:18:50,424 - FlaskProcess - __mp_main__ - INFO - Flask process finished.
+2025-04-16 17:20:32,192 - MainProcess - __main__ - WARNING - Main process received KeyboardInterrupt. Terminating child processes...
+2025-04-16 17:20:39,675 - MainProcess - __main__ - INFO - Initializing application...
+2025-04-16 17:20:39,681 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-04-16 17:20:39,698 - MainProcess - __main__ - INFO - Starting Assistant process...
+2025-04-16 17:20:44,332 - AssistantProcess - __mp_main__ - INFO - Starting Assistant process...
+2025-04-16 17:20:44,334 - FlaskProcess - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-04-16 17:20:45,006 - AssistantProcess - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-04-16 17:20:45,007 - AssistantProcess - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-04-16 17:20:45,022 - AssistantProcess - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-04-16 17:20:45,128 - AssistantProcess - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-04-16 17:20:45,150 - AssistantProcess - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-04-16 17:20:45,155 - AssistantProcess - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-04-16 17:20:45,156 - AssistantProcess - assistant - INFO - Loaded assistant long-term memory at startup:
+Pamiętam: Użytkownik ma na imię Tomek
+2025-04-16 17:20:45,157 - AssistantProcess - assistant - INFO - Bot is starting...
+2025-04-16 17:20:45,171 - AssistantProcess - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-04-16 17:20:45,173 - AssistantProcess - assistant - INFO - Starting/Restarting wake word detection task...
+2025-04-16 17:20:45,174 - AssistantProcess - assistant - INFO - Starting command queue processing task...
+2025-04-16 17:20:45,405 - AssistantProcess - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-04-16 17:20:52,174 - AssistantProcess - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-16 17:20:52,176 - AssistantProcess - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-16 17:20:52,238 - AssistantProcess - audio_modules.wakeword_detector - INFO - Listening for command with Vosk...
+2025-04-16 17:20:52,238 - AssistantProcess - audio_modules.speech_recognition - INFO - Listening for command using Vosk (dynamic recording)...
+2025-04-16 17:20:52,238 - AssistantProcess - audio_modules.speech_recognition - INFO - Dynamic command recording...
+2025-04-16 17:20:56,563 - AssistantProcess - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-16 17:20:57,517 - AssistantProcess - audio_modules.speech_recognition - INFO - Vosk recognized: nie mam na imię tomek tylko tymoteusz zmień to
+2025-04-16 17:20:57,526 - AssistantProcess - audio_modules.wakeword_detector - INFO - Command: nie mam na imię tomek tylko tymoteusz zmień to
+2025-04-16 17:20:59,585 - AssistantProcess - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-16 17:21:02,270 - AssistantProcess - assistant - INFO - Refined query: nie mam na imię Tymoteusz tylko Tymoteusz
+2025-04-16 17:21:02,270 - AssistantProcess - assistant - INFO - Intent classified as: general
+2025-04-16 17:21:04,317 - AssistantProcess - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-16 17:21:07,249 - AssistantProcess - assistant - INFO - AI response: {"text": "Cześć! Miło Cię poznać. Jak się dziś czujesz?# tools"}
+2025-04-16 17:21:07,250 - AssistantProcess - audio_modules.tts_module - INFO - TTS: Cześć! Miło Cię poznać. Jak się dziś czujesz?# tools
+2025-04-16 17:21:19,172 - AssistantProcess - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-16 17:21:19,172 - AssistantProcess - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-16 17:21:19,195 - AssistantProcess - audio_modules.wakeword_detector - INFO - Listening for command with Vosk...
+2025-04-16 17:21:19,195 - AssistantProcess - audio_modules.speech_recognition - INFO - Listening for command using Vosk (dynamic recording)...
+2025-04-16 17:21:19,196 - AssistantProcess - audio_modules.speech_recognition - INFO - Dynamic command recording...
+2025-04-16 17:21:21,621 - AssistantProcess - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-16 17:21:22,345 - AssistantProcess - audio_modules.speech_recognition - INFO - Vosk recognized: przypomnij sobie co by zapamiętać
+2025-04-16 17:21:22,351 - AssistantProcess - audio_modules.wakeword_detector - INFO - Command: przypomnij sobie co by zapamiętać
+2025-04-16 17:21:24,423 - AssistantProcess - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-16 17:21:27,012 - AssistantProcess - assistant - INFO - Refined query: Przypomnij sobie co by zapamiętać
+2025-04-16 17:21:27,012 - AssistantProcess - assistant - INFO - Intent classified as: general
+2025-04-16 17:21:29,091 - AssistantProcess - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-16 17:21:32,753 - AssistantProcess - assistant - INFO - AI response: {"text": "Sprawdzam, co o Tobie pamiętam... Właśnie zapisałem, że lubisz kawę! Co jeszcze chciałbyś, żebym zapamiętał?", "command": "memory get", "params": "użytkownik", "tool": "memory"}
+2025-04-16 17:21:32,753 - AssistantProcess - assistant - INFO - Identified sub-command: memory get
+2025-04-16 17:21:32,753 - AssistantProcess - audio_modules.tts_module - INFO - TTS: Sprawdzam, co o Tobie pamiętam... Właśnie zapisałem, że lubisz kawę! Co jeszcze chciałbyś, żebym zapamiętał?
+2025-04-16 17:21:33,256 - AssistantProcess - assistant - INFO - Attempting to execute handler: retrieve_memories for command 'memory get' with params: 'użytkownik'
+2025-04-16 17:21:33,256 - AssistantProcess - memory_module - INFO - Retrieving memories via command with query: 'użytkownik' user: 'assistant'
+2025-04-16 17:21:33,258 - AssistantProcess - assistant - INFO - Handler retrieve_memories returned: ('Pamiętam: Użytkownik ma na imię Tomek', True)
+2025-04-16 17:21:33,258 - AssistantProcess - assistant - INFO - Tool 'memory get' result (Success: True): Pamiętam: Użytkownik ma na imię Tomek
+2025-04-16 17:21:33,258 - AssistantProcess - audio_modules.tts_module - INFO - TTS: Pamiętam: Użytkownik ma na imię Tomek
+2025-04-16 17:21:49,171 - AssistantProcess - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-16 17:21:49,171 - AssistantProcess - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-16 17:21:49,202 - AssistantProcess - audio_modules.wakeword_detector - INFO - Listening for command with Vosk...
+2025-04-16 17:21:49,203 - AssistantProcess - audio_modules.speech_recognition - INFO - Listening for command using Vosk (dynamic recording)...
+2025-04-16 17:21:49,203 - AssistantProcess - audio_modules.speech_recognition - INFO - Dynamic command recording...
+2025-04-16 17:21:51,630 - AssistantProcess - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-16 17:21:52,330 - AssistantProcess - audio_modules.speech_recognition - INFO - Vosk recognized: zapomnij o tym
+2025-04-16 17:21:52,335 - AssistantProcess - audio_modules.wakeword_detector - INFO - Command: zapomnij o tym
+2025-04-16 17:21:54,393 - AssistantProcess - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-16 17:21:56,944 - AssistantProcess - assistant - INFO - Refined query: Zapomnij o tym
+2025-04-16 17:21:56,944 - AssistantProcess - assistant - INFO - Intent classified as: general
+2025-04-16 17:21:58,991 - AssistantProcess - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-16 17:22:02,309 - AssistantProcess - assistant - INFO - AI response: {"text": "{\n  \"text\": \"Dobrze, zapomniałem o tym.\",\n  \"command\": \"memory del\",\n  \"params\": \"użytkownik lubi kawę\",\n}"}
+2025-04-16 17:22:02,309 - AssistantProcess - audio_modules.tts_module - INFO - TTS: {
+  "text": "Dobrze, zapomniałem o tym.",
+  "command": "memory del",
+  "params": "użytkownik lubi kawę",
+}
+2025-04-16 17:24:45,277 - AssistantProcess - assistant - INFO - Detected changes in plugins. Reloading plugins...
+2025-04-16 17:24:45,280 - AssistantProcess - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-04-16 17:24:45,281 - AssistantProcess - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-04-16 17:24:45,311 - AssistantProcess - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-04-16 17:24:45,313 - AssistantProcess - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-04-16 17:24:45,319 - AssistantProcess - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-04-16 17:25:45,584 - AssistantProcess - assistant - INFO - Received command from queue: activate
+2025-04-16 17:25:45,584 - AssistantProcess - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-16 17:25:45,589 - AssistantProcess - assistant - INFO - Listening for command with Vosk (manual trigger)...
+2025-04-16 17:25:45,589 - AssistantProcess - audio_modules.speech_recognition - INFO - Listening for command using Vosk (dynamic recording)...
+2025-04-16 17:25:45,589 - AssistantProcess - audio_modules.speech_recognition - INFO - Dynamic command recording...
+2025-04-16 17:25:48,019 - AssistantProcess - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-16 17:25:48,818 - AssistantProcess - audio_modules.speech_recognition - INFO - Vosk recognized: co miałeś zapamiętać
+2025-04-16 17:25:48,822 - AssistantProcess - assistant - INFO - Command (manual trigger): co miałeś zapamiętać
+2025-04-16 17:25:50,889 - AssistantProcess - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-16 17:25:53,131 - AssistantProcess - assistant - INFO - Refined query: co miałeś zapamiętać
+2025-04-16 17:25:53,131 - AssistantProcess - assistant - INFO - Intent classified as: general
+2025-04-16 17:25:55,194 - AssistantProcess - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-16 17:25:58,653 - AssistantProcess - assistant - INFO - AI response: {"command": "memory get", "params": "", "text": "Sprawdzam, co o Tobie pamiętam... Na razie nic konkretnego, ale mam zapisane, że lubisz kawę!"}
+2025-04-16 17:25:58,653 - AssistantProcess - assistant - INFO - Identified sub-command: memory get
+2025-04-16 17:25:58,654 - AssistantProcess - audio_modules.tts_module - INFO - TTS: Sprawdzam, co o Tobie pamiętam... Na razie nic konkretnego, ale mam zapisane, że lubisz kawę!
+2025-04-16 17:25:59,165 - AssistantProcess - assistant - INFO - Attempting to execute handler: retrieve_memories for command 'memory get' with params: ''
+2025-04-16 17:25:59,166 - AssistantProcess - memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-04-16 17:25:59,167 - AssistantProcess - assistant - INFO - Handler retrieve_memories returned: ('Pamiętam: Użytkownik ma na imię Tomek', True)
+2025-04-16 17:25:59,167 - AssistantProcess - assistant - INFO - Tool 'memory get' result (Success: True): Pamiętam: Użytkownik ma na imię Tomek
+2025-04-16 17:25:59,167 - AssistantProcess - audio_modules.tts_module - INFO - TTS: Pamiętam: Użytkownik ma na imię Tomek
+2025-04-16 17:29:45,762 - MainProcess - __main__ - WARNING - Assistant process terminated unexpectedly with exit code 3221225786. Not restarting automatically.
+2025-04-16 17:29:45,763 - MainProcess - __main__ - INFO - Assistant restart loop finished. Waiting for Flask process...
+2025-04-16 17:29:57,882 - MainProcess - __main__ - INFO - Initializing application...
+2025-04-16 17:29:57,889 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-04-16 17:29:57,898 - MainProcess - __main__ - INFO - Starting Assistant process...
+2025-04-16 17:30:02,393 - AssistantProcess - __mp_main__ - INFO - Starting Assistant process...
+2025-04-16 17:30:02,403 - FlaskProcess - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-04-16 17:30:03,125 - AssistantProcess - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-04-16 17:30:03,125 - AssistantProcess - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-04-16 17:30:03,126 - AssistantProcess - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-04-16 17:30:03,241 - AssistantProcess - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-04-16 17:30:03,269 - AssistantProcess - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-04-16 17:30:03,274 - AssistantProcess - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-04-16 17:30:03,274 - AssistantProcess - assistant - INFO - Loaded assistant long-term memory at startup:
+Pamiętam: Użytkownik ma na imię Tomek
+2025-04-16 17:30:03,275 - AssistantProcess - assistant - INFO - Bot is starting...
+2025-04-16 17:30:03,290 - AssistantProcess - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-04-16 17:30:03,290 - AssistantProcess - assistant - INFO - Starting/Restarting wake word detection task...
+2025-04-16 17:30:03,292 - AssistantProcess - assistant - INFO - Starting command queue processing task...
+2025-04-16 17:30:03,547 - AssistantProcess - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-04-16 17:30:28,296 - AssistantProcess - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-16 17:30:28,297 - AssistantProcess - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-16 17:30:28,356 - AssistantProcess - audio_modules.wakeword_detector - INFO - Listening for command with Vosk...
+2025-04-16 17:30:28,356 - AssistantProcess - audio_modules.speech_recognition - INFO - Listening for command using Vosk (dynamic recording)...
+2025-04-16 17:30:28,357 - AssistantProcess - audio_modules.speech_recognition - INFO - Dynamic command recording...
+2025-04-16 17:30:31,075 - AssistantProcess - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-16 17:30:32,120 - AssistantProcess - audio_modules.speech_recognition - INFO - Vosk recognized: czy masz coś teraz w pamięci
+2025-04-16 17:30:32,130 - AssistantProcess - audio_modules.wakeword_detector - INFO - Command: czy masz coś teraz w pamięci
+2025-04-16 17:30:34,198 - AssistantProcess - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-16 17:30:36,794 - AssistantProcess - assistant - INFO - Refined query: czy masz coś teraz w pamięci
+2025-04-16 17:30:36,794 - AssistantProcess - assistant - INFO - Intent classified as: general
+2025-04-16 17:30:38,835 - AssistantProcess - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-16 17:30:42,352 - AssistantProcess - assistant - INFO - AI response: {"text": "Tak, mam kilka rzeczy zapisanych! Przypomnij mi, co ostatnio przeglądaliśmy, albo powiedz, czego konkretnie chcesz, żebym sprawdził.", "command": "", "params": ""}
+2025-04-16 17:30:42,353 - AssistantProcess - audio_modules.tts_module - INFO - TTS: Tak, mam kilka rzeczy zapisanych! Przypomnij mi, co ostatnio przeglądaliśmy, albo powiedz, czego konkretnie chcesz, żebym sprawdził.
+2025-04-16 17:30:54,795 - AssistantProcess - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-16 17:30:54,795 - AssistantProcess - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-16 17:30:54,829 - AssistantProcess - audio_modules.wakeword_detector - INFO - Listening for command with Vosk...
+2025-04-16 17:30:54,829 - AssistantProcess - audio_modules.speech_recognition - INFO - Listening for command using Vosk (dynamic recording)...
+2025-04-16 17:30:54,829 - AssistantProcess - audio_modules.speech_recognition - INFO - Dynamic command recording...
+2025-04-16 17:30:59,155 - AssistantProcess - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-16 17:31:00,047 - AssistantProcess - audio_modules.speech_recognition - INFO - Vosk recognized: widzę że masz coś zapisane w pamięci przypomnij sobie
+2025-04-16 17:31:00,055 - AssistantProcess - audio_modules.wakeword_detector - INFO - Command: widzę że masz coś zapisane w pamięci przypomnij sobie
+2025-04-16 17:31:02,115 - AssistantProcess - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-16 17:31:04,672 - AssistantProcess - assistant - INFO - Refined query: widzę, że masz coś zapisane w pamięci przypomnij sobie
+2025-04-16 17:31:04,672 - AssistantProcess - assistant - INFO - Intent classified as: general
+2025-04-16 17:31:06,720 - AssistantProcess - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-16 17:31:10,340 - AssistantProcess - assistant - INFO - AI response: {"text": "Przepraszam, ale nie mam dostępu do mojej długoterminowej pamięci. Muszę najpierw ją zsynchronizować. Zatem, co chciałbyś/chciałabyś, żebym sprawdził?", "command": "", "params": ""}
+2025-04-16 17:31:10,341 - AssistantProcess - audio_modules.tts_module - INFO - TTS: Przepraszam, ale nie mam dostępu do mojej długoterminowej pamięci. Muszę najpierw ją zsynchronizować. Zatem, co chciałbyś/chciałabyś, żebym sprawdził?
+2025-04-16 17:31:23,793 - AssistantProcess - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-16 17:31:23,794 - AssistantProcess - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-16 17:31:23,826 - AssistantProcess - audio_modules.wakeword_detector - INFO - Listening for command with Vosk...
+2025-04-16 17:31:23,827 - AssistantProcess - audio_modules.speech_recognition - INFO - Listening for command using Vosk (dynamic recording)...
+2025-04-16 17:31:23,827 - AssistantProcess - audio_modules.speech_recognition - INFO - Dynamic command recording...
+2025-04-16 17:31:27,843 - AssistantProcess - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-16 17:31:28,751 - AssistantProcess - audio_modules.speech_recognition - INFO - Vosk recognized: zapamiętaj o słowie glebogryzarki
+2025-04-16 17:31:28,758 - AssistantProcess - audio_modules.wakeword_detector - INFO - Command: zapamiętaj o słowie glebogryzarki
+2025-04-16 17:31:30,812 - AssistantProcess - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-16 17:31:33,404 - AssistantProcess - assistant - INFO - Refined query: zapamiętaj o słowie glebogatarka
+2025-04-16 17:31:33,405 - AssistantProcess - assistant - INFO - Intent classified as: general
+2025-04-16 17:31:35,465 - AssistantProcess - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-16 17:31:38,825 - AssistantProcess - assistant - INFO - AI response: {"text": "OK, zapamiętałem, że słowo to 'glebogatarka'.", "command": "memory add", "params": "glebogatarka"}
+2025-04-16 17:31:38,826 - AssistantProcess - assistant - INFO - Identified sub-command: memory add
+2025-04-16 17:31:38,826 - AssistantProcess - assistant - INFO - Attempting to execute handler: add_memory for command 'memory add' with params: 'glebogatarka'
+2025-04-16 17:31:38,826 - AssistantProcess - memory_module - INFO - Attempting to add memory via command: 'glebogatarka...' by user 'assistant'
+2025-04-16 17:31:38,835 - AssistantProcess - database_manager - INFO - Memory added successfully (ID: 11, User: assistant): glebogatarka...
+2025-04-16 17:31:38,836 - AssistantProcess - assistant - INFO - Handler add_memory returned: ('Zapamiętałem: glebogatarka', True)
+2025-04-16 17:31:38,836 - AssistantProcess - audio_modules.tts_module - INFO - TTS: Zapamiętałem: glebogatarka
+2025-04-16 17:31:54,145 - MainProcess - __main__ - WARNING - Assistant process terminated unexpectedly with exit code 3221225786. Not restarting automatically.
+2025-04-16 17:31:54,146 - MainProcess - __main__ - INFO - Assistant restart loop finished. Waiting for Flask process...
+2025-04-16 17:31:54,163 - MainProcess - __main__ - INFO - Application shutting down.
+2025-04-16 17:32:00,031 - MainProcess - __main__ - INFO - Initializing application...
+2025-04-16 17:32:00,036 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-04-16 17:32:00,045 - MainProcess - __main__ - INFO - Starting Assistant process...
+2025-04-16 17:32:04,280 - FlaskProcess - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-04-16 17:32:04,280 - AssistantProcess - __mp_main__ - INFO - Starting Assistant process...
+2025-04-16 17:32:04,951 - AssistantProcess - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-04-16 17:32:04,951 - AssistantProcess - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-04-16 17:32:04,953 - AssistantProcess - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-04-16 17:32:05,059 - AssistantProcess - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-04-16 17:32:05,081 - AssistantProcess - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-04-16 17:32:05,086 - AssistantProcess - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-04-16 17:32:05,087 - AssistantProcess - assistant - INFO - Loaded assistant long-term memory at startup:
+Pamiętam: glebogatarka; Użytkownik ma na imię Tomek
+2025-04-16 17:32:05,088 - AssistantProcess - assistant - INFO - Bot is starting...
+2025-04-16 17:32:05,104 - AssistantProcess - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-04-16 17:32:05,104 - AssistantProcess - assistant - INFO - Starting/Restarting wake word detection task...
+2025-04-16 17:32:05,106 - AssistantProcess - assistant - INFO - Starting command queue processing task...
+2025-04-16 17:32:05,340 - AssistantProcess - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-04-16 17:32:13,631 - AssistantProcess - audio_modules.wakeword_detector - INFO - Wake word detected (full).
+2025-04-16 17:32:13,631 - AssistantProcess - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-16 17:32:13,640 - AssistantProcess - audio_modules.wakeword_detector - INFO - Listening for command with Vosk...
+2025-04-16 17:32:13,641 - AssistantProcess - audio_modules.speech_recognition - INFO - Listening for command using Vosk (dynamic recording)...
+2025-04-16 17:32:13,641 - AssistantProcess - audio_modules.speech_recognition - INFO - Dynamic command recording...
+2025-04-16 17:32:17,661 - AssistantProcess - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-16 17:32:18,663 - AssistantProcess - audio_modules.speech_recognition - INFO - Vosk recognized: przypomnij sobie jakie słowo kazałem ci zapamiętać
+2025-04-16 17:32:18,674 - AssistantProcess - audio_modules.wakeword_detector - INFO - Command: przypomnij sobie jakie słowo kazałem ci zapamiętać
+2025-04-16 17:32:20,733 - AssistantProcess - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-16 17:32:23,262 - AssistantProcess - assistant - INFO - Refined query: przypomnij sobie jakie słowo kazałem ci zapamiętać
+2025-04-16 17:32:23,262 - AssistantProcess - assistant - INFO - Intent classified as: general
+2025-04-16 17:32:25,310 - AssistantProcess - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-16 17:32:28,712 - AssistantProcess - assistant - INFO - AI response: {"text": "Pamiętam, że miałeś mi zapamiętać słowo 'jabłko'.", "command": "memory get", "params": "słowo"}
+2025-04-16 17:32:28,712 - AssistantProcess - assistant - INFO - Identified sub-command: memory get
+2025-04-16 17:32:28,713 - AssistantProcess - assistant - INFO - Attempting to execute handler: retrieve_memories for command 'memory get' with params: 'słowo'
+2025-04-16 17:32:28,713 - AssistantProcess - memory_module - INFO - Retrieving memories via command with query: 'słowo' user: 'assistant'
+2025-04-16 17:32:28,714 - AssistantProcess - assistant - INFO - Handler retrieve_memories returned: ('Nie znalazłem żadnych pasujących wspomnień.', True)
+2025-04-16 17:32:28,715 - AssistantProcess - audio_modules.tts_module - INFO - TTS: Nie znalazłem żadnych pasujących wspomnień.
+2025-04-16 17:32:40,610 - AssistantProcess - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-16 17:32:40,612 - AssistantProcess - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-16 17:32:40,659 - AssistantProcess - audio_modules.wakeword_detector - INFO - Listening for command with Vosk...
+2025-04-16 17:32:40,660 - AssistantProcess - audio_modules.speech_recognition - INFO - Listening for command using Vosk (dynamic recording)...
+2025-04-16 17:32:40,660 - AssistantProcess - audio_modules.speech_recognition - INFO - Dynamic command recording...
+2025-04-16 17:32:43,580 - AssistantProcess - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-16 17:32:44,346 - AssistantProcess - audio_modules.speech_recognition - INFO - Vosk recognized: wyszukaj po prostu wszystkie
+2025-04-16 17:32:44,356 - AssistantProcess - audio_modules.wakeword_detector - INFO - Command: wyszukaj po prostu wszystkie
+2025-04-16 17:32:46,405 - AssistantProcess - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-16 17:32:48,934 - AssistantProcess - assistant - INFO - Refined query: wyszukaj po prostu wszystko
+2025-04-16 17:32:48,935 - AssistantProcess - assistant - INFO - Intent classified as: search
+2025-04-16 17:32:50,994 - AssistantProcess - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-16 17:32:54,354 - AssistantProcess - assistant - INFO - AI response: {"text": "Sprawdzam w internecie wszystko, co dotyczy tego pytania...", "command": "search", "params": "wszystko słowo zapamiętać"}
+2025-04-16 17:32:54,354 - AssistantProcess - assistant - INFO - Identified top-level command: search
+2025-04-16 17:32:54,354 - AssistantProcess - assistant - INFO - Attempting to execute handler: search_handler for command 'search' with params: 'wszystko słowo zapamiętać'
+2025-04-16 17:32:54,355 - AssistantProcess - search_module - INFO - Searching for query: wszystko słowo zapamiętać
+2025-04-16 17:32:54,356 - AssistantProcess - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'search' z pliku: resources/sounds/search_beep.mp3 (Loop: False)
+2025-04-16 17:32:55,208 - AssistantProcess - primp - INFO - response: https://lite.duckduckgo.com/lite/ 200
+2025-04-16 17:33:00,091 - FlaskProcess - __mp_main__ - INFO - Flask process finished.
+2025-04-16 17:33:00,946 - AssistantProcess - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-16 17:33:52,884 - MainProcess - __main__ - WARNING - Main process received KeyboardInterrupt. Terminating child processes...
+2025-04-16 17:33:58,422 - MainProcess - __main__ - INFO - Initializing application...
+2025-04-16 17:33:58,428 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-04-16 17:33:58,439 - MainProcess - __main__ - INFO - Starting Assistant process...
+2025-04-16 17:34:02,755 - FlaskProcess - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-04-16 17:34:02,755 - AssistantProcess - __mp_main__ - INFO - Starting Assistant process...
+2025-04-16 17:34:03,426 - AssistantProcess - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-04-16 17:34:03,426 - AssistantProcess - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-04-16 17:34:03,427 - AssistantProcess - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-04-16 17:34:03,530 - AssistantProcess - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-04-16 17:34:03,552 - AssistantProcess - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-04-16 17:34:03,557 - AssistantProcess - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-04-16 17:34:03,559 - AssistantProcess - assistant - INFO - Loaded assistant long-term memory at startup:
+Pamiętam: glebogatarka; Użytkownik ma na imię Tomek
+2025-04-16 17:34:03,560 - AssistantProcess - assistant - INFO - Bot is starting...
+2025-04-16 17:34:03,575 - AssistantProcess - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-04-16 17:34:03,576 - AssistantProcess - assistant - INFO - Starting/Restarting wake word detection task...
+2025-04-16 17:34:03,578 - AssistantProcess - assistant - INFO - Starting command queue processing task...
+2025-04-16 17:34:03,814 - AssistantProcess - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-04-16 17:34:17,575 - AssistantProcess - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-16 17:34:17,576 - AssistantProcess - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-16 17:34:17,616 - AssistantProcess - audio_modules.wakeword_detector - INFO - Listening for command with Vosk...
+2025-04-16 17:34:17,617 - AssistantProcess - audio_modules.speech_recognition - INFO - Listening for command using Vosk (dynamic recording)...
+2025-04-16 17:34:17,617 - AssistantProcess - audio_modules.speech_recognition - INFO - Dynamic command recording...
+2025-04-16 17:34:20,545 - AssistantProcess - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-16 17:34:21,441 - AssistantProcess - audio_modules.speech_recognition - INFO - Vosk recognized: przypomnij sobie co miałeś zapamiętać
+2025-04-16 17:34:21,448 - AssistantProcess - audio_modules.wakeword_detector - INFO - Command: przypomnij sobie co miałeś zapamiętać
+2025-04-16 17:34:23,499 - AssistantProcess - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-16 17:34:26,155 - AssistantProcess - assistant - INFO - Refined query: przypomnij sobie co miałeś zapamiętać
+2025-04-16 17:34:26,155 - AssistantProcess - assistant - INFO - Intent classified as: general
+2025-04-16 17:34:28,195 - AssistantProcess - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-16 17:34:31,623 - AssistantProcess - assistant - INFO - AI response: {"text": "Sprawdzam, co miałem zapamiętać... Widzę, że zapisałem, że lubisz kawę.", "command": "memory get", "params": "użytkownik"}
+2025-04-16 17:34:31,624 - AssistantProcess - assistant - INFO - Identified sub-command: memory get
+2025-04-16 17:34:31,624 - AssistantProcess - assistant - INFO - Attempting to execute handler: retrieve_memories for command 'memory get' with params: 'użytkownik'
+2025-04-16 17:34:31,624 - AssistantProcess - memory_module - INFO - Retrieving memories via command with query: 'użytkownik' user: 'assistant'
+2025-04-16 17:34:31,625 - AssistantProcess - assistant - INFO - Handler retrieve_memories returned: ('Pamiętam: Użytkownik ma na imię Tomek', True)
+2025-04-16 17:34:31,626 - AssistantProcess - audio_modules.tts_module - INFO - TTS: Pamiętam: Użytkownik ma na imię Tomek
+2025-04-16 17:34:44,074 - AssistantProcess - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-16 17:34:44,075 - AssistantProcess - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-16 17:34:44,109 - AssistantProcess - audio_modules.wakeword_detector - INFO - Listening for command with Vosk...
+2025-04-16 17:34:44,110 - AssistantProcess - audio_modules.speech_recognition - INFO - Listening for command using Vosk (dynamic recording)...
+2025-04-16 17:34:44,110 - AssistantProcess - audio_modules.speech_recognition - INFO - Dynamic command recording...
+2025-04-16 17:34:46,534 - AssistantProcess - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-16 17:34:47,170 - AssistantProcess - audio_modules.speech_recognition - INFO - Vosk recognized: a poza tym
+2025-04-16 17:34:47,174 - AssistantProcess - audio_modules.wakeword_detector - INFO - Command: a poza tym
+2025-04-16 17:34:49,224 - AssistantProcess - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-16 17:34:51,661 - AssistantProcess - assistant - INFO - Refined query: a poza tym
+2025-04-16 17:34:51,661 - AssistantProcess - assistant - INFO - Intent classified as: general
+2025-04-16 17:34:53,729 - AssistantProcess - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-16 17:34:57,276 - AssistantProcess - assistant - INFO - AI response: {"text": "Oprócz tego, pamiętam, że ostatnio rozmawialiśmy o Twojej pasji do gier wideo. Czy chcesz, żebym przypomniał Ci coś jeszcze?", "command": "", "params": ""}
+2025-04-16 17:34:57,276 - AssistantProcess - audio_modules.tts_module - INFO - TTS: Oprócz tego, pamiętam, że ostatnio rozmawialiśmy o Twojej pasji do gier wideo. Czy chcesz, żebym przypomniał Ci coś jeszcze?
+2025-04-16 17:35:08,301 - FlaskProcess - __mp_main__ - INFO - Flask process finished.
+2025-04-16 17:39:28,839 - MainProcess - __main__ - WARNING - Main process received KeyboardInterrupt. Terminating child processes...
+2025-04-16 17:39:34,741 - MainProcess - __main__ - INFO - Initializing application...
+2025-04-16 17:39:34,749 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-04-16 17:39:34,758 - MainProcess - __main__ - INFO - Starting Assistant process...
+2025-04-16 17:39:39,863 - AssistantProcess - __mp_main__ - INFO - Starting Assistant process...
+2025-04-16 17:39:39,879 - FlaskProcess - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-04-16 17:39:40,565 - AssistantProcess - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-04-16 17:39:40,565 - AssistantProcess - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-04-16 17:39:40,566 - AssistantProcess - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-04-16 17:39:40,681 - AssistantProcess - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-04-16 17:39:40,707 - AssistantProcess - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-04-16 17:39:40,712 - AssistantProcess - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-04-16 17:39:40,713 - AssistantProcess - assistant - INFO - Loaded assistant long-term memory at startup:
+Pamiętam: glebogatarka; Użytkownik ma na imię Tomek
+2025-04-16 17:39:40,714 - AssistantProcess - assistant - INFO - Bot is starting...
+2025-04-16 17:39:40,728 - AssistantProcess - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-04-16 17:39:40,732 - AssistantProcess - assistant - INFO - Starting/Restarting wake word detection task...
+2025-04-16 17:39:40,734 - AssistantProcess - assistant - INFO - Starting command queue processing task...
+2025-04-16 17:39:40,972 - AssistantProcess - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-04-16 17:39:56,858 - AssistantProcess - assistant - INFO - Received command from queue: config_updated
+2025-04-16 17:39:56,859 - AssistantProcess - assistant - WARNING - Configuration updated via web UI. Initiating assistant restart.
+2025-04-16 17:40:17,479 - MainProcess - __main__ - WARNING - Assistant process terminated unexpectedly with exit code 3221225786. Not restarting automatically.
+2025-04-16 17:40:17,479 - MainProcess - __main__ - INFO - Assistant restart loop finished. Waiting for Flask process...
+2025-04-16 17:40:17,496 - MainProcess - __main__ - INFO - Application shutting down.
+2025-04-16 17:40:23,685 - MainProcess - __main__ - INFO - Initializing application...
+2025-04-16 17:40:23,692 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-04-16 17:40:23,699 - MainProcess - __main__ - INFO - Starting Assistant process...
+2025-04-16 17:40:28,116 - FlaskProcess - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-04-16 17:40:28,120 - AssistantProcess - __mp_main__ - INFO - Starting Assistant process...
+2025-04-16 17:40:28,869 - AssistantProcess - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-04-16 17:40:28,869 - AssistantProcess - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-04-16 17:40:28,870 - AssistantProcess - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-04-16 17:40:28,978 - AssistantProcess - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-04-16 17:40:29,001 - AssistantProcess - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-04-16 17:40:29,005 - AssistantProcess - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-04-16 17:40:29,006 - AssistantProcess - assistant - INFO - Loaded assistant long-term memory at startup:
+Pamiętam: glebogatarka; Użytkownik ma na imię Tomek
+2025-04-16 17:40:37,042 - AssistantProcess - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-04-16 17:40:53,342 - AssistantProcess - assistant - INFO - Bot is starting...
+2025-04-16 17:40:53,344 - AssistantProcess - assistant - ERROR - Error in audio stream: No input device matching '14'
+2025-04-16 17:40:53,345 - AssistantProcess - assistant - INFO - Audio processing ended. Blocking main loop indefinitely.
+2025-04-16 17:40:53,346 - AssistantProcess - assistant - INFO - Starting command queue processing task...
+2025-04-16 17:44:42,200 - AssistantProcess - assistant - INFO - Received command from queue: activate
+2025-04-16 17:44:42,201 - AssistantProcess - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-16 17:44:42,214 - AssistantProcess - assistant - INFO - Recording audio for Whisper command (manual trigger)...
+2025-04-16 17:44:42,214 - AssistantProcess - audio_modules.speech_recognition - INFO - Dynamic command recording...
+2025-04-16 17:44:42,219 - AssistantProcess - assistant - ERROR - Error during command listening/processing after manual trigger: No input device matching '14'
+Traceback (most recent call last):
+  File "F:\Asystent\assistant.py", line 351, in process_command_queue
+    audio_command = self.speech_recognizer.record_dynamic_command_audio()
+  File "F:\Asystent\audio_modules\speech_recognition.py", line 51, in record_dynamic_command_audio
+    stream = sd.InputStream(samplerate=sample_rate, channels=1, device=self.mic_device_id, dtype='float32')
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\sounddevice.py", line 1440, in __init__
+    _StreamBase.__init__(self, kind='input', wrap_callback='array',
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                         **_remove_self(locals()))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\sounddevice.py", line 828, in __init__
+    _get_stream_parameters(kind, device, channels, dtype, latency,
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                           extra_settings, samplerate)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\sounddevice.py", line 2692, in _get_stream_parameters
+    device = _get_device_id(device, kind, raise_on_error=True)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\sounddevice.py", line 2858, in _get_device_id
+    raise ValueError(
+        'No ' + kind + ' device matching ' + repr(id_or_query_string))
+ValueError: No input device matching '14'
+2025-04-16 17:45:15,494 - AssistantProcess - assistant - INFO - Received command from queue: config_updated
+2025-04-16 17:45:15,496 - AssistantProcess - assistant - WARNING - Configuration updated via web UI. Initiating assistant restart.
+2025-04-16 17:45:15,500 - AssistantProcess - __mp_main__ - ERROR - Critical error in Assistant process: Event loop stopped before Future completed.
+Traceback (most recent call last):
+  File "F:\Asystent\main.py", line 47, in run_assistant_process
+    asyncio.run(assistant.run_async())
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\asyncio\runners.py", line 195, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\asyncio\base_events.py", line 723, in run_until_complete
+    raise RuntimeError('Event loop stopped before Future completed.')
+RuntimeError: Event loop stopped before Future completed.
+2025-04-16 17:45:15,505 - AssistantProcess - __mp_main__ - INFO - Assistant process finished.
+2025-04-16 17:45:16,496 - MainProcess - __main__ - INFO - Assistant process finished cleanly (exit code 0). Restarting...
+2025-04-16 17:45:18,497 - MainProcess - __main__ - INFO - Starting Assistant process...
+2025-04-16 17:45:22,840 - AssistantProcess - __mp_main__ - INFO - Starting Assistant process...
+2025-04-16 17:45:23,564 - AssistantProcess - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-04-16 17:45:23,565 - AssistantProcess - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-04-16 17:45:23,566 - AssistantProcess - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-04-16 17:45:23,685 - AssistantProcess - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-04-16 17:45:23,709 - AssistantProcess - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-04-16 17:45:23,715 - AssistantProcess - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-04-16 17:45:23,715 - AssistantProcess - assistant - INFO - Loaded assistant long-term memory at startup:
+Pamiętam: glebogatarka; Użytkownik ma na imię Tomek
+2025-04-16 17:45:30,206 - AssistantProcess - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-04-16 17:45:32,515 - AssistantProcess - assistant - INFO - Bot is starting...
+2025-04-16 17:45:32,517 - AssistantProcess - assistant - ERROR - Error in audio stream: No input device matching '14'
+2025-04-16 17:45:32,518 - AssistantProcess - assistant - INFO - Audio processing ended. Blocking main loop indefinitely.
+2025-04-16 17:45:32,519 - AssistantProcess - assistant - INFO - Starting command queue processing task...
