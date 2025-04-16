@@ -21,15 +21,14 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from config import load_config as load_main_config, save_config as save_main_config, CONFIG_FILE as MAIN_CONFIG_FILE, DEFAULT_CONFIG
 # Import memory functions
 from database_manager import get_memories_db, add_memory_db, delete_memory_db, get_db_connection # Added get_db_connection
+from database_models import (
+    get_user_by_username, add_user, delete_user, list_users, update_user,
+    set_user_config, get_user_config, initialize_database
+)
 
 # --- Configuration ---
 # TODO: SECURITY: Replace with a more robust secret key management (e.g., environment variables)
 SECRET_KEY = os.urandom(24)
-# TODO: SECURITY: Define user credentials (replace with database/proper auth later)
-USERS = {
-    "user": {"password": "password", "role": "user"},
-    "dev": {"password": "devpassword", "role": "dev"}
-}
 # Use the config file path from the main config module
 CONFIG_FILE = MAIN_CONFIG_FILE
 HISTORY_FILE = os.path.join(os.path.dirname(__file__), '..', 'assistant.log') # Path to log file for now
@@ -383,22 +382,21 @@ def clear_conversation_history():
          return False
 
 # --- Authentication ---
-# ... (login_required, login, logout remain the same) ...
 def login_required(role="user"):
-    """Decorator to require login and specific role."""
     def wrapper(fn):
         @wraps(fn)
         def decorated_view(*args, **kwargs):
             if 'username' not in session:
                 flash("Please log in to access this page.", "warning")
                 return redirect(url_for('login'))
-            user_role = session.get('role')
-            # Allow devs to access user pages too
-            if role == "dev" and user_role != "dev":
+            user = get_user_by_username(session['username'])
+            if not user:
+                session.clear()
+                flash("User not found.", "danger")
+                return redirect(url_for('login'))
+            if role == "dev" and user['role'] != "dev":
                 flash("You do not have permission to access this page.", "danger")
-                return redirect(url_for('index')) # Or a specific error page
-            # If role is "user", both "user" and "dev" roles are allowed
-            # No specific check needed here if role=="user" as the first check handles non-logged-in users
+                return redirect(url_for('index'))
             return fn(*args, **kwargs)
         return decorated_view
     return wrapper
@@ -426,7 +424,7 @@ def create_app(queue: multiprocessing.Queue):
     logging.getLogger('werkzeug').setLevel(logging.WARNING)  # Ogranicz logi Werkzeug do WARNING i wyżej
     # Add specific handlers if needed (e.g., file handler for web_ui.log)
     # handler = logging.FileHandler('web_ui.log')
-    # handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+    # handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levellevel)s - %(message)s'))
     # logging.getLogger(__name__).addHandler(handler)
 
     logger.info("Flask app created and configured.")
@@ -439,8 +437,7 @@ def create_app(queue: multiprocessing.Queue):
         if request.method == 'POST':
             username = request.form.get('username')
             password = request.form.get('password')
-            user = USERS.get(username)
-            # TODO: SECURITY: Use password hashing (e.g., Werkzeug's generate_password_hash/check_password_hash)
+            user = get_user_by_username(username)
             if user and user['password'] == password:
                 session['username'] = username
                 session['role'] = user['role']
@@ -525,6 +522,53 @@ def create_app(queue: multiprocessing.Queue):
     @login_required(role="dev")
     def mcp_page():
         return render_template('mcp.html')
+
+    # --- User Management (Dev Only) ---
+    @app.route('/dev/users', methods=['GET'])
+    @login_required(role="dev")
+    def dev_list_users():
+        users = list_users()
+        return render_template('dev.html', users=users)
+
+    @app.route('/dev/users/add', methods=['POST'])
+    @login_required(role="dev")
+    def dev_add_user():
+        data = request.json
+        username = data.get('username')
+        password = data.get('password')
+        role = data.get('role', 'user')
+        display_name = data.get('display_name')
+        ai_persona = data.get('ai_persona')
+        personalization = data.get('personalization')
+        if not username or not password:
+            return jsonify({'success': False, 'error': 'Username and password required.'}), 400
+        if get_user_by_username(username):
+            return jsonify({'success': False, 'error': 'User already exists.'}), 400
+        add_user(username, password, role, display_name, ai_persona, personalization)
+        return jsonify({'success': True})
+
+    @app.route('/dev/users/delete', methods=['POST'])
+    @login_required(role="dev")
+    def dev_delete_user():
+        data = request.json
+        username = data.get('username')
+        if username == 'dev':
+            return jsonify({'success': False, 'error': 'Cannot delete dev account.'}), 400
+        if not get_user_by_username(username):
+            return jsonify({'success': False, 'error': 'User not found.'}), 404
+        delete_user(username)
+        return jsonify({'success': True})
+
+    @app.route('/dev/users/update', methods=['POST'])
+    @login_required(role="dev")
+    def dev_update_user():
+        data = request.json
+        username = data.get('username')
+        fields = {k: v for k, v in data.items() if k != 'username'}
+        if not get_user_by_username(username):
+            return jsonify({'success': False, 'error': 'User not found.'}), 404
+        update_user(username, **fields)
+        return jsonify({'success': True})
 
     # --- API Routes --- (Registered within create_app)
     @app.route('/api/config', methods=['GET', 'POST'])
@@ -880,6 +924,167 @@ def create_app(queue: multiprocessing.Queue):
             f.write('stop')
         return jsonify({"message": "Wysłano żądanie zatrzymania asystenta."}), 202
 
+    @app.route('/chat')
+    @login_required(role="user")
+    def chat_page():
+        return render_template('chat.html')
+
+    @app.route('/personalization')
+    @login_required(role="user")
+    def personalization_page():
+        return render_template('personalization.html')
+
+    @app.route('/api/chat/history')
+    @login_required(role="user")
+    def chat_history_api():
+        username = session['username']
+        user = get_user_by_username(username)
+        if not user:
+            return jsonify({'history': []})
+        user_id = user['id']
+        conn = get_db_connection()
+        # Pobierz tylko wiadomości tego usera i AI, posortowane rosnąco
+        rows = conn.execute("SELECT m.content, m.timestamp, m.user_id, u.username FROM memories m LEFT JOIN users u ON m.user_id = u.id WHERE m.user_id = ? OR m.user_id IS NULL ORDER BY m.id ASC", (user_id,)).fetchall()
+        conn.close()
+        history = []
+        for row in rows:
+            if row['user_id'] == user_id:
+                history.append({'role': 'user', 'content': row['content'], 'timestamp': row['timestamp']})
+            else:
+                history.append({'role': 'assistant', 'content': row['content'], 'timestamp': row['timestamp']})
+        return jsonify({'history': history})
+
+    @app.route('/api/chat/send', methods=['POST'])
+    @login_required(role="user")
+    def chat_send_api():
+        import importlib
+        from ai_module import chat_with_providers, remove_chain_of_thought, parse_response
+        from config import MAIN_MODEL
+        from prompts import SYSTEM_PROMPT
+        import inspect
+        data = request.get_json()
+        message = data.get('message', '').strip()
+        if not message:
+            return jsonify({'reply': ''})
+        username = session['username']
+        user = get_user_by_username(username)
+        if not user:
+            return jsonify({'reply': '(Błąd użytkownika)'}), 400
+        user_id = user['id']
+        # Zapisz wiadomość usera
+        conn = get_db_connection()
+        conn.execute("INSERT INTO memories (content, user_id) VALUES (?, ?)", (message, user_id))
+        conn.commit()
+        # Pobierz całą historię tego chatu
+        rows = conn.execute("SELECT m.content, m.user_id, u.username FROM memories m LEFT JOIN users u ON m.user_id = u.id WHERE m.user_id = ? OR m.user_id IS NULL ORDER BY m.id ASC", (user_id,)).fetchall()
+        conn.close()
+        chat_msgs = []
+        for row in rows:
+            if row['user_id'] == user_id:
+                chat_msgs.append({'role': 'user', 'content': row['content']})
+            else:
+                chat_msgs.append({'role': 'assistant', 'content': row['content']})
+        chat_msgs.insert(0, {'role': 'system', 'content': SYSTEM_PROMPT + '\nYou are now in a text chat with the user.'})
+
+        # --- TOOL CALLING PIPELINE ---
+        ai_response = chat_with_providers(MAIN_MODEL, chat_msgs)
+        ai_content = ai_response["message"]["content"].strip() if ai_response and ai_response.get("message", {}).get("content") else None
+        reply = ""
+        tool_result = None
+        if ai_content:
+            try:
+                parsed = None
+                try:
+                    parsed = json.loads(ai_content)
+                except Exception:
+                    pass
+                if not parsed and hasattr(importlib, 'import_module'):
+                    # Try parse_response if available
+                    try:
+                        parse_response_fn = getattr(importlib.import_module('ai_module'), 'parse_response', None)
+                        if parse_response_fn:
+                            parsed = parse_response_fn(ai_content)
+                    except Exception:
+                        pass
+                if isinstance(parsed, dict) and (parsed.get('command') or parsed.get('tool')):
+                    # Tool call detected
+                    ai_command = parsed.get('command') or parsed.get('tool')
+                    ai_params = parsed.get('params', '')
+                    ai_text = parsed.get('text', '')
+                    reply = ai_text or ''
+                    # Try to find and call the tool handler
+                    tool_result = None
+                    # --- Dynamic tool handler loading ---
+                    tool_modules = ['modules.search_module', 'modules.memory_module', 'modules.api_module', 'modules.deepseek_module', 'modules.see_screen_module']
+                    handler = None
+                    for mod_name in tool_modules:
+                        try:
+                            mod = importlib.import_module(mod_name)
+                            if hasattr(mod, 'register'):
+                                reg = mod.register()
+                                if reg.get('command') == ai_command or ai_command in reg.get('aliases', []):
+                                    handler = reg.get('handler')
+                                    break
+                        except Exception:
+                            continue
+                    if handler:
+                        sig = inspect.signature(handler)
+                        args_to_pass = {}
+                        if 'params' in sig.parameters:
+                            args_to_pass['params'] = ai_params
+                        if 'conversation_history' in sig.parameters:
+                            args_to_pass['conversation_history'] = chat_msgs
+                        if 'user_lang' in sig.parameters:
+                            args_to_pass['user_lang'] = None
+                        if 'user' in sig.parameters:
+                            args_to_pass['user'] = username
+                        try:
+                            if inspect.iscoroutinefunction(handler):
+                                loop = asyncio.new_event_loop()
+                                asyncio.set_event_loop(loop)
+                                tool_result = loop.run_until_complete(handler(**args_to_pass))
+                                loop.close()
+                            else:
+                                tool_result = handler(**args_to_pass)
+                        except Exception as e:
+                            tool_result = f"Błąd podczas wywołania funkcji '{ai_command}': {e}"
+                        if isinstance(tool_result, tuple):
+                            reply = str(tool_result[0])
+                        elif tool_result is not None:
+                            reply = str(tool_result)
+                        else:
+                            reply = ai_text or f"(Brak odpowiedzi narzędzia {ai_command})"
+                    else:
+                        reply = ai_text or f"(Nie znaleziono handlera dla komendy {ai_command})"
+                elif isinstance(parsed, dict) and 'text' in parsed:
+                    reply = parsed['text']
+                else:
+                    reply = ai_content
+            except Exception as e:
+                reply = f"(Błąd AI: {e})"
+        else:
+            reply = "(Brak odpowiedzi AI)"
+        # Zapisz odpowiedź AI (user_id NULL = assistant)
+        conn = get_db_connection()
+        conn.execute("INSERT INTO memories (content, user_id) VALUES (?, NULL)", (reply,))
+        conn.commit()
+        conn.close()
+        return jsonify({'reply': reply})
+
+    @app.route('/api/chat/clear', methods=['POST'])
+    @login_required(role="user")
+    def chat_clear_api():
+        username = session['username']
+        user = get_user_by_username(username)
+        if not user:
+            return jsonify({'success': False})
+        user_id = user['id']
+        conn = get_db_connection()
+        conn.execute("DELETE FROM memories WHERE user_id = ? OR user_id IS NULL", (user_id,))
+        conn.commit()
+        conn.close()
+        return jsonify({'success': True})
+
     return app
 
 # --- Main Execution (for standalone testing) ---
@@ -888,7 +1093,7 @@ if __name__ == '__main__':
     # It won't have a connection to the real assistant process in this mode.
     print("Running Flask app in standalone debug mode...")
     # Configure logging for standalone mode
-    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levellevel)s - %(message)s')
     # Create a dummy queue for standalone mode
     dummy_queue = multiprocessing.Queue()
     app = create_app(dummy_queue)

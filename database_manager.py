@@ -2,6 +2,10 @@ import sqlite3
 import os
 import logging
 from datetime import datetime
+from database_models import (
+    get_user_by_username, add_user, delete_user, list_users, update_user,
+    set_user_config, get_user_config, initialize_database
+)
 
 logger = logging.getLogger(__name__)
 

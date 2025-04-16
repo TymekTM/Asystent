@@ -11,6 +11,45 @@
         <summary>Pokaż pełny log testów</summary>
         <div id="test-log"></div>
     </details>
+
+    <hr>
+    <h2>Zarządzanie użytkownikami</h2>
+    <div class="mb-3">
+        <form id="add-user-form" class="row g-2">
+            <div class="col-md-2"><input type="text" class="form-control" name="username" placeholder="Nazwa użytkownika" required></div>
+            <div class="col-md-2"><input type="password" class="form-control" name="password" placeholder="Hasło" required></div>
+            <div class="col-md-2"><input type="text" class="form-control" name="display_name" placeholder="Wyświetlana nazwa"></div>
+            <div class="col-md-2"><input type="text" class="form-control" name="ai_persona" placeholder="Persona AI"></div>
+            <div class="col-md-2"><input type="text" class="form-control" name="personalization" placeholder="Personalizacja"></div>
+            <div class="col-md-1">
+                <select class="form-select" name="role">
+                    <option value="user">user</option>
+                    <option value="dev">dev</option>
+                </select>
+            </div>
+            <div class="col-md-1"><button type="submit" class="btn btn-success">Dodaj</button></div>
+        </form>
+        <div id="add-user-status" class="mt-2"></div>
+    </div>
+    <table class="table table-bordered" id="users-table">
+        <thead><tr><th>Nazwa użytkownika</th><th>Rola</th><th>Wyświetlana nazwa</th><th>Persona AI</th><th>Personalizacja</th><th>Akcje</th></tr></thead>
+        <tbody>
+        {% for user in users %}
+            <tr>
+                <td>{{ user['username'] }}</td>
+                <td>{{ user['role'] }}</td>
+                <td>{{ user['display_name'] or '' }}</td>
+                <td>{{ user['ai_persona'] or '' }}</td>
+                <td>{{ user['personalization'] or '' }}</td>
+                <td>
+                    {% if user['username'] != 'dev' %}
+                    <button class="btn btn-danger btn-sm delete-user-btn" data-username="{{ user['username'] }}">Usuń</button>
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
     <script>
     const runBtn = document.getElementById('run-tests-btn');
     const statusDot = document.getElementById('test-status-dot');
@@ -108,6 +147,44 @@
     });
 
     pollStatus();
+
+    // User management JS
+    document.getElementById('add-user-form').onsubmit = async function(e) {
+        e.preventDefault();
+        const form = e.target;
+        const data = Object.fromEntries(new FormData(form));
+        const statusDiv = document.getElementById('add-user-status');
+        statusDiv.textContent = '';
+        const resp = await fetch('/dev/users/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await resp.json();
+        if (result.success) {
+            statusDiv.textContent = 'Dodano użytkownika!';
+            window.location.reload();
+        } else {
+            statusDiv.textContent = result.error || 'Błąd dodawania użytkownika.';
+        }
+    };
+    document.querySelectorAll('.delete-user-btn').forEach(btn => {
+        btn.onclick = async function() {
+            if (!confirm('Na pewno usunąć użytkownika?')) return;
+            const username = btn.getAttribute('data-username');
+            const resp = await fetch('/dev/users/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username })
+            });
+            const result = await resp.json();
+            if (result.success) {
+                window.location.reload();
+            } else {
+                alert(result.error || 'Błąd usuwania użytkownika.');
+            }
+        };
+    });
     </script>
     <style>
         #test-log { white-space: pre-wrap; background: #222; color: #eee; padding: 1em; border-radius: 6px; max-height: 300px; overflow-y: auto; }

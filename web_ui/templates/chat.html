@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chatgpt.css') }}">
+<div class="container mt-4" style="max-width: 700px;">
+    <div id="chat-history"></div>
+    <form id="chat-form" class="mt-3">
+        <input type="text" class="form-control flex-grow-1" id="chat-input" placeholder="Napisz wiadomość..." autocomplete="off">
+        <button type="submit" class="btn btn-primary ms-2">Wyślij</button>
+        <button type="button" class="btn btn-secondary ms-2" id="voice-btn"><i class="fas fa-microphone"></i></button>
+        <button type="button" class="btn btn-outline-danger ms-2" id="clear-chat-btn">Wyczyść</button>
+    </form>
+    <div id="chat-status" class="mt-2"></div>
+</div>
+<script>
+let recognizing = false;
+let recognition;
+
+function appendMessage(role, content, timestamp) {
+    const chatHistory = document.getElementById('chat-history');
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `bubble ${role}`;
+    let timeHtml = timestamp ? `<span class='text-muted small ms-2'>${timestamp}</span>` : '';
+    msgDiv.innerHTML = `<span>${content}</span> ${timeHtml}`;
+    chatHistory.appendChild(msgDiv);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+}
+
+function loadHistory() {
+    fetch('/api/chat/history')
+        .then(r => r.json())
+        .then(data => {
+            const chatHistory = document.getElementById('chat-history');
+            chatHistory.innerHTML = '';
+            (data.history || []).forEach(msg => appendMessage(msg.role, msg.content, msg.timestamp));
+        });
+}
+
+function sendMessage(text) {
+    if (!text.trim()) return;
+    appendMessage('user', text, new Date().toLocaleTimeString());
+    document.getElementById('chat-input').value = '';
+    document.getElementById('chat-status').textContent = 'AI myśli...';
+    fetch('/api/chat/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text })
+    })
+    .then(r => r.json())
+    .then(data => {
+        appendMessage('assistant', data.reply, new Date().toLocaleTimeString());
+        document.getElementById('chat-status').textContent = '';
+    })
+    .catch(() => {
+        document.getElementById('chat-status').textContent = 'Błąd komunikacji z AI.';
+    });
+}
+
+document.getElementById('chat-form').onsubmit = function(e) {
+    e.preventDefault();
+    sendMessage(document.getElementById('chat-input').value);
+};
+
+// Voice input
+const voiceBtn = document.getElementById('voice-btn');
+if ('webkitSpeechRecognition' in window) {
+    recognition = new webkitSpeechRecognition();
+    recognition.lang = 'pl-PL';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.onresult = function(event) {
+        const text = event.results[0][0].transcript;
+        document.getElementById('chat-input').value = text;
+        sendMessage(text);
+    };
+    recognition.onend = function() { recognizing = false; voiceBtn.classList.remove('btn-danger'); };
+    voiceBtn.onclick = function() {
+        if (recognizing) { recognition.stop(); return; }
+        recognition.start(); recognizing = true; voiceBtn.classList.add('btn-danger');
+    };
+} else {
+    voiceBtn.disabled = true;
+    voiceBtn.title = 'Brak wsparcia dla rozpoznawania mowy w tej przeglądarce';
+}
+
+document.getElementById('clear-chat-btn').onclick = function() {
+    if (!confirm('Na pewno wyczyścić historię chatu?')) return;
+    fetch('/api/chat/clear', { method: 'POST' })
+        .then(r => r.json())
+        .then(data => { if (data.success) loadHistory(); });
+};
+
+loadHistory();
+</script>
+{% endblock %}

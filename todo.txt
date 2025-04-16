@@ -2,8 +2,6 @@
 
 ## Priority Tasks
 - [WIP] Multi-provider AI support (OpenAI, DeepSeek, Anthropic, Ollama, LM Studio)
-- [WIP] Language detection and multilingual support
-- [TODO] Real-time dashboard updates via WebSockets (status, activity, logs)
 - [TODO] Manual activation improvements (add button in web UI, keyboard shortcut)
 - [TODO] Enhanced error handling and logging (log rotation, in-UI log viewer, export logs)
 

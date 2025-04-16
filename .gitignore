@@ -7,3 +7,4 @@ assistant.log
 /__pycache__
 /.VSCodeCounter
 /__pycache__
+assistant_memory.db
