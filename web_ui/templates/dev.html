@@ -13,6 +13,17 @@
     </details>
 
     <hr>
+    <h1>Benchmarki systemu</h1>
+    <button id="run-bench-btn" class="btn btn-secondary mb-3">Uruchom benchmarki</button>
+    <span id="bench-status-dot" class="idle"></span>
+    <span id="bench-status-label">Status: Idle</span>
+    <div id="bench-summary" class="mt-2"></div>
+    <details class="mt-3">
+        <summary>Pokaż pełny log benchmarku</summary>
+        <div id="bench-log" style="white-space: pre-wrap; background: #f5f5f5; padding: 1em; border-radius: 6px; max-height: 300px; overflow-y: auto;"></div>
+    </details>
+
+    <hr>
     <h2>Zarządzanie użytkownikami</h2>
     <div class="mb-3">
         <form id="add-user-form" class="row g-2">
@@ -50,6 +61,25 @@
         {% endfor %}
         </tbody>
     </table>
+    <hr>
+    <h2>Historia testów</h2>
+    <table class="table table-sm" id="test-history-table">
+        <thead><tr><th>Czas</th><th>Wynik</th><th>Podsumowanie</th></tr></thead>
+        <tbody></tbody>
+    </table>
+
+    <h2>Planowanie testów</h2>
+    <form id="schedule-tests-form" class="row g-2 mb-4">
+        <div class="col-auto">
+            <input type="number" id="schedule-interval" class="form-control" placeholder="Interwał (minuty)" min="1" required>
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-warning">Zaplanuj</button>
+        </div>
+        <div class="col-auto">
+            <span id="schedule-status-label">Brak harmonogramu</span>
+        </div>
+    </form>
     <script>
     const runBtn = document.getElementById('run-tests-btn');
     const statusDot = document.getElementById('test-status-dot');
@@ -147,6 +177,98 @@
     });
 
     pollStatus();
+
+    // Benchmark controls
+    const benchBtn = document.getElementById('run-bench-btn');
+    const benchDot = document.getElementById('bench-status-dot');
+    const benchLabel = document.getElementById('bench-status-label');
+    const benchSummaryDiv = document.getElementById('bench-summary');
+    const benchLogDiv = document.getElementById('bench-log');
+    let benchPolling = false;
+
+    function setBenchStatus(status) {
+        benchDot.className = '';
+        if (status === 'running') {
+            benchDot.classList.add('running'); benchLabel.textContent = 'Status: W trakcie...';
+        } else if (status === 'completed') {
+            benchDot.classList.add('passed'); benchLabel.textContent = 'Status: Zakończone';
+        } else if (status === 'error') {
+            benchDot.classList.add('failed'); benchLabel.textContent = 'Status: Błąd';
+        } else {
+            benchDot.classList.add('idle'); benchLabel.textContent = 'Status: Idle';
+        }
+    }
+
+    function pollBench() {
+        fetch('/api/bench_status').then(r => r.json()).then(data => {
+            setBenchStatus(data.running ? 'running' : (data.summary && !data.running ? 'completed' : 'idle'));
+            benchSummaryDiv.textContent = data.summary || '';
+            benchLogDiv.textContent = data.log || '';
+            if (data.running) {
+                setTimeout(pollBench, 1000);
+            } else {
+                benchPolling = false;
+            }
+        });
+    }
+
+    benchBtn.addEventListener('click', () => {
+        fetch('/api/run_benchmarks', {method: 'POST'}).then(r => {
+            if (r.ok) {
+                benchPolling = true;
+                pollBench();
+            } else {
+                alert('Benchmark już trwa!');
+            }
+        });
+        setBenchStatus('running'); benchSummaryDiv.textContent = ''; benchLogDiv.textContent = '';
+    });
+    // Initial status fetch
+    pollBench();
+    // Test history
+    async function loadTestHistory() {
+        const res = await fetch('/api/test_history');
+        const history = await res.json();
+        const tbody = document.querySelector('#test-history-table tbody');
+        tbody.innerHTML = '';
+        history.slice().reverse().forEach(entry => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${new Date(entry.timestamp).toLocaleString()}</td>
+                <td>${entry.result}</td>
+                <td>${entry.summary}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+    loadTestHistory();
+    setInterval(loadTestHistory, 30000); // odśwież co 30s
+
+    // Scheduling tests
+    async function loadScheduleStatus() {
+        const res = await fetch('/api/schedule_status');
+        const data = await res.json();
+        const label = document.getElementById('schedule-status-label');
+        if (data.scheduled_interval) {
+            label.textContent = `Zaplanowano co ${data.scheduled_interval} min.`;
+        } else {
+            label.textContent = 'Brak harmonogramu';
+        }
+    }
+    document.getElementById('schedule-tests-form').onsubmit = async function(e) {
+        e.preventDefault();
+        const mins = document.getElementById('schedule-interval').value;
+        const res = await fetch('/api/schedule_tests', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({interval: mins})
+        });
+        if (res.ok) {
+            loadScheduleStatus();
+        } else {
+            const err = await res.json(); alert(err.error || 'Błąd planowania');
+        }
+    };
+    loadScheduleStatus();
 
     // User management JS
     document.getElementById('add-user-form').onsubmit = async function(e) {

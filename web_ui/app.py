@@ -52,40 +52,75 @@ test_status = {
 }
 test_status_lock = threading.Lock()
 
+bench_status = {'running': False, 'result': {}, 'log': '', 'summary': ''}
+bench_status_lock = threading.Lock()
+
+# Test history and scheduling
+test_history = []
+max_history_entries = 20
+scheduled_interval = None  # in minutes
+scheduled_timer = None
+scheduler_lock = threading.Lock()
+
+import unittest, io, datetime
+
 def run_unit_tests():
-    """Run unit tests and update test_status dict."""
+    """Run unit tests incrementally and update test_status for real-time UI."""
     global test_status
+    loader = unittest.TestLoader()
+    suite = loader.discover(os.path.join(os.path.dirname(__file__), '..', 'tests_unit'), pattern='test_*.py')
+    stream = io.StringIO()
+    # Initialize status
     with test_status_lock:
-        test_status['running'] = True
-        test_status['result'] = None
-        test_status['log'] = ''
-        test_status['summary'] = ''
-        test_status['ai_summary'] = ''
-        test_status['tests'] = []
-    try:
-        proc = subprocess.Popen([
-            'python', '-m', 'unittest', 'discover', '-s', 'tests_unit', '-p', 'test_*.py'
-        ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-        output, _ = proc.communicate()
-        passed = proc.returncode == 0
-        summary = parse_test_summary(output)
-        ai_summary = generate_ai_summary(output)
-        tests = parse_individual_tests(output)
-        with test_status_lock:
-            test_status['running'] = False
-            test_status['result'] = 'passed' if passed else 'failed'
-            test_status['log'] = output
-            test_status['summary'] = summary
-            test_status['ai_summary'] = ai_summary
-            test_status['tests'] = tests
-    except Exception as e:
-        with test_status_lock:
-            test_status['running'] = False
-            test_status['result'] = 'error'
-            test_status['log'] = str(e)
-            test_status['summary'] = ''
-            test_status['ai_summary'] = ''
-            test_status['tests'] = []
+        test_status.update({
+            'running': True,
+            'result': None,
+            'log': '',
+            'summary': '',
+            'ai_summary': '',
+            'tests': [],
+            'last_run': datetime.datetime.now().isoformat()
+        })
+    # Custom TestResult for streaming
+    class StreamingResult(unittest.TextTestResult):
+        def __init__(self, *args, **kwargs):
+            # Accept all args including 'durations' and 'tb_locals'
+            super().__init__(*args, **kwargs)
+        def addSuccess(self, test):
+            super().addSuccess(test)
+            with test_status_lock:
+                test_status['tests'].append({'name': test._testMethodName, 'class': test.__class__.__name__, 'status': 'ok', 'details': ''})
+                test_status['log'] = stream.getvalue()
+        def addFailure(self, test, err):
+            super().addFailure(test, err)
+            details = self.failures[-1][1]
+            with test_status_lock:
+                test_status['tests'].append({'name': test._testMethodName, 'class': test.__class__.__name__, 'status': 'FAIL', 'details': details})
+                test_status['log'] = stream.getvalue()
+        def addError(self, test, err):
+            super().addError(test, err)
+            details = self.errors[-1][1]
+            with test_status_lock:
+                test_status['tests'].append({'name': test._testMethodName, 'class': test.__class__.__name__, 'status': 'ERROR', 'details': details})
+                test_status['log'] = stream.getvalue()
+    runner = unittest.TextTestRunner(stream=stream, verbosity=1, resultclass=StreamingResult)
+    result_obj = runner.run(suite)
+    output = stream.getvalue()
+    with test_status_lock:
+        test_status['running'] = False
+        test_status['result'] = 'passed' if result_obj.wasSuccessful() else 'failed'
+        test_status['summary'] = parse_test_summary(output)
+        test_status['ai_summary'] = generate_ai_summary(output)
+        test_status['log'] = output
+        # Append to history
+        entry = {
+            'timestamp': test_status.get('last_run'),
+            'result': test_status['result'],
+            'summary': test_status['summary']
+        }
+        test_history.append(entry)
+        if len(test_history) > max_history_entries:
+            test_history.pop(0)
 
 def parse_individual_tests(output):
     """Parse unittest output for individual test results (robust for dots and verbose, with real test names and status)."""
@@ -164,6 +199,89 @@ def generate_ai_summary(output):
     if 'OK' in output:
         return 'Wszystkie testy zaliczone pomyślnie.'
     return 'Brak szczegółowego podsumowania.'
+
+def run_benchmarks():
+    with bench_status_lock:
+        bench_status['running'] = True
+        bench_status['result'] = {}
+        bench_status['log'] = ''
+        bench_status['summary'] = ''
+    log_lines = []
+    try:
+        import psutil, time
+        # System info
+        cpu_count = psutil.cpu_count(logical=False) or psutil.cpu_count()
+        total_gb = psutil.virtual_memory().total / (1024**3)
+        log_lines.append(f"CPU cores: {cpu_count}")
+        log_lines.append(f"Total RAM: {total_gb:.2f} GB")
+        # CPU benchmark
+        start = time.time()
+        sum(range(10_000_000))
+        cpu_time = time.time() - start
+        log_lines.append(f"Sum(range(10_000_000)): {cpu_time:.3f}s")
+        # Memory benchmark
+        proc = psutil.Process()
+        mem_before = proc.memory_info().rss / (1024**2)
+        lst = [0] * 10_000_000
+        mem_after = proc.memory_info().rss / (1024**2)
+        mem_delta = mem_after - mem_before
+        log_lines.append(f"Alloc list(10M ints): +{mem_delta:.2f} MB")
+        # Disk I/O benchmark: write and read 10MB file
+        import tempfile
+        # Prepare 10MB file in temp location
+        fd, tmp_path = tempfile.mkstemp(prefix="bench_io_", suffix=".tmp")
+        os.close(fd)
+        data = b'\0' * (1 * 1024 * 1024)
+        num_chunks = 10
+        start_io = time.time()
+        with open(tmp_path, "wb") as f:
+            for _ in range(num_chunks):
+                f.write(data)
+                f.flush()
+                os.fsync(f.fileno())
+        write_time = time.time() - start_io
+        log_lines.append(f"Write 10MB file: {write_time:.3f}s")
+        # Read back the file
+        start_io = time.time()
+        with open(tmp_path, "rb") as f:
+            while f.read(1024 * 1024):
+                pass
+        read_time = time.time() - start_io
+        log_lines.append(f"Read 10MB file: {read_time:.3f}s")
+        # Cleanup
+        try:
+            os.remove(tmp_path)
+        except Exception:
+            pass
+        # Prepare initial results including CPU and memory
+        result = {
+            'cpu_cores': cpu_count,
+            'total_memory_gb': round(total_gb, 2),
+            'cpu_benchmark_sec': round(cpu_time, 3),
+            'memory_alloc_mb': round(mem_delta, 2)
+        }
+        # Add disk I/O results
+        result['disk_write_sec'] = round(write_time, 3)
+        result['disk_read_sec'] = round(read_time, 3)
+        # Prepare summary string
+        summary = (
+            f"{cpu_count} cores, {total_gb:.1f}GB RAM; "
+            f"CPU: {cpu_time:.3f}s; Mem: {mem_delta:.2f}MB; "
+            f"Write: {result['disk_write_sec']:.3f}s; Read: {result['disk_read_sec']:.3f}s"
+        )
+        log = "\n".join(log_lines)
+        with bench_status_lock:
+            bench_status['running'] = False
+            bench_status['result'] = result
+            bench_status['log'] = log
+            bench_status['summary'] = summary
+    except Exception as e:
+        err = str(e)
+        with bench_status_lock:
+            bench_status['running'] = False
+            bench_status['summary'] = f"Error: {err}"
+            bench_status['log'] = "\n".join(log_lines) + f"\nError: {err}"
+            bench_status['result'] = {}
 
 # --- Helper Functions ---
 
@@ -418,7 +536,7 @@ def create_app(queue: multiprocessing.Queue):
     # Use a basic config, can be enhanced (e.g., rotating file handler)
     # Avoid basicConfig here if the main process already configured it.
     # Rely on the logger obtained at the module level.
-    # logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    # logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levellevel)s - %(message)s')
     log_level = logging.WARNING # Or get from config/env
     logging.getLogger(__name__).setLevel(log_level)
     logging.getLogger('werkzeug').setLevel(logging.WARNING)  # Ogranicz logi Werkzeug do WARNING i wyżej
@@ -839,6 +957,64 @@ def create_app(queue: multiprocessing.Queue):
     def api_test_status():
         with test_status_lock:
             return jsonify(test_status)
+
+    @api_bp.route('/api/run_benchmarks', methods=['POST'])
+    def api_run_benchmarks():
+        with bench_status_lock:
+            if bench_status['running']:
+                return jsonify({'status': 'already_running'}), 409
+            thread = threading.Thread(target=run_benchmarks, daemon=True)
+            thread.start()
+            bench_status['running'] = True
+            bench_status['result'] = {}
+            bench_status['log'] = ''
+            bench_status['summary'] = ''
+        return jsonify({'status': 'started'})
+
+    @api_bp.route('/api/bench_status', methods=['GET'])
+    def api_bench_status():
+        with bench_status_lock:
+            return jsonify(bench_status)
+
+    @api_bp.route('/api/test_history', methods=['GET'])
+    def api_test_history():
+        """Return list of past test runs."""
+        with test_status_lock:
+            return jsonify(test_history)
+
+    @api_bp.route('/api/schedule_tests', methods=['POST'])
+    def api_schedule_tests():
+        """Schedule recurring test runs at given interval in minutes."""
+        data = request.json or {}
+        interval = data.get('interval')
+        try:
+            mins = float(interval)
+        except Exception:
+            return jsonify({'error': 'Invalid interval'}), 400
+        global scheduled_interval, scheduled_timer
+        # Cancel existing
+        with scheduler_lock:
+            if scheduled_timer:
+                scheduled_timer.cancel()
+            scheduled_interval = mins
+            # Schedule first run after interval
+            def schedule_runner():
+                run_unit_tests()
+                # Reschedule
+                global scheduled_timer
+                with scheduler_lock:
+                    scheduled_timer = threading.Timer(scheduled_interval * 60, schedule_runner)
+                    scheduled_timer.daemon = True
+                    scheduled_timer.start()
+            scheduled_timer = threading.Timer(mins * 60, schedule_runner)
+            scheduled_timer.daemon = True
+            scheduled_timer.start()
+        return jsonify({'status': 'scheduled', 'interval': scheduled_interval}), 200
+
+    @api_bp.route('/api/schedule_status', methods=['GET'])
+    def api_schedule_status():
+        """Return scheduling status."""
+        return jsonify({'scheduled_interval': scheduled_interval})
 
     # Register blueprint in create_app or directly if app is global
     app.register_blueprint(api_bp)

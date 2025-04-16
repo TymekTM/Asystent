@@ -87,7 +87,15 @@ class Assistant:
 
         self.conversation_history = []
         self.tts = TTSModule()
-        self.speech_recognizer = SpeechRecognizer(self.vosk_model_path, self.mic_device_id, self.stt_silence_threshold)
+        # Adaptive sample rate: lower for low power environments
+        from config import LOW_POWER_MODE
+        sample_rate = 8000 if LOW_POWER_MODE else 16000
+        self.speech_recognizer = SpeechRecognizer(
+            self.vosk_model_path,
+            self.mic_device_id,
+            self.stt_silence_threshold,
+            sample_rate=sample_rate
+        )
         self.modules = {}
         self.plugin_mod_times = {}
         self.load_plugins()
@@ -356,16 +364,16 @@ class Assistant:
                         command_text = None
                         try:
                             if self.use_whisper and self.whisper_asr:
-                                logger.info("Recording audio for Whisper command (manual trigger)...")
-                                audio_command = self.speech_recognizer.record_dynamic_command_audio()
+                                logger.info("Recording audio for Whisper command (manual trigger) in background thread...")
+                                audio_command = await self.loop.run_in_executor(None, self.speech_recognizer.record_dynamic_command_audio)
                                 if audio_command is not None:
-                                    # Przekazujemy numpy.ndarray bezpośrednio do transcribe
-                                    command_text = self.whisper_asr.transcribe(audio_command)
+                                    logger.info("Transcribing Whisper command in background thread...")
+                                    command_text = await self.loop.run_in_executor(None, self.whisper_asr.transcribe, audio_command, self.speech_recognizer.sample_rate)
                                 else:
                                     logger.warning("Failed to record audio for Whisper command (manual trigger).")
                             else:
-                                logger.info("Listening for command with Vosk (manual trigger)...")
-                                command_text = self.speech_recognizer.listen_command()
+                                logger.info("Listening for command with Vosk (manual trigger) in background thread...")
+                                command_text = await self.loop.run_in_executor(None, self.speech_recognizer.listen_command)
                             if command_text:
                                 logger.info("Command (manual trigger): %s", command_text)
                                 # process_query_callback musi być przekazany do Assistant, tu uproszczone:
@@ -536,7 +544,7 @@ class Assistant:
         import sounddevice as sd
         try:
             with sd.RawInputStream(
-                    samplerate=16000,
+                    samplerate=self.speech_recognizer.sample_rate,
                     blocksize=8000,
                     dtype="int16",
                     channels=1,

@@ -29,7 +29,7 @@ if dxcam is not None:
         dxcam_device = dxcam.create()
         logging.info("DXcam zainicjalizowany pomyślnie.")
     except Exception as e:
-        logging.error("Nie udało się zainicjalizować DXcam: %s", e)
+        logging.error("Nie udało się zainicjować DXcam: %s", e)
         dxcam_device = None
 
 
@@ -67,6 +67,10 @@ def capture_screen(params: str = "", conversation_history: list = None) -> str:
 
         abs_path = os.path.abspath(filepath)
         image_base64 = encode_image_to_base64(abs_path)
+        # If no conversation history, return just the base64 (fallback/test mode)
+        if conversation_history is None:
+            return image_base64
+
         prompt_text = f"Na podstawie tego zrzutu ekranu odpowiedz na pytanie: {params}" if params.strip() else "Co znajduje się na tym zrzucie ekranu?"
 
         # Jeśli dostępny jest kontekst rozmowy, dołączamy go

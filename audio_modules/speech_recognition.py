@@ -7,10 +7,11 @@ from vosk import Model, KaldiRecognizer
 logger = logging.getLogger(__name__)
 
 class SpeechRecognizer:
-    def __init__(self, model_path, mic_device_id, silence_threshold):
+    def __init__(self, model_path, mic_device_id, silence_threshold, sample_rate=16000):
         self.model = Model(model_path)
         self.mic_device_id = mic_device_id
         self.silence_threshold = silence_threshold
+        self.sample_rate = sample_rate  # adaptive sample rate based on environment
         self.audio_q = Queue()
 
     def audio_callback(self, indata, frames, time, status):
@@ -18,11 +19,11 @@ class SpeechRecognizer:
             logger.warning("Audio callback status: %s", status)
         self.audio_q.put(bytes(indata))
 
-    def listen_command(self, sample_rate=16000):
+    def listen_command(self):
         logger.info("Listening for command using Vosk (dynamic recording)...")
-        audio_command = self.record_dynamic_command_audio(sample_rate=sample_rate)
+        audio_command = self.record_dynamic_command_audio()
         audio_int16 = (audio_command * 32767).astype(np.int16)
-        recognizer = KaldiRecognizer(self.model, sample_rate)
+        recognizer = KaldiRecognizer(self.model, self.sample_rate)
         recognizer.AcceptWaveform(audio_int16.tobytes())
         try:
             result = json.loads(recognizer.FinalResult())
@@ -33,22 +34,22 @@ class SpeechRecognizer:
             logger.error("Error in Vosk recognition: %s", e)
             return ""
 
-    def record_command_audio(self, duration=5, sample_rate=16000, device=None):
+    def record_command_audio(self, duration=5, device=None):
         device = device if device is not None else self.mic_device_id
-        logger.info(f"Recording audio for {duration} seconds using device {device}...")
-        audio = sd.rec(int(duration * sample_rate), samplerate=sample_rate, channels=1, dtype='float32', device=device)
+        logger.info(f"Recording audio for {duration} seconds using device {device} at {self.sample_rate}Hz...")
+        audio = sd.rec(int(duration * self.sample_rate), samplerate=self.sample_rate, channels=1, dtype='float32', device=device)
         sd.wait()
         return audio.flatten()
 
-    def record_dynamic_command_audio(self, sample_rate=16000, silence_threshold=0.01, silence_duration=0.5, max_duration=10, min_duration=2):
-        logger.info("Dynamic command recording...")
+    def record_dynamic_command_audio(self, silence_threshold=0.01, silence_duration=0.5, max_duration=10, min_duration=2):
+        logger.info(f"Dynamic command recording at {self.sample_rate}Hz...")
         chunk_duration = 0.1
-        chunk_frames = int(sample_rate * chunk_duration)
+        chunk_frames = int(self.sample_rate * chunk_duration)
         recorded_audio = []
         silence_time = 0
         total_time = 0
 
-        stream = sd.InputStream(samplerate=sample_rate, channels=1, device=self.mic_device_id, dtype='float32')
+        stream = sd.InputStream(samplerate=self.sample_rate, channels=1, device=self.mic_device_id, dtype='float32')
         stream.start()
         while total_time < max_duration:
             data, _ = stream.read(chunk_frames)

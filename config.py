@@ -2,6 +2,7 @@
 import json
 import os
 import logging
+import psutil  # for environment detection
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +25,9 @@ DEFAULT_CONFIG = {
     "OPENAI_API_KEY": None,
     "DEEPSEEK_API_KEY": None,
     "ANTHROPIC_API_KEY": None
-  }
+  },
+  "LOW_POWER_MODE": False,
+  "LOW_POWER_THRESHOLDS": {"memory_gb": 1, "cpu_count": 2}
 }
 
 def load_config():
@@ -59,6 +62,18 @@ def save_config(config_data):
 # Load configuration once at startup
 _config = load_config()
 
+# Auto-enable low power mode based on system resources if not explicitly set
+try:
+    if not _config.get('LOW_POWER_MODE', False):
+        total_gb = psutil.virtual_memory().total / (1024 ** 3)
+        cpus = psutil.cpu_count(logical=False) or psutil.cpu_count()
+        thresholds = _config.get('LOW_POWER_THRESHOLDS', {})
+        if total_gb < thresholds.get('memory_gb', 1) or cpus < thresholds.get('cpu_count', 2):
+            _config['LOW_POWER_MODE'] = True
+            logger.info("Low power environment detected (mem: %.1fGB, cpus: %d). Enabling LOW_POWER_MODE.", total_gb, cpus)
+except Exception as e:
+    logger.warning("Failed to auto-detect low power mode: %s", e)
+
 # --- Accessor variables ---
 VOSK_MODEL_PATH = _config.get("VOSK_MODEL_PATH")
 MIC_DEVICE_ID = _config.get("MIC_DEVICE_ID")
@@ -85,3 +100,6 @@ if isinstance(API_KEYS, str):
 for key, value in API_KEYS.items():
     if value and value != f"YOUR_{key}_HERE": # Don't set if it's None or the placeholder
         os.environ[key] = value
+
+# expose low power flag
+LOW_POWER_MODE = _config.get('LOW_POWER_MODE', False)
