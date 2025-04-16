@@ -418,8 +418,9 @@ def create_app(queue: multiprocessing.Queue):
     # Avoid basicConfig here if the main process already configured it.
     # Rely on the logger obtained at the module level.
     # logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    log_level = logging.INFO # Or get from config/env
+    log_level = logging.WARNING # Or get from config/env
     logging.getLogger(__name__).setLevel(log_level)
+    logging.getLogger('werkzeug').setLevel(logging.WARNING)  # Ogranicz logi Werkzeug do WARNING i wyżej
     # Add specific handlers if needed (e.g., file handler for web_ui.log)
     # handler = logging.FileHandler('web_ui.log')
     # handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))

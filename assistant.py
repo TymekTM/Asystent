@@ -549,7 +549,7 @@ if __name__ == "__main__":
     # from config import VOSK_MODEL_PATH, MIC_DEVICE_ID, WAKE_WORD, STT_SILENCE_THRESHOLD
 
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.WARNING, # Zmieniono z INFO na WARNING
         filename="assistant.log",
         filemode="a",
         format="%(asctime)s - %(levelname)s - %(message)s"

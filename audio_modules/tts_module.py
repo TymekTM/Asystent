@@ -30,5 +30,10 @@ class TTSModule:
             logger.error("TTS error: %s", e)
         finally:
             if os.path.exists(output_file):
-                os.remove(output_file)
+                try:
+                    os.remove(output_file)
+                except PermissionError:
+                    logger.warning(f"Nie można usunąć pliku {output_file}, jest używany przez inny proces.")
+                except Exception as e:
+                    logger.error(f"Błąd przy usuwaniu pliku {output_file}: {e}")
             self.current_process = None

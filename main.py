@@ -19,7 +19,7 @@ from config import load_config # Import load_config from config.py
 # --- Logging Configuration ---
 # Configure root logger - both processes will inherit this
 log_filename = "assistant.log"
-log_level = logging.INFO # Or load from config if needed
+log_level = logging.INFO # Zmieniono z INFO na WARNING
 log_format = "%(asctime)s - %(processName)s - %(name)s - %(levelname)s - %(message)s"
 
 # Use basicConfig for simplicity, or add handlers as needed

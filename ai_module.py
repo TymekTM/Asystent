@@ -116,20 +116,21 @@ class AIProviders:
                 "temperature": 0.7,
             }
             if images is not None:
-                # Jeśli provider nie obsługuje osobnego parametru obrazów, możesz spróbować dołączyć je do wiadomości
                 payload["images"] = images
-                # Alternatywnie:
-                # images_info = "\n\nObrazy: " + ", ".join(images)
-                # messages[-1]["content"] += images_info
             response = requests.post(
                 "http://localhost:1234/v1/chat/completions",
                 json=payload,
                 timeout=30
             )
-            return {"message": {"content": response.json()["choices"][0]["message"]["content"]}}
+            data = response.json()
+            if "choices" in data and data["choices"] and "message" in data["choices"][0] and "content" in data["choices"][0]["message"]:
+                return {"message": {"content": data["choices"][0]["message"]["content"]}}
+            else:
+                print(f"Błąd LM Studio: nieprawidłowa odpowiedź: {data}")
+                return {"message": {"content": "Błąd: nieprawidłowa odpowiedź z LM Studio"}}
         except Exception as e:
             print(f"Błąd LM Studio: {e}")
-            return None
+            return {"message": {"content": f"Błąd LM Studio: {e}"}}
 
     def chat_openai(self, model: str, messages: list, images: list = None) -> Optional[Dict[str, Any]]:
         try:
