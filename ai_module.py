@@ -4,7 +4,8 @@ import os
 import importlib
 import requests
 import logging # Add logging import
-from typing import Dict, Any, Optional
+import langid # Add import for langid
+from typing import Dict, Any, Optional, Tuple
 from config import STT_MODEL, MAIN_MODEL, PROVIDER, _config, DEEP_MODEL # Added DEEP_MODEL
 from prompts import CONVERT_QUERY_PROMPT, SYSTEM_PROMPT, DETECT_LANGUAGE_PROMPT # Added DETECT_LANGUAGE_PROMPT
 
@@ -279,47 +280,59 @@ def chat_with_providers(model: str, messages: list, images: list = None, provide
     return {"message": {"content": '{"command": "", "params": "", "text": "Błąd: Żaden dostawca nie odpowiada"}'}}
 
 # --- New Function: Language Detection ---
-def detect_language(text: str) -> str:
-    """Detects the language of the input text using the main AI provider."""
+def detect_language(text: str) -> Tuple[str, float, str]:
+    """Detects the language of the input text using langid, with heuristics and fallback."""
     try:
-        # Use a smaller/faster model if available and suitable, otherwise MAIN_MODEL
-        # For simplicity, using MAIN_MODEL for now
-        response = chat_with_providers(
-            model=MAIN_MODEL, # Or a dedicated smaller model
-            messages=[
-                {"role": "system", "content": DETECT_LANGUAGE_PROMPT},
-                {"role": "user", "content": text}
-            ]
-        )
-        if response and response.get("message", {}).get("content"):
-            lang = response["message"]["content"].strip().capitalize()
-            # Basic validation
-            if len(lang.split()) == 1 and lang != 'Unknown':
-                return lang
+        text = text.strip()
+        # Heuristic: If text is too short, fallback
+        if len(text) < 4:
+            logger.info("Text too short for reliable language detection. Fallback to Polish.")
+            return "pl", 1.0, "Detected language: pl\nRespond in Polish to all user inputs unless explicitly asked otherwise."
+        lang_code, confidence = langid.classify(text)
+        # Heuristic: If confidence is very low, fallback
+        if confidence < 0.7:
+            # Check for Polish diacritics or common words
+            polish_chars = set("ąćęłńóśźż")
+            if any(c in text for c in polish_chars) or any(w in text.lower() for w in ["jest", "czy", "jak", "co", "się", "nie", "tak"]):
+                lang_code, confidence = "pl", 0.8
             else:
-                logger.warning(f"Language detection returned unexpected format: {lang}. Defaulting to Polish.")
-                return "Polish" # Default fallback
-        else:
-            logger.error("Language detection failed: No response from AI.")
-            return "Polish" # Default fallback
+                logger.info(f"Low confidence ({confidence:.2f}) for langid result '{lang_code}'. Fallback to Polish.")
+                lang_code, confidence = "pl", confidence
+        lang_map = {
+            "en": "English",
+            "pl": "Polish",
+            "de": "German",
+            "es": "Spanish",
+            "fr": "French",
+            "it": "Italian",
+            "ru": "Russian",
+            "sv": "Swedish",
+        }
+        lang_name = lang_map.get(lang_code, lang_code)
+        prompt_text = (
+            f"Detected language: {lang_code}\nRespond in {lang_name} to all user inputs unless explicitly asked otherwise."
+        )
+        return lang_code, confidence, prompt_text
     except Exception as e:
         logger.error(f"Language detection failed: {e}", exc_info=True)
-        return "Polish" # Default fallback on error
+        return "pl", 0.0, "Detected language: pl\nRespond in Polish to all user inputs unless explicitly asked otherwise."
 
+# --- Improved Refiner: lock language, prevent translation ---
 def refine_query(query: str, detected_language: str = "Polish") -> str:
-    """Refines the user query using the AI provider, focusing on transcription correction."""
+    """Refines the user query using the AI provider, focusing on transcription correction, never translation."""
     try:
-        # Pass language context if needed by the prompt/model, though current prompt doesn't explicitly use it
+        # Add language lock to the prompt
+        language_lock = f"The user's language is {detected_language}. DO NOT translate, rephrase, or change the language. Only correct transcription errors."
+        prompt = language_lock + "\n" + CONVERT_QUERY_PROMPT
         response = chat_with_providers(
-            model=MAIN_MODEL, # Or a model specifically fine-tuned for correction
+            model=MAIN_MODEL,
             messages=[
-                {"role": "system", "content": CONVERT_QUERY_PROMPT},
+                {"role": "system", "content": prompt},
                 {"role": "user", "content": query}
             ]
         )
         if response and response.get("message", {}).get("content"):
             refined = response["message"]["content"].strip()
-            # Basic check: don't return empty string if original wasn't
             return refined if refined else query
         else:
             logger.warning("Query refinement failed: No response from AI. Returning original query.")
@@ -328,10 +341,13 @@ def refine_query(query: str, detected_language: str = "Polish") -> str:
         logger.error(f"Query refinement failed: {e}. Returning original query.", exc_info=True)
         return query
 
-def generate_response(conversation_history: list, functions_info: str) -> str:
+# Change generate_response to accept optional system prompt override
+def generate_response(conversation_history: list, functions_info: str, system_prompt_override: str = None) -> str:
     """Generates the main AI response based on history and available functions. Always returns JSON string."""
     try:
-        current_system_prompt = SYSTEM_PROMPT + f"\n\nAvailable tools: {functions_info}"
+        # Use overridden system prompt if provided, else default
+        current_system_prompt = (system_prompt_override if system_prompt_override else SYSTEM_PROMPT)
+        current_system_prompt += f"\n\nAvailable tools: {functions_info}"
         messages_for_api = list(conversation_history)
         if messages_for_api and messages_for_api[0]["role"] == "system":
             messages_for_api[0]["content"] = current_system_prompt

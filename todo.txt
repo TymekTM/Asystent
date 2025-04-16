@@ -1,15 +1,28 @@
-# Asystent TODO (2025)
+# Asystent TODO (2025-2026)
 
-- Real-time dashboard updates via WebSockets (status, activity, logs)
-- Advanced user authentication and role management (roles, password reset, etc.)
-- Enhanced error handling and logging (log rotation, in-UI log viewer, export logs)
+## Priority Tasks
+- [WIP] Multi-provider AI support (OpenAI, DeepSeek, Anthropic, Ollama, LM Studio)
+- [WIP] Language detection and multilingual support
+- [TODO] Real-time dashboard updates via WebSockets (status, activity, logs)
+- [TODO] Manual activation improvements (add button in web UI, keyboard shortcut)
+- [TODO] Enhanced error handling and logging (log rotation, in-UI log viewer, export logs)
+
+## Feature Enhancements
 - TTS and voice personalization (user-selectable voice, language, speed, test preview)
 - Automated and scheduled unit/integration tests (run from UI, view results/history)
-- Multi-modal input support (text, voice, file/image upload in web UI)
+- Multi-modal input support (text, voice, image analysis in web UI)
 - Improved long-term memory (search, tagging, context linking, memory management)
+- Advanced plugin system with simple API for third-party extensions
+
+## Web UI and UX
+- Advanced user authentication and role management (roles, password reset, etc.)
 - Accessibility improvements (screen reader support, keyboard navigation, color contrast)
 - Documentation and onboarding (user guide, developer setup, API docs)
-- API integrations: add more external services (weather, calendar, IoT, etc.)
-- Security review and improvements (rate limiting, audit logs, config secrets)
 - Internationalization (multi-language UI, easy translation)
 - Mobile-friendly/responsive UI improvements
+
+## Integration and Security
+- API integrations: add more external services (weather, calendar, IoT, etc.)
+- Security review and improvements (rate limiting, audit logs, config secrets)
+- Cloud synchronization of memories and preferences
+- Performance optimization for resource-constrained environments

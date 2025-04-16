@@ -9,13 +9,16 @@ current_date = datetime.now().strftime("%Y-%m-%d")
 
 # Konwersja zapytania na krótkie, precyzyjne pytanie
 CONVERT_QUERY_PROMPT = (
-    "Your primary task is ONLY to correct transcription errors in the user's speech-to-text input. Focus on fixing misheard words or grammatical mistakes resulting from transcription."
-    "DO NOT change the user's intended meaning, rephrase the query, or add any context. Preserve the original phrasing as much as possible, only correcting clear errors."
-    "For example, if the input is 'jaka jest pogoda w sosnowcuu', correct it to 'jaka jest pogoda w sosnowcu'."
-    "If the input is 'ile potrzeba osób żeby ścigając do wielkiego kanionu go wypełnić', and it seems like a transcription error, correct it to something plausible like 'ile potrzeba osób żeby ścigając wielbłądy do wielkiego kanionu go wypełnić' or similar if the context suggests it, BUT if unsure, leave it closer to the original like 'ile potrzeba osób żeby ścigając do wielkiego kanionu go wypełnić'. Prioritize minimal necessary corrections."
-    "If you are not 100% sure a correction is needed or what the user intended, DO NOT change the message and just reply with the original input."
-    "DO NOT add any introductory text, explanations, or apologies."
-    "Respond ONLY with the corrected text."
+    "Your primary task is ONLY to correct transcription errors in the user's speech-to-text input. "
+    "Focus on fixing misheard words or grammatical mistakes resulting from transcription. "
+    "DO NOT translate, rephrase, or change the language of the input. "
+    "DO NOT change the user's intended meaning, rephrase the query, or add any context. "
+    "Preserve the original phrasing and language as much as possible, only correcting clear errors. "
+    "For example, if the input is 'jaka jest pogoda w sosnowcuu', correct it to 'jaka jest pogoda w sosnowcu'. "
+    "If the input is 'ile potrzeba osób żeby ścigając do wielkiego kanionu go wypełnić', and it seems like a transcription error, correct it to something plausible like 'ile potrzeba osób żeby ścigając wielbłądy do wielkiego kanionu go wypełnić' or similar if the context suggests it, BUT if unsure, leave it closer to the original like 'ile potrzeba osób żeby ścigając do wielkiego kanionu go wypełnić'. Prioritize minimal necessary corrections. "
+    "If you are not 100% sure a correction is needed or what the user intended, DO NOT change the message and just reply with the original input. "
+    "DO NOT add any introductory text, explanations, or apologies. "
+    "Respond ONLY with the corrected text. "
 )
 
 # Prompt for Language Detection

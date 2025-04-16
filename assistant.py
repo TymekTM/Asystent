@@ -11,7 +11,7 @@ from audio_modules.beep_sounds import play_beep
 from audio_modules.wakeword_detector import run_wakeword_detection
 
 # Import funkcji AI z nowego modułu
-from ai_module import refine_query, generate_response, parse_response, remove_chain_of_thought
+from ai_module import refine_query, generate_response, parse_response, remove_chain_of_thought, detect_language
 
 # Import specific config variables needed
 from config import (
@@ -202,6 +202,11 @@ class Assistant:
         else:
             refined_query = text_input
             logger.info("Query refinement disabled, using raw input: %s", refined_query)
+
+        # --- Language Detection Layer (langid) ---
+        lang_code, lang_conf, lang_prompt = detect_language(refined_query)
+        logger.info(f"Detected language: {lang_code} (confidence {lang_conf:.2f})")
+
         # Intent classification (new layer)
         intent = IntentClassifier().classify(refined_query)
         logger.info("Intent classified as: %s", intent)
@@ -210,12 +215,13 @@ class Assistant:
         self.trim_conversation_history() # Trim history *before* sending to model
 
         # Przygotowanie listy dostępnych funkcji (tool descriptions)
-        # This could be enhanced for MCP with JSON schema descriptions
         functions_info = ", ".join([f"{cmd} - {info['description']}" for cmd, info in self.modules.items()])
 
+        # --- Inject language context into system prompt ---
+        system_prompt = lang_prompt + "\n" + SYSTEM_PROMPT
+
         # Generowanie odpowiedzi przy użyciu funkcji z ai_module
-        # Pass current history and function descriptions
-        response_text = generate_response(self.conversation_history, functions_info)
+        response_text = generate_response(self.conversation_history, functions_info, system_prompt_override=system_prompt)
         logger.info("AI response: %s", response_text)
 
         structured_output = parse_response(response_text)
