@@ -12,6 +12,7 @@ import subprocess
 import threading
 import queue
 import sounddevice as sd # Import sounddevice
+import collections # Import collections for deque
 
 # Import the main config loading/saving functions
 import sys
@@ -205,41 +206,66 @@ def save_ltm(data):
         return False
 
 # ... (get_conversation_history and clear_conversation_history remain the same) ...
-def get_conversation_history(limit=50):
+def get_conversation_history(limit=50, buffer_multiplier=5):
     """
-    Reads conversation history from the log file.
+    Reads conversation history from the log file efficiently.
+    Reads roughly the last N lines needed, where N is limit * buffer_multiplier.
     Improved parsing and error handling.
     """
     history = []
     logger.debug(f"Attempting to read history from: {HISTORY_FILE}")
     try:
-        # Ensure file exists before opening
         if not os.path.exists(HISTORY_FILE):
             logger.warning(f"History file not found at {HISTORY_FILE}. Returning empty list.")
             return []
 
-        # Open with error handling for encoding issues
-        with open(HISTORY_FILE, 'r', encoding='utf-8', errors='ignore') as f:
-            # TODO: Consider a more robust log parsing strategy or a structured history format (e.g., JSON lines)
-            # This simple parsing might break with complex log messages.
-            lines = f.readlines()
-            for line in reversed(lines): # Read from end for recent entries
+        # Estimate buffer size needed (average line length * lines_to_read)
+        # This is a heuristic, adjust avg_line_len if needed
+        avg_line_len = 150
+        lines_to_read = limit * buffer_multiplier
+        buffer_size = avg_line_len * lines_to_read
+
+        with open(HISTORY_FILE, 'rb') as f: # Open in binary mode for seek
+            # Seek towards the end of the file, but not necessarily exactly
+            f.seek(0, os.SEEK_END)
+            file_size = f.tell()
+            seek_pos = max(0, file_size - buffer_size)
+            f.seek(seek_pos, os.SEEK_SET)
+
+            # Read the end chunk and decode, handling potential partial lines
+            # Use deque for efficient limited line storage
+            try:
+                # Read remaining data and decode, ignoring errors
+                lines_bytes = f.read()
+                lines_str = lines_bytes.decode('utf-8', errors='ignore')
+                # Use deque to keep only the last lines_to_read (approx)
+                last_lines = collections.deque(lines_str.splitlines(), maxlen=lines_to_read)
+            except Exception as read_err:
+                 logger.error(f"Error reading/decoding end of history file: {read_err}")
+                 return [] # Return empty on read error
+
+            # Parse lines from the deque in reverse (most recent first)
+            last_user_content = None
+            for line in reversed(last_lines):
                 line = line.strip()
                 if not line:
                     continue
 
+                # --- Keep the existing parsing logic ---
                 # Basic parsing logic (adjust based on actual log format)
                 # Look for specific log messages indicating user input or assistant speech
-                if "INFO - Command:" in line:
-                    content = line.split("Command:", 1)[1].strip()
-                    # Avoid adding empty strings
+                if "INFO - Refined query:" in line:
+                    content = line.split("Refined query:", 1)[1].strip()
                     if content and (not history or history[-1].get("content") != content or history[-1].get("role") != "user"):
                         history.append({"role": "user", "content": content})
-                elif "INFO - Refined query:" in line: # Also consider refined query as user input for history
-                     content = line.split("Refined query:", 1)[1].strip()
-                     # Avoid duplicates if Command: log is very close or content is empty
-                     if content and (not history or history[-1].get("content") != content or history[-1].get("role") != "user"):
-                         history.append({"role": "user", "content": content})
+                    last_user_content = content
+                elif "INFO - Command:" in line:
+                    # Only add if there was no refined query after this command
+                    content = line.split("Command:", 1)[1].strip()
+                    if last_user_content != content:
+                        if content and (not history or history[-1].get("content") != content or history[-1].get("role") != "user"):
+                            history.append({"role": "user", "content": content})
+                    last_user_content = None
                 elif "INFO - TTS:" in line:
                     content = line.split("TTS:", 1)[1].strip()
                     # Avoid adding internal TTS messages like errors or irrelevant info
@@ -288,12 +314,14 @@ def get_conversation_history(limit=50):
                          if content_part and (not history or history[-1].get("content") != content_part or history[-1].get("role") != "assistant"):
                              if not any(h.get("role") == "assistant" and h.get("content") == content_part for h in history[-2:]):
                                  history.append({"role": "assistant", "content": content_part})
+                # --- End of existing parsing logic ---
 
 
                 if len(history) >= limit:
                     break # Stop once the limit is reached
+
             history.reverse() # Put back in chronological order
-            logger.info(f"Retrieved {len(history)} history entries.")
+            logger.info(f"Retrieved {len(history)} history entries (from buffer).")
 
     except FileNotFoundError: # Should be caught by the check above, but keep for safety
         logger.warning(f"History file not found at {HISTORY_FILE}.")
@@ -476,6 +504,16 @@ def create_app(queue: multiprocessing.Queue):
             return redirect(url_for('index'))
         return render_template('dev.html')
 
+    @app.route('/plugins')
+    @login_required(role="dev")
+    def plugins_page():
+        return render_template('plugins.html')
+
+    @app.route('/mcp')
+    @login_required(role="dev")
+    def mcp_page():
+        return render_template('mcp.html')
+
     # --- API Routes --- (Registered within create_app)
     @app.route('/api/config', methods=['GET', 'POST'])
     @login_required(role="dev")
@@ -617,6 +655,55 @@ def create_app(queue: multiprocessing.Queue):
             return jsonify({'logs': logs})
         except Exception as e:
             return jsonify({'logs': [f'Błąd odczytu logów: {e}']}), 500
+
+    @app.route('/api/analytics', methods=['GET'])
+    @login_required()
+    def api_analytics():
+        """API endpoint for usage statistics (dashboard)."""
+        # Example: count messages and users from conversation history
+        try:
+            history = get_conversation_history()
+            msg_count = len(history)
+            unique_users = list({entry.get('user', 'unknown') for entry in history})
+            avg_response_time = sum(entry.get('response_time', 0) for entry in history if entry.get('response_time')) / msg_count if msg_count else 0
+            last_query_time = max((entry.get('timestamp', 0) for entry in history), default=None)
+            return jsonify({
+                'msg_count': msg_count,
+                'unique_users': unique_users,
+                'avg_response_time': avg_response_time,
+                'last_query_time': last_query_time
+            })
+        except Exception as e:
+            logger.error(f"Failed to calculate analytics: {e}", exc_info=True)
+            return jsonify({'msg_count': 0, 'unique_users': [], 'avg_response_time': 0, 'last_query_time': None})
+
+    @app.route('/api/plugins', methods=['GET'])
+    @login_required(role="dev")
+    def api_plugins():
+        """API endpoint for plugin list and status."""
+        import os, json
+        plugins_file = os.path.join(os.path.dirname(__file__), '..', 'plugins_state.json')
+        plugins = {}
+        try:
+            if os.path.exists(plugins_file):
+                with open(plugins_file, 'r', encoding='utf-8') as f:
+                    plugins_data = json.load(f)
+                    # plugins_data może być {'plugins': {...}} lub {...}
+                    if 'plugins' in plugins_data:
+                        plugins = plugins_data['plugins']
+                    else:
+                        plugins = plugins_data
+            else:
+                # Fallback: scan modules dir
+                modules_dir = os.path.join(os.path.dirname(__file__), '..', 'modules')
+                for fname in os.listdir(modules_dir):
+                    if fname.endswith('_module.py'):
+                        name = fname[:-3]
+                        plugins[name] = {'enabled': True}
+            return jsonify(plugins)
+        except Exception as e:
+            logger.error(f"Failed to load plugins: {e}", exc_info=True)
+            return jsonify({})
 
     # --- API endpoints for test running ---
     from flask import Blueprint

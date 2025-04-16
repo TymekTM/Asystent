@@ -2,6 +2,7 @@ import asyncio, json, logging, os, glob, importlib.util, re, subprocess, multipr
 import ollama
 import inspect # Add inspect import
 import queue # Import queue for Empty exception
+import threading
 
 # Import modułów audio z nowej lokalizacji
 from audio_modules.tts_module import TTSModule
@@ -25,6 +26,29 @@ from prompts import CONVERT_QUERY_PROMPT, SYSTEM_PROMPT
 
 logger = logging.getLogger(__name__)
 # MAX_HISTORY_LENGTH is now loaded from config
+
+PLUGINS_STATE_FILE = os.path.join(os.path.dirname(__file__), 'plugins_state.json')
+plugins_state_lock = threading.Lock()
+
+def load_plugins_state():
+    try:
+        with plugins_state_lock:
+            if not os.path.exists(PLUGINS_STATE_FILE):
+                return {}
+            with open(PLUGINS_STATE_FILE, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                return data.get('plugins', {})
+    except Exception as e:
+        logger.error(f"Failed to load plugins state: {e}")
+        return {}
+
+def save_plugins_state(plugins):
+    try:
+        with plugins_state_lock:
+            with open(PLUGINS_STATE_FILE, 'w', encoding='utf-8') as f:
+                json.dump({'plugins': plugins}, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        logger.error(f"Failed to save plugins state: {e}")
 
 class IntentClassifier:
     """Simple intent classifier using LLM or rules."""
@@ -111,12 +135,16 @@ class Assistant:
     def load_plugins(self):
         plugin_folder = "modules"
         os.makedirs(plugin_folder, exist_ok=True)
+        plugins_state = load_plugins_state()
         new_modules = {}
-        # Przechodzimy przez wszystkie pliki z rozszerzeniem .py w folderze pluginów
-        for filepath in glob.glob(os.path.join(plugin_folder, "*.py")):
+        for filepath in glob.glob(os.path.join(plugin_folder, "*_module.py")):
             mod_time = os.path.getmtime(filepath)
             self.plugin_mod_times[filepath] = mod_time
             module_name = os.path.splitext(os.path.basename(filepath))[0]
+            # Sprawdź, czy plugin jest włączony
+            if plugins_state and module_name in plugins_state and not plugins_state[module_name].get('enabled', True):
+                logger.info(f"Plugin {module_name} jest wyłączony - pomijam ładowanie.")
+                continue
             spec = importlib.util.spec_from_file_location(module_name, filepath)
             module = importlib.util.module_from_spec(spec)
             try:
@@ -298,10 +326,6 @@ class Assistant:
         # self.manual_listen_triggered = True # Flag is no longer needed
 
     async def process_command_queue(self):
-        """Processes commands received from the web UI queue."""
-        if not self.command_queue:
-            logger.info("No command queue provided, skipping queue processing task.")
-            return
         logger.info("Starting command queue processing task...")
         while True:
             try:
@@ -310,22 +334,51 @@ class Assistant:
                     action = command_data.get("action")
                     logger.info(f"Received command from queue: {action}")
                     if action == "activate":
-                        self.trigger_manual_listen()
+                        # Manual activation: natychmiast uruchom ścieżkę aktywacji (dźwięk + STT)
+                        self.tts.cancel()
+                        play_beep("keyword", loop=False)
+                        command_text = None
+                        try:
+                            if self.use_whisper and self.whisper_asr:
+                                logger.info("Recording audio for Whisper command (manual trigger)...")
+                                audio_command = self.speech_recognizer.record_dynamic_command_audio()
+                                if audio_command is not None:
+                                    import soundfile as sf
+                                    import io
+                                    buffer = io.BytesIO()
+                                    sf.write(buffer, audio_command, 16000, format='WAV')
+                                    buffer.seek(0)
+                                    logger.info("Transcribing command with Whisper (manual trigger)...")
+                                    command_text = self.whisper_asr.transcribe(buffer)
+                                    buffer.close()
+                                else:
+                                    logger.warning("Failed to record audio for Whisper command (manual trigger).")
+                            else:
+                                logger.info("Listening for command with Vosk (manual trigger)...")
+                                command_text = self.speech_recognizer.listen_command()
+                            if command_text:
+                                logger.info("Command (manual trigger): %s", command_text)
+                                # process_query_callback musi być przekazany do Assistant, tu uproszczone:
+                                if hasattr(self, 'process_query_callback'):
+                                    asyncio.create_task(self.process_query_callback(command_text))
+                                else:
+                                    logger.warning("No process_query_callback set on Assistant instance!")
+                            else:
+                                logger.warning("No command detected after manual trigger.")
+                        except Exception as cmd_e:
+                            logger.error(f"Error during command listening/processing after manual trigger: {cmd_e}", exc_info=True)
+                        continue
                     elif action == "config_updated":
                         logger.warning("Configuration updated via web UI. Initiating assistant restart.")
-                        # Stop the main loop to allow the process to exit cleanly
                         if self.loop:
                             self.loop.stop()
-                        # No need to call reload_config_values() here, restart will load fresh config
-                        break # Exit the queue processing loop
-                    # Add more actions as needed
-                await asyncio.sleep(1) # Check queue periodically
+                        break
+                    # ...existing code...
+                await asyncio.sleep(1)
             except queue.Empty:
-                 await asyncio.sleep(1) # Wait if queue is empty
+                await asyncio.sleep(1)
             except Exception as e:
-                logger.error(f"Error processing command queue: {e}", exc_info=True)
-                await asyncio.sleep(5) # Wait longer after an error
-        logger.info("Command queue processing task stopped.")
+                logger.error(f"Error in assistant command queue: {e}")
 
     def process_audio(self):
         """

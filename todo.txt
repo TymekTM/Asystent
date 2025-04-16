@@ -1,13 +1,15 @@
-Wielomodalność: Integracja nie tylko głosowych, ale także tekstowych interfejsów użytkownika (np. webowy panel sterowania) czy komunikacji przez komunikatory.
+# Asystent TODO (2025)
 
-Zaawansowana analiza kontekstu: Rozbudowanie historii konwersacji o długoterminową pamięć, by asystent mógł lepiej reagować na wieloetapowe zapytania.
-
-Interfejs konfiguracji: Stworzenie graficznego interfejsu do konfiguracji asystenta (ustawienia mikrofonu, ścieżek do modeli, konfiguracji pluginów itd.).
-
-Integracja z zewnętrznymi API: Rozszerzenie funkcjonalności o obsługę dodatkowych zadań, np. prognozy pogody, zarządzanie kalendarzem, czy sterowanie urządzeniami IoT.
-
-Personalizacja głosu i TTS: Wprowadzenie opcji wyboru głosu i języka dla TTS, by użytkownik mógł dostosować asystenta do swoich preferencji.
-
-Bezpieczeństwo i prywatność: Dodanie mechanizmów autoryzacji oraz lepszego logowania, aby chronić dane użytkownika i zapewnić bezpieczeństwo komunikacji.
-
-Automatyczne testy jednostkowe: Wtyczka, która pozwala przetestować każdą (wybraną) funkcjonalność.
+- Real-time dashboard updates via WebSockets (status, activity, logs)
+- Advanced user authentication and role management (roles, password reset, etc.)
+- Enhanced error handling and logging (log rotation, in-UI log viewer, export logs)
+- TTS and voice personalization (user-selectable voice, language, speed, test preview)
+- Automated and scheduled unit/integration tests (run from UI, view results/history)
+- Multi-modal input support (text, voice, file/image upload in web UI)
+- Improved long-term memory (search, tagging, context linking, memory management)
+- Accessibility improvements (screen reader support, keyboard navigation, color contrast)
+- Documentation and onboarding (user guide, developer setup, API docs)
+- API integrations: add more external services (weather, calendar, IoT, etc.)
+- Security review and improvements (rate limiting, audit logs, config secrets)
+- Internationalization (multi-language UI, easy translation)
+- Mobile-friendly/responsive UI improvements

@@ -24,9 +24,38 @@ def run_wakeword_detection(speech_recognizer, wake_word, tts, use_whisper, proce
             # Check for the manual trigger signal
             if data == "__MANUAL_TRIGGER__":
                 logger.info("Manual trigger signal received in wake word detector.")
-                # Clear any remaining partial result in the recognizer
+                # Zamiast tylko return, uruchom pełną ścieżkę: dźwięk + STT
+                tts.cancel()
+                play_beep("keyword", loop=False)
                 recognizer.FinalResult()
-                return "MANUAL_TRIGGER_REQUESTED" # Signal back to process_audio
+                command_text = None
+                try:
+                    if use_whisper and whisper_asr:
+                        logger.info("Recording audio for Whisper command (manual trigger)...")
+                        audio_command = speech_recognizer.record_dynamic_command_audio()
+                        if audio_command is not None:
+                            import soundfile as sf
+                            import io
+                            buffer = io.BytesIO()
+                            sf.write(buffer, audio_command, 16000, format='WAV')
+                            buffer.seek(0)
+                            logger.info("Transcribing command with Whisper (manual trigger)...")
+                            command_text = whisper_asr.transcribe(buffer)
+                            buffer.close()
+                        else:
+                            logger.warning("Failed to record audio for Whisper command (manual trigger).")
+                    else:
+                        logger.info("Listening for command with Vosk (manual trigger)...")
+                        command_text = speech_recognizer.listen_command()
+                    if command_text:
+                        logger.info("Command (manual trigger): %s", command_text)
+                        asyncio.run_coroutine_threadsafe(process_query_callback(command_text), loop)
+                    else:
+                        logger.warning("No command detected after manual trigger.")
+                except Exception as cmd_e:
+                    logger.error(f"Error during command listening/processing after manual trigger: {cmd_e}", exc_info=True)
+                recognizer = KaldiRecognizer(speech_recognizer.model, 16000)
+                continue
 
         except queue.Empty:
             # Timeout occurred, no data received, just continue the loop
@@ -110,7 +139,7 @@ def run_wakeword_detection(speech_recognizer, wake_word, tts, use_whisper, proce
                         else: # Use Vosk
                             logger.info("Listening for command with Vosk...")
                             # Corrected method name based on traceback
-                            command_text = speech_recognizer.listen_command(timeout=10) # Use correct method
+                            command_text = speech_recognizer.listen_command() # Use correct method
 
                         if command_text:
                             logger.info("Command: %s", command_text)

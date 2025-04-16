@@ -49,6 +49,17 @@
         </div>
     </div>
 
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">Statystyki Użytkowania</div>
+                <div class="card-body" id="analytics-section">
+                    <div class="alert alert-info">Ładowanie statystyk...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 {% endblock %}
 
@@ -60,7 +71,7 @@
 
     if (activateBtn) {
         activateBtn.addEventListener('click', () => {
-            activateStatus.textContent = 'Sending activation...';
+            activateStatus.textContent = 'Wysyłanie żądania aktywacji...';
             activateStatus.className = 'ms-2 text-info';
             activateBtn.disabled = true;
             fetch('/api/activate', {
@@ -72,25 +83,22 @@
             .then(response => response.json().then(data => ({ status: response.status, body: data })))
             .then(({ status, body }) => {
                 if (status === 202 || status === 200) { // 202 Accepted or 200 OK
-                    activateStatus.textContent = body.message || 'Activation request sent.';
+                    activateStatus.textContent = body.message || 'Aktywacja wysłana!';
                     activateStatus.className = 'ms-2 text-success';
                 } else {
-                    activateStatus.textContent = `Error: ${body.error || 'Failed to send request.'}`;
+                    activateStatus.textContent = `Błąd: ${body.error || 'Nie udało się wysłać żądania.'}`;
                     activateStatus.className = 'ms-2 text-danger';
                 }
-                console.log('Manual activation response:', status, body);
-                 // Re-enable button after a short delay
                 setTimeout(() => {
                     activateBtn.disabled = false;
                     activateStatus.textContent = '';
                 }, 3000);
             })
             .catch(error => {
-                activateStatus.textContent = 'Error sending request.';
+                activateStatus.textContent = 'Błąd wysyłania żądania.';
                 activateStatus.className = 'ms-2 text-danger';
-                console.error('Error activating manually:', error);
                 activateBtn.disabled = false;
-                 setTimeout(() => {
+                setTimeout(() => {
                     activateStatus.textContent = '';
                 }, 3000);
             });
@@ -139,6 +147,32 @@
     }
     setInterval(fetchRecentActivity, 5000);
     fetchRecentActivity();
+
+    // DASHBOARD: Fetch and display analytics
+    function fetchAnalytics() {
+        fetch('/api/analytics')
+            .then(response => {
+                if (!response.ok) throw new Error('Błąd API: ' + response.status);
+                return response.json();
+            })
+            .then(data => {
+                const section = document.getElementById('analytics-section');
+                if (!section) return;
+                let html = '<ul class="list-group">';
+                html += `<li class="list-group-item">Liczba wiadomości: <b>${data.msg_count ?? '-'}</b></li>`;
+                html += `<li class="list-group-item">Unikalni użytkownicy: <b>${data.unique_users ? data.unique_users.length : 0}</b> (${data.unique_users ? data.unique_users.join(', ') : ''})</li>`;
+                html += `<li class="list-group-item">Średni czas odpowiedzi: <b>${(data.avg_response_time || 0).toFixed(2)}s</b></li>`;
+                html += `<li class="list-group-item">Ostatnie zapytanie: <b>${data.last_query_time ? new Date(data.last_query_time * 1000).toLocaleString() : '-'}</b></li>`;
+                html += '</ul>';
+                section.innerHTML = html;
+            })
+            .catch(err => {
+                const section = document.getElementById('analytics-section');
+                if (section) section.innerHTML = `<div class='alert alert-danger'>Błąd ładowania statystyk: ${err.message}</div>`;
+            });
+    }
+    setInterval(fetchAnalytics, 5000);
+    fetchAnalytics();
 
     // TODO: DASHBOARD: Implement WebSocket or polling logic here for real-time status updates
     // e.g., connect to a WebSocket endpoint provided by the Flask app

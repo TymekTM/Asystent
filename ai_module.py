@@ -328,28 +328,37 @@ def refine_query(query: str, detected_language: str = "Polish") -> str:
         return query
 
 def generate_response(conversation_history: list, functions_info: str) -> str:
-    """Generates the main AI response based on history and available functions."""
+    """Generates the main AI response based on history and available functions. Always returns JSON string."""
     try:
-        # Add function info to the system prompt or a user message?
-        # Let's add it to the system prompt context for this call.
         current_system_prompt = SYSTEM_PROMPT + f"\n\nAvailable tools: {functions_info}"
-
-        messages_for_api = list(conversation_history) # Create a copy
-        # Replace the original system prompt with the enhanced one if it exists
+        messages_for_api = list(conversation_history)
         if messages_for_api and messages_for_api[0]["role"] == "system":
             messages_for_api[0]["content"] = current_system_prompt
         else:
             messages_for_api.insert(0, {"role": "system", "content": current_system_prompt})
 
         response = chat_with_providers(MAIN_MODEL, messages_for_api)
-        if response and response.get("message", {}).get("content"):
-            return response["message"]["content"].strip()
+        ai_content = response["message"]["content"].strip() if response and response.get("message", {}).get("content") else None
+        if ai_content:
+            # Try to parse as JSON, else wrap in JSON
+            try:
+                # Try parsing as JSON (or code block with JSON)
+                parsed = json.loads(extract_json(ai_content))
+                # If it's a dict and has 'text', re-serialize to ensure string output
+                if isinstance(parsed, dict) and "text" in parsed:
+                    return json.dumps(parsed, ensure_ascii=False)
+                # If it's a string, wrap it
+                if isinstance(parsed, str):
+                    return json.dumps({"text": parsed}, ensure_ascii=False)
+            except Exception:
+                # Not valid JSON, wrap as text
+                return json.dumps({"text": ai_content}, ensure_ascii=False)
         else:
             logger.error("Response generation failed: No content from AI.")
-            return "Przepraszam, nie udało mi się wygenerować odpowiedzi."
+            return json.dumps({"text": "Przepraszam, nie udało mi się wygenerować odpowiedzi."}, ensure_ascii=False)
     except Exception as e:
         logger.error(f"Response generation failed: {e}", exc_info=True)
-        return "Przepraszam, wystąpił błąd podczas generowania odpowiedzi."
+        return json.dumps({"text": "Przepraszam, wystąpił błąd podczas generowania odpowiedzi."}, ensure_ascii=False)
 
 def parse_response(response_text: str) -> dict:
     try:

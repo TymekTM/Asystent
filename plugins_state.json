@@ -1,0 +1,16 @@
+{
+  "plugins": {
+    "api_module": {
+      "enabled": true
+    },
+    "deepseek_module": {
+      "enabled": false
+    },
+    "search_module": {
+      "enabled": true
+    },
+    "see_screen_module": {
+      "enabled": true
+    }
+  }
+}

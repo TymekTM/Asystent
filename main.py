@@ -39,8 +39,11 @@ def run_assistant_process(queue: multiprocessing.Queue):
     """Target function to run the Assistant in its own process."""
     logger.info("Starting Assistant process...")
     try:
-        # Pass the queue to the Assistant
         assistant = Assistant(command_queue=queue)
+        # Ustaw callback do obsługi zapytań (AI/STT)
+        async def process_query_callback(text):
+            await assistant.process_query(text)
+        assistant.process_query_callback = process_query_callback
         asyncio.run(assistant.run_async())
     except KeyboardInterrupt:
         logger.info("Assistant process received KeyboardInterrupt. Exiting.")
