@@ -43,25 +43,37 @@ class SpeechRecognizer:
 
     def record_dynamic_command_audio(self, silence_threshold=0.01, silence_duration=0.5, max_duration=10, min_duration=2):
         logger.info(f"Dynamic command recording at {self.sample_rate}Hz...")
-        chunk_duration = 0.1
+        # Faster loop: smaller chunks for timely detection
+        chunk_duration = 0.05  # 50ms chunks
+        # use provided silence_duration and min_duration parameters
         chunk_frames = int(self.sample_rate * chunk_duration)
         recorded_audio = []
         silence_time = 0
         total_time = 0
+        extended = False
 
         stream = sd.InputStream(samplerate=self.sample_rate, channels=1, device=self.mic_device_id, dtype='float32')
         stream.start()
-        while total_time < max_duration:
+        while True:
             data, _ = stream.read(chunk_frames)
             data = np.squeeze(data)
             recorded_audio.append(data)
             total_time += chunk_duration
-            rms = np.sqrt(np.mean(np.square(data.astype(np.float32))))
+            rms = np.sqrt(np.mean(data * data))
+            # after minimum duration, detect silence
             if total_time >= min_duration:
-                silence_time = silence_time + chunk_duration if rms < silence_threshold else 0
+                if rms < silence_threshold:
+                    silence_time += chunk_duration
+                else:
+                    silence_time = 0
                 if silence_time >= silence_duration:
                     logger.info("Silence detected, ending recording.")
                     break
+            # if max_duration reached without silence, extend until silence
+            if not extended and total_time >= max_duration and silence_time == 0:
+                extended = True
+                logger.info("Max duration reached but still speaking, extending recording until silence.")
+            # Removed absolute cap; recording continues until silence detected
         stream.stop()
         stream.close()
         return np.concatenate(recorded_audio)

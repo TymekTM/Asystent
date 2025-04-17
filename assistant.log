@@ -1005,3 +1005,1501 @@ Traceback (most recent call last):
     raise effect
 Exception: fail
 2025-04-16 23:49:50,882 - Process-2 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'screenshot' z pliku: resources/sounds/screenshot_beep.mp3 (Loop: False)
+2025-04-16 23:50:20,540 - Process-1 - assistant - INFO - Detected changes in plugins. Reloading plugins...
+2025-04-16 23:50:20,543 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-04-16 23:50:20,544 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-04-16 23:50:20,546 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-04-16 23:50:20,548 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-04-16 23:50:20,556 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-04-16 23:50:22,579 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-04-16 23:50:22,579 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-04-16 23:50:22,740 - MainProcess - __main__ - INFO - All processes terminated.
+2025-04-16 23:57:26,265 - MainProcess - __main__ - INFO - Initializing application...
+2025-04-16 23:57:26,272 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-04-16 23:57:31,615 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-04-16 23:57:31,632 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-04-16 23:57:32,447 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-04-16 23:57:32,448 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-04-16 23:57:32,449 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-04-16 23:57:32,569 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-04-16 23:57:32,599 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-04-16 23:57:32,605 - Process-1 - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-04-16 23:57:32,605 - Process-1 - database_manager - ERROR - Error retrieving memories (Query: None): no such column: user
+2025-04-16 23:57:32,606 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-04-16 23:57:39,756 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-04-16 23:57:41,748 - Process-1 - assistant - INFO - Bot is starting...
+2025-04-16 23:57:41,762 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-04-16 23:57:41,764 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-04-16 23:57:41,765 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-04-16 23:57:41,768 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-04-16 23:57:47,284 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected.
+2025-04-16 23:57:47,285 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-16 23:57:47,292 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-16 23:57:49,717 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-16 23:57:49,729 - Process-1 - audio_modules.wakeword_detector - ERROR - Error processing command: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
+Traceback (most recent call last):
+  File "F:\Asystent\audio_modules\wakeword_detector.py", line 70, in run_wakeword_detection
+    if audio_cmd:
+       ^^^^^^^^^
+ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
+2025-04-16 23:57:56,779 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected.
+2025-04-16 23:57:56,780 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-16 23:57:56,785 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-16 23:57:59,707 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-16 23:57:59,719 - Process-1 - audio_modules.wakeword_detector - ERROR - Error processing command: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
+Traceback (most recent call last):
+  File "F:\Asystent\audio_modules\wakeword_detector.py", line 70, in run_wakeword_detection
+    if audio_cmd:
+       ^^^^^^^^^
+ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
+2025-04-17 00:00:22,698 - Process-2 - __mp_main__ - INFO - Flask process finished.
+2025-04-17 00:00:22,869 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-04-17 00:00:22,869 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-04-17 00:00:23,021 - MainProcess - __main__ - INFO - All processes terminated.
+2025-04-17 00:00:30,153 - MainProcess - __main__ - INFO - Initializing application...
+2025-04-17 00:00:30,160 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-04-17 00:00:35,764 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-04-17 00:00:35,778 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-04-17 00:00:37,179 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-04-17 00:00:37,180 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-04-17 00:00:37,181 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-04-17 00:00:37,355 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-04-17 00:00:37,404 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-04-17 00:00:37,408 - Process-1 - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-04-17 00:00:37,409 - Process-1 - database_manager - ERROR - Error retrieving memories (Query: None): no such column: user
+2025-04-17 00:00:37,410 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-04-17 00:00:45,071 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-04-17 00:00:46,910 - Process-1 - assistant - INFO - Bot is starting...
+2025-04-17 00:00:46,924 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-04-17 00:00:46,928 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-04-17 00:00:46,929 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-04-17 00:00:46,930 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-04-17 00:00:54,940 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected.
+2025-04-17 00:00:54,941 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 00:00:54,947 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:00:57,369 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:00:57,380 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 00:01:00,452 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:01:03,054 - Process-1 - assistant - INFO - Refined query: Powiedz mi, jak się czujesz.
+2025-04-17 00:01:03,054 - Process-1 - langid.langid - INFO - initializing identifier
+2025-04-17 00:01:05,045 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 00:01:05,045 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 00:01:05,528 - Process-1 - audio_modules.speech_recognition - WARNING - Audio callback status: input overflow
+2025-04-17 00:01:07,088 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:01:11,366 - Process-1 - assistant - INFO - AI response: {"text": "Wszystko w porządku, dziękuję za pytanie! Jak mija Twój dzień?", "command": "", "params": ""}
+2025-04-17 00:01:11,367 - Process-1 - audio_modules.tts_module - INFO - TTS: Wszystko w porządku, dziękuję za pytanie! Jak mija Twój dzień?
+2025-04-17 00:01:21,539 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected.
+2025-04-17 00:01:21,540 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 00:01:21,545 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:01:23,967 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:01:23,979 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 00:01:26,597 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:01:29,170 - Process-1 - assistant - INFO - Refined query: Jak się masz dzisiaj?
+2025-04-17 00:01:29,173 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 00:01:29,174 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 00:01:31,252 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:01:35,124 - Process-1 - assistant - INFO - AI response: {"text": "Dziś dobrze, dziękuję za pytasz! Sprawdzam też, czy wszystko u Ciebie jest w porządku.", "command": "", "params": ""}
+2025-04-17 00:01:35,126 - Process-1 - audio_modules.tts_module - INFO - TTS: Dziś dobrze, dziękuję za pytasz! Sprawdzam też, czy wszystko u Ciebie jest w porządku.
+2025-04-17 00:05:41,492 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-04-17 00:05:41,493 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-04-17 00:05:41,741 - MainProcess - __main__ - INFO - All processes terminated.
+2025-04-17 00:06:29,950 - MainProcess - __main__ - INFO - Initializing application...
+2025-04-17 00:06:29,959 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-04-17 00:06:35,525 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-04-17 00:06:35,528 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-04-17 00:06:36,332 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-04-17 00:06:36,332 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-04-17 00:06:36,333 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-04-17 00:06:36,457 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-04-17 00:06:36,487 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-04-17 00:06:36,491 - Process-1 - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-04-17 00:06:36,491 - Process-1 - database_manager - ERROR - Error retrieving memories (Query: None): no such column: user
+2025-04-17 00:06:36,492 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-04-17 00:06:43,765 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-04-17 00:06:45,706 - Process-1 - assistant - INFO - Bot is starting...
+2025-04-17 00:06:45,721 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-04-17 00:06:45,723 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-04-17 00:06:45,725 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-04-17 00:06:45,726 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-04-17 00:06:55,233 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-17 00:06:55,234 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 00:06:55,241 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:06:57,122 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:06:57,135 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 00:07:00,404 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:07:03,020 - Process-1 - assistant - INFO - Refined query: Powiedz mi coś o sobie, proszę.
+2025-04-17 00:07:03,021 - Process-1 - langid.langid - INFO - initializing identifier
+2025-04-17 00:07:05,252 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 00:07:05,252 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 00:07:05,741 - Process-1 - audio_modules.speech_recognition - WARNING - Audio callback status: input overflow
+2025-04-17 00:07:07,320 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:07:12,251 - Process-1 - assistant - INFO - AI response: {"text": "No dobrze, to trochę dziwne pytanie, ale skoro chcesz mnie poznać, to powiem Ci, że jestem Jarvisem, dużym modelem językowym uruchomionym na Twoim PC. Jestem tutaj, żeby pogadać i spróbować jak najlepiej Ci pomóc. Wiesz, jestem trochę jak asystent, który ciągle się uczy i stara się być pomocny.", "command": "", "params": ""}
+2025-04-17 00:07:12,252 - Process-1 - audio_modules.tts_module - INFO - TTS: No dobrze, to trochę dziwne pytanie, ale skoro chcesz mnie poznać, to powiem Ci, że jestem Jarvisem, dużym modelem językowym uruchomionym na Twoim PC. Jestem tutaj, żeby pogadać i spróbować jak najlepiej Ci pomóc. Wiesz, jestem trochę jak asystent, który ciągle się uczy i stara się być pomocny.
+2025-04-17 00:07:17,757 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-17 00:07:17,758 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 00:07:17,764 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:07:23,340 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:07:23,354 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 00:07:24,656 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-17 00:07:24,657 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 00:07:24,662 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:07:25,950 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:07:25,962 - Process-1 - audio_modules.wakeword_detector - WARNING - No valid audio after trimming silence for Whisper command.
+2025-04-17 00:07:25,963 - Process-1 - audio_modules.wakeword_detector - WARNING - Empty command text detected.
+2025-04-17 00:07:26,708 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:07:29,518 - Process-1 - assistant - INFO - Refined query: Zastanawiam się ostatnio nad tym, jak zrobić kotlet w habaneros.
+2025-04-17 00:07:29,522 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 00:07:29,522 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 00:07:31,560 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:07:36,453 - Process-1 - assistant - INFO - AI response: {"text": "Sprawdzam, jakie są popularne przepisy na kotlety w habaneros...", "command": "search", "params": "kotlet w habaneros przepis"}
+2025-04-17 00:07:36,454 - Process-1 - assistant - INFO - Identified top-level command: search
+2025-04-17 00:07:36,454 - Process-1 - assistant - INFO - Attempting to execute handler: search_handler for command 'search' with params: 'kotlet w habaneros przepis'
+2025-04-17 00:07:36,454 - Process-1 - search_module - INFO - Searching for query: kotlet w habaneros przepis
+2025-04-17 00:07:36,455 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'search' z pliku: resources/sounds/search_beep.mp3 (Loop: False)
+2025-04-17 00:07:37,167 - Process-1 - primp - INFO - response: https://html.duckduckgo.com/html 200
+2025-04-17 00:07:40,112 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:07:44,136 - Process-1 - assistant - INFO - Handler search_handler returned: Przepis na kotlet w habaneros nie jest zawarty w tym tekście. Tekst zawiera przepis na kotlet schabowy, który wymaga panierowania w jajku i bułce tartej, smażenia na smalcu i przyprawiania solą i pieprzem.
+2025-04-17 00:07:44,143 - Process-1 - audio_modules.tts_module - INFO - TTS: Przepis na kotlet w habaneros nie jest zawarty w tym tekście. Tekst zawiera przepis na kotlet schabowy, który wymaga panierowania w jajku i bułce tartej, smażenia na smalcu i przyprawiania solą i pieprzem.
+2025-04-17 00:07:56,250 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-17 00:07:56,251 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 00:07:56,256 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:08:01,079 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:08:01,091 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 00:08:01,753 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-17 00:08:01,753 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 00:08:01,757 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:08:03,119 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:08:03,130 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 00:08:03,762 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:08:06,314 - Process-1 - assistant - INFO - Refined query: Zobacz, jak się wypośrodkować.
+2025-04-17 00:08:06,321 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 00:08:06,322 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 00:08:08,364 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:08:12,582 - Process-1 - assistant - INFO - AI response: {"command": "screenshot", "params": "", "text": "Przepraszam, nie mam możliwości zrobienia zrzutu ekranu, ponieważ jestem modelem językowym i działam na Twoim PC. Nie mogę zobaczyć, jak się wypośrodkujesz."}
+2025-04-17 00:08:12,582 - Process-1 - assistant - INFO - Identified top-level command: screenshot
+2025-04-17 00:08:12,582 - Process-1 - assistant - INFO - Attempting to execute handler: capture_screen for command 'screenshot' with params: ''
+2025-04-17 00:08:12,584 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'screenshot' z pliku: resources/sounds/screenshot_beep.mp3 (Loop: False)
+2025-04-17 00:08:12,752 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-17 00:08:12,753 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 00:08:12,757 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:08:14,694 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:08:15,004 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:08:17,200 - Process-1 - assistant - INFO - Refined query: 6 jajek
+2025-04-17 00:08:17,204 - Process-1 - assistant - INFO - Detected language: en (confidence 9.06)
+2025-04-17 00:08:17,204 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 00:08:17,368 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:08:17,380 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 00:08:19,280 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:08:19,492 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-17 00:08:19,507 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 00:08:19,562 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:08:20,848 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:08:20,860 - Process-1 - audio_modules.wakeword_detector - WARNING - No valid audio after trimming silence for Whisper command.
+2025-04-17 00:08:20,860 - Process-1 - audio_modules.wakeword_detector - WARNING - Empty command text detected.
+2025-04-17 00:08:24,103 - Process-1 - assistant - INFO - AI response: {"text": "Ojej, to trudne! Wyobrażam sobie, że próba wyprostowania się na 6 jajek to spore wyzwanie. Spróbuj skupić się na jednej rzeczy naraz – postaw jedną nogę prosto i spróbuj delikatnie unieść drugą. To wymaga trochę równowagi, prawda? Chcesz, żebym coś w tym pomógł?", "command": "", "params": ""}
+2025-04-17 00:08:24,103 - Process-1 - audio_modules.tts_module - INFO - TTS: Ojej, to trudne! Wyobrażam sobie, że próba wyprostowania się na 6 jajek to spore wyzwanie. Spróbuj skupić się na jednej rzeczy naraz – postaw jedną nogę prosto i spróbuj delikatnie unieść drugą. To wymaga trochę równowagi, prawda? Chcesz, żebym coś w tym pomógł?
+2025-04-17 00:08:26,736 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:08:29,536 - Process-1 - assistant - INFO - Refined query: Czy możesz mi powiedzieć, jak zdobyć ciastka z sześciu jajek?
+2025-04-17 00:08:29,540 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 00:08:29,541 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 00:08:31,596 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:08:35,738 - Process-1 - assistant - INFO - AI response: {"command": "search", "params": "przepis na ciasto z 6 jajek", "text": "Sprawdzam, jak zrobić ciasto z sześciu jajek..."}
+2025-04-17 00:08:35,738 - Process-1 - assistant - INFO - Identified top-level command: search
+2025-04-17 00:08:35,738 - Process-1 - assistant - INFO - Attempting to execute handler: search_handler for command 'search' with params: 'przepis na ciasto z 6 jajek'
+2025-04-17 00:08:35,738 - Process-1 - search_module - INFO - Searching for query: przepis na ciasto z 6 jajek
+2025-04-17 00:08:35,739 - Process-1 - assistant - INFO - Handler capture_screen returned: Na zrzucie ekranu widzisz instrukcję krok po kroku, jak wykonywać prawidłowe ćwiczenie na ósemkę (wypośrodkowanie). Pokazuje ona ilustrację i opis, jak ustawić ciało i ruchy podczas tego ćwiczenia.
+2025-04-17 00:08:35,739 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'search' z pliku: resources/sounds/search_beep.mp3 (Loop: False)
+2025-04-17 00:08:35,740 - Process-1 - audio_modules.tts_module - INFO - TTS: Na zrzucie ekranu widzisz instrukcję krok po kroku, jak wykonywać prawidłowe ćwiczenie na ósemkę (wypośrodkowanie). Pokazuje ona ilustrację i opis, jak ustawić ciało i ruchy podczas tego ćwiczenia.
+2025-04-17 00:08:37,036 - Process-1 - primp - INFO - response: https://html.duckduckgo.com/html 200
+2025-04-17 00:08:39,661 - MainProcess - __main__ - WARNING - Detected process exit, shutting down main.
+2025-04-17 00:08:39,661 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-04-17 00:08:48,123 - MainProcess - __main__ - INFO - Initializing application...
+2025-04-17 00:08:48,130 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-04-17 00:08:53,460 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-04-17 00:08:53,461 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-04-17 00:08:54,298 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-04-17 00:08:54,298 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-04-17 00:08:54,299 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-04-17 00:08:54,436 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-04-17 00:08:54,464 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-04-17 00:08:54,469 - Process-1 - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-04-17 00:08:54,469 - Process-1 - database_manager - ERROR - Error retrieving memories (Query: None): no such column: user
+2025-04-17 00:08:54,469 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-04-17 00:09:01,889 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-04-17 00:09:03,897 - Process-1 - assistant - INFO - Bot is starting...
+2025-04-17 00:09:03,912 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-04-17 00:09:03,913 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-04-17 00:09:03,915 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-04-17 00:09:03,917 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-04-17 00:09:54,426 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-17 00:09:54,426 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 00:09:54,432 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:10:00,814 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:10:00,826 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 00:10:02,717 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-17 00:10:02,718 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 00:10:02,722 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:10:04,013 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:10:04,025 - Process-1 - audio_modules.wakeword_detector - WARNING - No valid audio after trimming silence for Whisper command.
+2025-04-17 00:10:04,025 - Process-1 - audio_modules.wakeword_detector - WARNING - Empty command text detected.
+2025-04-17 00:10:04,748 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:10:07,691 - Process-1 - assistant - INFO - Refined query: Ostatnio zastanawiałem się, jak mogę zrobić dzień czyste z sześciu jajek. Czy może mi w tym proszę pomóc?
+2025-04-17 00:10:07,691 - Process-1 - langid.langid - INFO - initializing identifier
+2025-04-17 00:10:10,023 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 00:10:10,024 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 00:10:10,512 - Process-1 - audio_modules.speech_recognition - WARNING - Audio callback status: input overflow
+2025-04-17 00:10:12,066 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:10:17,297 - Process-1 - assistant - INFO - AI response: {"text": "Interesujące pytanie! Zrobienie dnia czystego z sześciu jajek to spore wyzwanie. Sprawdzę, jakie są najlepsze metody i przepisy na to. Może uda nam się znaleźć coś, co zadziała. Co masz na myśli mówiąc 'dzień czysty'? Chodzi o małe, dekoracyjne pierożki, czy może o bardziej tradycyjne ciasto?", "command": "", "params": ""}
+2025-04-17 00:10:17,297 - Process-1 - audio_modules.tts_module - INFO - TTS: Interesujące pytanie! Zrobienie dnia czystego z sześciu jajek to spore wyzwanie. Sprawdzę, jakie są najlepsze metody i przepisy na to. Może uda nam się znaleźć coś, co zadziała. Co masz na myśli mówiąc 'dzień czysty'? Chodzi o małe, dekoracyjne pierożki, czy może o bardziej tradycyjne ciasto?
+2025-04-17 00:10:37,855 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-04-17 00:10:37,856 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-04-17 00:10:38,085 - MainProcess - __main__ - INFO - All processes terminated.
+2025-04-17 00:14:17,772 - MainProcess - __main__ - INFO - Initializing application...
+2025-04-17 00:14:17,779 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-04-17 00:14:22,811 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-04-17 00:14:22,834 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-04-17 00:14:23,626 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-04-17 00:14:23,626 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-04-17 00:14:23,627 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-04-17 00:14:23,754 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-04-17 00:14:23,779 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-04-17 00:14:23,783 - Process-1 - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-04-17 00:14:23,784 - Process-1 - database_manager - ERROR - Error retrieving memories (Query: None): no such column: user
+2025-04-17 00:14:23,784 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-04-17 00:14:32,133 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-04-17 00:14:34,078 - Process-1 - assistant - INFO - Bot is starting...
+2025-04-17 00:14:34,092 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-04-17 00:14:34,094 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-04-17 00:14:34,096 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-04-17 00:14:34,097 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-04-17 00:14:43,112 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-17 00:14:43,112 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 00:14:43,118 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:14:44,430 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:14:44,972 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 00:14:47,892 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:14:50,331 - Process-1 - assistant - INFO - Refined query: Czy możesz mi...
+2025-04-17 00:14:50,332 - Process-1 - langid.langid - INFO - initializing identifier
+2025-04-17 00:14:52,535 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 00:14:52,536 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 00:14:54,589 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:14:58,566 - Process-1 - assistant - INFO - AI response: {"text": "No jasne! Czego byś chciał/a porozmawiać? Mam nadzieję, że masz udany dzień!", "command": "", "params": ""}
+2025-04-17 00:14:58,566 - Process-1 - audio_modules.tts_module - INFO - TTS: No jasne! Czego byś chciał/a porozmawiać? Mam nadzieję, że masz udany dzień!
+2025-04-17 00:15:01,613 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-17 00:15:01,614 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 00:15:01,621 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:15:05,689 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:15:06,224 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 00:15:09,048 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:15:11,587 - Process-1 - assistant - INFO - Refined query: Czy możesz mi powiedzieć proszę, jak działa mechanizm?
+2025-04-17 00:15:11,590 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 00:15:11,591 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 00:15:13,647 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:15:16,631 - Process-2 - __mp_main__ - INFO - Flask process finished.
+2025-04-17 00:15:16,631 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-04-17 00:15:16,632 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-04-17 00:15:16,848 - MainProcess - __main__ - INFO - All processes terminated.
+2025-04-17 00:16:24,287 - MainProcess - __main__ - INFO - Initializing application...
+2025-04-17 00:16:24,295 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-04-17 00:16:29,843 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-04-17 00:16:29,847 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-04-17 00:16:30,714 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-04-17 00:16:30,714 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-04-17 00:16:30,715 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-04-17 00:16:30,845 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-04-17 00:16:30,873 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-04-17 00:16:30,878 - Process-1 - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-04-17 00:16:30,879 - Process-1 - database_manager - ERROR - Error retrieving memories (Query: None): no such column: user
+2025-04-17 00:16:30,879 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-04-17 00:16:38,477 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-04-17 00:16:40,577 - Process-1 - assistant - INFO - Bot is starting...
+2025-04-17 00:16:40,593 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-04-17 00:16:40,594 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-04-17 00:16:40,596 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-04-17 00:16:40,597 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-04-17 00:16:52,606 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-17 00:16:52,607 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 00:16:52,617 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:16:54,304 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:16:54,837 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 00:16:58,295 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:17:00,877 - Process-1 - assistant - INFO - Refined query: Uboższy Tadeusz, że on to tak w sobie...
+2025-04-17 00:17:00,877 - Process-1 - langid.langid - INFO - initializing identifier
+2025-04-17 00:17:04,621 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 00:17:04,622 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 00:17:05,103 - Process-1 - audio_modules.speech_recognition - WARNING - Audio callback status: input overflow
+2025-04-17 00:17:05,618 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-17 00:17:05,619 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 00:17:05,623 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:17:06,684 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:17:08,113 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:17:08,657 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 00:17:10,635 - Process-1 - assistant - INFO - AI response: {"text": "No hej! Uboższy Tadeusz, mówisz? Brzmi jak postać z filmu. Co takiego ciekawego robisz?", "command": "", "params": ""}
+2025-04-17 00:17:10,636 - Process-1 - audio_modules.tts_module - INFO - TTS: No hej! Uboższy Tadeusz, mówisz? Brzmi jak postać z filmu. Co takiego ciekawego robisz?
+2025-04-17 00:17:13,347 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:17:15,872 - Process-1 - assistant - INFO - Refined query: 5% detektorów głosów
+2025-04-17 00:17:15,879 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 00:17:15,879 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 00:17:17,913 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:17:21,889 - Process-1 - assistant - INFO - AI response: {"text": "5% detektorów głosów, brzmi trochę jak niepewna statystyka! Czy chodziło o coś konkretnego, czy po prostu to zauważyłeś?", "command": "", "params": ""}
+2025-04-17 00:17:21,890 - Process-1 - audio_modules.tts_module - INFO - TTS: 5% detektorów głosów, brzmi trochę jak niepewna statystyka! Czy chodziło o coś konkretnego, czy po prostu to zauważyłeś?
+2025-04-17 00:17:32,104 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-04-17 00:17:32,106 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-04-17 00:17:32,308 - MainProcess - __main__ - INFO - All processes terminated.
+2025-04-17 00:40:35,866 - MainProcess - __main__ - INFO - Initializing application...
+2025-04-17 00:40:35,872 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-04-17 00:40:40,421 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-04-17 00:40:40,427 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-04-17 00:40:41,124 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-04-17 00:40:41,124 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-04-17 00:40:41,125 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-04-17 00:40:41,237 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-04-17 00:40:41,262 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-04-17 00:40:41,266 - Process-1 - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-04-17 00:40:41,266 - Process-1 - database_manager - ERROR - Error retrieving memories (Query: None): no such column: user
+2025-04-17 00:40:41,267 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-04-17 00:40:47,714 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-04-17 00:40:49,647 - Process-1 - assistant - INFO - Bot is starting...
+2025-04-17 00:40:49,666 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-04-17 00:40:49,668 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-04-17 00:40:49,670 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-04-17 00:40:49,671 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-04-17 00:41:09,180 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (final).
+2025-04-17 00:41:09,181 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 00:41:09,187 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:41:10,470 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:41:10,481 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:41:11,770 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:41:11,785 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:41:13,079 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:41:13,091 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:41:14,369 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:41:14,382 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:41:15,688 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:41:15,700 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:41:16,988 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:41:17,000 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:41:18,288 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:41:18,301 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:41:19,588 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:41:19,600 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:41:20,888 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:41:20,901 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:41:22,188 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:41:22,201 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:41:23,488 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:41:23,500 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:41:24,788 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:41:24,800 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:41:26,088 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:41:26,101 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:41:27,388 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:41:27,400 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:41:28,678 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:41:28,690 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:41:29,008 - Process-2 - __mp_main__ - INFO - Flask process finished.
+2025-04-17 00:41:29,118 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-04-17 00:41:29,119 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-04-17 00:41:29,265 - MainProcess - __main__ - INFO - All processes terminated.
+2025-04-17 00:50:10,126 - MainProcess - __main__ - INFO - Initializing application...
+2025-04-17 00:50:10,133 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-04-17 00:50:14,621 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-04-17 00:50:14,623 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-04-17 00:50:15,364 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-04-17 00:50:15,365 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-04-17 00:50:15,365 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-04-17 00:50:15,483 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-04-17 00:50:15,510 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-04-17 00:50:15,515 - Process-1 - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-04-17 00:50:15,516 - Process-1 - database_manager - ERROR - Error retrieving memories (Query: None): no such column: user
+2025-04-17 00:50:15,516 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-04-17 00:50:21,985 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-04-17 00:50:23,800 - Process-1 - assistant - INFO - Bot is starting...
+2025-04-17 00:50:23,815 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-04-17 00:50:23,816 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-04-17 00:50:23,818 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-04-17 00:50:23,819 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-04-17 00:50:28,334 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (final).
+2025-04-17 00:50:28,335 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 00:50:28,340 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:50:29,623 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:50:29,635 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 00:50:32,608 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:50:35,144 - Process-1 - assistant - INFO - Refined query: Powiedz mi proszę.
+2025-04-17 00:50:35,145 - Process-1 - langid.langid - INFO - initializing identifier
+2025-04-17 00:50:37,033 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 00:50:37,034 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 00:50:37,523 - Process-1 - audio_modules.speech_recognition - WARNING - Audio callback status: input overflow
+2025-04-17 00:50:39,074 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:50:42,258 - Process-1 - assistant - INFO - AI response: {"text": "No hej! Jak się dzisiaj czujesz?", "command": "", "params": ""}
+2025-04-17 00:50:42,258 - Process-1 - audio_modules.tts_module - INFO - TTS: No hej! Jak się dzisiaj czujesz?
+2025-04-17 00:50:43,033 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (final).
+2025-04-17 00:50:43,034 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 00:50:43,038 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:50:44,322 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:50:44,333 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 00:50:46,725 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:50:49,255 - Process-1 - assistant - INFO - Refined query: jaką
+2025-04-17 00:50:49,259 - Process-1 - assistant - INFO - Detected language: pl (confidence 2.95)
+2025-04-17 00:50:49,259 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 00:50:51,305 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:50:54,252 - Process-1 - assistant - INFO - AI response: {"command": "memory get", "params": "", "text": ""}
+2025-04-17 00:50:54,253 - Process-1 - assistant - INFO - Identified sub-command: memory get
+2025-04-17 00:50:54,253 - Process-1 - assistant - INFO - Attempting to execute handler: retrieve_memories for command 'memory get' with params: ''
+2025-04-17 00:50:54,256 - Process-1 - memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-04-17 00:50:54,258 - Process-1 - database_manager - ERROR - Error retrieving memories (Query: None): no such column: user
+2025-04-17 00:50:54,259 - Process-1 - assistant - INFO - Handler retrieve_memories returned: ('Brak zapisanych wspomnień.', True)
+2025-04-17 00:50:54,259 - Process-1 - audio_modules.tts_module - INFO - TTS: Brak zapisanych wspomnień.
+2025-04-17 00:51:02,033 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (final).
+2025-04-17 00:51:02,035 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 00:51:02,039 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:51:05,951 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:51:05,963 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 00:51:08,726 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:51:11,284 - Process-1 - assistant - INFO - Refined query: Zastanawiam się ostatnio, jak może rozwiązać problem z Inwersją.
+2025-04-17 00:51:11,287 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 00:51:11,288 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 00:51:13,338 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:51:17,980 - Process-1 - assistant - INFO - AI response: {"text": "Interesujące pytanie! Problem z Inwersją to dość skomplikowany temat w programowaniu, szczególnie w kontekście algorytmów sortowania. Mówisz o algorytmie Inwersji, który służy do liczenia ilości zamian potrzebnych do posortowania tablicy. Czy możesz mi powiedzieć, co konkretnie Cię interesuje w tym problemie? Może masz na myśli jego implementację, złożoność obliczeniową, czy może jakieś specyficzne przypadki?", "command": "", "params": ""}
+2025-04-17 00:51:17,980 - Process-1 - audio_modules.tts_module - INFO - TTS: Interesujące pytanie! Problem z Inwersją to dość skomplikowany temat w programowaniu, szczególnie w kontekście algorytmów sortowania. Mówisz o algorytmie Inwersji, który służy do liczenia ilości zamian potrzebnych do posortowania tablicy. Czy możesz mi powiedzieć, co konkretnie Cię interesuje w tym problemie? Może masz na myśli jego implementację, złożoność obliczeniową, czy może jakieś specyficzne przypadki?
+2025-04-17 00:52:02,097 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-04-17 00:52:02,097 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-04-17 00:52:02,278 - MainProcess - __main__ - INFO - All processes terminated.
+2025-04-17 00:54:13,148 - MainProcess - __main__ - INFO - Initializing application...
+2025-04-17 00:54:13,154 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-04-17 00:54:17,638 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-04-17 00:54:17,639 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-04-17 00:54:18,344 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-04-17 00:54:18,344 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-04-17 00:54:18,345 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-04-17 00:54:18,455 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-04-17 00:54:18,486 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-04-17 00:54:18,494 - Process-1 - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-04-17 00:54:18,499 - Process-1 - database_manager - ERROR - Error retrieving memories (Query: None): no such column: user
+2025-04-17 00:54:18,505 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-04-17 00:54:24,912 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-04-17 00:54:26,693 - Process-1 - assistant - INFO - Bot is starting...
+2025-04-17 00:54:26,707 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-04-17 00:54:26,711 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-04-17 00:54:26,714 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-04-17 00:54:26,715 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-04-17 00:54:36,224 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (final).
+2025-04-17 00:54:36,224 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 00:54:36,230 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:54:37,512 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:54:37,524 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 00:54:40,520 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:54:42,997 - Process-1 - assistant - INFO - Refined query: Love it.
+2025-04-17 00:54:42,998 - Process-1 - langid.langid - INFO - initializing identifier
+2025-04-17 00:54:44,835 - Process-1 - assistant - INFO - Detected language: en (confidence 9.06)
+2025-04-17 00:54:44,835 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 00:54:45,321 - Process-1 - audio_modules.speech_recognition - WARNING - Audio callback status: input overflow
+2025-04-17 00:54:46,911 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:54:50,322 - Process-1 - assistant - INFO - AI response: {"text": "No hej! Miło cię widzieć. Co tam u Ciebie słychać dzisiaj?", "command": "", "params": ""}
+2025-04-17 00:54:50,322 - Process-1 - audio_modules.tts_module - INFO - TTS: No hej! Miło cię widzieć. Co tam u Ciebie słychać dzisiaj?
+2025-04-17 00:54:50,334 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (final).
+2025-04-17 00:54:50,335 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 00:54:50,342 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:54:51,631 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:54:51,643 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 00:54:53,949 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:54:56,426 - Process-1 - assistant - INFO - Refined query: Ja to lubię.
+2025-04-17 00:54:56,428 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 00:54:56,429 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 00:54:58,480 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:55:01,921 - Process-1 - assistant - INFO - AI response: {"text": "Super, że tak lubisz! A co konkretnie lubisz?", "command": "", "params": ""}
+2025-04-17 00:55:01,921 - Process-1 - audio_modules.tts_module - INFO - TTS: Super, że tak lubisz! A co konkretnie lubisz?
+2025-04-17 00:55:04,315 - Process-2 - __mp_main__ - INFO - Flask process finished.
+2025-04-17 00:55:04,315 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-04-17 00:55:04,315 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-04-17 00:55:04,526 - MainProcess - __main__ - INFO - All processes terminated.
+2025-04-17 00:59:03,745 - MainProcess - __main__ - INFO - Initializing application...
+2025-04-17 00:59:03,751 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-04-17 00:59:08,208 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-04-17 00:59:08,208 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-04-17 00:59:08,936 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-04-17 00:59:08,937 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-04-17 00:59:08,938 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-04-17 00:59:09,086 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-04-17 00:59:09,109 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-04-17 00:59:09,113 - Process-1 - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-04-17 00:59:09,113 - Process-1 - database_manager - ERROR - Error retrieving memories (Query: None): no such column: user
+2025-04-17 00:59:09,114 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-04-17 00:59:15,355 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-04-17 00:59:17,390 - Process-1 - assistant - INFO - Bot is starting...
+2025-04-17 00:59:17,405 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-04-17 00:59:17,408 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-04-17 00:59:17,410 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-04-17 00:59:17,411 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-04-17 00:59:21,424 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (final).
+2025-04-17 00:59:21,425 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 00:59:21,430 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:59:22,719 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:59:22,732 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 00:59:25,504 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:59:27,964 - Process-1 - assistant - INFO - Refined query: Powiedz mi proszę...
+2025-04-17 00:59:27,964 - Process-1 - langid.langid - INFO - initializing identifier
+2025-04-17 00:59:30,103 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 00:59:30,103 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 00:59:30,588 - Process-1 - audio_modules.speech_recognition - WARNING - Audio callback status: input overflow
+2025-04-17 00:59:32,147 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:59:34,601 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (final).
+2025-04-17 00:59:34,602 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 00:59:34,608 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 00:59:35,436 - Process-1 - assistant - INFO - AI response: {"text": "No dobra, powiedz mi proszę...", "command": "", "params": ""}
+2025-04-17 00:59:35,438 - Process-1 - audio_modules.tts_module - INFO - TTS: No dobra, powiedz mi proszę...
+2025-04-17 00:59:37,928 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 00:59:37,941 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 00:59:40,872 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:59:43,531 - Process-1 - assistant - INFO - Refined query: Jedne z soli muszę dodać w tej ryżnicy ze sześciu jajek.
+2025-04-17 00:59:43,534 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 00:59:43,535 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 00:59:45,602 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 00:59:49,178 - Process-1 - assistant - INFO - AI response: {"text": "Okej, ryżnica ze sześcioma jajkami? Brzmi ciekawie. Jakie sole miałeś na myśli?", "command": "", "params": ""}
+2025-04-17 00:59:49,178 - Process-1 - audio_modules.tts_module - INFO - TTS: Okej, ryżnica ze sześcioma jajkami? Brzmi ciekawie. Jakie sole miałeś na myśli?
+2025-04-17 01:02:42,675 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-04-17 01:02:42,675 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-04-17 01:02:42,867 - MainProcess - __main__ - INFO - All processes terminated.
+2025-04-17 01:02:48,517 - MainProcess - __main__ - INFO - Initializing application...
+2025-04-17 01:02:48,523 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-04-17 01:02:53,046 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-04-17 01:02:53,063 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-04-17 01:02:53,755 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-04-17 01:02:53,756 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-04-17 01:02:53,756 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-04-17 01:02:53,872 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-04-17 01:02:53,896 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-04-17 01:02:53,899 - Process-1 - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-04-17 01:02:53,900 - Process-1 - database_manager - ERROR - Error retrieving memories (Query: None): no such column: user
+2025-04-17 01:02:53,900 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-04-17 01:03:00,828 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-04-17 01:03:02,828 - Process-1 - assistant - INFO - Bot is starting...
+2025-04-17 01:03:02,843 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-04-17 01:03:02,844 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-04-17 01:03:02,846 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-04-17 01:03:02,847 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-04-17 01:03:06,864 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (final).
+2025-04-17 01:03:06,864 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 01:03:06,870 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 01:03:08,159 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 01:03:08,171 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 01:03:22,015 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 01:03:24,531 - Process-1 - assistant - INFO - Refined query: jaka jest pogoda w sosnowcu?
+2025-04-17 01:03:24,531 - Process-1 - langid.langid - INFO - initializing identifier
+2025-04-17 01:03:26,673 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 01:03:26,673 - Process-1 - assistant - INFO - Intent classified as: weather_query
+2025-04-17 01:03:27,157 - Process-1 - audio_modules.speech_recognition - WARNING - Audio callback status: input overflow
+2025-04-17 01:03:28,719 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 01:03:32,148 - Process-1 - assistant - INFO - AI response: {"text": "Sprawdzam pogodę w Sosnowcu...", "command": "search", "params": "pogoda Sosnowiec"}
+2025-04-17 01:03:32,150 - Process-1 - assistant - INFO - Identified top-level command: search
+2025-04-17 01:03:32,151 - Process-1 - assistant - INFO - Attempting to execute handler: search_handler for command 'search' with params: 'pogoda Sosnowiec'
+2025-04-17 01:03:32,151 - Process-1 - search_module - INFO - Searching for query: pogoda Sosnowiec
+2025-04-17 01:03:32,152 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'search' z pliku: resources/sounds/search_beep.mp3 (Loop: False)
+2025-04-17 01:03:32,874 - Process-1 - primp - INFO - response: https://html.duckduckgo.com/html 200
+2025-04-17 01:03:36,171 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (final).
+2025-04-17 01:03:36,171 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 01:03:36,177 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 01:03:36,573 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 01:03:37,957 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 01:03:37,970 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 01:03:39,728 - Process-1 - assistant - INFO - Handler search_handler returned: Aktualna pogoda w Sosnowcu: 05:45, 19:40, 01:00, 07:10.
+2025-04-17 01:03:39,731 - Process-1 - audio_modules.tts_module - INFO - TTS: Aktualna pogoda w Sosnowcu: 05:45, 19:40, 01:00, 07:10.
+2025-04-17 01:03:50,572 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 01:03:53,069 - Process-1 - assistant - INFO - Refined query: jak się czujesz dzisiaj?
+2025-04-17 01:03:53,072 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 01:03:53,072 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 01:03:55,144 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 01:03:58,739 - Process-1 - assistant - INFO - AI response: {"text": "Dziś czuję się całkiem dobrze, dziękuję za pytanie! Sprawdzam pogodę w Sosnowcu i przygotowuję się do dalszej rozmowy. Jak minął Twój dzień?", "command": "", "params": ""}
+2025-04-17 01:03:58,739 - Process-1 - audio_modules.tts_module - INFO - TTS: Dziś czuję się całkiem dobrze, dziękuję za pytanie! Sprawdzam pogodę w Sosnowcu i przygotowuję się do dalszej rozmowy. Jak minął Twój dzień?
+2025-04-17 01:04:15,167 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (final).
+2025-04-17 01:04:15,168 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 01:04:15,172 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 01:04:17,335 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 01:04:17,348 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 01:04:29,683 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 01:04:32,186 - Process-1 - assistant - INFO - Refined query: Jak się masz?
+2025-04-17 01:04:32,190 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 01:04:32,190 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 01:04:34,238 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 01:04:37,846 - Process-1 - assistant - INFO - AI response: {"command": "memory get", "params": "", "text": ""}
+2025-04-17 01:04:37,846 - Process-1 - assistant - INFO - Identified sub-command: memory get
+2025-04-17 01:04:37,846 - Process-1 - assistant - INFO - Attempting to execute handler: retrieve_memories for command 'memory get' with params: ''
+2025-04-17 01:04:37,847 - Process-1 - memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-04-17 01:04:37,848 - Process-1 - database_manager - ERROR - Error retrieving memories (Query: None): no such column: user
+2025-04-17 01:04:37,849 - Process-1 - assistant - INFO - Handler retrieve_memories returned: ('Brak zapisanych wspomnień.', True)
+2025-04-17 01:04:37,849 - Process-1 - audio_modules.tts_module - INFO - TTS: Brak zapisanych wspomnień.
+2025-04-17 01:05:23,216 - Process-2 - __mp_main__ - INFO - Flask process finished.
+2025-04-17 01:05:23,557 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-04-17 01:05:23,558 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-04-17 01:05:23,744 - MainProcess - __main__ - INFO - All processes terminated.
+2025-04-17 01:08:29,491 - MainProcess - __main__ - INFO - Initializing application...
+2025-04-17 01:08:29,500 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-04-17 01:08:34,184 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-04-17 01:08:34,185 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-04-17 01:08:34,972 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-04-17 01:08:34,973 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-04-17 01:08:34,974 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-04-17 01:08:35,095 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-04-17 01:08:35,122 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-04-17 01:08:35,126 - Process-1 - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-04-17 01:08:35,127 - Process-1 - database_manager - ERROR - Error retrieving memories (Query: None): no such column: user
+2025-04-17 01:08:35,127 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-04-17 01:08:41,806 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-04-17 01:08:43,748 - Process-1 - assistant - INFO - Bot is starting...
+2025-04-17 01:08:43,765 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-04-17 01:08:43,767 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-04-17 01:08:43,769 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-04-17 01:08:43,770 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-04-17 01:08:51,785 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (final).
+2025-04-17 01:08:51,786 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 01:08:51,792 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 01:08:55,412 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 01:08:55,425 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 01:09:08,124 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 01:09:10,734 - Process-1 - assistant - INFO - Refined query: jak się czujecie dzisiaj?
+2025-04-17 01:09:10,735 - Process-1 - langid.langid - INFO - initializing identifier
+2025-04-17 01:09:12,687 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 01:09:12,687 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 01:09:14,737 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 01:09:17,785 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (final).
+2025-04-17 01:09:17,786 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 01:09:17,790 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 01:09:18,153 - Process-1 - assistant - INFO - AI response: {"text": "Dziś dobrze, dziękuję za pytanie! Jak minął Twój dzień?", "command": "", "params": ""}
+2025-04-17 01:09:18,153 - Process-1 - audio_modules.tts_module - INFO - TTS: Dziś dobrze, dziękuję za pytanie! Jak minął Twój dzień?
+2025-04-17 01:09:19,951 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 01:09:19,966 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 01:09:32,645 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 01:09:35,209 - Process-1 - assistant - INFO - Refined query: jaką temperaturę ma mieć dzisiaj w Krakowie?
+2025-04-17 01:09:35,212 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 01:09:35,213 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 01:09:37,275 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 01:09:40,602 - Process-1 - assistant - INFO - AI response: {"text": "Sprawdzam pogodę w Krakowie...", "command": "search", "params": "pogoda Kraków"}
+2025-04-17 01:09:40,603 - Process-1 - assistant - INFO - Identified top-level command: search
+2025-04-17 01:09:40,603 - Process-1 - assistant - INFO - Attempting to execute handler: search_handler for command 'search' with params: 'pogoda Kraków'
+2025-04-17 01:09:40,603 - Process-1 - search_module - INFO - Searching for query: pogoda Kraków
+2025-04-17 01:09:40,604 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'search' z pliku: resources/sounds/search_beep.mp3 (Loop: False)
+2025-04-17 01:09:41,424 - Process-1 - primp - INFO - response: https://lite.duckduckgo.com/lite/ 200
+2025-04-17 01:09:44,675 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 01:09:48,031 - Process-1 - assistant - INFO - Handler search_handler returned: Dzisiaj w Krakowie średnia temperatura wyniesie 26°C, a temperatura odczuwalna około 27°C. Zachmurzenie 18%, wiatr 11 km/h, bez burz.
+2025-04-17 01:09:48,036 - Process-1 - audio_modules.tts_module - INFO - TTS: Dzisiaj w Krakowie średnia temperatura wyniesie 26°C, a temperatura odczuwalna około 27°C. Zachmurzenie 18%, wiatr 11 km/h, bez burz.
+2025-04-17 10:20:14,084 - MainProcess - __main__ - INFO - Initializing application...
+2025-04-17 10:20:14,096 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-04-17 10:20:18,354 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-04-17 10:20:18,358 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-04-17 10:20:19,181 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-04-17 10:20:19,182 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-04-17 10:20:19,183 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-04-17 10:20:19,341 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-04-17 10:20:19,384 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-04-17 10:20:19,388 - Process-1 - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-04-17 10:20:19,389 - Process-1 - database_manager - ERROR - Error retrieving memories (Query: None): no such column: user
+2025-04-17 10:20:19,389 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-04-17 10:20:28,727 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-04-17 10:20:36,630 - Process-1 - assistant - INFO - Bot is starting...
+2025-04-17 10:20:36,648 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-04-17 10:20:36,649 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-04-17 10:20:36,651 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-04-17 10:20:36,663 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-04-17 10:20:41,172 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (final).
+2025-04-17 10:20:41,173 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 10:20:41,182 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 10:20:43,351 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 10:20:43,365 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 10:20:55,966 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:20:58,072 - Process-1 - assistant - INFO - Refined query: Błąd: nieprawidłowa odpowiedź z LM Studio
+2025-04-17 10:20:58,073 - Process-1 - langid.langid - INFO - initializing identifier
+2025-04-17 10:20:59,897 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 10:20:59,897 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 10:21:00,380 - Process-1 - audio_modules.speech_recognition - WARNING - Audio callback status: input overflow
+2025-04-17 10:21:01,938 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:21:04,000 - Process-1 - assistant - INFO - AI response: {"text": "Błąd: nieprawidłowa odpowiedź z LM Studio"}
+2025-04-17 10:21:04,001 - Process-1 - audio_modules.tts_module - INFO - TTS: Błąd: nieprawidłowa odpowiedź z LM Studio
+2025-04-17 10:21:35,896 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (final).
+2025-04-17 10:21:35,897 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 10:21:35,902 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 10:21:39,218 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 10:21:39,231 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 10:21:53,367 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:21:56,034 - Process-1 - assistant - INFO - Refined query: jaka jest pogoda w sosnowcu?
+2025-04-17 10:21:56,038 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 10:21:56,038 - Process-1 - assistant - INFO - Intent classified as: weather_query
+2025-04-17 10:21:58,102 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:22:01,954 - Process-1 - assistant - INFO - AI response: {"text": "Sprawdzam pogodę w Sosnowcu...", "command": "search", "params": "pogoda Sosnowiec"}
+2025-04-17 10:22:01,955 - Process-1 - assistant - INFO - Identified top-level command: search
+2025-04-17 10:22:01,955 - Process-1 - assistant - INFO - Attempting to execute handler: search_handler for command 'search' with params: 'pogoda Sosnowiec'
+2025-04-17 10:22:01,955 - Process-1 - search_module - INFO - Searching for query: pogoda Sosnowiec
+2025-04-17 10:22:01,956 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'search' z pliku: resources/sounds/search_beep.mp3 (Loop: False)
+2025-04-17 10:22:02,802 - Process-1 - primp - INFO - response: https://lite.duckduckgo.com/lite/ 200
+2025-04-17 10:22:06,528 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:22:09,242 - Process-1 - assistant - INFO - Handler search_handler returned: Aktualna pogoda w Sosnowcu nie jest podana w tym tekście.
+2025-04-17 10:22:09,247 - Process-1 - audio_modules.tts_module - INFO - TTS: Aktualna pogoda w Sosnowcu nie jest podana w tym tekście.
+2025-04-17 10:22:19,393 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (final).
+2025-04-17 10:22:19,393 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 10:22:19,399 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 10:22:24,499 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 10:22:35,920 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:22:38,490 - Process-1 - assistant - INFO - Refined query: jak się masz dzisiaj?
+2025-04-17 10:22:38,493 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 10:22:38,494 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 10:22:40,547 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:22:45,107 - Process-1 - assistant - INFO - AI response: {"text": "Wszystko dobrze, dziękuję za pytanie! Jak mija Twój dzień? Mam nadzieję, że jest udany. Co tam u Ciebie słychać?", "command": "", "params": ""}
+2025-04-17 10:22:45,108 - Process-1 - audio_modules.tts_module - INFO - TTS: Wszystko dobrze, dziękuję za pytanie! Jak mija Twój dzień? Mam nadzieję, że jest udany. Co tam u Ciebie słychać?
+2025-04-17 10:25:24,394 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-04-17 10:25:24,394 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-04-17 10:25:24,591 - MainProcess - __main__ - INFO - All processes terminated.
+2025-04-17 10:25:32,187 - MainProcess - __main__ - INFO - Initializing application...
+2025-04-17 10:25:32,193 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-04-17 10:25:36,519 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-04-17 10:25:36,528 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-04-17 10:25:37,201 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-04-17 10:25:37,201 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-04-17 10:25:37,202 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-04-17 10:25:37,311 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-04-17 10:25:37,334 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-04-17 10:25:37,337 - Process-1 - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-04-17 10:25:37,338 - Process-1 - database_manager - ERROR - Error retrieving memories (Query: None): no such column: user
+2025-04-17 10:25:37,338 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-04-17 10:25:43,394 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-04-17 10:25:45,166 - Process-1 - assistant - INFO - Bot is starting...
+2025-04-17 10:25:45,181 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-04-17 10:25:45,183 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-04-17 10:25:45,185 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-04-17 10:25:45,186 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-04-17 10:25:52,203 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (final).
+2025-04-17 10:25:52,203 - Process-1 - audio_modules.wakeword_detector - INFO - Prebuffer chunks before wake-word record: 14
+2025-04-17 10:25:52,204 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 10:25:52,210 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 10:25:56,587 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 10:25:56,601 - Process-1 - audio_modules.wakeword_detector - INFO - Dynamic audio samples: 69600, duration: 4.35s
+2025-04-17 10:25:56,602 - Process-1 - audio_modules.wakeword_detector - INFO - Prebuffer audio samples: 56000, duration: 3.50s
+2025-04-17 10:25:56,603 - Process-1 - audio_modules.wakeword_detector - INFO - Queued command audio total samples: 125600, duration: 7.85s
+2025-04-17 10:25:56,603 - Process-1 - audio_modules.wakeword_detector - INFO - Async queued audio length: 7.85s (125600 samples)
+2025-04-17 10:25:56,603 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 10:26:08,352 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:26:10,853 - Process-1 - assistant - INFO - Refined query: jak się czujesz dzisiaj?
+2025-04-17 10:26:10,854 - Process-1 - langid.langid - INFO - initializing identifier
+2025-04-17 10:26:12,474 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 10:26:12,475 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 10:26:14,524 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:26:18,231 - Process-1 - assistant - INFO - AI response: {"text": "Czuję się świetnie, dziękuję za pytanie! Jestem gotów do rozmowy. Jak minął Twój dzień?", "command": "", "params": ""}
+2025-04-17 10:26:18,232 - Process-1 - audio_modules.tts_module - INFO - TTS: Czuję się świetnie, dziękuję za pytanie! Jestem gotów do rozmowy. Jak minął Twój dzień?
+2025-04-17 10:26:22,197 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (final).
+2025-04-17 10:26:22,198 - Process-1 - audio_modules.wakeword_detector - INFO - Prebuffer chunks before wake-word record: 52
+2025-04-17 10:26:22,198 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 10:26:22,203 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 10:26:25,436 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 10:26:25,448 - Process-1 - audio_modules.wakeword_detector - INFO - Dynamic audio samples: 51200, duration: 3.20s
+2025-04-17 10:26:25,448 - Process-1 - audio_modules.wakeword_detector - INFO - Prebuffer audio samples: 208000, duration: 13.00s
+2025-04-17 10:26:25,449 - Process-1 - audio_modules.wakeword_detector - INFO - Queued command audio total samples: 259200, duration: 16.20s
+2025-04-17 10:26:25,450 - Process-1 - audio_modules.wakeword_detector - INFO - Async queued audio length: 16.20s (259200 samples)
+2025-04-17 10:26:25,450 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 10:26:36,607 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:26:39,256 - Process-1 - assistant - INFO - Refined query: jaką temperaturę mają w Krakowie dzisiaj?
+2025-04-17 10:26:39,259 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 10:26:39,259 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 10:26:41,305 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:26:45,228 - Process-1 - assistant - INFO - AI response: {"text": "Sprawdzam pogodę w Krakowie...", "command": "search", "params": "pogoda Kraków"}
+2025-04-17 10:26:45,228 - Process-1 - assistant - INFO - Identified top-level command: search
+2025-04-17 10:26:45,229 - Process-1 - assistant - INFO - Attempting to execute handler: search_handler for command 'search' with params: 'pogoda Kraków'
+2025-04-17 10:26:45,229 - Process-1 - search_module - INFO - Searching for query: pogoda Kraków
+2025-04-17 10:26:45,232 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'search' z pliku: resources/sounds/search_beep.mp3 (Loop: False)
+2025-04-17 10:26:46,133 - Process-1 - primp - INFO - response: https://html.duckduckgo.com/html 200
+2025-04-17 10:26:49,308 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:26:52,496 - Process-1 - assistant - INFO - Handler search_handler returned: Dzisiaj w Krakowie częściowo słonecznie, z możliwością przelotnych opadów deszczu głównie w piątek wieczorem.
+2025-04-17 10:26:52,499 - Process-1 - audio_modules.tts_module - INFO - TTS: Dzisiaj w Krakowie częściowo słonecznie, z możliwością przelotnych opadów deszczu głównie w piątek wieczorem.
+2025-04-17 10:27:03,702 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (final).
+2025-04-17 10:27:03,703 - Process-1 - audio_modules.wakeword_detector - INFO - Prebuffer chunks before wake-word record: 77
+2025-04-17 10:27:03,703 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 10:27:03,710 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 10:27:06,144 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 10:27:06,157 - Process-1 - audio_modules.wakeword_detector - INFO - Dynamic audio samples: 38400, duration: 2.40s
+2025-04-17 10:27:06,158 - Process-1 - audio_modules.wakeword_detector - INFO - Prebuffer audio samples: 308000, duration: 19.25s
+2025-04-17 10:27:06,159 - Process-1 - audio_modules.wakeword_detector - INFO - Queued command audio total samples: 346400, duration: 21.65s
+2025-04-17 10:27:06,159 - Process-1 - audio_modules.wakeword_detector - INFO - Async queued audio length: 21.65s (346400 samples)
+2025-04-17 10:27:06,160 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 10:27:17,546 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:27:20,047 - Process-1 - assistant - INFO - Refined query: jaką temperaturę mam ustawić?
+2025-04-17 10:27:20,049 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 10:27:20,050 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 10:27:22,121 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:27:26,388 - Process-1 - assistant - INFO - AI response: {"text": "Aktualnie w Krakowie temperatura wynosi 18 stopni Celsjusza.", "command": "memory add", "params": "Temperatura w Krakowie: 18°C", "tool": "memory"}
+2025-04-17 10:27:26,388 - Process-1 - assistant - INFO - Identified sub-command: memory add
+2025-04-17 10:27:26,388 - Process-1 - assistant - INFO - Attempting to execute handler: add_memory for command 'memory add' with params: 'Temperatura w Krakowie: 18°C'
+2025-04-17 10:27:26,389 - Process-1 - database_manager - ERROR - Error retrieving memories (Query: None): no such column: user
+2025-04-17 10:27:26,390 - Process-1 - memory_module - INFO - Attempting to add memory via command: 'Temperatura w Krakowie: 18°C...' by user 'assistant'
+2025-04-17 10:27:26,391 - Process-1 - database_manager - ERROR - Error adding memory (User: assistant): table memories has no column named user
+2025-04-17 10:27:26,391 - Process-1 - assistant - INFO - Handler add_memory returned: ('Nie udało mi się zapisać informacji.', False)
+2025-04-17 10:27:26,391 - Process-1 - audio_modules.tts_module - INFO - TTS: Nie udało mi się zapisać informacji.
+2025-04-17 10:29:21,955 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-04-17 10:29:21,958 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-04-17 10:29:22,192 - MainProcess - __main__ - INFO - All processes terminated.
+2025-04-17 10:31:06,167 - MainProcess - __main__ - INFO - Initializing application...
+2025-04-17 10:31:06,175 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-04-17 10:31:10,433 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-04-17 10:31:10,434 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-04-17 10:31:11,105 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-04-17 10:31:11,106 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-04-17 10:31:11,107 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-04-17 10:31:11,215 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-04-17 10:31:11,239 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-04-17 10:31:11,243 - Process-1 - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-04-17 10:31:11,244 - Process-1 - database_manager - ERROR - Error retrieving memories (Query: None): no such column: user
+2025-04-17 10:31:11,244 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-04-17 10:31:17,256 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-04-17 10:31:19,064 - Process-1 - assistant - INFO - Bot is starting...
+2025-04-17 10:31:19,077 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-04-17 10:31:19,079 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-04-17 10:31:19,080 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-04-17 10:31:19,082 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-04-17 10:31:23,098 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (final).
+2025-04-17 10:31:23,098 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 10:31:23,104 - Process-1 - audio_modules.speech_recognition - INFO - Recording audio for 7 seconds using device 14 at 16000Hz...
+2025-04-17 10:31:30,174 - Process-1 - audio_modules.wakeword_detector - INFO - Fixed-length command audio duration: 7.00s (112000 samples)
+2025-04-17 10:31:30,174 - Process-1 - audio_modules.wakeword_detector - INFO - Command audio queued for async processing.
+2025-04-17 10:31:30,174 - Process-1 - audio_modules.wakeword_detector - INFO - Async queued audio length: 7.00s (112000 samples)
+2025-04-17 10:31:30,174 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 10:31:33,549 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:31:36,247 - Process-1 - assistant - INFO - Refined query: Ile soli dodać do jajecznicy z sześciu jajek?
+2025-04-17 10:31:36,247 - Process-1 - langid.langid - INFO - initializing identifier
+2025-04-17 10:31:37,925 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 10:31:37,926 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 10:31:39,985 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:31:44,869 - Process-1 - assistant - INFO - AI response: {"text": "Zatem, sześć jajek... To sporo! Zazwyczaj dodaje się około 1 łyżeczki soli na każdą porcję jajecznicy. Więc dla sześciu jajek, to będzie około 3-4 łyżeczki. Chcesz, żebym sprawdził prognozę pogody, żeby wiedzieć, czy nie będzie padać podczas gotowania?", "command": "", "params": ""}
+2025-04-17 10:31:44,870 - Process-1 - audio_modules.tts_module - INFO - TTS: Zatem, sześć jajek... To sporo! Zazwyczaj dodaje się około 1 łyżeczki soli na każdą porcję jajecznicy. Więc dla sześciu jajek, to będzie około 3-4 łyżeczki. Chcesz, żebym sprawdził prognozę pogody, żeby wiedzieć, czy nie będzie padać podczas gotowania?
+2025-04-17 10:32:07,595 - Process-1 - audio_modules.wakeword_detector - INFO - Stutter detected (partial)
+2025-04-17 10:32:07,596 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 10:32:07,602 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 10:32:09,881 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 10:32:09,902 - Process-1 - audio_modules.wakeword_detector - INFO - Async queued audio length: 1.90s (30326 samples)
+2025-04-17 10:32:09,903 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 10:32:09,972 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (final).
+2025-04-17 10:32:09,972 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 10:32:09,976 - Process-1 - audio_modules.speech_recognition - INFO - Recording audio for 7 seconds using device 14 at 16000Hz...
+2025-04-17 10:32:12,650 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:32:15,210 - Process-1 - assistant - INFO - Refined query: Asystencie, jaka jest ładunek w Sosnowcu?
+2025-04-17 10:32:15,213 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 10:32:15,213 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 10:32:17,041 - Process-1 - audio_modules.wakeword_detector - INFO - Fixed-length command audio duration: 7.00s (112000 samples)
+2025-04-17 10:32:17,042 - Process-1 - audio_modules.wakeword_detector - INFO - Command audio queued for async processing.
+2025-04-17 10:32:17,042 - Process-1 - audio_modules.wakeword_detector - INFO - Async queued audio length: 7.00s (112000 samples)
+2025-04-17 10:32:17,042 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 10:32:17,279 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:32:22,525 - Process-1 - assistant - INFO - AI response: {"text": "Sprawdzam aktualny stan naładowania w Sosnowcu... Chwila. Zgodnie z dostępnymi danymi, na stacji ładowania przy ulicy Kościuszki 57 w Sosnowcu znajduje się pojazd o ładunku około 80%. Czy chcesz, żebym sprawdził jeszcze inne stacje ładowania w okolicy?", "command": "search", "params": "stacje ładowania sosnowiec", "metadata": {"tool": "web"}}
+2025-04-17 10:32:22,525 - Process-1 - assistant - INFO - Identified top-level command: search
+2025-04-17 10:32:22,526 - Process-1 - assistant - INFO - Attempting to execute handler: search_handler for command 'search' with params: 'stacje ładowania sosnowiec'
+2025-04-17 10:32:22,526 - Process-1 - search_module - INFO - Searching for query: stacje ładowania sosnowiec
+2025-04-17 10:32:22,526 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'search' z pliku: resources/sounds/search_beep.mp3 (Loop: False)
+2025-04-17 10:32:24,601 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:32:27,157 - Process-1 - assistant - INFO - Refined query: jaka jest pogoda w sosnowcu?
+2025-04-17 10:32:27,161 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 10:32:27,161 - Process-1 - assistant - INFO - Intent classified as: weather_query
+2025-04-17 10:32:29,237 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:32:34,877 - Process-1 - assistant - INFO - AI response: {"text": "Sprawdzam aktualny stan naładowania w Sosnowcu... Okazuje się, że na chwilę obecną jest bardzo słaby deszcz. Temperatura to 12 stopni Celsjusza, a wilgotność względna to około 85%. Wiatr wieje z kierunku zachodniego i ma prędkość 7 km/h. Zatem, nieprzyjemnie! Chcesz, żebym coś więcej sprawdził, albo może poszukał informacji o jakichś wydarzeniach w Sosnowcu?", "command": "search", "params": "pogoda Sosnowiec", "tool": "web"}
+2025-04-17 10:32:34,877 - Process-1 - assistant - INFO - Identified top-level command: search
+2025-04-17 10:32:34,877 - Process-1 - assistant - INFO - Attempting to execute handler: search_handler for command 'search' with params: 'pogoda Sosnowiec'
+2025-04-17 10:32:34,878 - Process-1 - search_module - INFO - Searching for query: pogoda Sosnowiec
+2025-04-17 10:32:34,878 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'search' z pliku: resources/sounds/search_beep.mp3 (Loop: False)
+2025-04-17 10:32:35,633 - Process-1 - primp - INFO - response: https://lite.duckduckgo.com/lite/ 200
+2025-04-17 10:32:35,699 - Process-1 - primp - INFO - response: https://lite.duckduckgo.com/lite/ 200
+2025-04-17 10:32:38,983 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:32:41,772 - Process-1 - assistant - INFO - Handler search_handler returned: Nie mam aktualnych informacji o pogodzie w Sosnowcu.
+2025-04-17 10:32:41,775 - Process-1 - audio_modules.tts_module - INFO - TTS: Nie mam aktualnych informacji o pogodzie w Sosnowcu.
+2025-04-17 10:32:42,067 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:32:46,603 - Process-1 - assistant - INFO - Handler search_handler returned: W Sosnowcu dostępne są 68 stacji ładowania samochodów elektrycznych (stan na 16-04-2025). Łącznie w mieście dostępnych jest 72 punkty ładowania z 138 gniazd. Ładowanie oferują 9 operatorów.
+2025-04-17 10:32:46,604 - Process-1 - audio_modules.tts_module - INFO - TTS: W Sosnowcu dostępne są 68 stacji ładowania samochodów elektrycznych (stan na 16-04-2025). Łącznie w mieście dostępnych jest 72 punkty ładowania z 138 gniazd. Ładowanie oferują 9 operatorów.
+2025-04-17 10:33:01,590 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (final).
+2025-04-17 10:33:01,590 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 10:33:01,595 - Process-1 - audio_modules.speech_recognition - INFO - Recording audio for 7 seconds using device 14 at 16000Hz...
+2025-04-17 10:33:08,670 - Process-1 - audio_modules.wakeword_detector - INFO - Fixed-length command audio duration: 7.00s (112000 samples)
+2025-04-17 10:33:08,671 - Process-1 - audio_modules.wakeword_detector - INFO - Command audio queued for async processing.
+2025-04-17 10:33:08,671 - Process-1 - audio_modules.wakeword_detector - INFO - Async queued audio length: 7.00s (112000 samples)
+2025-04-17 10:33:08,672 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 10:33:11,843 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:33:14,744 - Process-1 - assistant - INFO - Refined query: Na jaką temperaturę muszę sobie ustawić klimatyzację w pokoju, żeby mi się wydawało?
+2025-04-17 10:33:14,747 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 10:33:14,748 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 10:33:16,817 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:33:20,986 - Process-1 - assistant - INFO - AI response: {"command": "search", "params": "jak ustawić klimatyzację w pokoju żeby było przyjemnie", "text": "Sprawdzam, jak najlepiej ustawić temperaturę w klimatyzacji..."}
+2025-04-17 10:33:20,986 - Process-1 - assistant - INFO - Identified top-level command: search
+2025-04-17 10:33:20,987 - Process-1 - assistant - INFO - Attempting to execute handler: search_handler for command 'search' with params: 'jak ustawić klimatyzację w pokoju żeby było przyjemnie'
+2025-04-17 10:33:20,987 - Process-1 - search_module - INFO - Searching for query: jak ustawić klimatyzację w pokoju żeby było przyjemnie
+2025-04-17 10:33:20,987 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'search' z pliku: resources/sounds/search_beep.mp3 (Loop: False)
+2025-04-17 10:33:21,926 - Process-1 - primp - INFO - response: https://lite.duckduckgo.com/lite/ 200
+2025-04-17 10:33:26,193 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:33:30,427 - Process-1 - assistant - INFO - Handler search_handler returned: Ustaw temperaturę na 25-26 stopni Celsjusza – to bezpieczna i komfortowa wartość. Zawsze trzymaj pomieszczenie zamknięte, żeby klimatyzator nie musiał ciągle pracować na pełnych obrotach. Nie ustawiaj bardzo niskiej temperatury, bo możesz się przeziębić!
+2025-04-17 10:33:30,427 - Process-1 - audio_modules.tts_module - INFO - TTS: Ustaw temperaturę na 25-26 stopni Celsjusza – to bezpieczna i komfortowa wartość. Zawsze trzymaj pomieszczenie zamknięte, żeby klimatyzator nie musiał ciągle pracować na pełnych obrotach. Nie ustawiaj bardzo niskiej temperatury, bo możesz się przeziębić!
+2025-04-17 10:33:46,093 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (final).
+2025-04-17 10:33:46,094 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 10:33:46,101 - Process-1 - audio_modules.speech_recognition - INFO - Recording audio for 7 seconds using device 14 at 16000Hz...
+2025-04-17 10:33:53,177 - Process-1 - audio_modules.wakeword_detector - INFO - Fixed-length command audio duration: 7.00s (112000 samples)
+2025-04-17 10:33:53,177 - Process-1 - audio_modules.wakeword_detector - INFO - Command audio queued for async processing.
+2025-04-17 10:33:53,177 - Process-1 - audio_modules.wakeword_detector - INFO - Async queued audio length: 7.00s (112000 samples)
+2025-04-17 10:33:53,178 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 10:33:55,810 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:33:58,478 - Process-1 - assistant - INFO - Refined query: Powiedz cześć!
+2025-04-17 10:33:58,481 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 10:33:58,481 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 10:34:00,539 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:34:04,576 - Process-1 - assistant - INFO - AI response: {"text": "Cześć!", "command": "", "params": ""}
+2025-04-17 10:34:04,577 - Process-1 - audio_modules.tts_module - INFO - TTS: Cześć!
+2025-04-17 10:37:25,578 - Process-1 - audio_modules.wakeword_detector - INFO - Stutter detected (partial)
+2025-04-17 10:37:25,578 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 10:37:25,583 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 10:37:26,875 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 10:38:13,709 - Process-2 - __mp_main__ - INFO - Flask process finished.
+2025-04-17 10:38:13,710 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-04-17 10:38:13,710 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-04-17 10:38:13,883 - MainProcess - __main__ - INFO - All processes terminated.
+2025-04-17 10:38:18,821 - MainProcess - __main__ - INFO - Initializing application...
+2025-04-17 10:38:18,827 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-04-17 10:38:23,135 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-04-17 10:38:23,143 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-04-17 10:38:23,821 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-04-17 10:38:23,821 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-04-17 10:38:23,822 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-04-17 10:38:23,930 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-04-17 10:38:23,955 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-04-17 10:38:23,959 - Process-1 - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-04-17 10:38:23,960 - Process-1 - database_manager - ERROR - Error retrieving memories (Query: None): no such column: user
+2025-04-17 10:38:23,960 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-04-17 10:38:29,892 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-04-17 10:38:31,612 - Process-1 - assistant - INFO - Bot is starting...
+2025-04-17 10:38:31,627 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-04-17 10:38:31,629 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-04-17 10:38:31,632 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-04-17 10:38:31,639 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-04-17 10:38:36,651 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (final).
+2025-04-17 10:38:36,651 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 10:38:36,662 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 10:38:39,482 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 10:38:39,494 - Process-1 - audio_modules.wakeword_detector - INFO - Recorded command audio duration: 2.80s (44800 samples)
+2025-04-17 10:38:39,495 - Process-1 - audio_modules.wakeword_detector - INFO - Command audio queued for async processing.
+2025-04-17 10:38:39,495 - Process-1 - audio_modules.wakeword_detector - INFO - Async queued audio length: 2.80s (44800 samples)
+2025-04-17 10:38:39,495 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 10:38:42,429 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:38:44,964 - Process-1 - assistant - INFO - Refined query: ile soli dodaj
+2025-04-17 10:38:44,964 - Process-1 - langid.langid - INFO - initializing identifier
+2025-04-17 10:38:46,580 - Process-1 - ai_module - INFO - Low confidence (0.36) for langid result 'it'. Fallback to Polish.
+2025-04-17 10:38:46,580 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.36)
+2025-04-17 10:38:46,580 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 10:38:48,628 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:38:52,987 - Process-1 - assistant - INFO - AI response: {"text": "Zależy od tego, co gotujesz! Ale jeśli chodzi o ogólne wskazówki, to zazwyczaj dodaje się około 1/2 łyżeczki soli na każdy garść składników.", "command": "", "params": ""}
+2025-04-17 10:38:52,987 - Process-1 - audio_modules.tts_module - INFO - TTS: Zależy od tego, co gotujesz! Ale jeśli chodzi o ogólne wskazówki, to zazwyczaj dodaje się około 1/2 łyżeczki soli na każdy garść składników.
+2025-04-17 10:39:01,147 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (final).
+2025-04-17 10:39:01,147 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 10:39:01,152 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 10:39:03,120 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 10:39:03,133 - Process-1 - audio_modules.wakeword_detector - INFO - Recorded command audio duration: 1.95s (31200 samples)
+2025-04-17 10:39:03,133 - Process-1 - audio_modules.wakeword_detector - INFO - Command audio queued for async processing.
+2025-04-17 10:39:03,134 - Process-1 - audio_modules.wakeword_detector - INFO - Async queued audio length: 1.95s (31200 samples)
+2025-04-17 10:39:03,134 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 10:39:05,729 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:39:08,356 - Process-1 - assistant - INFO - Refined query: robię jajecznicę
+2025-04-17 10:39:08,359 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 10:39:08,359 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 10:39:10,406 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:39:15,520 - Process-1 - assistant - INFO - AI response: {"text": "Okej, do jajecznicy potrzebujesz mniej soli niż do innych potraw. Zazwyczaj wystarczy odrobina, żeby podkreślić smak jajek. Jakiej ilości chcesz dodać – odrobiny czy więcej?", "command": "", "params": ""}
+2025-04-17 10:39:15,521 - Process-1 - audio_modules.tts_module - INFO - TTS: Okej, do jajecznicy potrzebujesz mniej soli niż do innych potraw. Zazwyczaj wystarczy odrobina, żeby podkreślić smak jajek. Jakiej ilości chcesz dodać – odrobiny czy więcej?
+2025-04-17 10:42:02,281 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-04-17 10:42:02,282 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-04-17 10:42:02,445 - MainProcess - __main__ - INFO - All processes terminated.
+2025-04-17 10:42:07,323 - MainProcess - __main__ - INFO - Initializing application...
+2025-04-17 10:42:07,329 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-04-17 10:42:11,640 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-04-17 10:42:11,642 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-04-17 10:42:12,310 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-04-17 10:42:12,311 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-04-17 10:42:12,312 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-04-17 10:42:12,417 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-04-17 10:42:12,442 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-04-17 10:42:12,445 - Process-1 - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-04-17 10:42:12,446 - Process-1 - database_manager - ERROR - Error retrieving memories (Query: None): no such column: user
+2025-04-17 10:42:12,446 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-04-17 10:42:18,468 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-04-17 10:42:20,223 - Process-1 - assistant - INFO - Bot is starting...
+2025-04-17 10:42:20,237 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-04-17 10:42:20,243 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-04-17 10:42:20,244 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-04-17 10:42:20,476 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-04-17 10:42:29,741 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-17 10:42:29,742 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 10:42:29,783 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-04-17 10:42:29,783 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 10:42:31,301 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 10:42:31,314 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-04-17 10:42:31,314 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 10:42:32,259 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Powiedz mi
+2025-04-17 10:42:34,317 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:42:36,846 - Process-1 - assistant - INFO - Refined query: Powiedz mi
+2025-04-17 10:42:36,846 - Process-1 - langid.langid - INFO - initializing identifier
+2025-04-17 10:42:38,447 - Process-1 - ai_module - INFO - Low confidence (-13.40) for langid result 'pl'. Fallback to Polish.
+2025-04-17 10:42:38,447 - Process-1 - assistant - INFO - Detected language: pl (confidence -13.40)
+2025-04-17 10:42:38,447 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 10:42:38,940 - Process-1 - audio_modules.speech_recognition - WARNING - Audio callback status: input overflow
+2025-04-17 10:42:39,440 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-17 10:42:39,440 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 10:42:39,467 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-04-17 10:42:39,467 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 10:42:40,503 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:42:41,740 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 10:42:41,752 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-04-17 10:42:41,752 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 10:42:42,409 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Ile solimu se dodaće?
+2025-04-17 10:42:44,336 - Process-1 - assistant - INFO - AI response: {"text": "Cześć! Jak się masz dzisiaj? Mam nadzieję, że wszystko dobrze.", "command": "", "params": ""}
+2025-04-17 10:42:44,336 - Process-1 - audio_modules.tts_module - INFO - TTS: Cześć! Jak się masz dzisiaj? Mam nadzieję, że wszystko dobrze.
+2025-04-17 10:42:46,881 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:42:49,459 - Process-1 - assistant - INFO - Refined query: Ilo soli się dodać?
+2025-04-17 10:42:49,462 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 10:42:49,462 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 10:42:51,527 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:42:57,354 - Process-1 - assistant - INFO - AI response: {"text": "To zależy od przepisu, na którym gotujesz! Powiedz mi, co pieczesz, a spróbuję doradzić.", "command": "", "params": ""}
+2025-04-17 10:42:57,355 - Process-1 - audio_modules.tts_module - INFO - TTS: To zależy od przepisu, na którym gotujesz! Powiedz mi, co pieczesz, a spróbuję doradzić.
+2025-04-17 10:43:05,939 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-17 10:43:05,939 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 10:43:05,969 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-04-17 10:43:05,969 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 10:43:08,679 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 10:43:08,690 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-04-17 10:43:08,690 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 10:43:09,298 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Ile soli dodać do jajecznicy?
+2025-04-17 10:43:11,364 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:43:13,981 - Process-1 - assistant - INFO - Refined query: Ilość soli dodać do jajecznicy?
+2025-04-17 10:43:13,984 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 10:43:13,984 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 10:43:16,051 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:43:16,550 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-04-17 10:43:16,550 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-04-17 10:43:16,715 - MainProcess - __main__ - INFO - All processes terminated.
+2025-04-17 10:43:21,793 - MainProcess - __main__ - INFO - Initializing application...
+2025-04-17 10:43:21,800 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-04-17 10:43:26,041 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-04-17 10:43:26,042 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-04-17 10:43:26,709 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-04-17 10:43:26,709 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-04-17 10:43:26,710 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-04-17 10:43:26,816 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-04-17 10:43:26,840 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-04-17 10:43:26,844 - Process-1 - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-04-17 10:43:26,844 - Process-1 - database_manager - ERROR - Error retrieving memories (Query: None): no such column: user
+2025-04-17 10:43:26,845 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-04-17 10:43:32,729 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-04-17 10:43:34,466 - Process-1 - assistant - INFO - Bot is starting...
+2025-04-17 10:43:34,479 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-04-17 10:43:34,481 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-04-17 10:43:34,483 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-04-17 10:43:34,709 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-04-17 10:43:38,988 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-17 10:43:38,988 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 10:43:39,015 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-04-17 10:43:39,015 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 10:43:41,727 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 10:43:41,740 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-04-17 10:43:41,740 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 10:43:42,827 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Ile soli dodać do jajecznicy?
+2025-04-17 10:43:44,900 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:43:47,420 - Process-1 - assistant - INFO - Refined query: Ilość soli dodać do jajecznicy?
+2025-04-17 10:43:47,421 - Process-1 - langid.langid - INFO - initializing identifier
+2025-04-17 10:43:49,345 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 10:43:49,345 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 10:43:51,395 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:43:56,414 - Process-1 - assistant - INFO - AI response: {"text": "Zależy od tego, jak bardzo lubisz jajecznicę słoną czy bardziej na ścisło. Jeśli wolisz bardziej osłodzoną wersję, to dodaj trochę soli, około 1/4 łyżeczki na 2-3 jajka. Jeśli preferujesz bardziej klasyczną jajecznice, to wystarczy szczypta soli.", "command": "", "params": ""}
+2025-04-17 10:43:56,415 - Process-1 - audio_modules.tts_module - INFO - TTS: Zależy od tego, jak bardzo lubisz jajecznicę słoną czy bardziej na ścisło. Jeśli wolisz bardziej osłodzoną wersję, to dodaj trochę soli, około 1/4 łyżeczki na 2-3 jajka. Jeśli preferujesz bardziej klasyczną jajecznice, to wystarczy szczypta soli.
+2025-04-17 10:48:28,608 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-04-17 10:48:28,608 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-04-17 10:48:28,793 - MainProcess - __main__ - INFO - All processes terminated.
+2025-04-17 10:48:33,668 - MainProcess - __main__ - INFO - Initializing application...
+2025-04-17 10:48:33,675 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-04-17 10:48:37,986 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-04-17 10:48:37,989 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-04-17 10:48:38,659 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-04-17 10:48:38,660 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-04-17 10:48:38,661 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-04-17 10:48:38,764 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-04-17 10:48:38,790 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-04-17 10:48:38,793 - Process-1 - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-04-17 10:48:38,794 - Process-1 - database_manager - ERROR - Error retrieving memories (Query: None): no such column: user
+2025-04-17 10:48:38,794 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-04-17 10:48:44,789 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-04-17 10:48:46,550 - Process-1 - assistant - INFO - Bot is starting...
+2025-04-17 10:48:46,565 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-04-17 10:48:46,568 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-04-17 10:48:46,569 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-04-17 10:48:46,799 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-04-17 10:48:57,141 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-17 10:48:57,142 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 10:48:57,162 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-04-17 10:48:57,162 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 10:49:01,531 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 10:49:01,543 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-04-17 10:49:01,544 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 10:49:02,706 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Ile soli do dać do jajecznicy z sześciu jajek?
+2025-04-17 10:49:04,776 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:49:07,512 - Process-1 - assistant - INFO - Refined query: Ile soli do dać do jajecznicy z sześciu jajek?
+2025-04-17 10:49:07,512 - Process-1 - langid.langid - INFO - initializing identifier
+2025-04-17 10:49:09,169 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 10:49:09,170 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 10:49:09,661 - Process-1 - audio_modules.speech_recognition - WARNING - Audio callback status: input overflow
+2025-04-17 10:49:11,226 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:49:15,855 - Process-1 - assistant - INFO - AI response: {"text": "Z sześciu jajek, dla osoby lubiącej słoną jajecznicę, polecam około 1/2 łyżeczki soli. Ale to zależy od Twojego gustu – jeśli wolisz bardziej wytrawne jajka, dodaj więcej.", "command": "", "params": ""}
+2025-04-17 10:49:15,856 - Process-1 - audio_modules.tts_module - INFO - TTS: Z sześciu jajek, dla osoby lubiącej słoną jajecznicę, polecam około 1/2 łyżeczki soli. Ale to zależy od Twojego gustu – jeśli wolisz bardziej wytrawne jajka, dodaj więcej.
+2025-04-17 10:49:32,676 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-17 10:49:32,677 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 10:49:32,696 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-04-17 10:49:32,698 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 10:49:34,420 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 10:49:34,436 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-04-17 10:49:34,436 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 10:49:35,025 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Powiedz cześć.
+2025-04-17 10:49:37,082 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:49:39,579 - Process-1 - assistant - INFO - Refined query: Powiedz cześć.
+2025-04-17 10:49:39,582 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 10:49:39,582 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 10:49:41,644 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:49:45,536 - Process-1 - assistant - INFO - AI response: {"text": "Cześć! Jak się masz dzisiaj?", "command": "", "params": ""}
+2025-04-17 10:49:45,536 - Process-1 - audio_modules.tts_module - INFO - TTS: Cześć! Jak się masz dzisiaj?
+2025-04-17 10:49:58,717 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-17 10:49:58,717 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 10:49:58,760 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-04-17 10:49:58,761 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 10:50:03,851 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-04-17 10:50:03,851 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 10:50:04,738 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Sproszę sprawdź czy teraz czas od chwili sylnalu do rozpoczęcia negatywy
+2025-04-17 10:50:06,806 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:50:09,567 - Process-1 - assistant - INFO - Refined query: Sproszę sprawdź czy teraz czas od chwili śmierci do rozpoczęcia negocjacji
+2025-04-17 10:50:09,570 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 10:50:09,570 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 10:50:11,609 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:50:15,779 - Process-1 - assistant - INFO - AI response: {"command": "search", "params": "czas od śmierci do rozpoczęcia negocjacji", "text": "Sprawdzam, ile czasu mija od śmierci do rozpoczęcia negocjacji..."}
+2025-04-17 10:50:15,779 - Process-1 - assistant - INFO - Identified top-level command: search
+2025-04-17 10:50:15,780 - Process-1 - assistant - INFO - Attempting to execute handler: search_handler for command 'search' with params: 'czas od śmierci do rozpoczęcia negocjacji'
+2025-04-17 10:50:15,780 - Process-1 - search_module - INFO - Searching for query: czas od śmierci do rozpoczęcia negocjacji
+2025-04-17 10:50:15,780 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'search' z pliku: resources/sounds/search_beep.mp3 (Loop: False)
+2025-04-17 10:50:16,561 - Process-1 - primp - INFO - response: https://lite.duckduckgo.com/lite/ 200
+2025-04-17 10:50:19,216 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:50:23,366 - Process-1 - assistant - INFO - Handler search_handler returned: Odpowiedź na pytanie "czas od śmierci do rozpoczęcia negocjacji" z tego tekstu brzmi: 5 lat. Należy rozpocząć działania związane z uzyskaniem informacji prawnej już po upływie 3-10 lat od śmierci spadkodawcy, a konkretnie w ciągu kilku miesięcy od jej zakończenia.
+2025-04-17 10:50:23,369 - Process-1 - audio_modules.tts_module - INFO - TTS: Odpowiedź na pytanie "czas od śmierci do rozpoczęcia negocjacji" z tego tekstu brzmi: 5 lat. Należy rozpocząć działania związane z uzyskaniem informacji prawnej już po upływie 3-10 lat od śmierci spadkodawcy, a konkretnie w ciągu kilku miesięcy od jej zakończenia.
+2025-04-17 10:50:53,518 - Process-2 - __mp_main__ - INFO - Flask process finished.
+2025-04-17 10:50:53,784 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-04-17 10:50:53,792 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-04-17 10:50:54,175 - MainProcess - __main__ - INFO - All processes terminated.
+2025-04-17 10:53:55,586 - MainProcess - __main__ - INFO - Initializing application...
+2025-04-17 10:53:55,592 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-04-17 10:53:59,889 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-04-17 10:53:59,889 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-04-17 10:54:00,570 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-04-17 10:54:00,570 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-04-17 10:54:00,571 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-04-17 10:54:00,678 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-04-17 10:54:00,703 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-04-17 10:54:00,707 - Process-1 - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-04-17 10:54:00,707 - Process-1 - database_manager - ERROR - Error retrieving memories (Query: None): no such column: user
+2025-04-17 10:54:00,708 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-04-17 10:54:06,708 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-04-17 10:54:08,469 - Process-1 - assistant - INFO - Bot is starting...
+2025-04-17 10:54:08,483 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-04-17 10:54:08,487 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-04-17 10:54:08,489 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-04-17 10:54:08,723 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-04-17 10:54:17,531 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-17 10:54:17,532 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 10:54:17,556 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-04-17 10:54:17,556 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 10:54:19,386 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 10:54:19,398 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-04-17 10:54:19,398 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 10:54:20,568 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Powiedz cześć!
+2025-04-17 10:54:22,629 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:54:25,260 - Process-1 - assistant - INFO - Refined query: Powiedz cześć!
+2025-04-17 10:54:25,260 - Process-1 - langid.langid - INFO - initializing identifier
+2025-04-17 10:54:26,845 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 10:54:26,845 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 10:54:28,911 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:54:32,766 - Process-1 - assistant - INFO - AI response: {"text": "Cześć! Jak się masz dzisiaj?", "command": "", "params": ""}
+2025-04-17 10:54:32,766 - Process-1 - audio_modules.tts_module - INFO - TTS: Cześć! Jak się masz dzisiaj?
+2025-04-17 10:54:43,037 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-17 10:54:43,037 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 10:54:43,066 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-04-17 10:54:43,066 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 10:54:48,205 - Process-1 - audio_modules.speech_recognition - INFO - Max duration reached but still speaking, extending recording until silence.
+2025-04-17 10:54:53,085 - Process-1 - audio_modules.speech_recognition - WARNING - Absolute max recording duration reached, ending recording.
+2025-04-17 10:54:53,098 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-04-17 10:54:53,098 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 10:54:55,216 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Dzięki temu przy dłuższych odpowiedziach nagranie samo się wydłuży, ale przy krótszych od pytania zakończy się oddazu po ciszy. Przetestuj dłużą wiadomość i sprawdź w lodziach czy w rodziach.
+2025-04-17 10:54:57,275 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:55:00,741 - Process-1 - assistant - INFO - Refined query: Dzięki temu przy dłuższych odpowiedziach nagranie samo się wydłuży, ale przy krótszych od pytania zakończy się odtwarzanie po ciszy. Przetestuj dłuższą wiadomość i sprawdź w lodziach czy w rodziach.
+2025-04-17 10:55:00,744 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 10:55:00,744 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 10:55:02,798 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:55:07,113 - Process-1 - assistant - INFO - AI response: {"command": "", "params": "", "text": "Rozumiem! Staraj się, żeby odpowiedź kończyła się po krótkiej przerwie, a nie kontynuowała nagrania. Sprawdźmy to, prawda? Dziękuję za informację!"}
+2025-04-17 10:55:07,113 - Process-1 - audio_modules.tts_module - INFO - TTS: Rozumiem! Staraj się, żeby odpowiedź kończyła się po krótkiej przerwie, a nie kontynuowała nagrania. Sprawdźmy to, prawda? Dziękuję za informację!
+2025-04-17 10:58:11,872 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-04-17 10:58:11,873 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-04-17 10:58:12,066 - MainProcess - __main__ - INFO - All processes terminated.
+2025-04-17 10:58:17,016 - MainProcess - __main__ - INFO - Initializing application...
+2025-04-17 10:58:17,022 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-04-17 10:58:21,423 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-04-17 10:58:21,450 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-04-17 10:58:22,101 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-04-17 10:58:22,101 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-04-17 10:58:22,102 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-04-17 10:58:22,211 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-04-17 10:58:22,235 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-04-17 10:58:22,239 - Process-1 - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-04-17 10:58:22,239 - Process-1 - database_manager - ERROR - Error retrieving memories (Query: None): no such column: user
+2025-04-17 10:58:22,240 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-04-17 10:58:28,274 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-04-17 10:58:30,033 - Process-1 - assistant - INFO - Bot is starting...
+2025-04-17 10:58:30,047 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-04-17 10:58:30,049 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-04-17 10:58:30,051 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-04-17 10:58:30,288 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-04-17 10:58:41,076 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (full).
+2025-04-17 10:58:41,077 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 10:58:41,085 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-04-17 10:58:41,085 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 10:58:43,964 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 10:58:43,976 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-04-17 10:58:43,976 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 10:58:45,182 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Ile soli dodać do jajecznicy ze szlą?
+2025-04-17 10:58:47,246 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:58:49,940 - Process-1 - assistant - INFO - Refined query: Ilość soli dodać do jajecznicy ze szałą?
+2025-04-17 10:58:49,941 - Process-1 - langid.langid - INFO - initializing identifier
+2025-04-17 10:58:51,802 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 10:58:51,802 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 10:58:52,293 - Process-1 - audio_modules.speech_recognition - WARNING - Audio callback status: input overflow
+2025-04-17 10:58:53,870 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:58:59,235 - Process-1 - assistant - INFO - AI response: {"text": "Hmm, pytanie o sól w jajecznicach ze szynką... To zależy od tego, jak bardzo lubisz słoną jajecznicę! Zazwyczaj dodaje się od 1/4 do 1/2 łyżeczki soli na porcję. A może chcesz dodać więcej, żeby podkręcić smak szynki?", "command": "", "params": ""}
+2025-04-17 10:58:59,236 - Process-1 - audio_modules.tts_module - INFO - TTS: Hmm, pytanie o sól w jajecznicach ze szynką... To zależy od tego, jak bardzo lubisz słoną jajecznicę! Zazwyczaj dodaje się od 1/4 do 1/2 łyżeczki soli na porcję. A może chcesz dodać więcej, żeby podkręcić smak szynki?
+2025-04-17 10:59:11,401 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-17 10:59:11,402 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 10:59:11,429 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-04-17 10:59:11,429 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 10:59:16,512 - Process-1 - audio_modules.speech_recognition - INFO - Max duration reached but still speaking, extending recording until silence.
+2025-04-17 10:59:20,412 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 10:59:20,424 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-04-17 10:59:20,425 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 10:59:21,946 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Przetestuj proszę jak działa w twoim środowisku jeśli nadal będzie za mało lub za dużo czułości możemy jeszcze rozstracić próg cieszy Silent Streshhold lub
+2025-04-17 10:59:24,022 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:59:27,110 - Process-1 - assistant - INFO - Refined query: Przetestuj proszę jak działa w twoim środowisku, jeśli nadal będzie za mało lub za dużo czułości, możemy jeszcze rozstrzecać próg Cieszyn.
+2025-04-17 10:59:27,114 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 10:59:27,114 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 10:59:29,171 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:59:34,151 - Process-1 - assistant - INFO - AI response: {"text": "Rozumiem! Zatem sprawdzam jak to działa w moim środowisku. Będę obserwował reakcje i dostosowywał czułość do Twoich potrzeb. Jeśli okaże się, że jest za mało lub za dużo, możemy wrócić do regulacji progu Cieszyn. Daj znać, jak będziemy postępować!", "command": "", "params": ""}
+2025-04-17 10:59:34,151 - Process-1 - audio_modules.tts_module - INFO - TTS: Rozumiem! Zatem sprawdzam jak to działa w moim środowisku. Będę obserwował reakcje i dostosowywał czułość do Twoich potrzeb. Jeśli okaże się, że jest za mało lub za dużo, możemy wrócić do regulacji progu Cieszyn. Daj znać, jak będziemy postępować!
+2025-04-17 10:59:52,323 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-17 10:59:52,324 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 10:59:52,343 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-04-17 10:59:52,344 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 10:59:53,580 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 10:59:53,591 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-04-17 10:59:53,592 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 10:59:54,116 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  İlyas
+2025-04-17 10:59:56,154 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 10:59:58,648 - Process-1 - assistant - INFO - Refined query: Ilyaś
+2025-04-17 10:59:58,650 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 10:59:58,651 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 11:00:00,729 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 11:00:04,799 - Process-1 - assistant - INFO - AI response: {"text": "Przepraszam, nie rozumiem. Czy mógłbyś to powtórzyć, albo wyjaśnić? Może chodziło o Iliję?"}
+2025-04-17 11:00:04,799 - Process-1 - audio_modules.tts_module - INFO - TTS: Przepraszam, nie rozumiem. Czy mógłbyś to powtórzyć, albo wyjaśnić? Może chodziło o Iliję?
+2025-04-17 11:00:08,474 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (full).
+2025-04-17 11:00:08,475 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 11:00:08,479 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-04-17 11:00:08,480 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 11:00:10,701 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 11:00:10,720 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-04-17 11:00:10,722 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 11:00:11,442 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  ile solid do jajecznicy zyszy
+2025-04-17 11:00:13,513 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 11:00:16,189 - Process-1 - assistant - INFO - Refined query: Ile soli dodaje się do jajecznicy?
+2025-04-17 11:00:16,192 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 11:00:16,192 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 11:00:18,231 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 11:00:23,191 - Process-1 - assistant - INFO - AI response: {"text": "Zazwyczaj dodaje się od 1/4 do 1/2 łyżeczki soli na porcję jajecznicy ze szynką. Zależy to też od tego, jak słoną lubisz jajka! Chcesz dodać więcej, żeby podkreślić smak szynki?", "command": "", "params": ""}
+2025-04-17 11:00:23,191 - Process-1 - audio_modules.tts_module - INFO - TTS: Zazwyczaj dodaje się od 1/4 do 1/2 łyżeczki soli na porcję jajecznicy ze szynką. Zależy to też od tego, jak słoną lubisz jajka! Chcesz dodać więcej, żeby podkreślić smak szynki?
+2025-04-17 11:00:46,807 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-17 11:00:46,808 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 11:00:46,837 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-04-17 11:00:46,838 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 11:00:48,078 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 11:00:48,090 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-04-17 11:00:48,090 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 11:00:48,508 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Яки...
+2025-04-17 11:00:50,572 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 11:00:53,051 - Process-1 - assistant - INFO - Refined query: Jaki
+2025-04-17 11:00:53,054 - Process-1 - assistant - INFO - Detected language: en (confidence 9.06)
+2025-04-17 11:00:53,054 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 11:00:55,106 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 11:00:59,442 - Process-1 - assistant - INFO - AI response: {"text": "Przepraszam, nie rozumiem. Czy mógłbyś zadać pytanie jeszcze raz, albo inaczej sformułować? Zastanawiam się, co masz na myśli przez \"jaki\"."}
+2025-04-17 11:00:59,443 - Process-1 - audio_modules.tts_module - INFO - TTS: Przepraszam, nie rozumiem. Czy mógłbyś zadać pytanie jeszcze raz, albo inaczej sformułować? Zastanawiam się, co masz na myśli przez "jaki".
+2025-04-17 11:01:04,318 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-17 11:01:04,318 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 11:01:04,371 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-04-17 11:01:04,371 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 11:01:07,087 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 11:01:07,099 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-04-17 11:01:07,099 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 11:01:07,853 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  E aqui está a duma doctorapepere.
+2025-04-17 11:01:09,916 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 11:01:12,555 - Process-1 - assistant - INFO - Refined query: E aqui está a drama doctorapepere.
+2025-04-17 11:01:12,557 - Process-1 - ai_module - INFO - Low confidence (-83.38) for langid result 'pt'. Fallback to Polish.
+2025-04-17 11:01:12,558 - Process-1 - assistant - INFO - Detected language: pl (confidence -83.38)
+2025-04-17 11:01:12,558 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 11:01:14,608 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 11:01:19,100 - Process-1 - assistant - INFO - AI response: {"text": "Przepraszam, nie rozumiem. Mówisz po hiszpańsku? Czy możesz przetłumaczyć to zdanie lub zadać pytanie inaczej? Potrzebuję wiedzieć, co się stało z \"drama doctorapepere\"."}
+2025-04-17 11:01:19,101 - Process-1 - audio_modules.tts_module - INFO - TTS: Przepraszam, nie rozumiem. Mówisz po hiszpańsku? Czy możesz przetłumaczyć to zdanie lub zadać pytanie inaczej? Potrzebuję wiedzieć, co się stało z "drama doctorapepere".
+2025-04-17 11:01:36,313 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-17 11:01:36,313 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 11:01:36,343 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-04-17 11:01:36,344 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 11:01:38,016 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 11:01:38,028 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-04-17 11:01:38,028 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 11:01:38,589 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  ile mocy ma budynek?
+2025-04-17 11:01:40,657 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 11:01:43,257 - Process-1 - assistant - INFO - Refined query: ile mocy ma budynek?
+2025-04-17 11:01:43,260 - Process-1 - ai_module - INFO - Low confidence (-26.38) for langid result 'pl'. Fallback to Polish.
+2025-04-17 11:01:43,261 - Process-1 - assistant - INFO - Detected language: pl (confidence -26.38)
+2025-04-17 11:01:43,261 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 11:01:45,327 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 11:01:50,832 - Process-1 - assistant - INFO - AI response: {"text": "Żeby odpowiedzieć na to pytanie, potrzebuję więcej informacji. O jakim budynku mówisz? Czy chodzi o dom, biurowiec, fabrykę, czy może coś innego? I czy znasz jego wymiary (np. powierzchnię)? Im więcej szczegółów mi podasz, tym dokładniejszą odpowiedź będę mógł udzielić.", "command": "", "params": ""}
+2025-04-17 11:01:50,832 - Process-1 - audio_modules.tts_module - INFO - TTS: Żeby odpowiedzieć na to pytanie, potrzebuję więcej informacji. O jakim budynku mówisz? Czy chodzi o dom, biurowiec, fabrykę, czy może coś innego? I czy znasz jego wymiary (np. powierzchnię)? Im więcej szczegółów mi podasz, tym dokładniejszą odpowiedź będę mógł udzielić.
+2025-04-17 11:01:54,465 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-04-17 11:01:54,466 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-04-17 11:01:54,640 - MainProcess - __main__ - INFO - All processes terminated.
+2025-04-17 11:03:08,958 - MainProcess - __main__ - INFO - Initializing application...
+2025-04-17 11:03:08,965 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-04-17 11:03:13,256 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-04-17 11:03:13,259 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-04-17 11:03:13,940 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-04-17 11:03:13,941 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-04-17 11:03:13,942 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-04-17 11:03:14,045 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-04-17 11:03:14,068 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-04-17 11:03:14,072 - Process-1 - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-04-17 11:03:14,072 - Process-1 - database_manager - ERROR - Error retrieving memories (Query: None): no such column: user
+2025-04-17 11:03:14,072 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-04-17 11:03:20,126 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-04-17 11:03:21,891 - Process-1 - assistant - INFO - Bot is starting...
+2025-04-17 11:03:21,905 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-04-17 11:03:21,908 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-04-17 11:03:21,912 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-04-17 11:03:22,140 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-04-17 11:03:41,427 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-17 11:03:41,427 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 11:03:41,496 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-04-17 11:03:41,496 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 11:03:42,729 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 11:03:42,742 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-04-17 11:03:42,742 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 11:03:43,539 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  you
+2025-04-17 11:03:45,579 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 11:03:48,131 - Process-1 - assistant - INFO - Refined query: jaka jest pogoda w sosnowcu?
+2025-04-17 11:03:48,132 - Process-1 - langid.langid - INFO - initializing identifier
+2025-04-17 11:03:49,730 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 11:03:49,730 - Process-1 - assistant - INFO - Intent classified as: weather_query
+2025-04-17 11:03:51,783 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 11:03:56,008 - Process-1 - assistant - INFO - AI response: {"text": "Sprawdzam pogodę w Sosnowcu…", "command": "search", "params": "pogoda w Sosnowcu"}
+2025-04-17 11:03:56,008 - Process-1 - assistant - INFO - Identified top-level command: search
+2025-04-17 11:03:56,008 - Process-1 - assistant - INFO - Attempting to execute handler: search_handler for command 'search' with params: 'pogoda w Sosnowcu'
+2025-04-17 11:03:56,009 - Process-1 - search_module - INFO - Searching for query: pogoda w Sosnowcu
+2025-04-17 11:03:56,010 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'search' z pliku: resources/sounds/search_beep.mp3 (Loop: False)
+2025-04-17 11:03:57,037 - Process-1 - primp - INFO - response: https://lite.duckduckgo.com/lite/ 200
+2025-04-17 11:03:57,096 - Process-1 - search_module - WARNING - Błąd 403 (próba 1) dla https://sosnowiec.naszemiasto.pl/prognoza-pogody-na-tydzien-dla-sosnowca-jakie-beda-temperatury-od-jutra-18-04-do-srody/ar/c1p1-19943957, ponawiam z innymi nagłówkami
+2025-04-17 11:03:59,147 - Process-1 - search_module - WARNING - Błąd 403 (próba 2) dla https://sosnowiec.naszemiasto.pl/prognoza-pogody-na-tydzien-dla-sosnowca-jakie-beda-temperatury-od-jutra-18-04-do-srody/ar/c1p1-19943957, ponawiam z innymi nagłówkami
+2025-04-17 11:04:01,127 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-04-17 11:04:01,127 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-04-17 11:04:01,302 - MainProcess - __main__ - INFO - All processes terminated.
+2025-04-17 11:05:34,547 - MainProcess - __main__ - INFO - Initializing application...
+2025-04-17 11:05:34,554 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-04-17 11:05:38,963 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-04-17 11:05:38,969 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-04-17 11:05:39,651 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-04-17 11:05:39,652 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-04-17 11:05:39,653 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-04-17 11:05:39,758 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-04-17 11:05:39,782 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-04-17 11:05:39,786 - Process-1 - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-04-17 11:05:39,787 - Process-1 - database_manager - ERROR - Error retrieving memories (Query: None): no such column: user
+2025-04-17 11:05:39,787 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-04-17 11:05:45,846 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-04-17 11:05:47,603 - Process-1 - assistant - INFO - Bot is starting...
+2025-04-17 11:05:47,617 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-04-17 11:05:47,619 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-04-17 11:05:47,620 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-04-17 11:05:47,851 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-04-17 11:05:57,623 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-17 11:05:57,623 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 11:05:57,672 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-04-17 11:05:57,672 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 11:06:00,203 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 11:06:00,214 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-04-17 11:06:00,214 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 11:06:01,350 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Ile soli dodać do jajecznicy ze
+2025-04-17 11:06:03,410 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 11:06:06,085 - Process-1 - assistant - INFO - Refined query: Ilości soli dodać do jajecznicy ze
+2025-04-17 11:06:06,086 - Process-1 - langid.langid - INFO - initializing identifier
+2025-04-17 11:06:07,802 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 11:06:07,802 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 11:06:08,293 - Process-1 - audio_modules.speech_recognition - WARNING - Audio callback status: input overflow
+2025-04-17 11:06:09,862 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 11:06:12,293 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-17 11:06:12,293 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 11:06:12,320 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-04-17 11:06:12,320 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 11:06:14,643 - Process-1 - assistant - INFO - AI response: {"text": "To zależy od Twoich preferencji! Czy wolisz jajecznicę bardziej płynną czy bardziej ściętą? Jeśli bardziej płynną, to wystarczy trochę soli, a jeśli bardziej ściętą, wtedy warto dodać więcej. Może powiesz mi, ile jajek użyłeś?", "command": "", "params": ""}
+2025-04-17 11:06:14,643 - Process-1 - audio_modules.tts_module - INFO - TTS: To zależy od Twoich preferencji! Czy wolisz jajecznicę bardziej płynną czy bardziej ściętą? Jeśli bardziej płynną, to wystarczy trochę soli, a jeśli bardziej ściętą, wtedy warto dodać więcej. Może powiesz mi, ile jajek użyłeś?
+2025-04-17 11:06:14,853 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 11:06:14,864 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-04-17 11:06:14,864 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 11:06:15,277 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Jaka jest podiada w zastanowcu?
+2025-04-17 11:06:17,338 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 11:06:19,988 - Process-1 - assistant - INFO - Refined query: Jaka jest pogoda w Zamościu?
+2025-04-17 11:06:19,991 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 11:06:19,991 - Process-1 - assistant - INFO - Intent classified as: weather_query
+2025-04-17 11:06:22,039 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 11:06:24,792 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-04-17 11:06:24,792 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-04-17 11:06:24,848 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-04-17 11:06:24,848 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-04-17 11:06:26,151 - Process-1 - assistant - INFO - AI response: {"text": "Sprawdzam pogodę w Zamościu...", "command": "search", "params": "pogoda Zamość"}
+2025-04-17 11:06:26,151 - Process-1 - assistant - INFO - Identified top-level command: search
+2025-04-17 11:06:26,151 - Process-1 - assistant - INFO - Attempting to execute handler: search_handler for command 'search' with params: 'pogoda Zamość'
+2025-04-17 11:06:26,152 - Process-1 - search_module - INFO - Searching for query: pogoda Zamość
+2025-04-17 11:06:26,152 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'search' z pliku: resources/sounds/search_beep.mp3 (Loop: False)
+2025-04-17 11:06:26,937 - Process-1 - primp - INFO - response: https://html.duckduckgo.com/html 200
+2025-04-17 11:06:27,009 - Process-1 - search_module - WARNING - Błąd 403 (próba 1) dla https://zamosc.naszemiasto.pl/pogoda-na-dzisiaj-dla-zamoscia-zobacz-prognoze-pogody-na-dzisiaj-czwartek-17-04/ar/c1p1-19942985, ponawiam z innymi nagłówkami
+2025-04-17 11:06:27,382 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-04-17 11:06:27,393 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-04-17 11:06:27,393 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-04-17 11:06:27,728 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Czy w stosnowcu będzie padać?
+2025-04-17 11:06:29,768 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 11:06:32,370 - Process-1 - assistant - INFO - Refined query: Czy w Sosnowcu będzie padać?
+2025-04-17 11:06:32,374 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-04-17 11:06:32,375 - Process-1 - assistant - INFO - Intent classified as: general
+2025-04-17 11:06:34,422 - Process-1 - ai_module - INFO - Attempting to use configured provider: lmstudio
+2025-04-17 11:06:40,065 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-04-17 11:06:40,067 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-04-17 11:06:40,352 - MainProcess - __main__ - INFO - All processes terminated.
