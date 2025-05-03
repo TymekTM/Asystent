@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Logi systemowe</h1>
+    <div class="mb-3">
+        <label for="log-level" class="form-label">Filtruj po poziomie:</label>
+        <select id="log-level" class="form-select" onchange="filterLogs()">
+            <option value="ALL">Wszystkie</option>
+            <option value="INFO">INFO</option>
+            <option value="WARNING">WARNING</option>
+            <option value="ERROR">ERROR</option>
+        </select>
+    </div>
+    <div class="mb-3 d-flex align-items-center gap-2">
+        <button class="btn btn-primary" onclick="downloadLogs()">Pobierz logi</button>
+        <button class="btn btn-secondary" id="prev-page" onclick="changePage(-1)">Poprzednia</button>
+        <span id="page-info" style="min-width: 120px;"></span>
+        <button class="btn btn-secondary" id="next-page" onclick="changePage(1)">Następna</button>
+    </div>
+    <pre id="logs-content" class="bg-light p-3 rounded" style="max-height: 600px; overflow-y: auto; font-size: 0.95em;"></pre>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+let currentPage = 1;
+let totalPages = 1;
+const pageSize = 100;
+
+function filterLogs(page = 1) {
+    const level = document.getElementById('log-level').value;
+    fetch(`/api/logs?level=${level}&page=${page}&page_size=${pageSize}`)
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('logs-content').textContent = data.logs.join('\n');
+            currentPage = data.page;
+            totalPages = data.total_pages;
+            document.getElementById('page-info').textContent = `Strona ${currentPage} z ${totalPages}`;
+            document.getElementById('prev-page').disabled = currentPage <= 1;
+            document.getElementById('next-page').disabled = currentPage >= totalPages;
+        });
+}
+function changePage(delta) {
+    let newPage = currentPage + delta;
+    if (newPage < 1) newPage = 1;
+    if (newPage > totalPages) newPage = totalPages;
+    filterLogs(newPage);
+}
+function downloadLogs() {
+    window.location.href = '/api/logs/download';
+}
+document.getElementById('log-level').addEventListener('change', () => filterLogs(1));
+window.onload = () => filterLogs(1);
+</script>
+{% endblock %}

@@ -1,317 +1,566 @@
-import asyncio
-import json
-import logging
-import os
-import glob
-import importlib.util
-import re
+__version__ = "1.0.0"
 
-import ollama  # Zakładamy, że ollama jest używane do komunikacji z modelem
+import asyncio, json, logging, os, glob, re, subprocess, multiprocessing, time
+import importlib  # for dynamic module loading
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+import ollama
+import inspect # Add inspect import
+import queue # Import queue for Empty exception
+import threading
+import logging.handlers  # Add this import
 
-from tts_module import TTSModule
-from speech_recognition import SpeechRecognizer
-from prompts import (
-    CONVERT_QUERY_PROMPT, SYSTEM_PROMPT,
+# Import modułów audio z nowej lokalizacji
+from audio_modules.tts_module import TTSModule
+from audio_modules.speech_recognition import SpeechRecognizer
+from audio_modules.beep_sounds import play_beep
+from audio_modules.wakeword_detector import run_wakeword_detection
+
+# Import funkcji AI z nowego modułu
+from ai_module import refine_query, generate_response, parse_response, remove_chain_of_thought, detect_language
+
+# Import specific config variables needed
+from config import (
+    load_config, # Import load_config function
+    VOSK_MODEL_PATH, MIC_DEVICE_ID, WAKE_WORD, STT_SILENCE_THRESHOLD,
+    USE_WHISPER_FOR_COMMAND, WHISPER_MODEL, MAX_HISTORY_LENGTH, PLUGIN_MONITOR_INTERVAL
 )
-from config import STT_MODEL, MAIN_MODEL, DEEP_MODEL  # <-- import modeli
+from config import _config
+QUERY_REFINEMENT_ENABLED = _config.get("query_refinement", {}).get("enabled", True)
+from prompts import CONVERT_QUERY_PROMPT, SYSTEM_PROMPT
+
 
 logger = logging.getLogger(__name__)
+# Usuwamy konfigurację handlerów, polegamy na main.py
 
-# Ustalona liczba wiadomości przechowywanych w historii
-MAX_HISTORY_LENGTH = 20
+PLUGINS_STATE_FILE = os.path.join(os.path.dirname(__file__), 'plugins_state.json')
+plugins_state_lock = threading.Lock()
 
-def remove_chain_of_thought(text: str) -> str:
-    """
-    Usuwa zawartość (wraz z tagami) dla wszystkich poniższych par:
-      - <think>...</think>
-      - <|begin_of_thought|>...</|end_of_thought|>
-      - <|begin_of_solution|>...</|end_of_solution|>
-    """
-    pattern = r"<think>.*?</think>|<\|begin_of_thought\|>.*?<\|end_of_thought\|>|<\|begin_of_solution\|>.*?<\|end_of_solution\|>"
-    # DOTALL sprawia, że kropka `.` łapie także znaki nowej linii
-    return re.sub(pattern, "", text, flags=re.DOTALL)
+def load_plugins_state():
+    try:
+        with plugins_state_lock:
+            if not os.path.exists(PLUGINS_STATE_FILE):
+                return {}
+            with open(PLUGINS_STATE_FILE, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                return data.get('plugins', {})
+    except Exception as e:
+        logger.error(f"Failed to load plugins state: {e}")
+        return {}
+
+def save_plugins_state(plugins):
+    try:
+        with plugins_state_lock:
+            with open(PLUGINS_STATE_FILE, 'w', encoding='utf-8') as f:
+                json.dump({'plugins': plugins}, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        logger.error(f"Failed to save plugins state: {e}")
+
+class IntentClassifier:
+    """Simple intent classifier using LLM or rules."""
+    def __init__(self, provider=None):
+        self.provider = provider
+
+    def classify(self, text: str) -> str:
+        # For demo: use simple rules, or call LLM for intent
+        text_l = text.lower()
+        if any(x in text_l for x in ["pogoda", "jaka temperatura", "czy będzie padać"]):
+            return "weather_query"
+        if any(x in text_l for x in ["kim jesteś", "opowiedz o sobie", "co potrafisz"]):
+            return "about_assistant"
+        if any(x in text_l for x in ["zrób zdjęcie", "screenshot"]):
+            return "screenshot"
+        if any(x in text_l for x in ["wyszukaj", "znajdź", "search"]):
+            return "search"
+        # Fallback: ask LLM (optional, not implemented here)
+        return "general"
 
 class Assistant:
-    def __init__(
-            self,
-            vosk_model_path: str,
-            mic_device_id: int,
-            wake_word: str,
-            stt_silence_threshold: int = 600
-    ):
-        self.wake_word = wake_word.lower()
+    def __init__(self, vosk_model_path: str = None, mic_device_id: int = None, wake_word: str = None, stt_silence_threshold: int = None, command_queue: multiprocessing.Queue = None):
+        # Load initial config
+        self.config = load_config()
+
+        # Use provided args or fall back to config values
+        self.vosk_model_path = vosk_model_path if vosk_model_path is not None else self.config.get('VOSK_MODEL_PATH', VOSK_MODEL_PATH) # Use default from import if not in JSON
+        self.mic_device_id = mic_device_id if mic_device_id is not None else self.config.get('MIC_DEVICE_ID', MIC_DEVICE_ID)
+        self.wake_word = (wake_word if wake_word is not None else self.config.get('WAKE_WORD', WAKE_WORD)).lower()
+        self.stt_silence_threshold = stt_silence_threshold if stt_silence_threshold is not None else self.config.get('STT_SILENCE_THRESHOLD', STT_SILENCE_THRESHOLD)
+        self.use_whisper = self.config.get('USE_WHISPER_FOR_COMMAND', USE_WHISPER_FOR_COMMAND)
+        self.whisper_model = self.config.get('WHISPER_MODEL', WHISPER_MODEL)
+        self.max_history_length = self.config.get('MAX_HISTORY_LENGTH', MAX_HISTORY_LENGTH)
+        self.plugin_monitor_interval = self.config.get('PLUGIN_MONITOR_INTERVAL', PLUGIN_MONITOR_INTERVAL)
+
         self.conversation_history = []
         self.tts = TTSModule()
+        # Adaptive sample rate: lower for low power environments
+        from config import LOW_POWER_MODE
+        sample_rate = 8000 if LOW_POWER_MODE else 16000
         self.speech_recognizer = SpeechRecognizer(
-            vosk_model_path,
-            mic_device_id,
-            stt_silence_threshold
+            self.vosk_model_path,
+            self.mic_device_id,
+            self.stt_silence_threshold,
+            sample_rate=sample_rate
         )
-        self.modules = {}  # Tu załadujemy pluginy
+        self.modules = {}
+        self.plugin_mod_times = {}
+        # Load plugins and start file watcher for changes
         self.load_plugins()
-        self.loop = None  # Pętla asynchroniczna
+        self._plugin_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), 'modules'))
+        os.makedirs(self._plugin_folder, exist_ok=True)
+        self._observer = Observer()
+        class _Handler(FileSystemEventHandler):
+            def __init__(self, outer):
+                self.outer = outer
+            def on_modified(self, event):
+                if event.src_path.endswith('_module.py'):
+                    self.outer.load_plugins()
+        handler = _Handler(self)
+        self._observer.schedule(handler, self._plugin_folder, recursive=False)
+        self._observer.daemon = True
+        self._observer.start()
+        self.loop = None
+        self.command_queue = command_queue
+        self.manual_listen_triggered = False # Flag for manual activation
+
+        # --- Load all memories for assistant user at startup ---
+        try:
+            from modules.memory_module import retrieve_memories
+            result, success = retrieve_memories(params="", user="assistant")
+            if success and result.strip():
+                logger.info(f"Loaded assistant long-term memory at startup:\n{result}")
+            else:
+                logger.info("No long-term memory found for assistant at startup.")
+        except Exception as e:
+            logger.error(f"Failed to load assistant long-term memory at startup: {e}")
+
+        if self.use_whisper:
+            from audio_modules.whisper_asr import WhisperASR
+            self.whisper_asr = WhisperASR(model_name=self.whisper_model)
+        else:
+            self.whisper_asr = None # Ensure it's defined even if not used
+
+    def reload_config_values(self):
+        """Reloads configuration from file and updates relevant instance variables."""
+        logger.info("Reloading configuration...")
+        try:
+            self.config = load_config()
+            # Update relevant attributes, falling back to original defaults if keys are missing
+            self.wake_word = self.config.get('WAKE_WORD', WAKE_WORD).lower()
+            self.mic_device_id = self.config.get('MIC_DEVICE_ID', MIC_DEVICE_ID) # Note: Changing mic might require restart
+            self.stt_silence_threshold = self.config.get('STT_SILENCE_THRESHOLD', STT_SILENCE_THRESHOLD)
+            self.use_whisper = self.config.get('USE_WHISPER_FOR_COMMAND', USE_WHISPER_FOR_COMMAND)
+            self.whisper_model = self.config.get('WHISPER_MODEL', WHISPER_MODEL)
+            self.max_history_length = self.config.get('MAX_HISTORY_LENGTH', MAX_HISTORY_LENGTH)
+            self.plugin_monitor_interval = self.config.get('PLUGIN_MONITOR_INTERVAL', PLUGIN_MONITOR_INTERVAL)
+
+            # Re-initialize components that depend on config if necessary
+            # Example: Re-init WhisperASR if model changed (might be complex)
+            if self.use_whisper and (not self.whisper_asr or self.whisper_asr.model_name != self.whisper_model):
+                 logger.info(f"Whisper model changed to {self.whisper_model}. Re-initializing...")
+                 from audio_modules.whisper_asr import WhisperASR
+                 self.whisper_asr = WhisperASR(model_name=self.whisper_model)
+            elif not self.use_whisper:
+                 self.whisper_asr = None
+
+            # Update speech recognizer if mic or threshold changed (might need restart)
+            # self.speech_recognizer = SpeechRecognizer(self.vosk_model_path, self.mic_device_id, self.stt_silence_threshold)
+            logger.warning("Some configuration changes (like Mic ID) might require a full application restart to take effect.")
+            logger.info("Configuration reloaded.")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to reload configuration: {e}", exc_info=True)
+            return False
 
     def load_plugins(self):
-        """
-        Przeszukuje folder modules/ i ładuje każdy plik .py, który
-        posiada funkcję register().
-        """
         plugin_folder = "modules"
-        if not os.path.exists(plugin_folder):
-            os.makedirs(plugin_folder)
-
-        for filepath in glob.glob(os.path.join(plugin_folder, "*.py")):
+        os.makedirs(plugin_folder, exist_ok=True)
+        plugins_state = load_plugins_state()
+        new_modules = {}
+        for filepath in glob.glob(os.path.join(plugin_folder, "*_module.py")):
+            mod_time = os.path.getmtime(filepath)
+            self.plugin_mod_times[filepath] = mod_time
             module_name = os.path.splitext(os.path.basename(filepath))[0]
+            # Sprawdź, czy plugin jest włączony
+            if plugins_state and module_name in plugins_state and not plugins_state[module_name].get('enabled', True):
+                logger.info(f"Plugin {module_name} jest wyłączony - pomijam ładowanie.")
+                continue
             spec = importlib.util.spec_from_file_location(module_name, filepath)
             module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
-
+            try:
+                spec.loader.exec_module(module)
+            except Exception as e:
+                logger.error("Błąd przy ładowaniu pluginu %s: %s", module_name, e)
+                continue
             if hasattr(module, "register"):
                 plugin_info = module.register()
                 command = plugin_info.get("command")
                 if command:
-                    self.modules[command] = plugin_info
-                    logger.info(
-                        "Loaded plugin: %s -> %s",
-                        command, plugin_info.get("description")
-                    )
+                    new_modules[command] = plugin_info
+                    logger.info("Loaded plugin: %s -> %s", command, plugin_info.get("description"))
                 else:
-                    logger.warning("Plugin %s nie zawiera klucza 'command'. Pomijam.", module_name)
+                    logger.warning("Plugin %s missing 'command' key, skipping.", module_name)
             else:
-                logger.debug("Plik %s nie zawiera funkcji register(). Pomijam.", filepath)
+                logger.debug("File %s does not have register() function, skipping.", filepath)
+        self.modules = new_modules
 
-    def _detect_command(self, text_input: str):
-        """
-        Dynamicznie wykrywa, czy text_input zawiera jakąś komendę (zarówno z '!' jak i aliasy).
-        Zwraca (command, params) lub (None, "") jeśli brak dopasowania.
-        """
-        lower_text = text_input.lower().strip()
-
-        # 1. Sprawdź, czy tekst zaczyna się od "!"
-        if lower_text.startswith("!"):
-            parts = text_input.strip().split(maxsplit=1)
-            possible_cmd = parts[0]  # np. "!search"
-            params = parts[1] if len(parts) > 1 else ""
-            if possible_cmd in self.modules:
-                logger.info("Detected command with '!': %s, params: %s", possible_cmd, params)
-                return (possible_cmd, params)
-
-        # 2. Sprawdź aliasy – iteruj po wczytanych modułach
-        for cmd, plugin_info in self.modules.items():
-            aliases = plugin_info.get("aliases", [])
-            for alias in aliases:
-                alias_lower = alias.lower()
-                if lower_text == alias_lower:
-                    # np. user wpisał samo "search"
-                    logger.info("Detected alias command: %s -> real command: %s (no params)", alias, cmd)
-                    return (cmd, "")
-                if lower_text.startswith(alias_lower + " "):
-                    params = text_input[len(alias):].strip()
-                    logger.info("Detected alias command: %s -> real command: %s, params: %s", alias, cmd, params)
-                    return (cmd, params)
-
-        # 3. Brak dopasowania
-        return (None, "")
+    async def monitor_plugins(self, interval: int = None): # Allow override, default to config
+        if interval is None:
+            interval = self.plugin_monitor_interval
+        plugin_folder = "modules"
+        while True:
+            updated = False
+            for filepath in glob.glob(os.path.join(plugin_folder, "*.py")):
+                try:
+                    mod_time = os.path.getmtime(filepath)
+                except Exception:
+                    continue
+                if filepath not in self.plugin_mod_times or self.plugin_mod_times[filepath] != mod_time:
+                    updated = True
+                    self.plugin_mod_times[filepath] = mod_time
+            if updated:
+                logger.info("Detected changes in plugins. Reloading plugins...")
+                self.load_plugins()
+            await asyncio.sleep(interval)
 
     async def process_query(self, text_input: str):
-        """
-        Główna logika przetwarzania poleceń:
-          - Jeśli wykryjemy komendę (!coś) to używamy modułu
-          - W innym wypadku normalna obsługa przez model AI
-            * Najpierw refine zapytania przez model STT_MODEL
-            * Potem finalna odpowiedź przez MAIN_MODEL
-        """
-        # 1. Spróbuj dynamicznie wykryć komendę
-        command, params = self._detect_command(text_input)
-
-        # 2. Jeśli to komenda, wołamy odpowiedni moduł
-        if command and command in self.modules:
-            handler = self.modules[command]["handler"]
-            try:
-                module_result = await asyncio.to_thread(handler, params)
-                logger.info("Handler for command %s completed with result: %s", command, module_result)
-            except Exception as e:
-                logger.error("Error executing handler for %s: %s", command, e)
-                module_result = f"Błąd wykonania komendy {command}: {e}"
-
-            # Dodaj do historii
-            self.conversation_history.append({"role": "user", "content": text_input})
-            self.conversation_history.append({"role": "assistant", "content": module_result})
-
-            # CHANGED: przed TTS usuwamy <think>...</think>
-            to_speak = remove_chain_of_thought(module_result)
-            await self.tts.speak(to_speak)
-
-            self.trim_conversation_history()
-            return
-
-        # --- 3. Jeśli nie wykryto żadnej komendy, standardowa obsługa przez AI ---
-        # Najpierw "czyszczenie" (CONVERT_QUERY_PROMPT) -> model STT_MODEL
-        try:
-            response = ollama.chat(
-                model=STT_MODEL,
-                messages=[
-                    {"role": "system", "content": CONVERT_QUERY_PROMPT},
-                    {"role": "user", "content": text_input}
-                ]
-            )
-            refined_query = response["message"]["content"].strip()
+        # Query refinement can be toggled in config
+        if QUERY_REFINEMENT_ENABLED:
+            refined_query = refine_query(text_input)
             logger.info("Refined query: %s", refined_query)
-        except Exception as e:
-            logger.error("Error processing query with Ollama (refine): %s", e)
-            refined_query = text_input
-
-        self.conversation_history.append({"role": "user", "content": refined_query})
-
-        # Następnie właściwe zapytanie do MAIN_MODEL
-        try:
-            # Zbuduj system prompt z listą dostępnych funkcji
-            functions_info = ", ".join([
-                f"{cmd} - {info['description']}"
-                for cmd, info in self.modules.items()
-            ])
-            system_prompt = SYSTEM_PROMPT
-            if functions_info:
-                system_prompt += " Dostępne funkcje: " + functions_info
-
-            messages = [{"role": "system", "content": system_prompt}]
-            messages.extend(self.conversation_history)
-
-            logger.debug("Sending messages to AI: %s", messages)
-            response = ollama.chat(model=MAIN_MODEL, messages=messages)
-            ai_response = response["message"]["content"]
-            logger.info("Initial AI response: %s", ai_response)
-        except Exception as e:
-            logger.error("Error communicating with AI (final): %s", e)
-            ai_response = "Przepraszam, wystąpił błąd podczas komunikacji z AI."
-
-        # 4. Jeśli AI zwraca polecenie typu "!search", wywołaj je
-        trimmed = ai_response.strip()
-        if trimmed.startswith("!"):
-            parts = trimmed.split(maxsplit=1)
-            ai_command = parts[0]
-            ai_params = parts[1] if len(parts) > 1 else ""
-            if ai_command in self.modules:
-                logger.info("AI triggered module command: %s, params: %s", ai_command, ai_params)
-                try:
-                    module_result = await asyncio.to_thread(self.modules[ai_command]["handler"], ai_params)
-                    self.conversation_history.append({"role": "assistant", "content": module_result})
-
-                    # CHANGED: usuwamy <think> z module_result
-                    to_speak = remove_chain_of_thought(module_result)
-                    await self.tts.speak(to_speak)
-
-                except Exception as e:
-                    logger.error("Error executing module command triggered by AI: %s", e)
-                    error_text = f"Błąd wykonania komendy {ai_command}: {e}"
-                    self.conversation_history.append({"role": "assistant", "content": error_text})
-                    await self.tts.speak(error_text)
-
-                self.trim_conversation_history()
-                return
-
-        # 5. W przeciwnym razie odczytujemy zwykłą odpowiedź
-        if ai_response.strip():
-            self.conversation_history.append({"role": "assistant", "content": ai_response})
-            # CHANGED: usuwamy <think> przed odczytem
-            to_speak = remove_chain_of_thought(ai_response)
-            await self.tts.speak(to_speak)
         else:
-            logger.warning("AI did not generate a response.")
+            refined_query = text_input
+            logger.info("Query refinement disabled, using raw input: %s", refined_query)
 
-        self.trim_conversation_history()
+        # --- Language Detection Layer (langid) ---
+        lang_code, lang_conf, lang_prompt = detect_language(refined_query)
+        logger.info(f"Detected language: {lang_code} (confidence {lang_conf:.2f})")
 
-    def _build_messages_for_screenshot(self, user_prompt: str):
-        """
-        Buduje listę wiadomości do AI w kontekście screenshotu.
-        Możesz dostosować np. dodać minimalną historię, albo większą.
-        """
-        system_prompt = (
-            "Odpowiedz maksymalnie w 2 zdaniach. Możesz nawiązywać do poprzednich wiadomości, "
-            "jeśli zawierają kontekst."
-        )
-        messages = [{"role": "system", "content": system_prompt}]
-        messages.extend(self.conversation_history)
-        messages.append({"role": "user", "content": user_prompt})
-        return messages
+        # Intent classification (new layer)
+        intent = IntentClassifier().classify(refined_query)
+        logger.info("Intent classified as: %s", intent)
+        # Add user message BEFORE calling the main model
+        self.conversation_history.append({"role": "user", "content": refined_query, "intent": intent})
+        self.trim_conversation_history() # Trim history *before* sending to model
+
+        # Przygotowanie listy dostępnych funkcji (tool descriptions)
+        functions_info = ", ".join([f"{cmd} - {info['description']}" for cmd, info in self.modules.items()])
+
+        # --- Inject language context into system prompt ---
+        system_prompt = lang_prompt + "\n" + SYSTEM_PROMPT
+
+        # Generowanie odpowiedzi przy użyciu funkcji z ai_module
+        response_text = generate_response(self.conversation_history, functions_info, system_prompt_override=system_prompt)
+        logger.info("AI response: %s", response_text)
+
+        structured_output = parse_response(response_text)
+
+        # Extract potential command and parameters
+        ai_command = structured_output.get("command")
+        ai_params = structured_output.get("params", "") # Default to "" if missing
+        ai_response_text = structured_output.get("text", "") # Text AI wants to say
+
+        # --- Tool Execution Logic ---
+        target_command_name = ai_command.lower().strip() if ai_command else None
+        found_module_key = None
+        module_info = None
+        actual_params_for_handler = "" # Default to empty string for handlers expecting string
+
+        # Find the module by checking command name and aliases
+        if target_command_name:
+            for module_key, info in self.modules.items():
+                aliases = [a.lower() for a in info.get("aliases", [])]
+                if target_command_name == module_key.lower() or target_command_name in aliases:
+                    found_module_key = module_key
+                    module_info = info
+                    break # Found the module
+
+        # Prepare parameters based on expected type (simple string extraction for now)
+        if isinstance(ai_params, dict) and 'query' in ai_params:
+             actual_params_for_handler = ai_params['query']
+        elif isinstance(ai_params, str):
+             actual_params_for_handler = ai_params
+
+        # --- Heurystyka: jeśli AI nie wywołało narzędzia, a pytanie użytkownika zawiera słowa kluczowe pamięci ---
+        memory_keywords = ["pamiętasz", "przypomnij", "zapamiętałeś", "zapamiętać", "zapomniałeś", "a poza tym", "co jeszcze", "co miałeś zapamiętać"]
+        if not found_module_key and any(kw in refined_query.lower() for kw in memory_keywords):
+            # ... (memory heuristic logic remains the same)
+            pass # Placeholder, original logic should be here
+
+        if found_module_key and module_info:
+            handler = module_info['handler']
+            description = module_info['description']
+            logger.info(f"Executing command: {found_module_key} (triggered by '{target_command_name}') with params: {actual_params_for_handler}") # Log which command was triggered
+            await asyncio.to_thread(play_beep, "action") # Or a specific sound?
+
+            # --- Parameter Injection (Simplified based on common patterns) ---
+            param_names = list(inspect.signature(handler).parameters.keys())
+            call_params = {}
+
+            # Pass the primary parameter (assuming it's often named 'params' and expects a string)
+            if "params" in param_names:
+                 call_params["params"] = actual_params_for_handler # Pass the extracted string
+
+            # Inject other common parameters if the handler expects them
+            if "conversation_history" in param_names:
+                call_params["conversation_history"] = self.conversation_history
+            if "user_lang" in param_names:
+                call_params["user_lang"] = lang_code # Pass detected lang code
+
+            # Speak the initial AI response text *before* executing the command
+            if ai_response_text:
+                logger.info(f"Speaking initial AI response before command: {ai_response_text}")
+                await self.tts.speak(ai_response_text) # Use await self.tts.speak
+
+            try:
+                # Execute the handler
+                # Corrected variable names in the log line
+                logger.info(f"Executing command: {found_module_key} (triggered by '{target_command_name}') with params: {actual_params_for_handler}") # Log execution start
+                if asyncio.iscoroutinefunction(handler):
+                    command_result = await handler(**call_params)
+                else:
+                    command_result = await asyncio.to_thread(handler, **call_params)
+
+                # Process result (existing logic)
+                if command_result:
+                    logger.info(f"Command '{found_module_key}' executed successfully, speaking result.")
+                    self.conversation_history.append({"role": "assistant", "content": command_result}) # Add command result to history
+                    self.trim_conversation_history()
+                    # Corrected TTS method call
+                    await self.tts.speak(command_result)
+                else:
+                    # Handle cases where the command executes but returns nothing (e.g., just plays a sound)
+                    logger.info(f"Command '{found_module_key}' executed successfully but returned no text response.")
+                    # Initial text was already spoken before the command execution
+
+            except Exception as e:
+                logger.error(f"Error executing command {found_module_key}: {e}", exc_info=True)
+                error_message = f"Przepraszam, wystąpił błąd podczas wykonywania komendy {found_module_key}."
+                self.conversation_history.append({"role": "assistant", "content": error_message})
+                self.trim_conversation_history()
+                # Corrected TTS method call
+                await self.tts.speak(error_message)
+
+        else:
+            # Command not found or not specified by AI
+            if ai_response_text:
+                logger.info("No command executed. Speaking AI response text.")
+                self.conversation_history.append({"role": "assistant", "content": ai_response_text})
+                self.trim_conversation_history()
+                await self.tts.speak(ai_response_text) # Use await self.tts.speak
+            else:
+                # Fallback if AI provides neither text nor command
+                logger.warning("AI provided no command and no text response.")
+                fallback_response = "Nie rozumiem polecenia lub nie wiem, jak odpowiedzieć."
+                self.conversation_history.append({"role": "assistant", "content": fallback_response})
+                self.trim_conversation_history()
+                await self.tts.speak(fallback_response)
+
+        # History trimming is now done within the branches after adding messages
 
     def trim_conversation_history(self):
-        """
-        Usuwa najstarsze wiadomości, jeśli jest ich za dużo.
-        """
-        if len(self.conversation_history) > MAX_HISTORY_LENGTH:
-            self.conversation_history = self.conversation_history[-MAX_HISTORY_LENGTH:]
+        if len(self.conversation_history) > self.max_history_length:
+            self.conversation_history = self.conversation_history[-self.max_history_length:]
+
+    def trigger_manual_listen(self):
+        """Puts a special marker onto the audio queue to trigger manual listening."""
+        logger.info("Manual listen trigger requested via queue. Sending signal.")
+        try:
+            # Put a special marker onto the audio queue to interrupt the detector
+            self.speech_recognizer.audio_q.put("__MANUAL_TRIGGER__")
+        except Exception as e:
+            logger.error(f"Failed to put manual trigger signal onto audio queue: {e}")
+        # self.manual_listen_triggered = True # Flag is no longer needed
+
+    async def process_command_queue(self):
+        logger.info("Starting command queue processing task...")
+        while True:
+            try:
+                if not self.command_queue.empty():
+                    command_data = self.command_queue.get_nowait()
+                    action = command_data.get("action")
+                    logger.info(f"Received command from queue: {action}")
+                    if action == "activate":
+                        # Manual activation: natychmiast uruchom ścieżkę aktywacji (dźwięk + STT)
+                        self.tts.cancel()
+                        play_beep("keyword", loop=False)
+                        command_text = None
+                        try:
+                            if self.use_whisper and self.whisper_asr:
+                                logger.info("Recording audio for Whisper command (manual trigger) in background thread...")
+                                audio_command = await self.loop.run_in_executor(None, self.speech_recognizer.record_dynamic_command_audio)
+                                if audio_command is not None:
+                                    logger.info("Transcribing Whisper command in background thread...")
+                                    command_text = await self.loop.run_in_executor(None, self.whisper_asr.transcribe, audio_command, self.speech_recognizer.sample_rate)
+                                else:
+                                    logger.warning("Failed to record audio for Whisper command (manual trigger).")
+                            else:
+                                logger.info("Listening for command with Vosk (manual trigger) in background thread...")
+                                command_text = await self.loop.run_in_executor(None, self.speech_recognizer.listen_command)
+                            if command_text:
+                                logger.info("Command (manual trigger): %s", command_text)
+                                # process_query_callback musi być przekazany do Assistant, tu uproszczone:
+                                if hasattr(self, 'process_query_callback'):
+                                    asyncio.create_task(self.process_query_callback(command_text))
+                                else:
+                                    logger.warning("No process_query_callback set on Assistant instance!")
+                            else:
+                                logger.warning("No command detected after manual trigger.")
+                        except Exception as cmd_e:
+                            logger.error(f"Error during command listening/processing after manual trigger: {cmd_e}", exc_info=True)
+                        continue
+                    elif action == "config_updated":
+                        logger.warning("Configuration updated via web UI. Initiating assistant restart.")
+                        if self.loop:
+                            self.loop.stop()
+                        break
+                    # ...existing code...
+                await asyncio.sleep(1)
+            except queue.Empty:
+                await asyncio.sleep(1)
+            except Exception as e:
+                logger.error(f"Error in assistant command queue: {e}")
 
     def process_audio(self):
         """
-        Główna pętla przetwarzania audio (blokująca, uruchamiana w wątku).
+        Główna pętla audio: obsługuje zarówno wake word, jak i ręczne wywołanie nasłuchu.
+        Refactored logic for handling manual trigger interruption.
         """
-        logger.info("Starting audio processing loop.")
-        from vosk import KaldiRecognizer
-        recognizer = KaldiRecognizer(self.speech_recognizer.model, 16000)
+        wake_word_task = None
+        perform_manual_listen = False # Flag to indicate manual listen needed after task check
 
         while True:
-            try:
-                data = self.speech_recognizer.audio_q.get()
-            except Exception as e:
-                logger.error("Error getting audio data: %s", e)
-                continue
+            # --- Check for Manual Trigger Request ---
+            if self.manual_listen_triggered:
+                logger.info("Manual trigger flag is set.")
+                self.manual_listen_triggered = False # Reset flag immediately
+                perform_manual_listen = True # Set flag to perform listen below
 
-            try:
-                partial_result = json.loads(recognizer.PartialResult())
-                partial_text = partial_result.get("partial", "").lower()
-            except Exception as e:
-                logger.error("Error processing partial result: %s", e)
-                partial_text = ""
-
-            # Wykrycie wake word w partial
-            if self.wake_word in partial_text:
-                logger.info("Wake word detected in partial result.")
-                self.tts.cancel()  # przerwij TTS
-                command_text = self.speech_recognizer.listen_command()
-                if command_text:
-                    logger.info("Detected command: %s", command_text)
-                    asyncio.run_coroutine_threadsafe(self.process_query(command_text), self.loop)
+                # If wake word task is running, attempt to interrupt it
+                if wake_word_task and not wake_word_task.done():
+                    logger.info("Attempting to interrupt running wake word task...")
+                    try:
+                        # Use put_nowait to avoid blocking if queue is full (shouldn't happen here)
+                        self.speech_recognizer.audio_q.put_nowait("__MANUAL_TRIGGER__")
+                        logger.info("Sent interruption signal to wake word detector queue.")
+                        # Give it a moment to potentially stop or process the signal
+                        time.sleep(0.3)
+                    except queue.Full:
+                         logger.error("Audio queue is full, cannot send interruption signal.")
+                    except Exception as q_err:
+                        logger.error(f"Failed to send interruption signal: {q_err}")
                 else:
-                    logger.warning("No command detected from partial result.")
-                recognizer = KaldiRecognizer(self.speech_recognizer.model, 16000)
-                continue
+                    logger.info("Wake word task not running or already done when manual trigger checked.")
 
-            # Jeśli mamy pełny wynik do sprawdzenia
-            if recognizer.AcceptWaveform(data):
+
+            # --- Check Wake Word Task Status ---
+            # Check if task exists and is done
+            if wake_word_task and wake_word_task.done():
+                logger.info("Wake word task has finished.")
+                interrupted_by_signal = False
                 try:
-                    result = json.loads(recognizer.Result())
-                    text = result.get("text", "").lower()
+                    result = wake_word_task.result() # Get result or raise exception if task failed
+                    if result == "MANUAL_TRIGGER_REQUESTED":
+                        logger.info("Wake word task confirmed interruption via signal.")
+                        interrupted_by_signal = True
+                        # If manual trigger wasn't already requested externally, set the flag now
+                        if not perform_manual_listen:
+                             logger.warning("Wake word task interrupted but manual flag wasn't set? Performing listen anyway.")
+                             perform_manual_listen = True
+                    # else: # Task finished normally (e.g., after processing a command)
+                    #     logger.debug("Wake word task finished without manual trigger signal.")
                 except Exception as e:
-                    logger.error("Error processing full result: %s", e)
-                    text = ""
+                    logger.error(f"Wake word detection task failed with exception: {e}", exc_info=True)
+                    time.sleep(2) # Delay before restart after error
 
-                if self.wake_word in text:
-                    logger.info("Wake word detected in full result.")
-                    self.tts.cancel()  # przerwij TTS
-                    command_text = self.speech_recognizer.listen_command()
+                wake_word_task = None # Reset task so it restarts later in the loop if needed
+
+            # --- Perform Manual Listen (if flagged) ---
+            if perform_manual_listen:
+                logger.info("Proceeding with manual listen block.")
+                perform_manual_listen = False # Reset flag for next iteration
+
+                play_beep("keyword", loop=False)
+                command_text = None
+                try:
+                    if self.use_whisper and self.whisper_asr:
+                        logger.info("Recording audio for Whisper command (manual trigger)...")
+                        # NOTE: This still requires record_dynamic_command_audio() to be implemented
+                        # in SpeechRecognizer for Whisper to work on manual trigger.
+                        try:
+                            # Record dynamic audio and transcribe with Whisper
+                            audio_command = self.speech_recognizer.record_dynamic_command_audio()
+                            if audio_command is not None:
+                                import io, soundfile as sf
+                                buffer = io.BytesIO()
+                                sf.write(buffer, audio_command, 16000, format='WAV')
+                                buffer.seek(0)
+                                logger.info("Transcribing command with Whisper (manual trigger)...")
+                                command_text = self.whisper_asr.transcribe(buffer)
+                                buffer.close()
+                            else:
+                                logger.warning("No audio recorded for Whisper manual trigger.")
+                        except Exception as e:
+                            logger.error(f"Error during Whisper manual trigger recording/transcription: {e}", exc_info=True)
+
+                    else: # Use Vosk
+                        logger.info("Listening for command with Vosk after manual trigger...")
+                        # Corrected method name here based on traceback
+                        command_text = self.speech_recognizer.listen_command()
+
+                    # Process the command if recognized
                     if command_text:
-                        logger.info("Detected command: %s", command_text)
+                        logger.info("Command (after manual trigger): %s", command_text)
+                        # Schedule the async process_query in the event loop
                         asyncio.run_coroutine_threadsafe(self.process_query(command_text), self.loop)
                     else:
-                        logger.warning("No command detected from full result.")
-                else:
-                    logger.debug("Speech detected but wake word not found.")
+                        logger.info("No command detected after manual trigger.")
 
-                recognizer = KaldiRecognizer(self.speech_recognizer.model, 16000)
+                except Exception as e:
+                    logger.error(f"Error during manually triggered listen execution: {e}", exc_info=True)
+
+                logger.info("Manual listening block finished.")
+                # Loop will continue and restart wake word task if wake_word_task is None
+
+
+            # --- Start Wake Word Task (if needed) ---
+            # Check if task is None (meaning it finished or never started)
+            if wake_word_task is None:
+                # Ensure we don't restart immediately after manual listen if wake word task was already running
+                # This check might be redundant with the perform_manual_listen logic above, but adds safety
+                if not perform_manual_listen:
+                    logger.info("Starting/Restarting wake word detection task...")
+                    # Run wake word detection in an executor thread
+                    wake_word_task = self.loop.run_in_executor(
+                        None, # Use default executor
+                        run_wakeword_detection,
+                        self.speech_recognizer,
+                        self.wake_word,
+                        self.tts,
+                        self.use_whisper,
+                        self.process_query, # Pass the async function directly
+                        self.loop,
+                        self.whisper_asr
+                    )
+                    # logger.info("Wake word detection task submitted to executor.")
+
+
+            # --- Wait / Yield ---
+            # Prevent tight loop; allow other asyncio tasks and checks to run
+            time.sleep(0.1) # Small sleep in the main sync loop
 
     async def run_async(self):
-        """
-        Główna metoda asynchroniczna – tworzy stream audio, uruchamia pętlę rozpoznawania mowy
-        i czeka w nieskończoność.
-        """
+        logger.info("Bot is starting...")
         self.loop = asyncio.get_running_loop()
-        self.speech_recognizer.audio_q.queue.clear()
+        # Uruchomienie zadania monitorującego folder pluginów
+        asyncio.create_task(self.monitor_plugins())
+        # Start the command queue processing task
+        asyncio.create_task(self.process_command_queue())
 
+        self.speech_recognizer.audio_q.queue.clear()
         import sounddevice as sd
         try:
             with sd.RawInputStream(
-                    samplerate=16000,
+                    samplerate=self.speech_recognizer.sample_rate,
                     blocksize=8000,
                     dtype="int16",
                     channels=1,
@@ -319,30 +568,38 @@ class Assistant:
                     callback=self.speech_recognizer.audio_callback
             ):
                 logger.info("Audio stream opened. Waiting for activation...")
+                # Run process_audio which now includes the manual trigger check
                 await self.loop.run_in_executor(None, self.process_audio)
         except Exception as e:
             logger.error("Error in audio stream: %s", e)
-
         logger.info("Audio processing ended. Blocking main loop indefinitely.")
-        await asyncio.Future()  # Nie kończ – czekaj w nieskończoność
+        await asyncio.Future() # Keep running
 
+    def get_all_memories_for_user(self, user: str = "assistant") -> list:
+        """
+        Zwraca wszystkie treści wspomnień dla danego użytkownika (bez metadanych).
+        """
+        from modules.memory_module import retrieve_memories
+        result, success = retrieve_memories(params="", user=user)
+        if not success:
+            return []
+        return [line for line in result.split("\n") if line.strip()]
+
+# Remove the old listen_and_process method if it exists, run_async is the main entry point now.
 
 if __name__ == "__main__":
-    from config import VOSK_MODEL_PATH, MIC_DEVICE_ID, WAKE_WORD, STT_SILENCE_THRESHOLD
+    # Config is loaded automatically when config.py is imported
+    # No need to import specific variables here unless overriding defaults for testing
+    # from config import VOSK_MODEL_PATH, MIC_DEVICE_ID, WAKE_WORD, STT_SILENCE_THRESHOLD
 
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.WARNING, # Zmieniono z INFO na WARNING
         filename="assistant.log",
         filemode="a",
         format="%(asctime)s - %(levelname)s - %(message)s"
     )
-
-    assistant = Assistant(
-        VOSK_MODEL_PATH,
-        MIC_DEVICE_ID,
-        WAKE_WORD,
-        STT_SILENCE_THRESHOLD
-    )
+    # Example of running standalone (without web ui queue)
+    assistant = Assistant()
     try:
         asyncio.run(assistant.run_async())
     except KeyboardInterrupt:

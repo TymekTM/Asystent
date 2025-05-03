@@ -1,80 +1,129 @@
-# see_screen_module.py
-import base64
-import os
-import datetime
-import logging
-import ollama
+import base64, os, datetime, logging, subprocess, ollama
+import numpy as np
+from pyexpat.errors import messages
+
+from ai_module import chat_with_providers, remove_chain_of_thought
+from audio_modules.beep_sounds import play_beep
+# Import prompt and ensure cv2 is a module attribute for use in capture_screen (can be monkeypatched)
+# Import screen prompt
+from prompts import SEE_SCREEN_PROMPT
+# Ensure cv2 attribute exists for monkeypatching in tests
+cv2 = None
+try:
+    import cv2
+except ImportError:
+    cv2 = None
+# Optional OpenCV import for image saving (can be monkeypatched in tests)
+try:
+    import cv2
+except ImportError:
+    cv2 = None
 
 try:
-    import pyautogui
+    import dxcam  # Najszybsza biblioteka do przechwytywania ekranu dla Windows
 except ImportError:
-    pyautogui = None
-
-if pyautogui is None:
+    dxcam = None
+    # Fallback do istniejących metod
     try:
-        from PIL import ImageGrab
+        import pyautogui
     except ImportError:
-        ImageGrab = None
-    else:
-        logging.info("Używam PIL ImageGrab jako alternatywy dla pyautogui.")
+        pyautogui = None
+        try:
+            from PIL import ImageGrab
+        except ImportError:
+            ImageGrab = None
 
-from config import MAIN_MODEL  # <-- importujemy
+from config import MAIN_MODEL
+
+# Optional OpenCV for writing images; tests may monkeypatch module cv2
+try:
+    import cv2 as _cv2
+    cv2 = _cv2
+except ImportError:
+    cv2 = None
+
+# Inicjalizacja kamery DXcam jako zmiennej globalnej dla lepszej wydajności
+dxcam_device = None
+if dxcam is not None:
+    try:
+        dxcam_device = dxcam.create()
+        logging.info("DXcam zainicjalizowany pomyślnie.")
+    except Exception as e:
+        logging.error("Nie udało się zainicjować DXcam: %s", e)
+        dxcam_device = None
+
 
 def encode_image_to_base64(image_path):
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode('utf-8')
 
-def capture_screen(params: str = "") -> str:
-    if pyautogui is None and ImageGrab is None:
-        logging.error("Nie znaleziono ani pyautogui, ani PIL ImageGrab.")
-        return "Nie można wykonać zrzutu ekranu - brak odpowiedniej biblioteki."
+def capture_screen(params: str = "", conversation_history: list = None) -> str:
+    global dxcam_device
 
     try:
+        play_beep("screenshot")
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"screenshot_{timestamp}.png"
         folder = "screenshots"
         os.makedirs(folder, exist_ok=True)
         filepath = os.path.join(folder, filename)
 
-        if pyautogui is not None:
+        if dxcam_device is not None:
+            screenshot = dxcam_device.grab()
+            if screenshot is not None:
+                # write using module-level cv2 (can be monkeypatched in tests)
+                if cv2:
+                    cv2.imwrite(filepath, screenshot)
+                    logging.info("Zrzut ekranu wykonany z DXcam")
+                else:
+                    raise Exception("cv2 nie jest dostępne do zapisu zrzutu ekranu")
+            else:
+                raise Exception("DXcam zwrócił None")
+        elif pyautogui is not None:
             screenshot = pyautogui.screenshot()
             screenshot.save(filepath)
-        else:
+        elif ImageGrab is not None:
             screenshot = ImageGrab.grab()
             screenshot.save(filepath, "PNG")
+        else:
+            return "Nie można wykonać zrzutu ekranu - brak odpowiedniej biblioteki."
 
         abs_path = os.path.abspath(filepath)
-        logging.info("Zrzut ekranu zapisany do: %s", filepath)
-
-        # Konwersja obrazu do base64
         image_base64 = encode_image_to_base64(abs_path)
+        # If no conversation history, return just the base64 (fallback/test mode)
+        if conversation_history is None:
+            return image_base64
 
-        # Wstępny prompt
-        prompt_text = (
-            f"Na podstawie tego zrzutu ekranu odpowiedz na pytanie: {params}"
-            if params.strip()
-            else "Co znajduje się na tym zrzucie ekranu?"
-        )
+        prompt_text = f"Na podstawie tego zrzutu ekranu odpowiedz na pytanie: {params}" if params.strip() else "Co znajduje się na tym zrzucie ekranu?"
 
-        # Wywołanie modelu (gamma3:4B)
-        response = ollama.generate(
+        # Jeśli dostępny jest kontekst rozmowy, dołączamy go
+        messages = []
+        if conversation_history:
+            messages.extend(conversation_history)
+        messages.extend([
+            {"role": "system", "content": SEE_SCREEN_PROMPT},
+            {"role": "user", "content": prompt_text}
+        ])
+
+        response = chat_with_providers(
             model=MAIN_MODEL,
-            prompt=prompt_text,
+            messages=messages,
             images=[image_base64]
         )
 
-        # Zwracamy finalną odpowiedź
-        answer = response["response"].strip()
-        return answer
+        result_text = remove_chain_of_thought(response["message"]["content"].strip())
+        return result_text
 
     except Exception as e:
-        logging.error("Błąd przy tworzeniu zrzutu ekranu: %s", e)
-        return "Błąd przy wykonywaniu zrzutu ekranu."
+        logging.error("Błąd przy wykonywaniu zrzutu ekranu: %s", e, exc_info=True)
+        return f"Błąd przy wykonywaniu zrzutu ekranu: {str(e)}"
+
 
 def register():
     return {
-        "command": "!screenshot",
+        "command": "screenshot",
         "aliases": ["screenshot", "screen"],
-        "description": "Pozwala zobaczyć, co znajduje się na ekranie użytkownika, analizując zrzut ekranu.",
-        "handler": capture_screen
+        "description": "Wykonuje zrzut ekranu i analizuje go.",
+        "handler": capture_screen,
+        "prompt": SEE_SCREEN_PROMPT
     }

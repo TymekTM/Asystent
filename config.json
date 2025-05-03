@@ -1,0 +1,19 @@
+{
+  "VOSK_MODEL_PATH": "vosk_model",
+  "WAKE_WORD": "asystencie",
+  "MIC_DEVICE_ID": 14,
+  "STT_SILENCE_THRESHOLD": 600,
+  "PROVIDER": "lmstudio",
+  "STT_MODEL": "gemma3:4b-it-q4_K_M",
+  "MAIN_MODEL": "gemma3:4b-it-q4_K_M",
+  "DEEP_MODEL": "openthinker",
+  "USE_WHISPER_FOR_COMMAND": true,
+  "WHISPER_MODEL": "openai/whisper-small",
+  "MAX_HISTORY_LENGTH": 20,
+  "PLUGIN_MONITOR_INTERVAL": 30,
+  "API_KEYS": {
+    "OPENAI_API_KEY": "None",
+    "DEEPSEEK_API_KEY": "None",
+    "ANTHROPIC_API_KEY": "None"
+  }
+}

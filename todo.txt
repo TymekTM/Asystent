@@ -1,0 +1,19 @@
+# Asystent TODO (2025-2026)
+
+## Priority Tasks
+- Full mobile version with chat and voice chat options
+
+## Feature Enhancements
+- TTS and voice personalization (user-selectable voice, language, speed, test preview)
+- Multi-modal input support (text, voice, image analysis in web UI)
+- Improved long-term memory (search, tagging, context linking, memory management)
+- Advanced plugin system with simple API for third-party extensions
+
+## Web UI and UX
+- Advanced user authentication and role management (roles, password reset, etc.)
+- Internationalizationok, (multi-language UI, easy translation)
+
+## Integration and Security
+- API integrations: add more external services (weather, calendar, IoT, etc.)
+- Security review and improvements (rate limiting, audit logs, config secrets)
+- Cloud synchronization of memories and preferences

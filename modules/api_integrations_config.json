@@ -1,0 +1,9 @@
+{
+  "weather": {
+    "priority": 1,
+    "url_template": "https://wttr.in/{}?format=3",
+    "default_params": {
+      "location": "Warsaw"
+    }
+  }
+}

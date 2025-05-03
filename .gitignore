@@ -1,2 +1,10 @@
 *.log
 /screenshots
+assistant.log
+*.pyc
+*.pyc
+/__pycache__
+/__pycache__
+/.VSCodeCounter
+/__pycache__
+assistant_memory.db

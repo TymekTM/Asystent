@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Dashboard</h1>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-header">
+                    Assistant Status
+                </div>
+                <div class="card-body">
+                    <!-- Real-time status updates implemented via polling -->
+                    <p>Status: <span id="assistant-status-badge" class="badge bg-secondary">{{ status.get('status', 'Unknown') }}</span></p>
+                    <p>Wake Word: <span class="badge bg-info">{{ config.get('WAKE_WORD', 'N/A') }}</span></p>
+                    {# Add more status info as needed, fetched dynamically #}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-header">
+                    Quick Actions
+                </div>
+                <div class="card-body">
+                    <button id="manual-activate-btn" class="btn btn-primary me-2">
+                        <i class="fas fa-microphone"></i> Activate Manually
+                    </button>
+                    <span id="manual-activate-status" class="ms-2"></span>
+                    <button id="restart-assistant-btn" class="btn btn-warning me-2">
+                        <i class="fas fa-sync-alt"></i> Restart Assistant
+                    </button>
+                    <button id="restart-web-btn" class="btn btn-secondary me-2">
+                        <i class="fas fa-sync-alt"></i> Restart Web Panel
+                    </button>
+                    <button id="restart-all-btn" class="btn btn-danger">
+                        <i class="fas fa-sync-alt"></i> Restart All
+                    </button>
+                    <span id="restart-status" class="ms-2"></span>
+                    <button id="stop-assistant-btn" class="btn btn-outline-danger me-2">
+                        <i class="fas fa-power-off"></i> Stop Assistant
+                    </button>
+                    <span id="stop-status" class="ms-2"></span>
+                    <!-- Additional actions implemented: manual activate, restart, stop -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+     <div class="row">
+        <div class="col-12">
+             <div class="card">
+                <div class="card-header">
+                    Recent Activity
+                </div>
+                <div class="card-body">
+                    <ul id="recent-activity-list" class="list-group">
+                        <!-- Recent log entries will be inserted here -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">Statystyki Użytkowania</div>
+                <div class="card-body" id="analytics-section">
+                    <div class="alert alert-info">Ładowanie statystyk...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Manual Activation Button
+    const activateBtn = document.getElementById('manual-activate-btn');
+    const activateStatus = document.getElementById('manual-activate-status');
+
+    if (activateBtn) {
+        activateBtn.addEventListener('click', () => {
+            activateStatus.textContent = 'Wysyłanie żądania aktywacji...';
+            activateStatus.className = 'ms-2 text-info';
+            activateBtn.disabled = true;
+            fetch('/api/activate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json().then(data => ({ status: response.status, body: data })))
+            .then(({ status, body }) => {
+                if (status === 202 || status === 200) { // 202 Accepted or 200 OK
+                    activateStatus.textContent = body.message || 'Aktywacja wysłana!';
+                    activateStatus.className = 'ms-2 text-success';
+                } else {
+                    activateStatus.textContent = `Błąd: ${body.error || 'Nie udało się wysłać żądania.'}`;
+                    activateStatus.className = 'ms-2 text-danger';
+                }
+                setTimeout(() => {
+                    activateBtn.disabled = false;
+                    activateStatus.textContent = '';
+                }, 3000);
+            })
+            .catch(error => {
+                activateStatus.textContent = 'Błąd wysyłania żądania.';
+                activateStatus.className = 'ms-2 text-danger';
+                activateBtn.disabled = false;
+                setTimeout(() => {
+                    activateStatus.textContent = '';
+                }, 3000);
+            });
+        });
+    }
+
+    // Restart buttons logic
+    const restartAssistantBtn = document.getElementById('restart-assistant-btn');
+    const restartWebBtn = document.getElementById('restart-web-btn');
+    const restartAllBtn = document.getElementById('restart-all-btn');
+    const restartStatus = document.getElementById('restart-status');
+
+    function handleRestart(url, label) {
+        if (restartStatus) {
+            restartStatus.textContent = `Wysyłanie żądania: ${label}...`;
+            restartStatus.className = 'ms-2 text-info';
+        }
+        fetch(url, { method: 'POST' })
+            .then(response => response.json().then(data => ({ status: response.status, body: data })))
+            .then(({ status, body }) => {
+                if (status === 202 || status === 200) {
+                    restartStatus.textContent = body.message || `${label} wysłane!`;
+                    restartStatus.className = 'ms-2 text-success';
+                } else {
+                    restartStatus.textContent = `Błąd: ${body.error || 'Nie udało się zrestartować.'}`;
+                    restartStatus.className = 'ms-2 text-danger';
+                }
+            })
+            .catch(() => {
+                restartStatus.textContent = 'Błąd wysyłania żądania restartu.';
+                restartStatus.className = 'ms-2 text-danger';
+            });
+    }
+    if (restartAssistantBtn) restartAssistantBtn.onclick = () => handleRestart('/api/restart/assistant', 'Restart Assistant');
+    if (restartWebBtn) restartWebBtn.onclick = () => handleRestart('/api/restart/web', 'Restart Web Panel');
+    if (restartAllBtn) restartAllBtn.onclick = () => handleRestart('/api/restart/all', 'Restart All');
+
+    // Update status badge for Restarting
+    function fetchAssistantStatus() {
+        fetch('/api/status')
+            .then(response => response.json())
+            .then(data => {
+                const badge = document.getElementById('assistant-status-badge');
+                if (badge) {
+                    if (data.status === 'Online') {
+                        badge.textContent = 'Online';
+                        badge.className = 'badge bg-success';
+                    } else if (data.status === 'Restarting') {
+                        badge.textContent = 'Restarting';
+                        badge.className = 'badge bg-warning text-dark';
+                    } else if (data.status === 'Offline') {
+                        badge.textContent = 'Offline';
+                        badge.className = 'badge bg-danger';
+                    } else {
+                        badge.textContent = data.status || 'Unknown';
+                        badge.className = 'badge bg-secondary';
+                    }
+                }
+            })
+            .catch(() => {
+                const badge = document.getElementById('assistant-status-badge');
+                if (badge) {
+                    badge.textContent = 'Offline';
+                    badge.className = 'badge bg-danger';
+                }
+            });
+    }
+    setInterval(fetchAssistantStatus, 5000);
+    fetchAssistantStatus();
+
+    // DASHBOARD: Polling for assistant status
+    function fetchAssistantStatus() {
+        fetch('/api/status')
+            .then(response => response.json())
+            .then(data => {
+                const badge = document.getElementById('assistant-status-badge');
+                if (badge) {
+                    badge.textContent = data.status || 'Unknown';
+                    badge.className = 'badge ' + (data.status === 'Online' ? 'bg-success' : 'bg-secondary');
+                }
+                // Optionally update other status fields
+            })
+            .catch(err => {
+                const badge = document.getElementById('assistant-status-badge');
+                if (badge) {
+                    badge.textContent = 'Offline';
+                    badge.className = 'badge bg-danger';
+                }
+            });
+    }
+    setInterval(fetchAssistantStatus, 5000); // Poll every 5 seconds
+    fetchAssistantStatus(); // Initial fetch
+
+    // DASHBOARD: Fetch and display recent activity
+    function fetchRecentActivity() {
+        fetch('/api/history?limit=5')
+            .then(response => response.json())
+            .then(data => {
+                const list = document.getElementById('recent-activity-list');
+                if (list) {
+                    list.innerHTML = '';
+                    (data || []).slice(-5).forEach(entry => {
+                        const li = document.createElement('li');
+                        li.className = 'list-group-item';
+                        li.textContent = `[${entry.role}] ${entry.content}`;
+                        list.appendChild(li);
+                    });
+                }
+            });
+    }
+    setInterval(fetchRecentActivity, 5000);
+    fetchRecentActivity();
+
+    // DASHBOARD: Fetch and display analytics
+    function fetchAnalytics() {
+        fetch('/api/analytics')
+            .then(response => {
+                if (!response.ok) throw new Error('Błąd API: ' + response.status);
+                return response.json();
+            })
+            .then(data => {
+                const section = document.getElementById('analytics-section');
+                if (!section) return;
+                let html = '<ul class="list-group">';
+                html += `<li class="list-group-item">Liczba wiadomości: <b>${data.msg_count ?? '-'}</b></li>`;
+                html += `<li class="list-group-item">Unikalni użytkownicy: <b>${data.unique_users ? data.unique_users.length : 0}</b> (${data.unique_users ? data.unique_users.join(', ') : ''})</li>`;
+                html += `<li class="list-group-item">Średni czas odpowiedzi: <b>${(data.avg_response_time || 0).toFixed(2)}s</b></li>`;
+                html += `<li class="list-group-item">Ostatnie zapytanie: <b>${data.last_query_time ? new Date(data.last_query_time * 1000).toLocaleString() : '-'}</b></li>`;
+                html += '</ul>';
+                section.innerHTML = html;
+            })
+            .catch(err => {
+                const section = document.getElementById('analytics-section');
+                if (section) section.innerHTML = `<div class='alert alert-danger'>Błąd ładowania statystyk: ${err.message}</div>`;
+            });
+    }
+    setInterval(fetchAnalytics, 5000);
+    fetchAnalytics();
+
+    // Stop Assistant logic
+    const stopAssistantBtn = document.getElementById('stop-assistant-btn');
+    const stopStatus = document.getElementById('stop-status');
+    if (stopAssistantBtn) stopAssistantBtn.onclick = () => {
+        if (stopStatus) {
+            stopStatus.textContent = 'Wysyłanie żądania zatrzymania...';
+            stopStatus.className = 'ms-2 text-info';
+        }
+        fetch('/api/stop/assistant', { method: 'POST' })
+            .then(response => response.json().then(data => ({ status: response.status, body: data })))
+            .then(({ status, body }) => {
+                if (status === 202 || status === 200) {
+                    stopStatus.textContent = body.message || 'Asystent zatrzymany!';
+                    stopStatus.className = 'ms-2 text-success';
+                } else {
+                    stopStatus.textContent = `Błąd: ${body.error || 'Nie udało się zatrzymać asystenta.'}`;
+                    stopStatus.className = 'ms-2 text-danger';
+                }
+            })
+            .catch(() => {
+                stopStatus.textContent = 'Błąd wysyłania żądania zatrzymania.';
+                stopStatus.className = 'ms-2 text-danger';
+            });
+    };
+
+    // e.g., connect to a WebSocket endpoint provided by the Flask app
+    // and update #assistant-status-badge and other elements based on received messages.
+</script>
+{% endblock %}

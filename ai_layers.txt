@@ -1,0 +1,63 @@
+AI Layers in the Asystent Project
+================================
+
+1. Activation Mechanisms
+   - Wake Word Detection: audio_modules/wakeword_detector.py 
+     - Listens for a specific keyword to activate the assistant using microphone input
+   - Manual Activation: assistant.py (trigger_manual_listen method)
+     - Allows activation via web UI or programmatic trigger through command queue
+
+2. Speech-to-Text (STT)
+   - Primary STT: audio_modules/speech_recognition.py (Vosk-based)
+   - Advanced STT: audio_modules/whisper_asr.py (Optional)
+   - Configuration: Supports switching between providers via config.json
+
+3. Multi-Provider AI Integration
+   - Provider Management: ai_module.py (AIProviders class)
+   - Supported Providers: 
+     - Ollama (local)
+     - LM Studio (local API)
+     - OpenAI
+     - DeepSeek
+     - Anthropic
+     - Transformer (local)
+
+4. Query Processing Pipeline
+   - Language Detection: ai_module.py (detect_language function)
+   - Query Refinement: ai_module.py (refine_query function)
+   - Intent Classification: assistant.py (IntentClassifier class)
+
+5. Conversation Management
+   - History Management: assistant.py
+   - Memory System: modules/memory_module.py
+   - Context Preservation: Maintains conversation flow with trimming for token limits
+
+6. Response Generation & Processing
+   - Generation: ai_module.py (generate_response function)
+   - Post-Processing: ai_module.py (remove_chain_of_thought, parse_response functions)
+   - Command Extraction: assistant.py (process_query method)
+
+7. Tool/Command Execution
+   - Module System: Dynamic loading from modules/ directory
+   - Core Modules:
+     - API Integration: modules/api_module.py
+     - Web Search: modules/search_module.py
+     - Deep Reasoning: modules/deepseek_module.py
+     - Visual Analysis: modules/see_screen_module.py
+     - Memory Management: modules/memory_module.py
+
+8. Text-to-Speech (TTS)
+   - Module: audio_modules/tts_module.py
+   - Features: Speech synthesis, cancellation support, audio queuing
+
+9. Web UI Integration
+   - Main App: web_ui/app.py
+   - Features: Configuration interface, conversation history, long-term memory management
+
+10. Multiprocessing Architecture
+    - Main Process: main.py (Web UI)
+    - Assistant Process: assistant.py via main.py
+    - Inter-Process Communication: Multiprocessing Queue
+
+---
+Each layer is modular and can be improved or replaced independently. The pipeline flows from wake word → STT → refinement → LLM → tool use → TTS → UI/logging.

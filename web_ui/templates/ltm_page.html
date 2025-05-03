@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Pamięć Długoterminowa{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Pamięć Długoterminowa Asystenta</h2>
+
+    <div class="card mb-4">
+        <div class="card-header">Dodaj nową pamięć</div>
+        <div class="card-body">
+            <form id="add-memory-form">
+                <div class="mb-3">
+                    <label for="memory-content" class="form-label">Treść informacji:</label>
+                    <textarea class="form-control" id="memory-content" name="content" rows="3" required></textarea>
+                </div>
+                 <div class="mb-3">
+                    <label for="memory-user" class="form-label">Użytkownik (opcjonalnie):</label>
+                    <input type="text" class="form-control" id="memory-user" name="user" placeholder="Domyślnie: assistant">
+                </div>
+                <button type="submit" class="btn btn-primary">Dodaj do pamięci</button>
+            </form>
+            <div id="add-memory-status" class="mt-2"></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Zapisane wspomnienia</div>
+        <div class="card-body">
+            <div class="input-group mb-3">
+                <input type="text" id="search-memory-input" class="form-control" placeholder="Wyszukaj w pamięci...">
+                <button class="btn btn-outline-secondary" type="button" id="search-memory-button">Szukaj</button>
+                 <button class="btn btn-outline-secondary" type="button" id="clear-search-button">Wyczyść</button>
+            </div>
+            <div id="memory-list">
+                {% if memories %}
+                    <ul class="list-group">
+                        {% for memory in memories %}
+                            <li class="list-group-item d-flex justify-content-between align-items-start" data-id="{{ memory.id }}">
+                                <div class="ms-2 me-auto">
+                                    <div class="fw-bold">ID: {{ memory.id }} | User: {{ memory.user }}</div>
+                                    <small class="text-muted">{{ memory.timestamp.split('.')[0] }}</small>
+                                    <p class="mb-1">{{ memory.content }}</p>
+                                </div>
+                                <button class="btn btn-danger btn-sm delete-memory-button" data-id="{{ memory.id }}">Usuń</button>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>Brak zapisanych wspomnień.</p>
+                {% endif %}
+            </div>
+             <div id="delete-memory-status" class="mt-2"></div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+{% endblock %}
