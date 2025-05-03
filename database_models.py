@@ -25,9 +25,9 @@ def initialize_database():
                 personalization TEXT
             )
         ''')
-        # Memories table
+        # User memories table (separate from assistant memory table)
         cursor.execute('''
-            CREATE TABLE IF NOT EXISTS memories (
+            CREATE TABLE IF NOT EXISTS user_memories (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 content TEXT NOT NULL,
                 user_id INTEGER,

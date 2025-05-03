@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Documentation{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Sidebar with links -->
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    Documentation
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('documentation_main') }}" class="list-group-item list-group-item-action {% if section == 'main' %}active{% endif %}">Introduction</a>
+                    
+                    <div class="list-group-item list-group-item-secondary">User Guide</div>
+                    <a href="{{ url_for('documentation_section', section='user-guide', path='README') }}" class="list-group-item list-group-item-action {% if section == 'user-guide' and path == 'README' %}active{% endif %}">Overview</a>
+                    <a href="{{ url_for('documentation_section', section='user-guide', path='web-ui') }}" class="list-group-item list-group-item-action {% if section == 'user-guide' and path == 'web-ui' %}active{% endif %}">Web Interface</a>
+                    <a href="{{ url_for('documentation_section', section='user-guide', path='voice-interaction') }}" class="list-group-item list-group-item-action {% if section == 'user-guide' and path == 'voice-interaction' %}active{% endif %}">Voice Interaction</a>
+                    
+                    <div class="list-group-item list-group-item-secondary">Developer Guide</div>
+                    <a href="{{ url_for('documentation_section', section='developer', path='README') }}" class="list-group-item list-group-item-action {% if section == 'developer' and path == 'README' %}active{% endif %}">Setup</a>
+                    <a href="{{ url_for('documentation_section', section='developer', path='ai-architecture') }}" class="list-group-item list-group-item-action {% if section == 'developer' and path == 'ai-architecture' %}active{% endif %}">AI Architecture</a>
+                    <a href="{{ url_for('documentation_section', section='developer', path='plugin-development') }}" class="list-group-item list-group-item-action {% if section == 'developer' and path == 'plugin-development' %}active{% endif %}">Plugin Development</a>
+                    <a href="{{ url_for('documentation_section', section='developer', path='integrating-docs') }}" class="list-group-item list-group-item-action {% if section == 'developer' and path == 'integrating-docs' %}active{% endif %}">Integrating Docs</a>
+                    
+                    <div class="list-group-item list-group-item-secondary">API Reference</div>
+                    <a href="{{ url_for('documentation_section', section='api', path='README') }}" class="list-group-item list-group-item-action {% if section == 'api' and path == 'README' %}active{% endif %}">Overview</a>
+                    <a href="{{ url_for('documentation_section', section='api', path='rest-endpoints') }}" class="list-group-item list-group-item-action {% if section == 'api' and path == 'rest-endpoints' %}active{% endif %}">REST Endpoints</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main content -->
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-body">
+                    <div class="markdown-content">
+                        {{ content | safe }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add syntax highlighting class to code blocks
+        document.querySelectorAll('pre code').forEach(function(block) {
+            block.className += ' language-' + (block.className || 'text');
+        });
+    });
+</script>
+{% endblock %}

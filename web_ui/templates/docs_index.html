@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Documentation Index{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h1>Documentation</h1>
+    <p>Welcome to the Asystent documentation. Choose a section below:</p>
+    <ul class="list-group list-group-flush mb-4">
+        <li class="list-group-item">
+            <a href="{{ url_for('documentation_section', section='user-guide', path='README') }}">User Guide</a> – How to use Asystent and its features
+        </li>
+        <li class="list-group-item">
+            <a href="{{ url_for('documentation_section', section='developer', path='README') }}">Developer Guide</a> – Setting up the development environment and contributing to Asystent
+        </li>
+        <li class="list-group-item">
+            <a href="{{ url_for('documentation_section', section='api', path='README') }}">API Documentation</a> – API reference for integrating with Asystent
+        </li>
+    </ul>
+    <h5>Quick Links</h5>
+    <ul>
+        <li><a href="{{ url_for('documentation_section', section='user-guide', path='web-ui') }}">Web UI Guide</a></li>
+        <li><a href="{{ url_for('documentation_section', section='user-guide', path='voice-interaction') }}">Voice Interaction</a></li>
+        <li><a href="{{ url_for('documentation_section', section='developer', path='ai-architecture') }}">AI Architecture</a></li>
+        <li><a href="{{ url_for('documentation_section', section='developer', path='plugin-development') }}">Plugin Development</a></li>
+        <li><a href="{{ url_for('documentation_section', section='api', path='rest-endpoints') }}">REST API Endpoints</a></li>
+    </ul>
+</div>
+{% endblock %}

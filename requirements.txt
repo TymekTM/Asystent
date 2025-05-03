@@ -2,17 +2,20 @@ ollama
 requests
 sounddevice
 vosk
-duckduckgo-search # Added for search_module
-beautifulsoup4 # Added for search_module (bs4)
-brotli # Added for handling brotli encoding in requests
-openai # Uncomment if used
-deepseek # Uncomment if used
-anthropic # Uncomment if used
-transformers # Uncomment if used
-torch # Uncomment if needed by transformers/whisper
-gTTS # Uncomment or replace with the specific TTS library used
-PyAudio # Uncomment if needed by sounddevice/speech libraries
-edge_tts # Uncomment if needed by edge-tts library
-Flask # Added for Web UI
-langid # For fast language detection
-psutil  # For system resource detection and benchmarking
+duckduckgo-search
+beautifulsoup4
+brotli
+openai
+deepseek
+anthropic
+transformers
+torch
+gTTS
+PyAudio
+edge_tts
+Flask
+langid
+psutil
+watchdog
+httpx[http2]
+markdown>=3.4.0

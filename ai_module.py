@@ -134,27 +134,40 @@ class AIProviders:
             return {"message": {"content": f"Błąd LM Studio: {e}"}}
 
     def chat_openai(self, model: str, messages: list, images: list = None) -> Optional[Dict[str, Any]]:
+        # Chat via OpenAI provider
         try:
             api_key = os.getenv("OPENAI_API_KEY") or _config.get("API_KEYS", {}).get("OPENAI_API_KEY")
             if not api_key or api_key == "YOUR_OPENAI_API_KEY_HERE":
-                 print("OpenAI API Key not configured.")
-                 return None
-            # Ensure the openai library is initialized with the key if not using env var
+                logger.error("OpenAI API Key not configured or invalid.")
+                return {"message": {"content": "Błąd OpenAI: Klucz API nie skonfigurowany."}}
             openai_module = self.providers["openai"]["module"]
-            if openai_module and not os.getenv("OPENAI_API_KEY"):
-                 openai_module.api_key = api_key
-
-            if images is not None:
+            if not openai_module:
+                logger.error("OpenAI module not available.")
+                return {"message": {"content": "Błąd OpenAI: moduł openai nie zaimportowany."}}
+            # Set API key
+            openai_module.api_key = api_key
+            # Optionally include images in prompt
+            if images:
                 images_info = "\n\nObrazy: " + ", ".join(images)
                 messages[-1]["content"] += images_info
-            response = openai_module.ChatCompletion.create(
+            # Call chat completion
+            response = openai_module.chat.completions.create(
                 model=model,
-                messages=messages
+                messages=messages,
+                temperature=_config.get("temperature", 0.7),
+                max_tokens=_config.get("max_tokens", 150)
             )
-            return {"message": {"content": response.choices[0].message.content}}
+            content = None
+            # Extract content from response
+            if hasattr(response, 'choices') and response.choices:
+                msg = getattr(response.choices[0].message, 'content', None)
+                content = msg or response.choices[0].message.content
+            if not content:
+                raise ValueError("No content in OpenAI response.")
+            return {"message": {"content": content}}
         except Exception as e:
-            print(f"Błąd OpenAI: {e}")
-            return None
+            logger.error(f"OpenAI chat error: {e}", exc_info=True)
+            return {"message": {"content": f"Błąd OpenAI: {e}"}}
 
     def chat_deepseek(self, model: str, messages: list, images: list = None) -> Optional[Dict[str, Any]]:
         try:

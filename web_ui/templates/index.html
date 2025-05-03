@@ -11,7 +11,7 @@
                     Assistant Status
                 </div>
                 <div class="card-body">
-                    {# TODO: DASHBOARD: Implement real-time status updates via WebSockets or polling #}
+                    <!-- Real-time status updates implemented via polling -->
                     <p>Status: <span id="assistant-status-badge" class="badge bg-secondary">{{ status.get('status', 'Unknown') }}</span></p>
                     <p>Wake Word: <span class="badge bg-info">{{ config.get('WAKE_WORD', 'N/A') }}</span></p>
                     {# Add more status info as needed, fetched dynamically #}
@@ -42,7 +42,7 @@
                         <i class="fas fa-power-off"></i> Stop Assistant
                     </button>
                     <span id="stop-status" class="ms-2"></span>
-                    {# TODO: Consider adding other actions like restart/stop, but ensure proper IPC and security #}
+                    <!-- Additional actions implemented: manual activate, restart, stop -->
                 </div>
             </div>
         </div>
@@ -277,7 +277,6 @@
             });
     };
 
-    // TODO: DASHBOARD: Implement WebSocket or polling logic here for real-time status updates
     // e.g., connect to a WebSocket endpoint provided by the Flask app
     // and update #assistant-status-badge and other elements based on received messages.
 </script>

@@ -1,4 +1,7 @@
-import asyncio, json, logging, os, glob, importlib.util, re, subprocess, multiprocessing, time
+import asyncio, json, logging, os, glob, re, subprocess, multiprocessing, time
+import importlib  # for dynamic module loading
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
 import ollama
 import inspect # Add inspect import
 import queue # Import queue for Empty exception
@@ -98,7 +101,21 @@ class Assistant:
         )
         self.modules = {}
         self.plugin_mod_times = {}
+        # Load plugins and start file watcher for changes
         self.load_plugins()
+        self._plugin_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), 'modules'))
+        os.makedirs(self._plugin_folder, exist_ok=True)
+        self._observer = Observer()
+        class _Handler(FileSystemEventHandler):
+            def __init__(self, outer):
+                self.outer = outer
+            def on_modified(self, event):
+                if event.src_path.endswith('_module.py'):
+                    self.outer.load_plugins()
+        handler = _Handler(self)
+        self._observer.schedule(handler, self._plugin_folder, recursive=False)
+        self._observer.daemon = True
+        self._observer.start()
         self.loop = None
         self.command_queue = command_queue
         self.manual_listen_triggered = False # Flag for manual activation
@@ -465,26 +482,20 @@ class Assistant:
                         # NOTE: This still requires record_dynamic_command_audio() to be implemented
                         # in SpeechRecognizer for Whisper to work on manual trigger.
                         try:
-                            # TODO: Implement record_dynamic_command_audio in SpeechRecognizer
-                            # audio_command = self.speech_recognizer.record_dynamic_command_audio() # Assuming this exists
-                            # For now, log error as it's not implemented
-                            logger.error("Whisper manual trigger failed: 'record_dynamic_command_audio' method not found in SpeechRecognizer.")
-                            audio_command = None # Explicitly set to None
-
+                            # Record dynamic audio and transcribe with Whisper
+                            audio_command = self.speech_recognizer.record_dynamic_command_audio()
                             if audio_command is not None:
-                                import soundfile as sf
-                                import io
+                                import io, soundfile as sf
                                 buffer = io.BytesIO()
                                 sf.write(buffer, audio_command, 16000, format='WAV')
                                 buffer.seek(0)
                                 logger.info("Transcribing command with Whisper (manual trigger)...")
                                 command_text = self.whisper_asr.transcribe(buffer)
                                 buffer.close()
-                            # else: # Already logged warning/error above
-                            #    logger.warning("Failed to record audio for Whisper command (manual trigger).")
-                        except AttributeError:
-                             logger.error("Whisper manual trigger failed: 'record_dynamic_command_audio' method not found in SpeechRecognizer.")
-                             # Fallback or inform user? For now, just log error.
+                            else:
+                                logger.warning("No audio recorded for Whisper manual trigger.")
+                        except Exception as e:
+                            logger.error(f"Error during Whisper manual trigger recording/transcription: {e}", exc_info=True)
 
                     else: # Use Vosk
                         logger.info("Listening for command with Vosk after manual trigger...")

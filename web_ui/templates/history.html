@@ -21,7 +21,9 @@
                                 <i class="fas fa-robot text-success me-2"></i>Assistant
                             {% endif %}
                         </h5>
-                        {# <small>Timestamp (TODO: Extract from log if available)</small> #}
+                        {% if entry.timestamp %}
+                            <small>{{ entry.timestamp }}</small>
+                        {% endif %}
                     </div>
                     <p class="mb-1">{{ entry.content }}</p>
                 </div>

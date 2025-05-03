@@ -9,15 +9,21 @@ import shutil # Import shutil for potential file operations like archiving
 import multiprocessing # Import multiprocessing for the queue
 import re # Import re for log parsing
 import subprocess
+import tempfile  # for secure temp files
 import threading
 import queue
+from functools import wraps
 import sounddevice as sd # Import sounddevice
 import collections # Import collections for deque
 import platform
+import markdown # Import markdown for documentation rendering
+
+# --- Configuration ---
 
 # Import the main config loading/saving functions
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# Import main config loaders
 from config import load_config as load_main_config, save_config as save_main_config, CONFIG_FILE as MAIN_CONFIG_FILE, DEFAULT_CONFIG
 # Import memory functions
 from database_manager import get_memories_db, add_memory_db, delete_memory_db, get_db_connection # Added get_db_connection
@@ -27,16 +33,53 @@ from database_models import (
 )
 
 # --- Configuration ---
-# TODO: SECURITY: Replace with a more robust secret key management (e.g., environment variables)
-SECRET_KEY = os.urandom(24)
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    # Fallback to generated key if not provided via environment
+    SECRET_KEY = os.urandom(24)
 # Use the config file path from the main config module
 CONFIG_FILE = MAIN_CONFIG_FILE
-HISTORY_FILE = os.path.join(os.path.dirname(__file__), '..', 'assistant.log') # Path to log file for now
-HISTORY_ARCHIVE_DIR = os.path.join(os.path.dirname(__file__), '..', 'history_archive') # Directory for archived logs
+HISTORY_FILE = os.path.join(os.path.dirname(__file__), '..', 'assistant.log')
+HISTORY_ARCHIVE_DIR = os.path.join(os.path.dirname(__file__), '..', 'history_archive')
 LTM_FILE = os.path.join(os.path.dirname(__file__), '..', 'long_term_memory.json')
-
-# --- Global variable for the queue (will be set by create_app) ---
+# --- Flask app (module-level) and startup time ---
+app = Flask(__name__, template_folder='templates', static_folder='static')
+app.secret_key = SECRET_KEY
 assistant_queue = None
+_startup_time = time.time()
+
+# --- Audio upload helpers ---
+def convert_audio(input_path: str) -> str:
+    """Convert any audio file to WAV and return new path."""
+    wav_path = input_path + '.wav'
+    subprocess.run([
+        'ffmpeg', '-y', '-i', input_path,
+        '-ar', '16000', '-ac', '1', wav_path
+    ], check=True, capture_output=True)
+    return wav_path
+
+def transcribe_audio(wav_path: str) -> str:
+    """Transcribe WAV file via assistant instance if available."""
+    try:
+        from assistant import get_assistant_instance
+        assistant = get_assistant_instance()
+        if getattr(assistant, 'whisper_asr', None):
+            return assistant.whisper_asr.transcribe(wav_path)
+        if getattr(assistant, 'speech_recognizer', None):
+            return assistant.speech_recognizer.transcribe_file(wav_path)
+    except Exception:
+        pass
+    return ''
+
+def cleanup_files(*paths: str):
+    """Remove temp files, ignore errors."""
+    for p in paths:
+        try:
+            os.remove(p)
+        except Exception:
+            pass
+_startup_time = time.time()
+_startup_time = time.time()
 
 # --- Flask App Setup ---
 # Logging setup moved inside create_app to avoid issues with multiple processes
@@ -375,25 +418,28 @@ def get_conversation_history(limit=50, buffer_multiplier=5):
                 # Basic parsing logic (adjust based on actual log format)
                 # Look for specific log messages indicating user input or assistant speech
                 if "INFO - Refined query:" in line:
+                    timestamp = line.split(" - ", 1)[0]
                     content = line.split("Refined query:", 1)[1].strip()
                     if content and (not history or history[-1].get("content") != content or history[-1].get("role") != "user"):
-                        history.append({"role": "user", "content": content})
+                        history.append({"role": "user", "content": content, "timestamp": timestamp})
                     last_user_content = content
                 elif "INFO - Command:" in line:
                     # Only add if there was no refined query after this command
+                    timestamp = line.split(" - ", 1)[0]
                     content = line.split("Command:", 1)[1].strip()
                     if last_user_content != content:
                         if content and (not history or history[-1].get("content") != content or history[-1].get("role") != "user"):
-                            history.append({"role": "user", "content": content})
+                            history.append({"role": "user", "content": content, "timestamp": timestamp})
                     last_user_content = None
                 elif "INFO - TTS:" in line:
                     content = line.split("TTS:", 1)[1].strip()
                     # Avoid adding internal TTS messages like errors or irrelevant info
                     # Filter more specifically based on expected assistant responses
                     if content and not content.startswith("Przepraszam,") and not content.startswith("Error executing command"):
+                         timestamp = line.split(" - ", 1)[0]
                          # Avoid adding if the last message was the same assistant message
                          if not history or history[-1].get("content") != content or history[-1].get("role") != "assistant":
-                            history.append({"role": "assistant", "content": content})
+                            history.append({"role": "assistant", "content": content, "timestamp": timestamp})
                 elif "INFO - AI response:" in line: # Capture AI text before potential tool use
                      content_part = line.split("AI response:", 1)[1].strip()
                      # Try to extract just the spoken part if structure is known (e.g., from parse_response)
@@ -420,6 +466,7 @@ def get_conversation_history(limit=50, buffer_multiplier=5):
 
                          # Check content validity and avoid duplicates/similarity with last TTS
                          if content and (not history or history[-1].get("content") != content or history[-1].get("role") != "assistant"):
+                              timestamp = line.split(" - ", 1)[0]
                               # Avoid adding if TTS log likely added the same content just before/after
                               is_likely_duplicate = False
                               if history:
@@ -427,7 +474,7 @@ def get_conversation_history(limit=50, buffer_multiplier=5):
                                   if last_msg.get("role") == "assistant" and last_msg.get("content") == content:
                                       is_likely_duplicate = True
                               if not is_likely_duplicate:
-                                   history.append({"role": "assistant", "content": content})
+                                   history.append({"role": "assistant", "content": content, "timestamp": timestamp})
                      except Exception as parse_err:
                          logger.error(f"Error parsing AI response log line: {parse_err} - Line: {line}")
                          # Fallback if parsing the log line fails, add raw content if valid
@@ -500,8 +547,8 @@ def clear_conversation_history():
          return False
 
 # --- Authentication ---
-def login_required(role="user"):
-    def wrapper(fn):
+def login_required(_func=None, *, role="user"):
+    def decorator(fn):
         @wraps(fn)
         def decorated_view(*args, **kwargs):
             if 'username' not in session:
@@ -517,7 +564,10 @@ def login_required(role="user"):
                 return redirect(url_for('index'))
             return fn(*args, **kwargs)
         return decorated_view
-    return wrapper
+    if _func is None:
+        return decorator
+    else:
+        return decorator(_func)
 
 # --- Web UI Routes --- defined within create_app ---
 
@@ -525,12 +575,42 @@ def login_required(role="user"):
 
 # --- App Creation Function ---
 def create_app(queue: multiprocessing.Queue):
+    # --- Retry decorator for HTTP endpoints or subprocess calls ---
+    def retry(on_exception=Exception, retries=3, backoff=1):
+        def decorator(func):
+            @wraps(func)
+            def wrapper(*args, **kwargs):
+                delay = backoff
+                for _ in range(retries):
+                    try:
+                        return func(*args, **kwargs)
+                    except on_exception:
+                        time.sleep(delay)
+                        delay *= 2
+                return func(*args, **kwargs)
+            return wrapper
+        return decorator
     """Creates and configures the Flask application."""
-    global assistant_queue # Set the global queue variable for this process
+    global assistant_queue  # Set the global queue variable for this process
     assistant_queue = queue
 
-    app = Flask(__name__, template_folder='templates', static_folder='static')
-    app.secret_key = SECRET_KEY
+    # Create a new Flask app instance for this process
+    local_app = Flask(__name__, template_folder='templates', static_folder='static')
+    local_app.secret_key = SECRET_KEY
+    # --- Health check endpoint ---
+    @local_app.route('/health')
+    def health():
+        uptime = time.time() - _startup_time
+        qsize = assistant_queue.qsize() if assistant_queue else None
+        return jsonify({'version': DEFAULT_CONFIG.get('version'), 'uptime_sec': uptime, 'queue_size': qsize})
+    # --- Global error handlers ---
+    @local_app.errorhandler(404)
+    def handle_404(e):
+        return jsonify({'error': 'Not Found'}), 404
+    @local_app.errorhandler(500)
+    def handle_500(e):
+        return jsonify({'error': 'Internal Server Error'}), 500
+
 
     # Configure Flask logging
     # Use a basic config, can be enhanced (e.g., rotating file handler)
@@ -550,7 +630,7 @@ def create_app(queue: multiprocessing.Queue):
 
     # --- Register Blueprints or Routes --- Add routes to the app object
 
-    @app.route('/login', methods=['GET', 'POST'])
+    @local_app.route('/login', methods=['GET', 'POST'])
     def login():
         if request.method == 'POST':
             username = request.form.get('username')
@@ -567,7 +647,7 @@ def create_app(queue: multiprocessing.Queue):
                 logger.warning(f"Failed login attempt for username: '{username}'.")
         return render_template('login.html')
 
-    @app.route('/logout')
+    @local_app.route('/logout')
     def logout():
         username = session.get('username', 'Unknown')
         session.pop('username', None)
@@ -576,22 +656,26 @@ def create_app(queue: multiprocessing.Queue):
         logger.info(f"User '{username}' logged out.")
         return redirect(url_for('login'))
 
-    @app.route('/')
+    @local_app.route('/')
     @login_required()
     def index():
         """Main dashboard page."""
-        current_config = load_main_config() # Use main config loader
-        # TODO: DASHBOARD: Fetch real-time status from the assistant (requires more IPC)
-        # For now, just show basic info from config
+        current_config = load_main_config()  # Use main config loader
+        # Fetch assistant status based on lock file (restarting or online)
+        lock_path = os.path.join(os.path.dirname(__file__), '..', 'assistant_restarting.lock')
+        if os.path.exists(lock_path):
+            status_str = "Restarting"
+        else:
+            status_str = "Online"
         assistant_status = {
-            "status": "Unknown (IPC needed)",
+            "status": status_str,
             "wake_word": current_config.get('WAKE_WORD', 'N/A'),
             "stt_engine": "Whisper" if current_config.get('USE_WHISPER_FOR_COMMAND') else "Vosk",
             "mic_id": current_config.get('MIC_DEVICE_ID', 'N/A')
-            }
+        }
         return render_template('index.html', config=current_config, status=assistant_status)
 
-    @app.route('/config')
+    @local_app.route('/config')
     @login_required(role="dev")
     def config_page():
         """Configuration management page."""
@@ -599,14 +683,14 @@ def create_app(queue: multiprocessing.Queue):
         audio_devices = get_audio_input_devices() # Get the list of devices
         return render_template('config.html', config=current_config, audio_devices=audio_devices)
 
-    @app.route('/history')
+    @local_app.route('/history')
     @login_required()
     def history_page():
         """Conversation history page."""
         history = get_conversation_history()
         return render_template('history.html', history=history)
 
-    @app.route('/ltm')
+    @local_app.route('/ltm')
     def ltm_page():
         if 'username' not in session:
             return redirect(url_for('login'))
@@ -619,36 +703,36 @@ def create_app(queue: multiprocessing.Queue):
             flash("Wystąpił błąd podczas ładowania strony pamięci.", "danger")
             return render_template('ltm_page.html', memories=[], search_query='')
 
-    @app.route('/logs')
+    @local_app.route('/logs')
     @login_required()
     def logs_page():
         return render_template('logs.html')
 
-    @app.route('/dev')
+    @local_app.route('/dev')
     def dev_page():
         if not session.get('username') or session.get('role') != 'dev':
             flash('Brak dostępu do zakładki Dev.', 'danger')
             return redirect(url_for('index'))
         return render_template('dev.html')
 
-    @app.route('/plugins')
+    @local_app.route('/plugins')
     @login_required(role="dev")
     def plugins_page():
         return render_template('plugins.html')
 
-    @app.route('/mcp')
+    @local_app.route('/mcp')
     @login_required(role="dev")
     def mcp_page():
         return render_template('mcp.html')
 
     # --- User Management (Dev Only) ---
-    @app.route('/dev/users', methods=['GET'])
+    @local_app.route('/dev/users', methods=['GET'])
     @login_required(role="dev")
     def dev_list_users():
         users = list_users()
         return render_template('dev.html', users=users)
 
-    @app.route('/dev/users/add', methods=['POST'])
+    @local_app.route('/dev/users/add', methods=['POST'])
     @login_required(role="dev")
     def dev_add_user():
         data = request.json
@@ -665,7 +749,7 @@ def create_app(queue: multiprocessing.Queue):
         add_user(username, password, role, display_name, ai_persona, personalization)
         return jsonify({'success': True})
 
-    @app.route('/dev/users/delete', methods=['POST'])
+    @local_app.route('/dev/users/delete', methods=['POST'])
     @login_required(role="dev")
     def dev_delete_user():
         data = request.json
@@ -677,7 +761,7 @@ def create_app(queue: multiprocessing.Queue):
         delete_user(username)
         return jsonify({'success': True})
 
-    @app.route('/dev/users/update', methods=['POST'])
+    @local_app.route('/dev/users/update', methods=['POST'])
     @login_required(role="dev")
     def dev_update_user():
         data = request.json
@@ -689,7 +773,7 @@ def create_app(queue: multiprocessing.Queue):
         return jsonify({'success': True})
 
     # --- API Routes --- (Registered within create_app)
-    @app.route('/api/config', methods=['GET', 'POST'])
+    @local_app.route('/api/config', methods=['GET', 'POST'])
     @login_required(role="dev")
     def api_config_route(): # Renamed to avoid conflict with function name
         """API endpoint for getting and updating configuration."""
@@ -738,7 +822,7 @@ def create_app(queue: multiprocessing.Queue):
             current_config = load_main_config() # Use main config loader
             return jsonify(current_config)
 
-    @app.route('/api/history', methods=['GET', 'DELETE'])
+    @local_app.route('/api/history', methods=['GET', 'DELETE'])
     @login_required()
     def api_history_route(): # Renamed
         """API endpoint for getting and clearing conversation history."""
@@ -755,7 +839,7 @@ def create_app(queue: multiprocessing.Queue):
             history = get_conversation_history()
             return jsonify(history)
 
-    @app.route('/api/activate', methods=['POST'])
+    @local_app.route('/api/activate', methods=['POST'])
     @login_required()
     def api_activate(): # Moved inside create_app
         """API endpoint to manually trigger voice listening (bypass wake word)."""
@@ -775,7 +859,7 @@ def create_app(queue: multiprocessing.Queue):
              logger.warning("Cannot trigger manual listen: Assistant queue not available.")
              return jsonify({"error": "Assistant connection not available."}), 503
 
-    @app.route('/api/long_term_memory', methods=['GET', 'POST', 'DELETE'])
+    @local_app.route('/api/long_term_memory', methods=['GET', 'POST', 'DELETE'])
     @login_required(role="dev")
     def api_long_term_memory():
         """API endpoint for long-term memory management."""
@@ -801,7 +885,7 @@ def create_app(queue: multiprocessing.Queue):
             ltm = load_ltm()
             return jsonify(ltm)
 
-    @app.route('/api/status', methods=['GET'])
+    @local_app.route('/api/status', methods=['GET'])
     @login_required()
     def api_status():
         """API endpoint for assistant status (for dashboard polling)."""
@@ -822,7 +906,7 @@ def create_app(queue: multiprocessing.Queue):
         }
         return jsonify(status)
 
-    @app.route('/api/restart/assistant', methods=['POST'])
+    @local_app.route('/api/restart/assistant', methods=['POST'])
     @login_required()
     def restart_assistant():
         """Endpoint to restart the assistant process."""
@@ -838,7 +922,7 @@ def create_app(queue: multiprocessing.Queue):
         logger.warning("[WEB] Attempted to start new assistant process. Uwaga: stary proces nie jest automatycznie zamykany!")
         return jsonify({"message": "Restarting assistant..."}), 202
 
-    @app.route('/api/restart/web', methods=['POST'])
+    @local_app.route('/api/restart/web', methods=['POST'])
     @login_required()
     def restart_web():
         logger.warning("[WEB] Restart web panel requested via dashboard API.")
@@ -848,7 +932,7 @@ def create_app(queue: multiprocessing.Queue):
         os._exit(3)  # This will cause most process managers to restart Flask
         return jsonify({"message": "Restarting web panel..."}), 202
 
-    @app.route('/api/restart/all', methods=['POST'])
+    @local_app.route('/api/restart/all', methods=['POST'])
     @login_required()
     def restart_all():
         logger.warning("[WEB] Restart all (assistant + web) requested via dashboard API.")
@@ -863,7 +947,7 @@ def create_app(queue: multiprocessing.Queue):
         os._exit(3)
         return jsonify({"message": "Restarting assistant and web panel..."}), 202
 
-    @app.route('/api/logs')
+    @local_app.route('/api/logs')
     @login_required()
     def api_logs():
         level = request.args.get('level', 'ALL')
@@ -885,7 +969,7 @@ def create_app(queue: multiprocessing.Queue):
         except Exception as e:
             return jsonify({'logs': [f'Błąd odczytu logów: {e}'], 'page': 1, 'total_pages': 1, 'total_lines': 0}), 500
 
-    @app.route('/api/analytics', methods=['GET'])
+    @local_app.route('/api/analytics', methods=['GET'])
     @login_required()
     def api_analytics():
         """API endpoint for usage statistics (dashboard)."""
@@ -906,7 +990,7 @@ def create_app(queue: multiprocessing.Queue):
             logger.error(f"Failed to calculate analytics: {e}", exc_info=True)
             return jsonify({'msg_count': 0, 'unique_users': [], 'avg_response_time': 0, 'last_query_time': None})
 
-    @app.route('/api/plugins', methods=['GET'])
+    @local_app.route('/api/plugins', methods=['GET'])
     @login_required(role="dev")
     def api_plugins():
         """API endpoint for plugin list and status."""
@@ -1014,15 +1098,13 @@ def create_app(queue: multiprocessing.Queue):
     @api_bp.route('/api/schedule_status', methods=['GET'])
     def api_schedule_status():
         """Return scheduling status."""
-        return jsonify({'scheduled_interval': scheduled_interval})
-
-    # Register blueprint in create_app or directly if app is global
-    app.register_blueprint(api_bp)
+        return jsonify({'scheduled_interval': scheduled_interval})    # Register blueprint in create_app or directly if app is global
+    local_app.register_blueprint(api_bp)
 
 
 
     # API endpoint to get memories (for dynamic updates/search)
-    @app.route('/api/ltm/get', methods=['GET'])
+    @local_app.route('/api/ltm/get', methods=['GET'])
     def api_get_memories():
         if 'username' not in session:
             return jsonify({"error": "Unauthorized"}), 401
@@ -1038,7 +1120,7 @@ def create_app(queue: multiprocessing.Queue):
 
 
     # API endpoint to add a memory
-    @app.route('/api/ltm/add', methods=['POST'])
+    @local_app.route('/api/ltm/add', methods=['POST'])
     def api_add_memory():
         if 'username' not in session:
             return jsonify({"error": "Unauthorized"}), 401
@@ -1080,7 +1162,7 @@ def create_app(queue: multiprocessing.Queue):
 
 
     # API endpoint to delete a memory
-    @app.route('/api/ltm/delete/<int:memory_id>', methods=['DELETE'])
+    @local_app.route('/api/ltm/delete/<int:memory_id>', methods=['DELETE'])
     def api_delete_memory(memory_id):
         if 'username' not in session:
             return jsonify({"error": "Unauthorized"}), 401
@@ -1096,7 +1178,7 @@ def create_app(queue: multiprocessing.Queue):
             logger.error(f"Error deleting memory {memory_id} via API: {e}")
             return jsonify({"error": "Server error"}), 500
 
-    @app.route('/api/stop/assistant', methods=['POST'])
+    @local_app.route('/api/stop/assistant', methods=['POST'])
     @login_required()
     def stop_assistant():
         logger.warning("[WEB] Stop assistant requested via dashboard API.")
@@ -1106,17 +1188,17 @@ def create_app(queue: multiprocessing.Queue):
             f.write('stop')
         return jsonify({"message": "Wysłano żądanie zatrzymania asystenta."}), 202
 
-    @app.route('/chat')
+    @local_app.route('/chat')
     @login_required(role="user")
     def chat_page():
         return render_template('chat.html')
 
-    @app.route('/personalization')
+    @local_app.route('/personalization')
     @login_required(role="user")
     def personalization_page():
         return render_template('personalization.html')
 
-    @app.route('/api/chat/history')
+    @local_app.route('/api/chat/history')
     @login_required(role="user")
     def chat_history_api():
         username = session['username']
@@ -1136,7 +1218,7 @@ def create_app(queue: multiprocessing.Queue):
                 history.append({'role': 'assistant', 'content': row['content'], 'timestamp': row['timestamp']})
         return jsonify({'history': history})
 
-    @app.route('/api/chat/send', methods=['POST'])
+    @local_app.route('/api/chat/send', methods=['POST'])
     @login_required(role="user")
     def chat_send_api():
         import importlib
@@ -1253,7 +1335,7 @@ def create_app(queue: multiprocessing.Queue):
         conn.close()
         return jsonify({'reply': reply})
 
-    @app.route('/api/chat/clear', methods=['POST'])
+    @local_app.route('/api/chat/clear', methods=['POST'])
     @login_required(role="user")
     def chat_clear_api():
         username = session['username']
@@ -1267,7 +1349,7 @@ def create_app(queue: multiprocessing.Queue):
         conn.close()
         return jsonify({'success': True})
 
-    @app.route('/api/logs/download')
+    @local_app.route('/api/logs/download')
     @login_required()
     def download_logs():
         """Download the current and rotated log files as a zip archive."""
@@ -1282,58 +1364,112 @@ def create_app(queue: multiprocessing.Queue):
         mem_zip.seek(0)
         return send_file(mem_zip, mimetype='application/zip', as_attachment=True, download_name='logs.zip')
 
-    @app.route('/api/voice_upload', methods=['POST'])
+    @local_app.route('/api/voice_upload', methods=['POST'])
     def voice_upload():
         """Przyjmuje plik audio z web UI (np. z telefonu), rozpoznaje tekst i zwraca go do UI."""
         if 'audio' not in request.files:
             return jsonify({'error': 'Brak pliku audio.'}), 400
         audio_file = request.files['audio']
         # Zapisz plik tymczasowo
-        temp_path = os.path.join('temp_voice_upload.webm')
+        # Save to secure temporary file to avoid conflicts
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.webm') as tmp:
+            temp_path = tmp.name
         audio_file.save(temp_path)
-        # Przekonwertuj do WAV jeśli potrzeba (np. ffmpeg)
-        wav_path = temp_path.replace('.webm', '.wav')
+        # Convert and transcribe, then cleanup
         try:
-            import subprocess
-            subprocess.run([
-                'ffmpeg', '-y', '-i', temp_path, '-ar', '16000', '-ac', '1', wav_path
-            ], check=True, capture_output=True)
-        except Exception as e:
+            wav_path = convert_audio(temp_path)
+            text = transcribe_audio(wav_path)
+        except subprocess.CalledProcessError as e:
             return jsonify({'error': f'Błąd konwersji audio: {e}'}), 500
-        # Rozpoznaj tekst (Whisper lub Vosk)
-        try:
-            from assistant import get_assistant_instance
-            assistant = get_assistant_instance()  # Musisz mieć funkcję singletona lub globalny obiekt
-            if hasattr(assistant, 'whisper_asr') and assistant.whisper_asr:
-                text = assistant.whisper_asr.transcribe(wav_path)
-            elif hasattr(assistant, 'speech_recognizer') and assistant.speech_recognizer:
-                text = assistant.speech_recognizer.transcribe_file(wav_path)
-            else:
-                text = ''
-        except Exception as e:
-            text = ''
-        # Usuń pliki tymczasowe
-        try:
-            os.remove(temp_path)
-            os.remove(wav_path)
         except Exception:
-            pass
+            text = ''
+        finally:
+            cleanup_files(temp_path, locals().get('wav_path', ''))
         return jsonify({'text': text})
 
-    return app
+    # --- Documentation Routes ---
+    @local_app.route('/docs')
+
+    def docs_index():
+        """Render the documentation index page."""
+        return render_template('docs_index.html')
+
+    # Documentation pages for web UI
+    @local_app.route('/documentation')
+    def documentation_main():
+        """Main documentation page."""
+        try:
+            with open(os.path.join(local_app.root_path, '..', 'docs', 'README.md'), 'r', encoding='utf-8') as f:
+                content = f.read()
+            html_content = markdown.markdown(content, extensions=['fenced_code', 'tables'])
+            return render_template('documentation.html', 
+                                title="Documentation", 
+                                content=html_content,
+                                section="main")
+        except FileNotFoundError:
+            flash("Documentation not found", "danger")
+            return redirect(url_for('index'))
+        except Exception as e:
+            logger.error(f"Error rendering documentation: {e}")
+            flash("Error loading documentation", "danger")
+            return redirect(url_for('index'))
+
+    @local_app.route('/documentation/<section>/<path>')
+    def documentation_section(section, path):
+        """Display a specific documentation file."""
+        try:
+            file_path = os.path.join(local_app.root_path, '..', 'docs', section, f"{path}.md")
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            html_content = markdown.markdown(content, extensions=['fenced_code', 'tables'])
+            return render_template('documentation.html', 
+                                title=f"{path.replace('-', ' ').title()}", 
+                                content=html_content,
+                                section=section,
+                                path=path)
+        except FileNotFoundError:
+            flash("Documentation page not found", "danger")
+            return redirect(url_for('documentation_main'))
+        except Exception as e:
+            logger.error(f"Error rendering documentation section: {e}")
+            flash("Error loading documentation", "danger")
+            return redirect(url_for('documentation_main'))
+
+    @local_app.route('/docs/<path:filename>')
+    def docs_file(filename):
+        """Serve a documentation file."""
+        try:
+            return send_file(os.path.join(os.path.dirname(__file__), '..', 'docs', filename))
+        except Exception as e:
+            logger.error(f"Error serving docs file {filename}: {e}")
+            return jsonify({"error": "File not found"}), 404    @local_app.route('/api/docs')
+    def api_docs():
+        """API endpoint to get documentation files list."""
+        docs_dir = os.path.join(os.path.dirname(__file__), '..', 'docs')
+        try:
+            files = os.listdir(docs_dir)
+            # Filter and return only markdown files for documentation
+            md_files = [f for f in files if f.endswith('.md')]
+            return jsonify({"files": md_files})
+        except Exception as e:
+            logger.error(f"Error listing docs directory: {e}")
+            return jsonify({"error": "Failed to list documentation files"}), 500
+              # Return the configured app
+    return local_app
 
 # --- Main Execution (for standalone testing) ---
-if __name__ == '__main__':
-    # This block is for running the web UI standalone for testing/development
-    # It won't have a connection to the real assistant process in this mode.
-    print("Running Flask app in standalone debug mode...")
-    # Configure logging for standalone mode
-    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levellevel)s - %(message)s')
-    # Create a dummy queue for standalone mode
-    dummy_queue = multiprocessing.Queue()
-    app = create_app(dummy_queue)
-    # Run Flask in debug mode for development
-    # Consider using a production server like Gunicorn or Waitress for deployment
-    # Running on 0.0.0.0 makes it accessible on the network
-    # Use use_reloader=False to prevent issues with multiprocessing in debug mode if needed
-    app.run(debug=True, host='0.0.0.0', port=5000, use_reloader=False)
+    if __name__ == '__main__':
+        # This block is for running the web UI standalone for testing/development
+        # It won't have a connection to the real assistant process in this mode.
+        print("Running Flask app in standalone debug mode...")
+        # Configure logging for standalone mode
+        logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levellevel)s - %(message)s')
+        # Create a dummy queue for standalone mode
+        dummy_queue = multiprocessing.Queue()
+        app = create_app(dummy_queue)
+        # Run Flask in debug mode for development
+        # Consider using a production server like Gunicorn or Waitress for deployment
+        # Running on 0.0.0.0 makes it accessible on the network
+        # Use use_reloader=False to prevent issues with multiprocessing in debug mode if needed
+        app.run(debug=True, host='0.0.0.0', port=5000, use_reloader=False)
+

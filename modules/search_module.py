@@ -196,7 +196,7 @@ async def search_handler(params: str = "", conversation_history: list | None = N
 def register():
     return {
         "command": "search",
-        "aliases": ["search", "wyszukaj"],
+        "aliases": ["search", "wyszukaj", "web"],
         "description": "Wyszukuje informacje w internecie i podsumowuje wyniki.",
         "handler": search_handler,
         "prompt": SEARCH_SUMMARY_PROMPT,

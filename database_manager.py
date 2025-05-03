@@ -32,10 +32,28 @@ def initialize_database():
                 CREATE TABLE IF NOT EXISTS memories (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     content TEXT NOT NULL,
-                    user TEXT,
+                    user TEXT, -- Added user column
                     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
-            """)
+            """)  # existing assistant memories table
+
+            # Check if 'user' column exists in 'memories' table and add it if not
+            cursor.execute("PRAGMA table_info(memories)")
+            columns = [column[1] for column in cursor.fetchall()]
+            if 'user' not in columns:
+                logger.info("Adding missing 'user' column to 'memories' table.")
+                cursor.execute("ALTER TABLE memories ADD COLUMN user TEXT")
+
+            # Ensure user-specific memories table matches database_models
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS user_memories (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    content TEXT NOT NULL,
+                    user_id INTEGER,
+                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(user_id) REFERENCES users(id)
+                )
+            ''')
             conn.commit()
             logger.info("Database initialized successfully. 'memories' table ensured.")
         except sqlite3.Error as e:
