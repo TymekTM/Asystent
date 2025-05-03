@@ -52,7 +52,10 @@ def is_similar(q1: str, q2: str, threshold: float = 0.8) -> bool:
     set1, set2 = set(q1.split()), set(q2.split())
     if not set1 or not set2:
         return False
-    return len(set1 & set2) / len(set1 | set2) >= threshold
+    # Similarity based on overlap relative to smaller set
+    intersection = len(set1 & set2)
+    min_size = min(len(set1), len(set2))
+    return (intersection / min_size) >= threshold
 
 
 def random_headers() -> dict:

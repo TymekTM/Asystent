@@ -38,7 +38,7 @@ def add_memory(params: str, conversation_history: list = None, user: str = "assi
         # Opcjonalnie: filtruj nieistotne treści (np. bardzo krótkie)
         if len(content) < 4:
             logger.info("Próba zapisu zbyt krótkiej informacji do pamięci - pomijam.")
-            return "Podana informacja jest zbyt krótka, by ją zapamiętać.", False
+            return "Podana informacja jest zbyt krótkiej, by ją zapamiętać.", False
 
     logger.info(f"Attempting to add memory via command: '{content[:50]}...' by user '{calling_user}'")
     memory_id = add_memory_db(content=content, user=calling_user)

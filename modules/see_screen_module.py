@@ -4,7 +4,20 @@ from pyexpat.errors import messages
 
 from ai_module import chat_with_providers, remove_chain_of_thought
 from audio_modules.beep_sounds import play_beep
+# Import prompt and ensure cv2 is a module attribute for use in capture_screen (can be monkeypatched)
+# Import screen prompt
 from prompts import SEE_SCREEN_PROMPT
+# Ensure cv2 attribute exists for monkeypatching in tests
+cv2 = None
+try:
+    import cv2
+except ImportError:
+    cv2 = None
+# Optional OpenCV import for image saving (can be monkeypatched in tests)
+try:
+    import cv2
+except ImportError:
+    cv2 = None
 
 try:
     import dxcam  # Najszybsza biblioteka do przechwytywania ekranu dla Windows
@@ -21,6 +34,13 @@ except ImportError:
             ImageGrab = None
 
 from config import MAIN_MODEL
+
+# Optional OpenCV for writing images; tests may monkeypatch module cv2
+try:
+    import cv2 as _cv2
+    cv2 = _cv2
+except ImportError:
+    cv2 = None
 
 # Inicjalizacja kamery DXcam jako zmiennej globalnej dla lepszej wydajności
 dxcam_device = None
@@ -51,9 +71,12 @@ def capture_screen(params: str = "", conversation_history: list = None) -> str:
         if dxcam_device is not None:
             screenshot = dxcam_device.grab()
             if screenshot is not None:
-                import cv2
-                cv2.imwrite(filepath, screenshot)
-                logging.info("Zrzut ekranu wykonany z DXcam")
+                # write using module-level cv2 (can be monkeypatched in tests)
+                if cv2:
+                    cv2.imwrite(filepath, screenshot)
+                    logging.info("Zrzut ekranu wykonany z DXcam")
+                else:
+                    raise Exception("cv2 nie jest dostępne do zapisu zrzutu ekranu")
             else:
                 raise Exception("DXcam zwrócił None")
         elif pyautogui is not None:

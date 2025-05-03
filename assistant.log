@@ -4152,3 +4152,731 @@ Brak zapisanych wspomnień.
 2025-05-03 14:16:53,309 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
 2025-05-03 14:16:53,313 - Process-1 - assistant - INFO - Starting command queue processing task...
 2025-05-03 14:16:53,664 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-05-03 14:31:54,463 - Process-2 - __mp_main__ - INFO - Flask process finished.
+2025-05-03 14:31:54,558 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-05-03 14:31:54,567 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-05-03 14:31:54,982 - MainProcess - __main__ - INFO - All processes terminated.
+2025-05-03 14:54:31,173 - MainProcess - __main__ - INFO - Initializing application...
+2025-05-03 14:54:31,182 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-05-03 14:54:37,499 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-05-03 14:54:37,536 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-05-03 14:54:38,543 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-05-03 14:54:38,543 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-05-03 14:54:38,544 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-05-03 14:54:38,701 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-05-03 14:54:38,814 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-05-03 14:54:38,818 - Process-1 - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-05-03 14:54:38,819 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-05-03 14:54:52,870 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-05-03 14:54:55,617 - Process-1 - assistant - INFO - Bot is starting...
+2025-05-03 14:54:55,637 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-05-03 14:54:55,647 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-05-03 14:54:55,649 - Process-1 - assistant - INFO - Detected changes in plugins. Reloading plugins...
+2025-05-03 14:54:55,652 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-05-03 14:54:55,661 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-05-03 14:54:55,667 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-05-03 14:54:55,677 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-05-03 14:54:55,690 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-05-03 14:54:55,691 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-05-03 14:54:55,990 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-05-03 14:55:16,143 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-05-03 14:55:16,143 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-05-03 14:55:16,162 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-05-03 14:55:16,165 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-05-03 14:55:19,483 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-05-03 14:55:19,495 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-05-03 14:55:19,497 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-05-03 14:55:20,821 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Jaka jest pogoda w Warszawie? W Wali błąd?
+2025-05-03 14:55:20,822 - Process-1 - ai_module - WARNING - Configured provider openai check failed or provider not found. Trying fallbacks.
+2025-05-03 14:55:22,861 - Process-1 - ai_module - INFO - Trying fallback provider: ollama
+2025-05-03 14:55:22,872 - Process-1 - httpx - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 404 Not Found"
+2025-05-03 14:55:22,873 - Process-1 - ai_module - WARNING - Fallback provider ollama failed during chat.
+2025-05-03 14:55:24,940 - Process-1 - ai_module - INFO - Trying fallback provider: lmstudio
+2025-05-03 14:55:27,018 - Process-1 - ai_module - INFO - Fallback provider lmstudio succeeded.
+2025-05-03 14:55:27,018 - Process-1 - assistant - INFO - Refined query: Błąd: nieprawidłowa odpowiedź z LM Studio
+2025-05-03 14:55:27,018 - Process-1 - langid.langid - INFO - initializing identifier
+2025-05-03 14:55:29,133 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-05-03 14:55:29,133 - Process-1 - assistant - INFO - Intent classified as: general
+2025-05-03 14:55:29,137 - Process-1 - ai_module - WARNING - Configured provider openai check failed or provider not found. Trying fallbacks.
+2025-05-03 14:55:31,188 - Process-1 - ai_module - INFO - Trying fallback provider: ollama
+2025-05-03 14:55:31,195 - Process-1 - httpx - INFO - HTTP Request: POST http://127.0.0.1:11434/api/chat "HTTP/1.1 404 Not Found"
+2025-05-03 14:55:31,196 - Process-1 - ai_module - WARNING - Fallback provider ollama failed during chat.
+2025-05-03 14:55:33,237 - Process-1 - ai_module - INFO - Trying fallback provider: lmstudio
+2025-05-03 14:55:35,283 - Process-1 - ai_module - INFO - Fallback provider lmstudio succeeded.
+2025-05-03 14:55:35,283 - Process-1 - assistant - INFO - AI response: {"text": "Błąd: nieprawidłowa odpowiedź z LM Studio"}
+2025-05-03 14:55:35,284 - Process-1 - audio_modules.tts_module - INFO - TTS: Błąd: nieprawidłowa odpowiedź z LM Studio
+2025-05-03 14:55:39,511 - Process-2 - __mp_main__ - INFO - Flask process finished.
+2025-05-03 14:55:39,749 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-05-03 14:55:39,749 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-05-03 14:55:39,918 - MainProcess - __main__ - INFO - All processes terminated.
+2025-05-03 14:55:45,233 - MainProcess - __main__ - INFO - Initializing application...
+2025-05-03 14:55:45,239 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-05-03 14:55:49,716 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-05-03 14:55:49,725 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-05-03 14:55:50,402 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-05-03 14:55:50,403 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-05-03 14:55:50,404 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-05-03 14:55:50,519 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-05-03 14:55:50,588 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-05-03 14:55:50,592 - Process-1 - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-05-03 14:55:50,593 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-05-03 14:55:56,780 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-05-03 14:55:59,700 - Process-1 - assistant - INFO - Bot is starting...
+2025-05-03 14:55:59,715 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-05-03 14:55:59,717 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-05-03 14:55:59,718 - Process-1 - assistant - INFO - Detected changes in plugins. Reloading plugins...
+2025-05-03 14:55:59,723 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-05-03 14:55:59,724 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-05-03 14:55:59,725 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-05-03 14:55:59,726 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-05-03 14:55:59,734 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-05-03 14:55:59,734 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-05-03 14:55:59,957 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-05-03 14:56:16,221 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-05-03 14:56:16,221 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-05-03 14:56:16,246 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-05-03 14:56:16,246 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-05-03 14:56:18,921 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-05-03 14:56:18,937 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-05-03 14:56:18,938 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-05-03 14:56:19,968 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Jaka jest poroda w Warszawie?
+2025-05-03 14:56:19,969 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 14:56:21,925 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 14:56:21,935 - Process-1 - assistant - INFO - Refined query: Jaka jest poroda w Warszawie?
+2025-05-03 14:56:21,936 - Process-1 - langid.langid - INFO - initializing identifier
+2025-05-03 14:56:23,918 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-05-03 14:56:23,918 - Process-1 - assistant - INFO - Intent classified as: general
+2025-05-03 14:56:23,919 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 14:56:24,410 - Process-1 - audio_modules.speech_recognition - WARNING - Audio callback status: input overflow
+2025-05-03 14:56:24,599 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 14:56:24,610 - Process-1 - assistant - INFO - AI response: {"text": "Chcę sprawdzić aktualną pogodę w Warszawie, zaraz to zrobię.", "command": "web", "params": {"query": "pogoda Warszawa"}}
+2025-05-03 14:56:24,611 - Process-1 - audio_modules.tts_module - INFO - TTS: Chcę sprawdzić aktualną pogodę w Warszawie, zaraz to zrobię.
+2025-05-03 14:56:49,422 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (full).
+2025-05-03 14:56:49,423 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-05-03 14:56:49,427 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-05-03 14:56:49,427 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-05-03 14:56:51,959 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-05-03 14:56:51,970 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-05-03 14:56:51,970 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-05-03 14:56:52,589 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Pododa w sióstrowcu.
+2025-05-03 14:56:52,590 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 14:56:53,123 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 14:56:53,125 - Process-1 - assistant - INFO - Refined query: Pododa w siostrowcu.
+2025-05-03 14:56:53,128 - Process-1 - ai_module - INFO - Low confidence (-29.63) for langid result 'pl'. Fallback to Polish.
+2025-05-03 14:56:53,129 - Process-1 - assistant - INFO - Detected language: pl (confidence -29.63)
+2025-05-03 14:56:53,129 - Process-1 - assistant - INFO - Intent classified as: general
+2025-05-03 14:56:53,129 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 14:56:54,022 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 14:56:54,025 - Process-1 - assistant - INFO - AI response: {"text": "Zaraz sprawdzę pogodę w Świętokrzyskim, w Sióstrze."}
+2025-05-03 14:56:54,025 - Process-1 - audio_modules.tts_module - INFO - TTS: Zaraz sprawdzę pogodę w Świętokrzyskim, w Sióstrze.
+2025-05-03 14:57:00,909 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-05-03 14:57:00,910 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-05-03 14:57:00,922 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-05-03 14:57:00,923 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-05-03 14:57:03,459 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-05-03 14:57:03,470 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-05-03 14:57:03,471 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-05-03 14:57:04,219 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Jaka jest podroda w sosnowcu?
+2025-05-03 14:57:04,219 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 14:57:04,873 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 14:57:04,884 - Process-1 - assistant - INFO - Refined query: Jaka jest podroda w Sosnowcu?
+2025-05-03 14:57:04,888 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-05-03 14:57:04,888 - Process-1 - assistant - INFO - Intent classified as: general
+2025-05-03 14:57:04,888 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 14:57:05,793 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 14:57:05,799 - Process-1 - assistant - INFO - AI response: {"text": "Już sprawdzam pogodę w Sosnowcu."}
+2025-05-03 14:57:05,799 - Process-1 - audio_modules.tts_module - INFO - TTS: Już sprawdzam pogodę w Sosnowcu.
+2025-05-03 14:57:22,904 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-05-03 14:57:22,904 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-05-03 14:57:23,089 - MainProcess - __main__ - INFO - All processes terminated.
+2025-05-03 14:57:28,949 - MainProcess - __main__ - INFO - Initializing application...
+2025-05-03 14:57:28,955 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-05-03 14:57:33,964 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-05-03 14:57:33,969 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-05-03 14:57:34,705 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-05-03 14:57:34,706 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-05-03 14:57:34,707 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-05-03 14:57:34,831 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-05-03 14:57:34,903 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-05-03 14:57:34,907 - Process-1 - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-05-03 14:57:34,908 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-05-03 14:57:42,131 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-05-03 14:57:43,935 - Process-1 - assistant - INFO - Bot is starting...
+2025-05-03 14:57:43,949 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-05-03 14:57:43,953 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-05-03 14:57:43,955 - Process-1 - assistant - INFO - Detected changes in plugins. Reloading plugins...
+2025-05-03 14:57:43,957 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-05-03 14:57:43,957 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-05-03 14:57:43,959 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-05-03 14:57:43,960 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-05-03 14:57:43,966 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-05-03 14:57:43,967 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-05-03 14:57:44,220 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-05-03 14:57:46,956 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-05-03 14:57:46,957 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-05-03 14:57:46,993 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-05-03 14:57:46,993 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-05-03 14:57:49,527 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-05-03 14:57:49,539 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-05-03 14:57:49,540 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-05-03 14:57:50,395 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Jaka jest podżada w Warszawie?
+2025-05-03 14:57:50,395 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 14:57:51,756 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 14:57:51,765 - Process-1 - assistant - INFO - Refined query: Jaka jest pogoda w Warszawie?
+2025-05-03 14:57:51,766 - Process-1 - langid.langid - INFO - initializing identifier
+2025-05-03 14:57:53,555 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-05-03 14:57:53,555 - Process-1 - assistant - INFO - Intent classified as: weather_query
+2025-05-03 14:57:53,555 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 14:57:54,035 - Process-1 - audio_modules.speech_recognition - WARNING - Audio callback status: input overflow
+2025-05-03 14:57:54,516 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 14:57:54,518 - Process-1 - assistant - INFO - AI response: {"text": "Już sprawdzam pogodę w Warszawie", "command": "web", "params": {"query": "pogoda Warszawa"}}
+2025-05-03 14:57:54,518 - Process-1 - audio_modules.tts_module - INFO - TTS: Już sprawdzam pogodę w Warszawie
+2025-05-03 14:59:43,981 - Process-2 - __mp_main__ - INFO - Flask process finished.
+2025-05-03 14:59:44,106 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-05-03 14:59:44,109 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-05-03 14:59:44,328 - MainProcess - __main__ - INFO - All processes terminated.
+2025-05-03 15:01:56,569 - MainProcess - __main__ - INFO - Initializing application...
+2025-05-03 15:01:56,578 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-05-03 15:02:02,781 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-05-03 15:02:02,819 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-05-03 15:02:03,699 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-05-03 15:02:03,700 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-05-03 15:02:03,702 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-05-03 15:02:03,843 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-05-03 15:02:03,937 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-05-03 15:02:03,942 - Process-1 - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-05-03 15:02:03,943 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-05-03 15:02:11,206 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-05-03 15:02:13,159 - Process-1 - assistant - INFO - Bot is starting...
+2025-05-03 15:02:13,173 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-05-03 15:02:13,174 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-05-03 15:02:13,176 - Process-1 - assistant - INFO - Detected changes in plugins. Reloading plugins...
+2025-05-03 15:02:13,178 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-05-03 15:02:13,178 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-05-03 15:02:13,180 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-05-03 15:02:13,182 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-05-03 15:02:13,190 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-05-03 15:02:13,192 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-05-03 15:02:13,415 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-05-03 15:02:16,684 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-05-03 15:02:16,685 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-05-03 15:02:16,738 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-05-03 15:02:16,738 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-05-03 15:02:19,324 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-05-03 15:02:19,336 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-05-03 15:02:19,336 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-05-03 15:02:20,518 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Jaka jest pogoda w Wadaszawie?
+2025-05-03 15:02:20,518 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:02:21,780 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:02:21,789 - Process-1 - assistant - INFO - Refined query: Jaka jest pogoda w Wadaszewie?
+2025-05-03 15:02:21,789 - Process-1 - langid.langid - INFO - initializing identifier
+2025-05-03 15:02:23,712 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-05-03 15:02:23,713 - Process-1 - assistant - INFO - Intent classified as: weather_query
+2025-05-03 15:02:23,713 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:02:24,202 - Process-1 - audio_modules.speech_recognition - WARNING - Audio callback status: input overflow
+2025-05-03 15:02:24,434 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:02:24,437 - Process-1 - assistant - INFO - AI response: {"text": "Zamierzam sprawdzić pogodę w Wadaszewie.", "command": "web", "params": {"query": "pogoda w Wadaszewie"}}
+2025-05-03 15:02:24,437 - Process-1 - assistant - INFO - Executing command: search (triggered by 'web') with params: pogoda w Wadaszewie
+2025-05-03 15:02:24,439 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'search' z pliku: resources/sounds/search_beep.mp3 (Loop: False)
+2025-05-03 15:02:25,532 - Process-1 - primp - INFO - response: https://html.duckduckgo.com/html 200
+2025-05-03 15:02:26,741 - Process-1 - primp - INFO - response: https://html.duckduckgo.com/html 200
+2025-05-03 15:02:27,480 - Process-1 - httpx - INFO - HTTP Request: GET https://pogoda.onet.pl/prognoza-pogody/warszawa-357732 "HTTP/2 200 OK"
+2025-05-03 15:02:27,676 - Process-1 - httpx - INFO - HTTP Request: GET https://www.meteoprog.pl/pl/weather/Warszawa/ "HTTP/2 200 OK"
+2025-05-03 15:02:28,283 - Process-1 - httpx - INFO - HTTP Request: GET https://warszawa.naszemiasto.pl/pogoda-tygodniowa-dla-warszawy-prognoza-od-jutra-4-05-do-piatku/ar/c1p1-19943927 "HTTP/2 403 Forbidden"
+2025-05-03 15:02:28,285 - Process-1 - httpx - INFO - HTTP Request: GET https://warszawa.naszemiasto.pl/pogoda-w-warszawie-dzisiaj-poznaj-prognoze-pogody-na-sobote-03-05/ar/c1p1-19942861 "HTTP/2 403 Forbidden"
+2025-05-03 15:02:28,287 - Process-1 - httpx - INFO - HTTP Request: GET https://warszawa.naszemiasto.pl/prognoza-pogody-na-weekend-03-05-i-niedziele-04-05-w-warszawie-sprawdz-jaka-moze-byc-temperatura/ar/c1p1-19945187 "HTTP/2 403 Forbidden"
+2025-05-03 15:02:29,827 - Process-1 - httpx - INFO - HTTP Request: GET https://warszawa.naszemiasto.pl/pogoda-w-warszawie-dzisiaj-poznaj-prognoze-pogody-na-sobote-03-05/ar/c1p1-19942861 "HTTP/2 403 Forbidden"
+2025-05-03 15:02:29,831 - Process-1 - httpx - INFO - HTTP Request: GET https://warszawa.naszemiasto.pl/prognoza-pogody-na-weekend-03-05-i-niedziele-04-05-w-warszawie-sprawdz-jaka-moze-byc-temperatura/ar/c1p1-19945187 "HTTP/2 403 Forbidden"
+2025-05-03 15:02:29,835 - Process-1 - httpx - INFO - HTTP Request: GET https://warszawa.naszemiasto.pl/pogoda-tygodniowa-dla-warszawy-prognoza-od-jutra-4-05-do-piatku/ar/c1p1-19943927 "HTTP/2 403 Forbidden"
+2025-05-03 15:02:32,862 - Process-1 - httpx - INFO - HTTP Request: GET https://warszawa.naszemiasto.pl/prognoza-pogody-na-weekend-03-05-i-niedziele-04-05-w-warszawie-sprawdz-jaka-moze-byc-temperatura/ar/c1p1-19945187 "HTTP/2 403 Forbidden"
+2025-05-03 15:02:32,874 - Process-1 - httpx - INFO - HTTP Request: GET https://warszawa.naszemiasto.pl/pogoda-w-warszawie-dzisiaj-poznaj-prognoze-pogody-na-sobote-03-05/ar/c1p1-19942861 "HTTP/2 403 Forbidden"
+2025-05-03 15:02:32,876 - Process-1 - httpx - INFO - HTTP Request: GET https://warszawa.naszemiasto.pl/pogoda-tygodniowa-dla-warszawy-prognoza-od-jutra-4-05-do-piatku/ar/c1p1-19943927 "HTTP/2 403 Forbidden"
+2025-05-03 15:02:37,378 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:02:38,977 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:02:38,982 - Process-1 - assistant - ERROR - Error executing command search: 'TTSModule' object has no attribute 'speak_async'
+Traceback (most recent call last):
+  File "F:\Asystent\assistant.py", line 321, in process_query
+    await self.tts.speak_async(command_result)
+          ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'TTSModule' object has no attribute 'speak_async'
+2025-05-03 15:02:48,218 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (full).
+2025-05-03 15:02:48,218 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-05-03 15:02:48,224 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-05-03 15:02:48,224 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-05-03 15:02:53,591 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-05-03 15:02:53,604 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-05-03 15:02:53,604 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-05-03 15:02:54,574 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Jakie są wyniki kwalifikacji wczorajszy wyścigów F1?
+2025-05-03 15:02:54,575 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:02:56,437 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:02:56,443 - Process-1 - assistant - INFO - Refined query: Jakie są wyniki kwalifikacji wczorajszych wyścigów F1?
+2025-05-03 15:02:56,448 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-05-03 15:02:56,448 - Process-1 - assistant - INFO - Intent classified as: general
+2025-05-03 15:02:56,448 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:02:57,212 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:02:57,214 - Process-1 - assistant - INFO - AI response: {"text": "Zamierzam sprawdzić wyniki kwalifikacji wczorajszych wyścigów F1. Zaraz to zrobię."}
+2025-05-03 15:02:57,214 - Process-1 - assistant - INFO - No command executed. Speaking AI response text.
+2025-05-03 15:03:13,200 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-05-03 15:03:13,201 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-05-03 15:03:13,224 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-05-03 15:03:13,225 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-05-03 15:03:15,760 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-05-03 15:03:15,772 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-05-03 15:03:15,772 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-05-03 15:03:16,395 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Powiedz mi coś o sobie.
+2025-05-03 15:03:16,396 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:03:16,958 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:03:16,969 - Process-1 - assistant - INFO - Refined query: Powiedz mi coś o sobie.
+2025-05-03 15:03:16,973 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-05-03 15:03:16,973 - Process-1 - assistant - INFO - Intent classified as: general
+2025-05-03 15:03:16,973 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:03:17,878 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:03:17,879 - Process-1 - assistant - INFO - AI response: {"text": "Jestem Jarvis, asystentem opartym na sztucznej inteligencji, stworzonym do pomagania Ci w różnych zadaniach i rozmowach. Chętnie pomogę Ci znaleźć informacje, przypomnieć o czymś albo po prostu pogadać.", "command": "", "params": ""}
+2025-05-03 15:03:17,880 - Process-1 - assistant - INFO - No command executed. Speaking AI response text.
+2025-05-03 15:03:23,994 - Process-2 - __mp_main__ - INFO - Flask process finished.
+2025-05-03 15:03:24,072 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-05-03 15:03:24,073 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-05-03 15:03:24,272 - MainProcess - __main__ - INFO - All processes terminated.
+2025-05-03 15:06:32,405 - MainProcess - __main__ - INFO - Initializing application...
+2025-05-03 15:06:32,412 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-05-03 15:06:38,142 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-05-03 15:06:38,142 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-05-03 15:06:38,887 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-05-03 15:06:38,887 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-05-03 15:06:38,888 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-05-03 15:06:39,017 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-05-03 15:06:39,099 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-05-03 15:06:39,103 - Process-1 - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-05-03 15:06:39,104 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-05-03 15:06:45,476 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-05-03 15:06:48,201 - Process-1 - assistant - INFO - Bot is starting...
+2025-05-03 15:06:48,216 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-05-03 15:06:48,217 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-05-03 15:06:48,219 - Process-1 - assistant - INFO - Detected changes in plugins. Reloading plugins...
+2025-05-03 15:06:48,222 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-05-03 15:06:48,222 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-05-03 15:06:48,228 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-05-03 15:06:48,230 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-05-03 15:06:48,237 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-05-03 15:06:48,237 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-05-03 15:06:48,459 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-05-03 15:06:54,721 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-05-03 15:06:54,722 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-05-03 15:06:54,769 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-05-03 15:06:54,769 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-05-03 15:06:57,380 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-05-03 15:06:57,392 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-05-03 15:06:57,392 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-05-03 15:06:58,404 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Jaka jest podziana w Warszawie?
+2025-05-03 15:06:58,405 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:06:59,505 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:06:59,513 - Process-1 - assistant - INFO - Refined query: Jaka jest podział w Warszawie?
+2025-05-03 15:06:59,514 - Process-1 - langid.langid - INFO - initializing identifier
+2025-05-03 15:07:01,535 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-05-03 15:07:01,535 - Process-1 - assistant - INFO - Intent classified as: general
+2025-05-03 15:07:01,535 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:07:02,019 - Process-1 - audio_modules.speech_recognition - WARNING - Audio callback status: input overflow
+2025-05-03 15:07:02,166 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:07:02,167 - Process-1 - assistant - INFO - AI response: {"text": "Czy chodzi Ci o podział administracyjny, dzielnice czy może coś innego w Warszawie?", "command": "", "params": ""}
+2025-05-03 15:07:02,167 - Process-1 - assistant - INFO - No command executed. Speaking AI response text.
+2025-05-03 15:07:02,168 - Process-1 - audio_modules.tts_module - INFO - TTS: Czy chodzi Ci o podział administracyjny, dzielnice czy może coś innego w Warszawie?
+2025-05-03 15:07:07,519 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-05-03 15:07:07,520 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-05-03 15:07:07,564 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-05-03 15:07:07,565 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-05-03 15:07:10,099 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-05-03 15:07:10,111 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-05-03 15:07:10,111 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-05-03 15:07:10,838 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Chodziło mi o pogodę.
+2025-05-03 15:07:10,839 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:07:11,381 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:07:11,387 - Process-1 - assistant - INFO - Refined query: Chodziło mi o pogodę.
+2025-05-03 15:07:11,391 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-05-03 15:07:11,391 - Process-1 - assistant - INFO - Intent classified as: general
+2025-05-03 15:07:11,391 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:07:11,867 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:07:11,869 - Process-1 - assistant - INFO - AI response: {"text": "Dobrze, zaraz sprawdzę pogodę w Warszawie."}
+2025-05-03 15:07:11,869 - Process-1 - assistant - INFO - No command executed. Speaking AI response text.
+2025-05-03 15:07:11,869 - Process-1 - audio_modules.tts_module - INFO - TTS: Dobrze, zaraz sprawdzę pogodę w Warszawie.
+2025-05-03 15:07:18,533 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (full).
+2025-05-03 15:07:18,533 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-05-03 15:07:18,538 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-05-03 15:07:18,538 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-05-03 15:07:21,298 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-05-03 15:07:21,311 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-05-03 15:07:21,311 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-05-03 15:07:22,038 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Jaka jest podroda w Wataszawie?
+2025-05-03 15:07:22,038 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:07:23,150 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:07:23,155 - Process-1 - assistant - INFO - Refined query: Jaka jest podróż w Wataszawie?
+2025-05-03 15:07:23,158 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-05-03 15:07:23,159 - Process-1 - assistant - INFO - Intent classified as: general
+2025-05-03 15:07:23,159 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:07:23,989 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:07:23,990 - Process-1 - assistant - INFO - AI response: {"text": "Chyba chodziło Ci o \"pogodę\" w Warszawie, tak? Jeśli tak, to sprawdzę aktualne warunki."}
+2025-05-03 15:07:23,990 - Process-1 - assistant - INFO - No command executed. Speaking AI response text.
+2025-05-03 15:07:23,991 - Process-1 - audio_modules.tts_module - INFO - TTS: Chyba chodziło Ci o "pogodę" w Warszawie, tak? Jeśli tak, to sprawdzę aktualne warunki.
+2025-05-03 15:07:39,518 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-05-03 15:07:39,519 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-05-03 15:07:39,555 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-05-03 15:07:39,555 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-05-03 15:07:43,387 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-05-03 15:07:43,400 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-05-03 15:07:43,401 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-05-03 15:07:44,196 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Jakie są wyniki wczorajsze kwalifikacji Formuły 1?
+2025-05-03 15:07:44,197 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:07:44,760 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:07:44,761 - Process-1 - assistant - INFO - Refined query: Jakie są wyniki wczorajszych kwalifikacji Formuły 1?
+2025-05-03 15:07:44,763 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-05-03 15:07:44,764 - Process-1 - assistant - INFO - Intent classified as: general
+2025-05-03 15:07:44,764 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:07:45,357 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:07:45,365 - Process-1 - assistant - INFO - AI response: {"text": "Zaraz sprawdzę wyniki wczorajszych kwalifikacji Formuły 1."}
+2025-05-03 15:07:45,365 - Process-1 - assistant - INFO - No command executed. Speaking AI response text.
+2025-05-03 15:07:45,365 - Process-1 - audio_modules.tts_module - INFO - TTS: Zaraz sprawdzę wyniki wczorajszych kwalifikacji Formuły 1.
+2025-05-03 15:08:07,587 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-05-03 15:08:07,588 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-05-03 15:08:07,757 - MainProcess - __main__ - INFO - All processes terminated.
+2025-05-03 15:08:14,620 - MainProcess - __main__ - INFO - Initializing application...
+2025-05-03 15:08:14,628 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-05-03 15:08:20,876 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-05-03 15:08:20,935 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-05-03 15:08:21,930 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-05-03 15:08:21,935 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-05-03 15:08:21,937 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-05-03 15:08:22,245 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-05-03 15:08:22,397 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-05-03 15:08:22,404 - Process-1 - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-05-03 15:08:22,405 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-05-03 15:08:31,139 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-05-03 15:08:33,666 - Process-1 - assistant - INFO - Bot is starting...
+2025-05-03 15:08:33,685 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-05-03 15:08:33,704 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-05-03 15:08:33,706 - Process-1 - assistant - INFO - Detected changes in plugins. Reloading plugins...
+2025-05-03 15:08:33,713 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-05-03 15:08:33,716 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-05-03 15:08:33,718 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-05-03 15:08:33,723 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-05-03 15:08:33,760 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-05-03 15:08:33,763 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-05-03 15:08:34,158 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-05-03 15:08:38,185 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-05-03 15:08:38,186 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-05-03 15:08:38,236 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-05-03 15:08:38,236 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-05-03 15:08:41,365 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-05-03 15:08:41,377 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-05-03 15:08:41,378 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-05-03 15:08:42,366 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Jaka jest pogoda w sosnowcu?
+2025-05-03 15:08:42,367 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:08:43,460 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:08:43,499 - Process-1 - assistant - INFO - Refined query: Jaka jest pogoda w Sosnowcu?
+2025-05-03 15:08:43,500 - Process-1 - langid.langid - INFO - initializing identifier
+2025-05-03 15:08:45,408 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-05-03 15:08:45,408 - Process-1 - assistant - INFO - Intent classified as: weather_query
+2025-05-03 15:08:45,409 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:08:45,895 - Process-1 - audio_modules.speech_recognition - WARNING - Audio callback status: input overflow
+2025-05-03 15:08:46,089 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:08:46,105 - Process-1 - assistant - INFO - AI response: {"text": "Sprawdzam pogodę w Sosnowcu.", "command": "web", "params": {"query": "pogoda Sosnowiec"}}
+2025-05-03 15:08:46,105 - Process-1 - assistant - INFO - Executing command: search (triggered by 'web') with params: pogoda Sosnowiec
+2025-05-03 15:08:46,107 - Process-1 - assistant - INFO - Speaking initial AI response before command: Sprawdzam pogodę w Sosnowcu.
+2025-05-03 15:08:46,107 - Process-1 - audio_modules.tts_module - INFO - TTS: Sprawdzam pogodę w Sosnowcu.
+2025-05-03 15:08:50,213 - Process-1 - assistant - ERROR - Error executing command search: name 'ai_response_command' is not defined
+Traceback (most recent call last):
+  File "F:\Asystent\assistant.py", line 316, in process_query
+    logger.info(f"Executing command: {found_module_key} (triggered by '{ai_response_command}') with params: {params_value}") # Log execution start
+                                                                        ^^^^^^^^^^^^^^^^^^^
+NameError: name 'ai_response_command' is not defined
+2025-05-03 15:08:50,223 - Process-1 - audio_modules.tts_module - INFO - TTS: Przepraszam, wystąpił błąd podczas wykonywania komendy search.
+2025-05-03 15:08:59,394 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-05-03 15:08:59,395 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-05-03 15:08:59,427 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-05-03 15:08:59,429 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-05-03 15:09:02,044 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-05-03 15:09:02,057 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-05-03 15:09:02,057 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-05-03 15:09:02,717 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Co widać na moim ekranie.
+2025-05-03 15:09:02,717 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:09:03,264 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:09:03,265 - Process-1 - assistant - INFO - Refined query: Co widać na moim ekranie.
+2025-05-03 15:09:03,268 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-05-03 15:09:03,268 - Process-1 - assistant - INFO - Intent classified as: general
+2025-05-03 15:09:03,269 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:09:04,161 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:09:04,167 - Process-1 - assistant - INFO - AI response: {"text": "Niestety, nie mam dostępu do Twojego ekranu, więc nie mogę zobaczyć, co się na nim znajduje."}
+2025-05-03 15:09:04,167 - Process-1 - assistant - INFO - No command executed. Speaking AI response text.
+2025-05-03 15:09:04,167 - Process-1 - audio_modules.tts_module - INFO - TTS: Niestety, nie mam dostępu do Twojego ekranu, więc nie mogę zobaczyć, co się na nim znajduje.
+2025-05-03 15:09:08,894 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-05-03 15:09:08,895 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-05-03 15:09:08,942 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-05-03 15:09:08,943 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-05-03 15:09:11,864 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-05-03 15:09:11,876 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-05-03 15:09:11,877 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-05-03 15:09:12,544 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Zapamiętaj słowo pomarańcza.
+2025-05-03 15:09:12,544 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:09:13,024 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:09:13,025 - Process-1 - assistant - INFO - Refined query: Zapamiętaj słowo pomarańcza.
+2025-05-03 15:09:13,027 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-05-03 15:09:13,028 - Process-1 - assistant - INFO - Intent classified as: general
+2025-05-03 15:09:13,028 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:09:13,687 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:09:13,690 - Process-1 - assistant - INFO - AI response: {"text": "Zapamiętam słowo 'pomarańcza'.", "command": "memory", "params": {"add": "pomarańcza"}}
+2025-05-03 15:09:54,302 - Process-2 - __mp_main__ - INFO - Flask process finished.
+2025-05-03 15:09:54,401 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-05-03 15:09:54,430 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-05-03 15:09:55,221 - MainProcess - __main__ - INFO - All processes terminated.
+2025-05-03 15:10:33,769 - MainProcess - __main__ - INFO - Initializing application...
+2025-05-03 15:10:33,775 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-05-03 15:10:38,524 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-05-03 15:10:38,541 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-05-03 15:10:39,272 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-05-03 15:10:39,272 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-05-03 15:10:39,273 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-05-03 15:10:39,382 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-05-03 15:10:39,451 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-05-03 15:10:39,455 - Process-1 - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-05-03 15:10:39,456 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-05-03 15:10:45,492 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-05-03 15:10:47,339 - Process-1 - assistant - INFO - Bot is starting...
+2025-05-03 15:10:47,352 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-05-03 15:10:47,354 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-05-03 15:10:47,356 - Process-1 - assistant - INFO - Detected changes in plugins. Reloading plugins...
+2025-05-03 15:10:47,360 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-05-03 15:10:47,363 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-05-03 15:10:47,365 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-05-03 15:10:47,366 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-05-03 15:10:47,372 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-05-03 15:10:47,373 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-05-03 15:10:47,591 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-05-03 15:10:59,359 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-05-03 15:10:59,360 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-05-03 15:10:59,398 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-05-03 15:10:59,398 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-05-03 15:11:02,208 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-05-03 15:11:02,221 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-05-03 15:11:02,222 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-05-03 15:11:03,237 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Jaka jest podrada w sosnowcu?
+2025-05-03 15:11:03,238 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:11:06,160 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:11:06,173 - Process-1 - assistant - INFO - Refined query: Jaka jest porada w Sosnowcu?
+2025-05-03 15:11:06,173 - Process-1 - langid.langid - INFO - initializing identifier
+2025-05-03 15:11:07,949 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-05-03 15:11:07,949 - Process-1 - assistant - INFO - Intent classified as: general
+2025-05-03 15:11:07,950 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:11:08,437 - Process-1 - audio_modules.speech_recognition - WARNING - Audio callback status: input overflow
+2025-05-03 15:11:08,758 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:11:08,763 - Process-1 - assistant - INFO - AI response: {"text": "Czy masz na myśli porady dotyczące czegoś konkretnego w Sosnowcu, na przykład restauracji, atrakcji czy usług?", "command": "", "params": ""}
+2025-05-03 15:11:08,764 - Process-1 - assistant - INFO - No command executed. Speaking AI response text.
+2025-05-03 15:11:08,764 - Process-1 - audio_modules.tts_module - INFO - TTS: Czy masz na myśli porady dotyczące czegoś konkretnego w Sosnowcu, na przykład restauracji, atrakcji czy usług?
+2025-05-03 15:11:19,437 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-05-03 15:11:19,438 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-05-03 15:11:19,456 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-05-03 15:11:19,457 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-05-03 15:11:21,987 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-05-03 15:11:21,999 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-05-03 15:11:22,000 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-05-03 15:11:22,655 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Hodziło mi o pogodę.
+2025-05-03 15:11:22,656 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:11:23,554 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:11:23,561 - Process-1 - assistant - INFO - Refined query: Chodziło mi o pogodę.
+2025-05-03 15:11:23,564 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-05-03 15:11:23,564 - Process-1 - assistant - INFO - Intent classified as: general
+2025-05-03 15:11:23,564 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:11:24,543 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:11:24,550 - Process-1 - assistant - INFO - AI response: {"text": "Zamierzam sprawdzić pogodę w Sosnowcu.", "command": "web", "params": {"query": "pogoda Sosnowiec"}}
+2025-05-03 15:11:24,550 - Process-1 - assistant - INFO - Executing command: search (triggered by 'web') with params: pogoda Sosnowiec
+2025-05-03 15:11:24,551 - Process-1 - assistant - INFO - Speaking initial AI response before command: Zamierzam sprawdzić pogodę w Sosnowcu.
+2025-05-03 15:11:24,551 - Process-1 - audio_modules.tts_module - INFO - TTS: Zamierzam sprawdzić pogodę w Sosnowcu.
+2025-05-03 15:11:30,885 - Process-1 - assistant - INFO - Executing command: search (triggered by 'web') with params: pogoda Sosnowiec
+2025-05-03 15:11:30,888 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'search' z pliku: resources/sounds/search_beep.mp3 (Loop: False)
+2025-05-03 15:11:31,956 - Process-1 - primp - INFO - response: https://lite.duckduckgo.com/lite/ 200
+2025-05-03 15:11:33,149 - Process-1 - primp - INFO - response: https://lite.duckduckgo.com/lite/ 200
+2025-05-03 15:11:33,731 - Process-1 - httpx - INFO - HTTP Request: GET https://pogoda.interia.pl/prognoza-dlugoterminowa-sosnowiec,cId,32574 "HTTP/2 200 OK"
+2025-05-03 15:11:33,752 - Process-1 - httpx - INFO - HTTP Request: GET https://pogoda.interia.pl/prognoza-szczegolowa-sosnowiec,cId,32574 "HTTP/2 200 OK"
+2025-05-03 15:11:33,879 - Process-1 - httpx - INFO - HTTP Request: GET https://www.accuweather.com/pl/pl/sosnowiec/275788/weather-forecast/275788 "HTTP/2 200 OK"
+2025-05-03 15:11:34,517 - Process-1 - httpx - INFO - HTTP Request: GET https://pogoda.onet.pl/prognoza-pogody/sosnowiec-346939 "HTTP/2 200 OK"
+2025-05-03 15:11:34,737 - Process-1 - httpx - INFO - HTTP Request: GET https://www.twojapogoda.pl/prognoza-polska/slaskie-sosnowiec/ "HTTP/2 200 OK"
+2025-05-03 15:11:34,780 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:11:35,889 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:11:35,904 - Process-1 - assistant - INFO - Command 'search' executed successfully, speaking result.
+2025-05-03 15:11:35,905 - Process-1 - audio_modules.tts_module - INFO - TTS: Obecna pogoda w Sosnowcu to około 26°C, z odczuwalną temperaturą 27°C. Wiatr wieje z prędkością 14 km/h, zachmurzenie wynosi około 71%, a prognoza na dziś przewiduje 2,6 mm opadów deszczu. Nadchodzą chłodniejsze dni z przelotnymi opadami i pochmurną pogodą.
+2025-05-03 15:12:03,936 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-05-03 15:12:03,936 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-05-03 15:12:03,983 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-05-03 15:12:03,983 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-05-03 15:12:08,465 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-05-03 15:12:08,477 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-05-03 15:12:08,477 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-05-03 15:12:09,264 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Jakie są wyniki wczorajszych kwalifikacji formuły pierwszej?
+2025-05-03 15:12:09,265 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:12:10,207 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:12:10,213 - Process-1 - assistant - INFO - Refined query: Jakie są wyniki wczorajszych kwalifikacji Formuły 1?
+2025-05-03 15:12:10,216 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-05-03 15:12:10,216 - Process-1 - assistant - INFO - Intent classified as: general
+2025-05-03 15:12:10,217 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:12:10,837 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:12:10,840 - Process-1 - assistant - INFO - AI response: {"text": "Chcę sprawdzić wyniki wczorajszych kwalifikacji Formuły 1, zaraz to zrobię."}
+2025-05-03 15:12:10,841 - Process-1 - assistant - INFO - No command executed. Speaking AI response text.
+2025-05-03 15:12:10,841 - Process-1 - audio_modules.tts_module - INFO - TTS: Chcę sprawdzić wyniki wczorajszych kwalifikacji Formuły 1, zaraz to zrobię.
+2025-05-03 15:12:21,434 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-05-03 15:12:21,435 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-05-03 15:12:21,474 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-05-03 15:12:21,475 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-05-03 15:12:25,744 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-05-03 15:12:25,756 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-05-03 15:12:25,756 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-05-03 15:12:26,576 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  I jaka jest tata spokojna w Gdańsku?
+2025-05-03 15:12:26,577 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:12:27,136 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:12:27,149 - Process-1 - assistant - INFO - Refined query: I jaka jest tata spokojna w Gdańsku?
+2025-05-03 15:12:27,153 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-05-03 15:12:27,154 - Process-1 - assistant - INFO - Intent classified as: general
+2025-05-03 15:12:27,154 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:12:28,255 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:12:28,256 - Process-1 - assistant - INFO - AI response: {"text": "Zamierzam sprawdzić, jaka jest obecnie pogoda w Gdańsku, zaraz to zrobię."}
+2025-05-03 15:12:28,257 - Process-1 - assistant - INFO - No command executed. Speaking AI response text.
+2025-05-03 15:12:28,257 - Process-1 - audio_modules.tts_module - INFO - TTS: Zamierzam sprawdzić, jaka jest obecnie pogoda w Gdańsku, zaraz to zrobię.
+2025-05-03 15:12:45,953 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (full).
+2025-05-03 15:12:45,954 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-05-03 15:12:45,960 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-05-03 15:12:45,960 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-05-03 15:12:48,943 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-05-03 15:12:48,955 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-05-03 15:12:48,955 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-05-03 15:12:49,665 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Zapamiętaj słowo pomarańcza.
+2025-05-03 15:12:49,665 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:12:50,227 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:12:50,228 - Process-1 - assistant - INFO - Refined query: Zapamiętaj słowo pomarańcza.
+2025-05-03 15:12:50,231 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-05-03 15:12:50,231 - Process-1 - assistant - INFO - Intent classified as: general
+2025-05-03 15:12:50,231 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:12:51,141 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:12:51,147 - Process-1 - assistant - INFO - AI response: {"text": "Zapamiętam słowo 'pomarańcza'.", "command": "memory", "params": {"add": "pomarańcza"}}
+2025-05-03 15:13:30,738 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-05-03 15:13:30,764 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-05-03 15:13:31,395 - MainProcess - __main__ - INFO - All processes terminated.
+2025-05-03 15:14:13,896 - MainProcess - __main__ - INFO - Initializing application...
+2025-05-03 15:14:13,921 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-05-03 15:14:19,144 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-05-03 15:14:19,151 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-05-03 15:14:19,876 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-05-03 15:14:19,877 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-05-03 15:14:19,877 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-05-03 15:14:20,000 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-05-03 15:14:20,071 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-05-03 15:14:20,075 - Process-1 - modules.memory_module - INFO - Retrieving memories via command with query: '' user: 'assistant'
+2025-05-03 15:14:20,076 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-05-03 15:14:26,401 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-05-03 15:14:28,144 - Process-1 - assistant - INFO - Bot is starting...
+2025-05-03 15:14:28,157 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-05-03 15:14:28,160 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-05-03 15:14:28,163 - Process-1 - assistant - INFO - Detected changes in plugins. Reloading plugins...
+2025-05-03 15:14:28,167 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-05-03 15:14:28,168 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-05-03 15:14:28,169 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta (dodawanie, pobieranie, usuwanie wpisów).
+2025-05-03 15:14:28,170 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-05-03 15:14:28,177 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-05-03 15:14:28,177 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-05-03 15:14:28,398 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-05-03 15:14:37,658 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-05-03 15:14:37,658 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-05-03 15:14:37,715 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-05-03 15:14:37,715 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-05-03 15:14:40,248 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-05-03 15:14:40,260 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-05-03 15:14:40,260 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-05-03 15:14:41,158 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Jaka jest pogoda w Warszawie?
+2025-05-03 15:14:41,158 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:14:42,820 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:14:42,838 - Process-1 - assistant - INFO - Refined query: Jaka jest pogoda w Warszawie?
+2025-05-03 15:14:42,838 - Process-1 - langid.langid - INFO - initializing identifier
+2025-05-03 15:14:44,539 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-05-03 15:14:44,539 - Process-1 - assistant - INFO - Intent classified as: weather_query
+2025-05-03 15:14:44,540 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:14:45,551 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:14:45,555 - Process-1 - assistant - INFO - AI response: {"text": "Sprawdzam pogodę w Warszawie", "command": "web", "params": {"query": "pogoda Warszawa"}}
+2025-05-03 15:14:45,555 - Process-1 - assistant - INFO - Executing command: search (triggered by 'web') with params: pogoda Warszawa
+2025-05-03 15:14:45,556 - Process-1 - assistant - INFO - Speaking initial AI response before command: Sprawdzam pogodę w Warszawie
+2025-05-03 15:14:45,556 - Process-1 - audio_modules.tts_module - INFO - TTS: Sprawdzam pogodę w Warszawie
+2025-05-03 15:14:49,828 - Process-1 - assistant - INFO - Executing command: search (triggered by 'web') with params: pogoda Warszawa
+2025-05-03 15:14:49,828 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'search' z pliku: resources/sounds/search_beep.mp3 (Loop: False)
+2025-05-03 15:14:50,594 - Process-1 - primp - INFO - response: https://html.duckduckgo.com/html 200
+2025-05-03 15:14:51,808 - Process-1 - primp - INFO - response: https://html.duckduckgo.com/html 200
+2025-05-03 15:14:52,567 - Process-1 - httpx - INFO - HTTP Request: GET https://pogoda.onet.pl/prognoza-pogody/warszawa-357732 "HTTP/2 200 OK"
+2025-05-03 15:14:52,772 - Process-1 - httpx - INFO - HTTP Request: GET https://pogoda.interia.pl/prognoza-szczegolowa-warszawa,cId,36917 "HTTP/2 200 OK"
+2025-05-03 15:14:52,773 - Process-1 - httpx - INFO - HTTP Request: GET https://pogoda.interia.pl/prognoza-dlugoterminowa-warszawa,cId,36917 "HTTP/2 200 OK"
+2025-05-03 15:14:53,573 - Process-1 - httpx - INFO - HTTP Request: GET https://www.accuweather.com/pl/pl/warsaw/274663/weather-forecast/274663 "HTTP/2 200 OK"
+2025-05-03 15:14:53,785 - Process-1 - httpx - INFO - HTTP Request: GET https://www.twojapogoda.pl/prognoza-polska/mazowieckie-warszawa/ "HTTP/2 200 OK"
+2025-05-03 15:14:53,825 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:14:54,705 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:14:54,710 - Process-1 - assistant - INFO - Command 'search' executed successfully, speaking result.
+2025-05-03 15:14:54,710 - Process-1 - audio_modules.tts_module - INFO - TTS: Pogoda w Warszawie dziś to 22°C (odczuwalna 23°C), zachmurzenie około 56%, wiatr 14 km/h, możliwe przelotne opady deszczu (0,7 mm). Nie ma zagrożenia burzami.
+2025-05-03 15:15:03,657 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-05-03 15:15:03,658 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-05-03 15:15:03,692 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-05-03 15:15:03,693 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-05-03 15:15:06,227 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-05-03 15:15:06,239 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-05-03 15:15:06,239 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-05-03 15:15:06,705 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Absatz noch zu.
+2025-05-03 15:15:06,705 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:15:12,520 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:15:12,522 - Process-1 - assistant - INFO - Refined query: Absatz noch zu.
+2025-05-03 15:15:12,525 - Process-1 - ai_module - INFO - Low confidence (-55.13) for langid result 'de'. Fallback to Polish.
+2025-05-03 15:15:12,525 - Process-1 - assistant - INFO - Detected language: pl (confidence -55.13)
+2025-05-03 15:15:12,525 - Process-1 - assistant - INFO - Intent classified as: general
+2025-05-03 15:15:12,525 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:15:13,223 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:15:13,229 - Process-1 - assistant - INFO - AI response: {"text": "Chcesz, żebym dodał coś jeszcze do opisu pogody w Warszawie, czy może chcesz coś innego wiedzieć?", "command": ""}
+2025-05-03 15:15:13,230 - Process-1 - assistant - INFO - No command executed. Speaking AI response text.
+2025-05-03 15:15:13,230 - Process-1 - audio_modules.tts_module - INFO - TTS: Chcesz, żebym dodał coś jeszcze do opisu pogody w Warszawie, czy może chcesz coś innego wiedzieć?
+2025-05-03 15:15:18,156 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-05-03 15:15:18,157 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-05-03 15:15:18,279 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-05-03 15:15:18,281 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-05-03 15:15:20,816 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-05-03 15:15:20,829 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-05-03 15:15:20,829 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-05-03 15:15:21,356 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Aber wirst du es noch zu?
+2025-05-03 15:15:21,356 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:15:22,942 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:15:22,953 - Process-1 - assistant - INFO - Refined query: Aber wirst du es noch tun?
+2025-05-03 15:15:22,958 - Process-1 - ai_module - INFO - Low confidence (-89.64) for langid result 'de'. Fallback to Polish.
+2025-05-03 15:15:22,959 - Process-1 - assistant - INFO - Detected language: pl (confidence -89.64)
+2025-05-03 15:15:22,959 - Process-1 - assistant - INFO - Intent classified as: general
+2025-05-03 15:15:22,960 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:15:23,891 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:15:23,897 - Process-1 - assistant - INFO - AI response: {"text": "Tak, mogę jeszcze coś dodać, jeśli chcesz, na przykład prognozę na kolejne dni lub szczegóły dotyczące pogody."}
+2025-05-03 15:15:23,897 - Process-1 - assistant - INFO - No command executed. Speaking AI response text.
+2025-05-03 15:15:23,899 - Process-1 - audio_modules.tts_module - INFO - TTS: Tak, mogę jeszcze coś dodać, jeśli chcesz, na przykład prognozę na kolejne dni lub szczegóły dotyczące pogody.
+2025-05-03 15:15:29,655 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-05-03 15:15:29,656 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-05-03 15:15:29,712 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-05-03 15:15:29,713 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-05-03 15:15:32,895 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-05-03 15:15:32,908 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-05-03 15:15:32,908 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-05-03 15:15:33,674 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  A jaka pododa jest za wy, z osnowcu?
+2025-05-03 15:15:33,674 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:15:34,217 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:15:34,218 - Process-1 - assistant - INFO - Refined query: A jaka pododa jest za wy, z osnowcu?
+2025-05-03 15:15:34,220 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-05-03 15:15:34,221 - Process-1 - assistant - INFO - Intent classified as: general
+2025-05-03 15:15:34,221 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-03 15:15:34,872 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-03 15:15:34,873 - Process-1 - assistant - INFO - AI response: {"text": "Chcę sprawdzić aktualną pogodę za Wy, z Osnowca, ale potrzebuję chwili, żeby to dokładnie sprawdzić. Zaraz to zrobię."}
+2025-05-03 15:15:34,873 - Process-1 - assistant - INFO - No command executed. Speaking AI response text.
+2025-05-03 15:15:34,873 - Process-1 - audio_modules.tts_module - INFO - TTS: Chcę sprawdzić aktualną pogodę za Wy, z Osnowca, ale potrzebuję chwili, żeby to dokładnie sprawdzić. Zaraz to zrobię.
+2025-05-03 15:15:45,945 - Process-2 - __mp_main__ - INFO - Flask process finished.
+2025-05-03 15:15:46,037 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-05-03 15:15:46,038 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-05-03 15:15:46,219 - MainProcess - __main__ - INFO - All processes terminated.
