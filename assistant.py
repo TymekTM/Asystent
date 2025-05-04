@@ -123,9 +123,11 @@ class Assistant:
         self.manual_listen_triggered = False # Flag for manual activation
 
         # --- Load all memories for assistant user at startup ---
+        # --- Load all memories for assistant user at startup ---
         try:
             from modules.memory_module import retrieve_memories
-            result, success = retrieve_memories(params="", user="assistant")
+            # Use correct parameter name 'query' instead of 'params'
+            result, success = retrieve_memories(query="", user="assistant")
             if success and result.strip():
                 logger.info(f"Loaded assistant long-term memory at startup:\n{result}")
             else:
@@ -172,35 +174,53 @@ class Assistant:
             return False
 
     def load_plugins(self):
-        plugin_folder = "modules"
+        """Load all plugin modules from the modules folder."""
+        # Determine plugin directory
+        plugin_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), 'modules'))
         os.makedirs(plugin_folder, exist_ok=True)
         plugins_state = load_plugins_state()
         new_modules = {}
-        for filepath in glob.glob(os.path.join(plugin_folder, "*_module.py")):
+        # Ensure modules package is importable
+        import sys, importlib
+        if os.path.dirname(plugin_folder) not in sys.path:
+            sys.path.insert(0, os.path.dirname(plugin_folder))
+        # Iterate over plugin files
+        for filename in os.listdir(plugin_folder):
+            if not filename.endswith('_module.py'):
+                continue
+            filepath = os.path.join(plugin_folder, filename)
             mod_time = os.path.getmtime(filepath)
             self.plugin_mod_times[filepath] = mod_time
-            module_name = os.path.splitext(os.path.basename(filepath))[0]
-            # Sprawdź, czy plugin jest włączony
-            if plugins_state and module_name in plugins_state and not plugins_state[module_name].get('enabled', True):
+            module_name = filename[:-3]
+            # Skip disabled plugins
+            state = plugins_state.get(module_name, {})
+            if state.get('enabled') is False:
                 logger.info(f"Plugin {module_name} jest wyłączony - pomijam ładowanie.")
                 continue
-            spec = importlib.util.spec_from_file_location(module_name, filepath)
-            module = importlib.util.module_from_spec(spec)
+            module_full_name = f"modules.{module_name}"
             try:
-                spec.loader.exec_module(module)
+                if module_full_name in sys.modules:
+                    module = importlib.reload(sys.modules[module_full_name])
+                else:
+                    module = importlib.import_module(module_full_name)
             except Exception as e:
                 logger.error("Błąd przy ładowaniu pluginu %s: %s", module_name, e)
                 continue
-            if hasattr(module, "register"):
-                plugin_info = module.register()
-                command = plugin_info.get("command")
+            # Register plugin if valid
+            if hasattr(module, 'register'):
+                try:
+                    plugin_info = module.register()
+                except Exception as e:
+                    logger.error("Błąd podczas register() pluginu %s: %s", module_name, e)
+                    continue
+                command = plugin_info.get('command')
                 if command:
                     new_modules[command] = plugin_info
-                    logger.info("Loaded plugin: %s -> %s", command, plugin_info.get("description"))
+                    logger.info("Loaded plugin: %s -> %s", command, plugin_info.get('description'))
                 else:
                     logger.warning("Plugin %s missing 'command' key, skipping.", module_name)
             else:
-                logger.debug("File %s does not have register() function, skipping.", filepath)
+                logger.debug("Plugin file %s has no register(), skipping.", filename)
         self.modules = new_modules
 
     async def monitor_plugins(self, interval: int = None): # Allow override, default to config
@@ -283,62 +303,74 @@ class Assistant:
         # --- Heurystyka: jeśli AI nie wywołało narzędzia, a pytanie użytkownika zawiera słowa kluczowe pamięci ---
         memory_keywords = ["pamiętasz", "przypomnij", "zapamiętałeś", "zapamiętać", "zapomniałeś", "a poza tym", "co jeszcze", "co miałeś zapamiętać"]
         if not found_module_key and any(kw in refined_query.lower() for kw in memory_keywords):
-            # ... (memory heuristic logic remains the same)
-            pass # Placeholder, original logic should be here
+            # Heurystyczne wywołanie narzędzia pamięci - domyślnie pobranie wspomnień
+            found_module_key = 'memory'
+            module_info = self.modules.get('memory')
+            # ustaw puste params, by wywołać domyślną subkomendę 'get'
+            ai_params = {}
 
         if found_module_key and module_info:
-            handler = module_info['handler']
-            description = module_info['description']
-            logger.info(f"Executing command: {found_module_key} (triggered by '{target_command_name}') with params: {actual_params_for_handler}") # Log which command was triggered
-            await asyncio.to_thread(play_beep, "action") # Or a specific sound?
-
-            # --- Parameter Injection (Simplified based on common patterns) ---
-            param_names = list(inspect.signature(handler).parameters.keys())
-            call_params = {}
-
-            # Pass the primary parameter (assuming it's often named 'params' and expects a string)
-            if "params" in param_names:
-                 call_params["params"] = actual_params_for_handler # Pass the extracted string
-
-            # Inject other common parameters if the handler expects them
-            if "conversation_history" in param_names:
-                call_params["conversation_history"] = self.conversation_history
-            if "user_lang" in param_names:
-                call_params["user_lang"] = lang_code # Pass detected lang code
-
-            # Speak the initial AI response text *before* executing the command
-            if ai_response_text:
-                logger.info(f"Speaking initial AI response before command: {ai_response_text}")
-                await self.tts.speak(ai_response_text) # Use await self.tts.speak
-
-            try:
-                # Execute the handler
-                # Corrected variable names in the log line
-                logger.info(f"Executing command: {found_module_key} (triggered by '{target_command_name}') with params: {actual_params_for_handler}") # Log execution start
-                if asyncio.iscoroutinefunction(handler):
-                    command_result = await handler(**call_params)
-                else:
-                    command_result = await asyncio.to_thread(handler, **call_params)
-
-                # Process result (existing logic)
-                if command_result:
-                    logger.info(f"Command '{found_module_key}' executed successfully, speaking result.")
-                    self.conversation_history.append({"role": "assistant", "content": command_result}) # Add command result to history
+            # Handle modules with sub_commands (e.g., memory)
+            handler = None
+            description = module_info.get('description', '')
+            sub_action = None
+            if 'sub_commands' in module_info:
+                # Expect params dict with single action key
+                if isinstance(ai_params, dict) and ai_params:
+                    sub_action = next(iter(ai_params.keys()))
+                # Default to 'get' if no dict params
+                if not sub_action:
+                    sub_action = 'get'
+                sub_info = module_info['sub_commands'].get(sub_action)
+                if sub_info:
+                    handler = sub_info['function']
+                    description = sub_info.get('description', description)
+                    actual_params_for_handler = ai_params.get(sub_action, '') if isinstance(ai_params, dict) else actual_params_for_handler
+            else:
+                handler = module_info.get('handler')
+                description = module_info.get('description', description)
+            if handler:
+                logger.info(f"Executing command: {found_module_key} (sub: {sub_action}) with params: {actual_params_for_handler}")
+                await asyncio.to_thread(play_beep, "action")
+                # Parameter injection based on handler signature
+                sig_params = list(inspect.signature(handler).parameters.keys())
+                call_params = {}
+                if 'params' in sig_params:
+                    call_params['params'] = actual_params_for_handler
+                if 'conversation_history' in sig_params:
+                    call_params['conversation_history'] = self.conversation_history
+                if 'user_lang' in sig_params:
+                    call_params['user_lang'] = lang_code
+                if 'user' in sig_params:
+                    call_params['user'] = 'assistant'
+                # Speak initial AI response before command
+                if ai_response_text:
+                    logger.info(f"Speaking initial AI response before command: {ai_response_text}")
+                    await self.tts.speak(ai_response_text)
+                try:
+                    # Execute handler (async or sync)
+                    if asyncio.iscoroutinefunction(handler):
+                        result = await handler(**call_params)
+                    else:
+                        result = await asyncio.to_thread(handler, **call_params)
+                    # Unpack tuple results if needed
+                    if isinstance(result, tuple) and len(result) >= 1:
+                        result_text = result[0]
+                    else:
+                        result_text = result
+                    # Speak and record result
+                    if result_text:
+                        logger.info(f"Command '{found_module_key}' executed successfully, speaking result.")
+                        self.conversation_history.append({"role": "assistant", "content": result_text})
+                        self.trim_conversation_history()
+                        await self.tts.speak(result_text)
+                    # else: no output to speak
+                except Exception as e:
+                    logger.error(f"Error executing command {found_module_key}: {e}", exc_info=True)
+                    error_message = f"Przepraszam, wystąpił błąd podczas wykonywania komendy {found_module_key}."
+                    self.conversation_history.append({"role": "assistant", "content": error_message})
                     self.trim_conversation_history()
-                    # Corrected TTS method call
-                    await self.tts.speak(command_result)
-                else:
-                    # Handle cases where the command executes but returns nothing (e.g., just plays a sound)
-                    logger.info(f"Command '{found_module_key}' executed successfully but returned no text response.")
-                    # Initial text was already spoken before the command execution
-
-            except Exception as e:
-                logger.error(f"Error executing command {found_module_key}: {e}", exc_info=True)
-                error_message = f"Przepraszam, wystąpił błąd podczas wykonywania komendy {found_module_key}."
-                self.conversation_history.append({"role": "assistant", "content": error_message})
-                self.trim_conversation_history()
-                # Corrected TTS method call
-                await self.tts.speak(error_message)
+                    await self.tts.speak(error_message)
 
         else:
             # Command not found or not specified by AI

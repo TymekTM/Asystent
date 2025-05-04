@@ -370,28 +370,59 @@ def generate_response(conversation_history: list, functions_info: str, system_pr
         response = chat_with_providers(MAIN_MODEL, messages_for_api)
         ai_content = response["message"]["content"].strip() if response and response.get("message", {}).get("content") else None
         if ai_content:
-            # Try to parse as JSON, else wrap in JSON
+            # Try to parse as JSON, ensure response has required structure
             try:
-                # Try parsing as JSON (or code block with JSON)
                 parsed = json.loads(extract_json(ai_content))
-                # If it's a dict and has 'text', re-serialize to ensure string output
                 if isinstance(parsed, dict) and "text" in parsed:
-                    return json.dumps(parsed, ensure_ascii=False)
-                # If it's a string, wrap it
+                    # Ensure all keys are present
+                    return json.dumps({
+                        "text": parsed.get("text", ""),
+                        "command": parsed.get("command", ""),
+                        "params": parsed.get("params", {})
+                    }, ensure_ascii=False)
                 if isinstance(parsed, str):
-                    return json.dumps({"text": parsed}, ensure_ascii=False)
+                    # Wrap string into required structure
+                    return json.dumps({
+                        "text": parsed,
+                        "command": "",
+                        "params": {}
+                    }, ensure_ascii=False)
             except Exception:
-                # Not valid JSON, wrap as text
-                return json.dumps({"text": ai_content}, ensure_ascii=False)
-        else:
-            logger.error("Response generation failed: No content from AI.")
-            return json.dumps({"text": "Przepraszam, nie udało mi się wygenerować odpowiedzi."}, ensure_ascii=False)
+                # Not valid JSON, wrap as text with default fields
+                return json.dumps({
+                    "text": ai_content,
+                    "command": "",
+                    "params": {}
+                }, ensure_ascii=False)
+        # No content from AI, return error in required structure
+        logger.error("Response generation failed: No content from AI.")
+        return json.dumps({
+            "text": "Przepraszam, nie udało mi się wygenerować odpowiedzi.",
+            "command": "",
+            "params": {}
+        }, ensure_ascii=False)
     except Exception as e:
         logger.error(f"Response generation failed: {e}", exc_info=True)
-        return json.dumps({"text": "Przepraszam, wystąpił błąd podczas generowania odpowiedzi."}, ensure_ascii=False)
+        return json.dumps({
+            "text": "Przepraszam, wystąpił błąd podczas generowania odpowiedzi.",
+            "command": "",
+            "params": {}
+        }, ensure_ascii=False)
 
 def parse_response(response_text: str) -> dict:
     try:
-        return json.loads(extract_json(response_text))
-    except json.JSONDecodeError:
-        return {"error": "Nieprawidłowa odpowiedź AI"}
+        parsed = json.loads(extract_json(response_text))
+        # Ensure all required keys exist
+        if isinstance(parsed, dict):
+            return {
+                "text": parsed.get("text", ""),
+                "command": parsed.get("command", ""),
+                "params": parsed.get("params", {})
+            }
+        # If parsed is a string, wrap into dict
+        if isinstance(parsed, str):
+            return {"text": parsed, "command": "", "params": {}}
+        # Unexpected type, return error
+        return {"text": "Nieprawidłowa odpowiedź AI", "command": "", "params": {}}
+    except Exception:
+        return {"text": "Nieprawidłowa odpowiedź AI", "command": "", "params": {}}

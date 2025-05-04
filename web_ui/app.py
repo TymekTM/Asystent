@@ -26,7 +26,12 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 # Import main config loaders
 from config import load_config as load_main_config, save_config as save_main_config, CONFIG_FILE as MAIN_CONFIG_FILE, DEFAULT_CONFIG
 # Import memory functions
-from database_manager import get_memories_db, add_memory_db, delete_memory_db, get_db_connection # Added get_db_connection
+from database_manager import get_db_connection
+from database_models import (
+    get_memories as get_memories_db,
+    add_memory as add_memory_db,
+    delete_memory as delete_memory_db,
+)
 from database_models import (
     get_user_by_username, add_user, delete_user, list_users, update_user,
     set_user_config, get_user_config, initialize_database
