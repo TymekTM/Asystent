@@ -25,9 +25,10 @@ from performance_monitor import measure_performance
 # Import specific config variables needed
 from config import (
     load_config, # Import load_config function
+    # Default values for direct use if needed
     VOSK_MODEL_PATH, MIC_DEVICE_ID, WAKE_WORD, STT_SILENCE_THRESHOLD,
-    USE_WHISPER_FOR_COMMAND, WHISPER_MODEL, MAX_HISTORY_LENGTH, PLUGIN_MONITOR_INTERVAL, # Removed PLUGIN_MONITOR_INTERVAL as monitor_plugins is removed
-    LOW_POWER_MODE # Import LOW_POWER_MODE directly
+    USE_WHISPER_FOR_COMMAND, WHISPER_MODEL, MAX_HISTORY_LENGTH, # Removed PLUGIN_MONITOR_INTERVAL
+    LOW_POWER_MODE, DEV_MODE # Import LOW_POWER_MODE and DEV_MODE directly
 )
 from config import _config
 QUERY_REFINEMENT_ENABLED = _config.get("query_refinement", {}).get("enabled", True)
@@ -698,15 +699,21 @@ class Assistant:
                  self._observer.join()
                  logger.info("Watchdog observer stopped.")
 
+            # Unload models only if not in DEV_MODE
+            if not DEV_MODE:
+                logger.info("DEV_MODE is False, unloading models...")
+                if self.speech_recognizer:
+                    self.speech_recognizer.unload()
+                if self.whisper_asr:
+                    self.whisper_asr.unload()
+            else:
+                logger.info("DEV_MODE is True, skipping model unloading.")
 
-    def get_all_memories_for_user(self, user: str = "assistant") -> list:
-        """
-        Zwraca wszystkie treści wspomnień dla danego użytkownika (bez metadanych).
-        """
-        from modules.memory_module import retrieve_memories
-        result, success = retrieve_memories(params="", user=user)
-        if not success:
-            return []
-        return [line for line in result.split("\n") if line.strip()]
+            # Stop TTS regardless of DEV_MODE
+            if self.tts:
+                self.tts.stop()
+                logger.info("TTS stopped.")
 
-# Remove the old listen_and_process method if it exists, run_async is the main entry point now.
+            logger.info("Assistant cleanup complete.")
+
+    # Remove the old listen_and_process method if it exists, run_async is the main entry point now.

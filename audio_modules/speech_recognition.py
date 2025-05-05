@@ -19,6 +19,16 @@ class SpeechRecognizer:
             logger.warning("Audio callback status: %s", status)
         self.audio_q.put(bytes(indata))
 
+    def unload(self):
+        """Unloads the Vosk model."""
+        if self.model:
+            logger.info("Unloading Vosk model...")
+            # Vosk model doesn't have an explicit unload, rely on GC
+            self.model = None
+            logger.info("Vosk model reference removed.")
+        else:
+            logger.info("Vosk model already unloaded or not loaded.")
+
     def listen_command(self):
         logger.info("Listening for command using Vosk (dynamic recording)...")
         audio_command = self.record_dynamic_command_audio()

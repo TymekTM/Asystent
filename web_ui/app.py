@@ -326,7 +326,7 @@ def run_benchmarks():
 # --- Helper Functions ---
 
 def get_audio_input_devices():
-    """Gets a list of available audio input devices."""
+    """Gets a list of available audio input devices with IDs and names."""
     devices = []
     try:
         sd_devices = sd.query_devices()
@@ -335,15 +335,14 @@ def get_audio_input_devices():
             if device['max_input_channels'] > 0:
                 is_default = (i == default_input_device_index)
                 devices.append({
-                    'id': i,
-                    'name': device['name'],
-                    'is_default': is_default
+                    "id": i,
+                    "name": device['name'],
+                    "is_default": is_default
                 })
-        logger.info(f"Found audio input devices: {devices}")
     except Exception as e:
-        logger.error(f"Could not query audio devices: {e}")
-        # Return a dummy entry or empty list if query fails
-        devices.append({'id': -1, 'name': "Error querying devices", 'is_default': False})
+        logger.error(f"Error querying audio devices: {e}")
+        # Optionally return a default/error indicator
+        devices.append({"id": "error", "name": "Nie można pobrać urządzeń", "is_default": False})
     return devices
 
 def load_ltm():
@@ -570,54 +569,115 @@ def login_required(_func=None, *, role="user"):
 
 # --- API Routes --- defined within create_app or standalone ---
 def setup_api_routes(app, queue):
+    global assistant_queue
+    assistant_queue = queue
+
     @app.route('/api/config', methods=['GET', 'POST'])
-    @login_required(role="dev")
-    def api_config_route(): # Renamed to avoid conflict with function name
-        """API endpoint for getting and updating configuration."""
+    @login_required # Protect config access
+    def api_config():
         if request.method == 'POST':
-            new_config_data = request.json
-            if not isinstance(new_config_data, dict):
-                 logger.warning("Received invalid config data (not a dictionary).")
-                 return jsonify({"error": "Invalid configuration format."}), 400
-
-            logger.info(f"Received request to update configuration by user '{session.get('username')}' with data: {new_config_data}")
-            # Basic validation (optional, enhance as needed)
-            if 'MIC_DEVICE_ID' in new_config_data:
-                try:
-                    if new_config_data['MIC_DEVICE_ID'] == '' or new_config_data['MIC_DEVICE_ID'] is None:
-                        new_config_data['MIC_DEVICE_ID'] = None
-                    else:
-                        new_config_data['MIC_DEVICE_ID'] = int(new_config_data['MIC_DEVICE_ID'])
-                except (ValueError, TypeError):
-                     logger.warning("Invalid MIC_DEVICE_ID received.")
-                     return jsonify({"error": "Invalid MIC_DEVICE_ID format (must be an integer or empty)."}), 400
-
             try:
-                # Use the main save function
-                save_main_config(new_config_data)
-                logger.info("Configuration saved successfully via save_main_config.")
+                new_config_data = request.get_json()
+                logger.debug(f"Received config data for saving: {new_config_data}")
 
-                # Notify the main assistant process about the config change
+                # --- Type Conversion and Validation ---
+                # Convert numeric fields
+                for key in ['STT_SILENCE_THRESHOLD', 'MAX_HISTORY_LENGTH']:
+                    if key in new_config_data:
+                        try:
+                            new_config_data[key] = int(new_config_data[key])
+                        except (ValueError, TypeError):
+                            logger.warning(f"Invalid value for {key}, keeping original or default.")
+                            # Optionally load current config to keep original value
+                            current_config = load_main_config()
+                            new_config_data[key] = current_config.get(key, DEFAULT_CONFIG.get(key))
+
+
+                # Handle MIC_DEVICE_ID (can be None or int)
+                mic_id_str = new_config_data.get('MIC_DEVICE_ID', '')
+                if isinstance(mic_id_str, str) and mic_id_str.isdigit():
+                     new_config_data['MIC_DEVICE_ID'] = int(mic_id_str)
+                elif mic_id_str == '' or mic_id_str is None:
+                     new_config_data['MIC_DEVICE_ID'] = None # Explicitly set to None for default
+                else:
+                     # Keep existing or default if invalid format
+                     logger.warning(f"Invalid MIC_DEVICE_ID format: '{mic_id_str}'. Using default (None).")
+                     new_config_data['MIC_DEVICE_ID'] = None
+
+
+                # Convert boolean fields (ensure they exist)
+                for key in ['USE_WHISPER_FOR_COMMAND', 'LOW_POWER_MODE', 'EXIT_WITH_CONSOLE', 'DEV_MODE']:
+                    new_config_data[key] = bool(new_config_data.get(key, False)) # Default to False if missing
+
+                # Handle nested query_refinement enabled boolean
+                if 'query_refinement' in new_config_data and isinstance(new_config_data['query_refinement'], dict):
+                    new_config_data['query_refinement']['enabled'] = bool(new_config_data['query_refinement'].get('enabled', False))
+                else:
+                     # Ensure query_refinement structure exists if saving related fields
+                     if 'query_refinement.model' in new_config_data: # Check if any refinement field was sent
+                         current_config = load_main_config()
+                         new_config_data['query_refinement'] = current_config.get('query_refinement', DEFAULT_CONFIG.get('query_refinement', {})).copy()
+                         # Update only the fields that were actually sent if necessary
+                         if 'query_refinement.model' in new_config_data:
+                             new_config_data['query_refinement']['model'] = new_config_data.pop('query_refinement.model') # Adjust if needed based on form data structure
+                         new_config_data['query_refinement']['enabled'] = bool(new_config_data['query_refinement'].get('enabled', False))
+
+
+                # Load current config to merge, ensuring no keys are lost
+                current_config = load_main_config()
+                # Update current_config with validated new_config_data
+                for key, value in new_config_data.items():
+                     # Handle nested dicts like API_KEYS and query_refinement carefully
+                     if isinstance(value, dict) and key in current_config and isinstance(current_config[key], dict):
+                         current_config[key].update(value) # Merge sub-dictionaries
+                     else:
+                         current_config[key] = value # Overwrite top-level keys or non-dict values
+
+
+                # Ensure all default keys still exist after merge (in case some were removed)
+                for key, default_value in DEFAULT_CONFIG.items():
+                    if key not in current_config:
+                        current_config[key] = default_value
+                    elif isinstance(default_value, dict):
+                        if not isinstance(current_config.get(key), dict):
+                             current_config[key] = default_value.copy() # Reset if type changed
+                        else:
+                             # Ensure nested defaults exist
+                             for sub_key, sub_default_value in default_value.items():
+                                 if sub_key not in current_config[key]:
+                                     current_config[key][sub_key] = sub_default_value
+
+
+                logger.debug(f"Final config data to save: {current_config}")
+                save_main_config(current_config)
+                flash("Konfiguracja zapisana pomyślnie.", "success")
+                # Signal main process to reload config if necessary (implementation depends on main loop)
                 if assistant_queue:
                     try:
-                        assistant_queue.put({"action": "config_updated"})
-                        logger.info("Sent config_updated notification to assistant process.")
-                    except Exception as q_err:
-                         logger.error(f"Failed to send config_updated notification via queue: {q_err}")
-                         # Continue even if queue fails, config was saved
-                else:
-                    logger.warning("Assistant queue not available, cannot notify assistant of config change.")
-
-                return jsonify({"message": "Configuration saved successfully."}), 200
+                        assistant_queue.put_nowait({'command': 'reload_config'})
+                        logger.info("Sent reload_config command to assistant process.")
+                    except Exception as e:
+                        logger.error(f"Failed to send reload_config command: {e}")
+                return jsonify({"message": "Konfiguracja zapisana."}), 200
+            except json.JSONDecodeError:
+                logger.error("Invalid JSON received for config update.")
+                return jsonify({"error": "Nieprawidłowy format JSON."}), 400
             except Exception as e:
-                # Log the specific error during saving or queue notification
-                logger.error(f"Error during save_main_config or queue notification: {e}", exc_info=True)
-                return jsonify({"error": "Failed to save configuration due to a server issue."}), 500
+                logger.error(f"Error saving configuration: {e}", exc_info=True)
+                return jsonify({"error": f"Wystąpił błąd serwera podczas zapisu: {e}"}), 500
+        else: # GET request
+            config_data = load_main_config()
+            # Ensure API keys are masked or handled appropriately before sending to client
+            if 'API_KEYS' in config_data:
+                 config_data['API_KEYS'] = {k: '********' if v else '' for k, v in config_data['API_KEYS'].items()}
+            return jsonify(config_data)
 
-        else: # GET
-            logger.info(f"Configuration requested by user '{session.get('username')}' via GET.")
-            current_config = load_main_config() # Use main config loader
-            return jsonify(current_config)
+    @app.route('/api/audio_devices', methods=['GET'])
+    @login_required
+    def api_audio_devices():
+        """API endpoint to get the list of audio input devices."""
+        devices = get_audio_input_devices()
+        return jsonify(devices)
 
     @app.route('/api/history', methods=['GET', 'DELETE'])
     @login_required()
@@ -1359,7 +1419,9 @@ def create_app(queue: multiprocessing.Queue):
         """Configuration management page."""
         current_config = load_main_config() # Use main config loader
         audio_devices = get_audio_input_devices() # Get the list of devices
-        return render_template('config.html', config=current_config, audio_devices=audio_devices)
+        # Pass default API keys structure for rendering all fields
+        default_api_keys = DEFAULT_CONFIG.get('API_KEYS', {})
+        return render_template('config.html', config=current_config, audio_devices=audio_devices, default_api_keys=default_api_keys)
 
     @local_app.route('/history')
     @login_required()

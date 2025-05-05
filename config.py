@@ -7,28 +7,41 @@ import psutil  # for environment detection
 logger = logging.getLogger(__name__)
 
 CONFIG_FILE = "config.json"
+# Default configuration values
 DEFAULT_CONFIG = {
   "VOSK_MODEL_PATH": "vosk_model",
-  "MIC_DEVICE_ID": 14,
   "WAKE_WORD": "asystencie",
+  "MIC_DEVICE_ID": None, # Default to None, let sounddevice choose
   "STT_SILENCE_THRESHOLD": 600,
-  "STT_MODEL": "gemma3:4b-it-q4_K_M",
-  "MAIN_MODEL": "gemma3:4b-it-q4_K_M",
+  "PROVIDER": "openai",
+  "STT_MODEL": "gpt-4.1-nano",
+  "MAIN_MODEL": "gpt-4.1-nano",
   "DEEP_MODEL": "openthinker",
-  "PROVIDER": "lmstudio",
-  "USE_WHISPER_FOR_COMMAND": False,
+  "USE_WHISPER_FOR_COMMAND": True,
   "WHISPER_MODEL": "openai/whisper-small",
   "MAX_HISTORY_LENGTH": 20,
-  "PLUGIN_MONITOR_INTERVAL": 30,
-  "EXIT_WITH_CONSOLE": True,  # Jeśli true, bot wyłącza się razem z konsolą/rodzicem
+  "LOW_POWER_MODE": False, # Default to False
+  "EXIT_WITH_CONSOLE": True, # Default to True
+  "DEV_MODE": False, # Default to False - prevents model unloading on exit if True
   "API_KEYS": {
-    "OPENAI_API_KEY": None,
-    "DEEPSEEK_API_KEY": None,
-    "ANTHROPIC_API_KEY": None
+    "OPENAI_API_KEY": "None",
+    "DEEPSEEK_API_KEY": "None",
+    "ANTHROPIC_API_KEY": "None",
   },
-  "LOW_POWER_MODE": False,
-  "LOW_POWER_THRESHOLDS": {"memory_gb": 1, "cpu_count": 2}
+  "query_refinement": {
+    "enabled": True,
+    "model": "gpt-4.1-nano"
+  },
+  "version": "1.1.0" # Add version here
 }
+
+# Extract default values for direct import elsewhere
+VOSK_MODEL_PATH = DEFAULT_CONFIG['VOSK_MODEL_PATH']
+WHISPER_MODEL = DEFAULT_CONFIG['WHISPER_MODEL']
+MAX_HISTORY_LENGTH = DEFAULT_CONFIG['MAX_HISTORY_LENGTH']
+LOW_POWER_MODE = DEFAULT_CONFIG['LOW_POWER_MODE']
+EXIT_WITH_CONSOLE = DEFAULT_CONFIG['EXIT_WITH_CONSOLE']
+DEV_MODE = DEFAULT_CONFIG['DEV_MODE'] # Add DEV_MODE here
 
 def load_config():
     if os.path.exists(CONFIG_FILE):
@@ -36,13 +49,26 @@ def load_config():
             with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
                 config = json.load(f)
                 # Ensure all default keys exist
+                updated = False
                 for key, value in DEFAULT_CONFIG.items():
                     if key not in config:
                         config[key] = value
-                    elif isinstance(value, dict): # Handle nested dicts like API_KEYS
-                         for sub_key, sub_value in value.items():
-                              if sub_key not in config[key]:
-                                   config[key][sub_key] = sub_value
+                        updated = True
+                        logger.info(f"Added missing default config key: {key}")
+                    # Handle nested dicts like API_KEYS and query_refinement
+                    elif isinstance(value, dict):
+                        for sub_key, sub_value in value.items():
+                            if key not in config or not isinstance(config[key], dict) or sub_key not in config[key]:
+                                 if key not in config or not isinstance(config[key], dict):
+                                     config[key] = {} # Ensure the key exists as a dict
+                                 config[key][sub_key] = sub_value
+                                 updated = True
+                                 logger.info(f"Added missing default config sub-key: {key}.{sub_key}")
+
+                # Save back if defaults were added
+                if updated:
+                    save_config(config)
+
                 return config
         except (json.JSONDecodeError, IOError) as e:
             logger.error(f"Error loading {CONFIG_FILE}: {e}. Using default config.")

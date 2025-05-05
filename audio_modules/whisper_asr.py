@@ -16,3 +16,17 @@ class WhisperASR:
         logger.info("Transcribing audio with Whisper...")
         result = self.asr(audio)
         return result.get("text", "")
+
+    def unload(self):
+        """Unloads the Whisper model and clears CUDA cache if applicable."""
+        if self.asr:
+            logger.info(f"Unloading Whisper model ({self.asr.model.name_or_path})...")
+            # Remove references to allow GC
+            del self.asr
+            self.asr = None
+            if torch.cuda.is_available():
+                logger.info("Clearing CUDA cache...")
+                torch.cuda.empty_cache()
+            logger.info("Whisper model unloaded.")
+        else:
+            logger.info("Whisper model already unloaded or not loaded.")

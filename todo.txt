@@ -14,6 +14,7 @@
 ## Web UI and UX
 - Advanced user authentication and role management (roles, password reset, etc.)
 - Internationalizationok, (multi-language UI, easy translation)
+- Fix config page to display API keys and corectly dosplay sound devices
 
 ## Integration and Security
 - API integrations: add more external services (weather, calendar, IoT, etc.)
