@@ -15,6 +15,7 @@ from ai_module import chat_with_providers, remove_chain_of_thought
 from audio_modules.beep_sounds import play_beep
 from config import MAIN_MODEL
 from prompts import SEARCH_SUMMARY_PROMPT
+from performance_monitor import measure_performance # Add this import
 
 logger = logging.getLogger(__name__)
 
@@ -116,6 +117,7 @@ _ddgs = DDGS()
 #  Networking helpers
 # ──────────────────────────────────────────
 
+@measure_performance
 async def _fetch_page(client: httpx.AsyncClient, url: str) -> str:
     for attempt in range(3):
         try:
@@ -130,6 +132,7 @@ async def _fetch_page(client: httpx.AsyncClient, url: str) -> str:
     return ""
 
 
+@measure_performance
 async def _search_duckduckgo(query: str) -> list[str]:
     loop = asyncio.get_running_loop()
     return await loop.run_in_executor(None, lambda: [r["href"] for r in _ddgs.text(query, max_results=DUCK_MAX_RESULTS) if r.get("href")])
@@ -138,6 +141,7 @@ async def _search_duckduckgo(query: str) -> list[str]:
 #  Public entrypoint
 # ──────────────────────────────────────────
 
+@measure_performance
 async def search_handler(params: str = "", conversation_history: list | None = None, user_lang: str | None = None) -> str:
     if not params:
         return "Podaj zapytanie wyszukiwania po komendzie !search"

@@ -17,6 +17,7 @@ import sounddevice as sd # Import sounddevice
 import collections # Import collections for deque
 import platform
 import markdown # Import markdown for documentation rendering
+from performance_monitor import get_average_times, measure_performance, clear_performance_stats # Add clear_performance_stats
 
 # --- Configuration ---
 
@@ -27,15 +28,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from config import load_config as load_main_config, save_config as save_main_config, CONFIG_FILE as MAIN_CONFIG_FILE, DEFAULT_CONFIG
 # Import memory functions
 from database_manager import get_db_connection
-from database_models import (
-    get_memories as get_memories_db,
-    add_memory as add_memory_db,
-    delete_memory as delete_memory_db,
-)
-from database_models import (
-    get_user_by_username, add_user, delete_user, list_users, update_user,
-    set_user_config, get_user_config, initialize_database
-)
+from database_models import (get_user_by_username, get_user_password_hash, list_users, add_user, delete_user, update_user, 
+                           get_memories, add_memory, delete_memory) # Corrected function names
 
 # --- Configuration ---
 SECRET_KEY = os.environ.get('SECRET_KEY')
@@ -564,7 +558,7 @@ def login_required(_func=None, *, role="user"):
                 session.clear()
                 flash("User not found.", "danger")
                 return redirect(url_for('login'))
-            if role == "dev" and user['role'] != "dev":
+            if role == "dev" and user.role != "dev": # Corrected attribute access
                 flash("You do not have permission to access this page.", "danger")
                 return redirect(url_for('index'))
             return fn(*args, **kwargs)
@@ -577,208 +571,8 @@ def login_required(_func=None, *, role="user"):
 # --- Web UI Routes --- defined within create_app ---
 
 # --- API Routes --- defined within create_app or standalone ---
-
-# --- App Creation Function ---
-def create_app(queue: multiprocessing.Queue):
-    # --- Retry decorator for HTTP endpoints or subprocess calls ---
-    def retry(on_exception=Exception, retries=3, backoff=1):
-        def decorator(func):
-            @wraps(func)
-            def wrapper(*args, **kwargs):
-                delay = backoff
-                for _ in range(retries):
-                    try:
-                        return func(*args, **kwargs)
-                    except on_exception:
-                        time.sleep(delay)
-                        delay *= 2
-                return func(*args, **kwargs)
-            return wrapper
-        return decorator
-    """Creates and configures the Flask application."""
-    global assistant_queue  # Set the global queue variable for this process
-    assistant_queue = queue
-
-    # Create a new Flask app instance for this process
-    local_app = Flask(__name__, template_folder='templates', static_folder='static')
-    local_app.secret_key = SECRET_KEY
-    # --- Health check endpoint ---
-    @local_app.route('/health')
-    def health():
-        uptime = time.time() - _startup_time
-        qsize = assistant_queue.qsize() if assistant_queue else None
-        return jsonify({'version': DEFAULT_CONFIG.get('version'), 'uptime_sec': uptime, 'queue_size': qsize})
-    # --- Global error handlers ---
-    @local_app.errorhandler(404)
-    def handle_404(e):
-        return jsonify({'error': 'Not Found'}), 404
-    @local_app.errorhandler(500)
-    def handle_500(e):
-        return jsonify({'error': 'Internal Server Error'}), 500
-
-
-    # Configure Flask logging
-    # Use a basic config, can be enhanced (e.g., rotating file handler)
-    # Avoid basicConfig here if the main process already configured it.
-    # Rely on the logger obtained at the module level.
-    # logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levellevel)s - %(message)s')
-    log_level = logging.WARNING # Or get from config/env
-    logging.getLogger(__name__).setLevel(log_level)
-    logging.getLogger('werkzeug').setLevel(logging.WARNING)  # Ogranicz logi Werkzeug do WARNING i wyżej
-    # Add specific handlers if needed (e.g., file handler for web_ui.log)
-    # handler = logging.FileHandler('web_ui.log')
-    # handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levellevel)s - %(message)s'))
-    # logging.getLogger(__name__).addHandler(handler)
-
-    logger.info("Flask app created and configured.")
-
-
-    # --- Register Blueprints or Routes --- Add routes to the app object
-
-    @local_app.route('/login', methods=['GET', 'POST'])
-    def login():
-        if request.method == 'POST':
-            username = request.form.get('username')
-            password = request.form.get('password')
-            user = get_user_by_username(username)
-            if user and user['password'] == password:
-                session['username'] = username
-                session['role'] = user['role']
-                flash(f"Welcome, {username}!", "success")
-                logger.info(f"User '{username}' logged in successfully.")
-                return redirect(url_for('index'))
-            else:
-                flash("Invalid username or password.", "danger")
-                logger.warning(f"Failed login attempt for username: '{username}'.")
-        return render_template('login.html')
-
-    @local_app.route('/logout')
-    def logout():
-        username = session.get('username', 'Unknown')
-        session.pop('username', None)
-        session.pop('role', None)
-        flash("You have been logged out.", "info")
-        logger.info(f"User '{username}' logged out.")
-        return redirect(url_for('login'))
-
-    @local_app.route('/')
-    @login_required()
-    def index():
-        """Main dashboard page."""
-        current_config = load_main_config()  # Use main config loader
-        # Fetch assistant status based on lock file (restarting or online)
-        lock_path = os.path.join(os.path.dirname(__file__), '..', 'assistant_restarting.lock')
-        if os.path.exists(lock_path):
-            status_str = "Restarting"
-        else:
-            status_str = "Online"
-        assistant_status = {
-            "status": status_str,
-            "wake_word": current_config.get('WAKE_WORD', 'N/A'),
-            "stt_engine": "Whisper" if current_config.get('USE_WHISPER_FOR_COMMAND') else "Vosk",
-            "mic_id": current_config.get('MIC_DEVICE_ID', 'N/A')
-        }
-        return render_template('index.html', config=current_config, status=assistant_status)
-
-    @local_app.route('/config')
-    @login_required(role="dev")
-    def config_page():
-        """Configuration management page."""
-        current_config = load_main_config() # Use main config loader
-        audio_devices = get_audio_input_devices() # Get the list of devices
-        return render_template('config.html', config=current_config, audio_devices=audio_devices)
-
-    @local_app.route('/history')
-    @login_required()
-    def history_page():
-        """Conversation history page."""
-        history = get_conversation_history()
-        return render_template('history.html', history=history)
-
-    @local_app.route('/ltm')
-    def ltm_page():
-        if 'username' not in session:
-            return redirect(url_for('login'))
-        try:
-            search_query = request.args.get('q', '')
-            memories = get_memories_db(query=search_query, limit=100)
-            return render_template('ltm_page.html', memories=memories, search_query=search_query)
-        except Exception as e:
-            logger.error(f"Error loading LTM page: {e}")
-            flash("Wystąpił błąd podczas ładowania strony pamięci.", "danger")
-            return render_template('ltm_page.html', memories=[], search_query='')
-
-    @local_app.route('/logs')
-    @login_required()
-    def logs_page():
-        return render_template('logs.html')
-
-    @local_app.route('/dev')
-    def dev_page():
-        if not session.get('username') or session.get('role') != 'dev':
-            flash('Brak dostępu do zakładki Dev.', 'danger')
-            return redirect(url_for('index'))
-        return render_template('dev.html')
-
-    @local_app.route('/plugins')
-    @login_required(role="dev")
-    def plugins_page():
-        return render_template('plugins.html')
-
-    @local_app.route('/mcp')
-    @login_required(role="dev")
-    def mcp_page():
-        return render_template('mcp.html')
-
-    # --- User Management (Dev Only) ---
-    @local_app.route('/dev/users', methods=['GET'])
-    @login_required(role="dev")
-    def dev_list_users():
-        users = list_users()
-        return render_template('dev.html', users=users)
-
-    @local_app.route('/dev/users/add', methods=['POST'])
-    @login_required(role="dev")
-    def dev_add_user():
-        data = request.json
-        username = data.get('username')
-        password = data.get('password')
-        role = data.get('role', 'user')
-        display_name = data.get('display_name')
-        ai_persona = data.get('ai_persona')
-        personalization = data.get('personalization')
-        if not username or not password:
-            return jsonify({'success': False, 'error': 'Username and password required.'}), 400
-        if get_user_by_username(username):
-            return jsonify({'success': False, 'error': 'User already exists.'}), 400
-        add_user(username, password, role, display_name, ai_persona, personalization)
-        return jsonify({'success': True})
-
-    @local_app.route('/dev/users/delete', methods=['POST'])
-    @login_required(role="dev")
-    def dev_delete_user():
-        data = request.json
-        username = data.get('username')
-        if username == 'dev':
-            return jsonify({'success': False, 'error': 'Cannot delete dev account.'}), 400
-        if not get_user_by_username(username):
-            return jsonify({'success': False, 'error': 'User not found.'}), 404
-        delete_user(username)
-        return jsonify({'success': True})
-
-    @local_app.route('/dev/users/update', methods=['POST'])
-    @login_required(role="dev")
-    def dev_update_user():
-        data = request.json
-        username = data.get('username')
-        fields = {k: v for k, v in data.items() if k != 'username'}
-        if not get_user_by_username(username):
-            return jsonify({'success': False, 'error': 'User not found.'}), 404
-        update_user(username, **fields)
-        return jsonify({'success': True})
-
-    # --- API Routes --- (Registered within create_app)
-    @local_app.route('/api/config', methods=['GET', 'POST'])
+def setup_api_routes(app, queue):
+    @app.route('/api/config', methods=['GET', 'POST'])
     @login_required(role="dev")
     def api_config_route(): # Renamed to avoid conflict with function name
         """API endpoint for getting and updating configuration."""
@@ -827,7 +621,7 @@ def create_app(queue: multiprocessing.Queue):
             current_config = load_main_config() # Use main config loader
             return jsonify(current_config)
 
-    @local_app.route('/api/history', methods=['GET', 'DELETE'])
+    @app.route('/api/history', methods=['GET', 'DELETE'])
     @login_required()
     def api_history_route(): # Renamed
         """API endpoint for getting and clearing conversation history."""
@@ -844,7 +638,7 @@ def create_app(queue: multiprocessing.Queue):
             history = get_conversation_history()
             return jsonify(history)
 
-    @local_app.route('/api/activate', methods=['POST'])
+    @app.route('/api/activate', methods=['POST'])
     @login_required()
     def api_activate(): # Moved inside create_app
         """API endpoint to manually trigger voice listening (bypass wake word)."""
@@ -864,7 +658,7 @@ def create_app(queue: multiprocessing.Queue):
              logger.warning("Cannot trigger manual listen: Assistant queue not available.")
              return jsonify({"error": "Assistant connection not available."}), 503
 
-    @local_app.route('/api/long_term_memory', methods=['GET', 'POST', 'DELETE'])
+    @app.route('/api/long_term_memory', methods=['GET', 'POST', 'DELETE'])
     @login_required(role="dev")
     def api_long_term_memory():
         """API endpoint for long-term memory management."""
@@ -890,7 +684,7 @@ def create_app(queue: multiprocessing.Queue):
             ltm = load_ltm()
             return jsonify(ltm)
 
-    @local_app.route('/api/status', methods=['GET'])
+    @app.route('/api/status', methods=['GET'])
     @login_required()
     def api_status():
         """API endpoint for assistant status (for dashboard polling)."""
@@ -911,7 +705,7 @@ def create_app(queue: multiprocessing.Queue):
         }
         return jsonify(status)
 
-    @local_app.route('/api/restart/assistant', methods=['POST'])
+    @app.route('/api/restart/assistant', methods=['POST'])
     @login_required()
     def restart_assistant():
         """Endpoint to restart the assistant process."""
@@ -927,7 +721,7 @@ def create_app(queue: multiprocessing.Queue):
         logger.warning("[WEB] Attempted to start new assistant process. Uwaga: stary proces nie jest automatycznie zamykany!")
         return jsonify({"message": "Restarting assistant..."}), 202
 
-    @local_app.route('/api/restart/web', methods=['POST'])
+    @app.route('/api/restart/web', methods=['POST'])
     @login_required()
     def restart_web():
         logger.warning("[WEB] Restart web panel requested via dashboard API.")
@@ -937,7 +731,7 @@ def create_app(queue: multiprocessing.Queue):
         os._exit(3)  # This will cause most process managers to restart Flask
         return jsonify({"message": "Restarting web panel..."}), 202
 
-    @local_app.route('/api/restart/all', methods=['POST'])
+    @app.route('/api/restart/all', methods=['POST'])
     @login_required()
     def restart_all():
         logger.warning("[WEB] Restart all (assistant + web) requested via dashboard API.")
@@ -952,7 +746,7 @@ def create_app(queue: multiprocessing.Queue):
         os._exit(3)
         return jsonify({"message": "Restarting assistant and web panel..."}), 202
 
-    @local_app.route('/api/logs')
+    @app.route('/api/logs')
     @login_required()
     def api_logs():
         level = request.args.get('level', 'ALL')
@@ -974,7 +768,7 @@ def create_app(queue: multiprocessing.Queue):
         except Exception as e:
             return jsonify({'logs': [f'Błąd odczytu logów: {e}'], 'page': 1, 'total_pages': 1, 'total_lines': 0}), 500
 
-    @local_app.route('/api/analytics', methods=['GET'])
+    @app.route('/api/analytics', methods=['GET'])
     @login_required()
     def api_analytics():
         """API endpoint for usage statistics (dashboard)."""
@@ -995,7 +789,7 @@ def create_app(queue: multiprocessing.Queue):
             logger.error(f"Failed to calculate analytics: {e}", exc_info=True)
             return jsonify({'msg_count': 0, 'unique_users': [], 'avg_response_time': 0, 'last_query_time': None})
 
-    @local_app.route('/api/plugins', methods=['GET'])
+    @app.route('/api/plugins', methods=['GET'])
     @login_required(role="dev")
     def api_plugins():
         """API endpoint for plugin list and status."""
@@ -1022,6 +816,25 @@ def create_app(queue: multiprocessing.Queue):
         except Exception as e:
             logger.error(f"Failed to load plugins: {e}", exc_info=True)
             return jsonify({})
+
+    @app.route('/api/performance_stats', methods=['GET', 'DELETE']) # Add DELETE method
+    @login_required
+    @measure_performance # Measure this endpoint too
+    def api_performance_stats():
+        """API endpoint to get or clear performance statistics."""
+        if request.method == 'DELETE':
+            if 'username' in session and session.get('role') == 'dev': # Only allow devs to clear
+                if clear_performance_stats():
+                    logger.info(f"Performance stats cleared by user '{session['username']}'.")
+                    return jsonify({"message": "Performance stats cleared successfully."}), 200
+                else:
+                    logger.error("Failed to clear performance stats.")
+                    return jsonify({"error": "Failed to clear performance stats."}), 500
+            else:
+                return jsonify({"error": "Unauthorized to clear stats."}), 403
+        else: # GET
+            stats = get_average_times()
+            return jsonify(stats)
 
     # --- API endpoints for test running ---
     from flask import Blueprint
@@ -1103,87 +916,74 @@ def create_app(queue: multiprocessing.Queue):
     @api_bp.route('/api/schedule_status', methods=['GET'])
     def api_schedule_status():
         """Return scheduling status."""
-        return jsonify({'scheduled_interval': scheduled_interval})    # Register blueprint in create_app or directly if app is global
-    local_app.register_blueprint(api_bp)
-
+        return jsonify({'scheduled_interval': scheduled_interval})    # Register blueprint in create_app
+    app.register_blueprint(api_bp)
 
 
     # API endpoint to get memories (for dynamic updates/search)
-    @local_app.route('/api/ltm/get', methods=['GET'])
-    def api_get_memories():
-        if 'username' not in session:
-            return jsonify({"error": "Unauthorized"}), 401
+    @app.route('/api/ltm/get', methods=['GET'])
+    @login_required()
+    def get_memories_api():
+        query = request.args.get('q', '')
+        limit = request.args.get('limit', default=50, type=int)
         try:
-            query = request.args.get('query', '')
-            memories = get_memories_db(query=query, limit=100)
-            # Convert Row objects to dictionaries for JSON serialization
-            memories_dict = [dict(mem) for mem in memories]
-            return jsonify(memories_dict)
+            memories = get_memories(query=query, limit=limit) # Corrected function name
+            # Convert Memory objects to dictionaries for JSON serialization
+            memories_list = [
+                {
+                    "id": mem.id,
+                    "content": mem.content,
+                    "user": mem.user,
+                    "timestamp": mem.timestamp.isoformat() # Format datetime
+                }
+                for mem in memories
+            ]
+            return jsonify(memories_list)
         except Exception as e:
             logger.error(f"Error fetching memories via API: {e}")
             return jsonify({"error": "Failed to fetch memories"}), 500
 
-
     # API endpoint to add a memory
-    @local_app.route('/api/ltm/add', methods=['POST'])
-    def api_add_memory():
-        if 'username' not in session:
-            return jsonify({"error": "Unauthorized"}), 401
+    @app.route('/api/ltm/add', methods=['POST'])
+    @login_required()
+    def add_memory_api():
+        data = request.json
+        content = data.get('content')
+        user = session.get('username', 'unknown') # Get user from session
+        if not content:
+            return jsonify({'error': 'Content is required'}), 400
         try:
-            data = request.json
-            content = data.get('content')
-            user = data.get('user') or session.get('username', 'web_ui_user')
-            if not content:
-                return jsonify({"error": "Content cannot be empty"}), 400
-            # Check for duplicate: do not add if identical content from same user in last 10 seconds
-            recent = get_memories_db(query=content, limit=3)
-            for mem in recent:
-                if mem['content'] == content and mem['user'] == user:
-                    # If timestamp is very recent, treat as duplicate
-                    from datetime import datetime, timedelta
-                    ts = datetime.strptime(mem['timestamp'].split('.')[0], '%Y-%m-%d %H:%M:%S')
-                    if (datetime.now() - ts).total_seconds() < 10:
-                        return jsonify({"error": "Duplikat zgłoszenia. Odczekaj chwilę."}), 409
-            memory_id = add_memory_db(content=content, user=user)
-            if memory_id:
-                logger.info(f"Memory added via Web UI by {user}. ID: {memory_id}")
-                conn = get_db_connection()
-                if conn:
-                    new_memory = conn.execute('SELECT * FROM memories WHERE id = ?', (memory_id,)).fetchone()
-                    conn.close()
-                    if new_memory:
-                         return jsonify(dict(new_memory)), 201 # Return the created memory
-                    else:
-                        # Should not happen if add_memory_db returned an ID, but handle defensively
-                        return jsonify({"message": "Memory added, but failed to retrieve details."}), 200
-                else:
-                     return jsonify({"message": "Memory added, but failed to retrieve details due to DB connection issue."}), 200
-            else:
-                logger.error(f"Failed to add memory via Web UI by {user}. Content: {content[:50]}...")
-                return jsonify({"error": "Failed to add memory to database"}), 500
+            # Check for duplicates (optional, based on desired behavior)
+            recent = get_memories(query=content, limit=3) # Corrected function name
+            if any(m.content == content for m in recent):
+                 logger.warning(f"Attempted to add duplicate memory: {content[:50]}...")
+                 # Decide whether to return an error or just log
+                 # return jsonify({'warning': 'Memory might be a duplicate'}), 200
+
+            memory_id = add_memory(content=content, user=user) # Corrected function name
+            logger.info(f"Memory added via API by {user}: ID {memory_id}")
+            return jsonify({'success': True, 'id': memory_id}), 201
         except Exception as e:
             logger.error(f"Error adding memory via API: {e}")
-            return jsonify({"error": "Server error"}), 500
-
+            return jsonify({'error': 'Failed to add memory'}), 500
 
     # API endpoint to delete a memory
-    @local_app.route('/api/ltm/delete/<int:memory_id>', methods=['DELETE'])
-    def api_delete_memory(memory_id):
-        if 'username' not in session:
-            return jsonify({"error": "Unauthorized"}), 401
+    @app.route('/api/ltm/delete/<int:memory_id>', methods=['DELETE'])
+    @login_required()
+    def delete_memory_api(memory_id):
         try:
-            success = delete_memory_db(memory_id)
+            success = delete_memory(memory_id) # Corrected function name
             if success:
-                logger.info(f"Memory ID {memory_id} deleted via Web UI by {session.get('username', 'unknown')}")
-                return jsonify({"message": "Memory deleted successfully"}), 200
+                logger.info(f"Memory {memory_id} deleted via API by {session.get('username')}")
+                return jsonify({'success': True})
             else:
-                logger.warning(f"Failed to delete memory ID {memory_id} via Web UI (not found or DB error).")
-                return jsonify({"error": "Memory not found or failed to delete"}), 404
+                logger.warning(f"Attempt to delete non-existent memory {memory_id} via API")
+                return jsonify({'error': 'Memory not found'}), 404
         except Exception as e:
             logger.error(f"Error deleting memory {memory_id} via API: {e}")
-            return jsonify({"error": "Server error"}), 500
+            return jsonify({'error': 'Failed to delete memory'}), 500
 
-    @local_app.route('/api/stop/assistant', methods=['POST'])
+    @app.route('/api/stop/assistant', methods=['POST'])
     @login_required()
     def stop_assistant():
         logger.warning("[WEB] Stop assistant requested via dashboard API.")
@@ -1193,17 +993,17 @@ def create_app(queue: multiprocessing.Queue):
             f.write('stop')
         return jsonify({"message": "Wysłano żądanie zatrzymania asystenta."}), 202
 
-    @local_app.route('/chat')
+    @app.route('/chat')
     @login_required(role="user")
     def chat_page():
         return render_template('chat.html')
 
-    @local_app.route('/personalization')
+    @app.route('/personalization')
     @login_required(role="user")
     def personalization_page():
         return render_template('personalization.html')
 
-    @local_app.route('/api/chat/history')
+    @app.route('/api/chat/history')
     @login_required(role="user")
     def chat_history_api():
         username = session['username']
@@ -1223,7 +1023,7 @@ def create_app(queue: multiprocessing.Queue):
                 history.append({'role': 'assistant', 'content': row['content'], 'timestamp': row['timestamp']})
         return jsonify({'history': history})
 
-    @local_app.route('/api/chat/send', methods=['POST'])
+    @app.route('/api/chat/send', methods=['POST'])
     @login_required(role="user")
     def chat_send_api():
         import importlib
@@ -1340,7 +1140,7 @@ def create_app(queue: multiprocessing.Queue):
         conn.close()
         return jsonify({'reply': reply})
 
-    @local_app.route('/api/chat/clear', methods=['POST'])
+    @app.route('/api/chat/clear', methods=['POST'])
     @login_required(role="user")
     def chat_clear_api():
         username = session['username']
@@ -1354,7 +1154,7 @@ def create_app(queue: multiprocessing.Queue):
         conn.close()
         return jsonify({'success': True})
 
-    @local_app.route('/api/logs/download')
+    @app.route('/api/logs/download')
     @login_required()
     def download_logs():
         """Download the current and rotated log files as a zip archive."""
@@ -1369,7 +1169,7 @@ def create_app(queue: multiprocessing.Queue):
         mem_zip.seek(0)
         return send_file(mem_zip, mimetype='application/zip', as_attachment=True, download_name='logs.zip')
 
-    @local_app.route('/api/voice_upload', methods=['POST'])
+    @app.route('/api/voice_upload', methods=['POST'])
     def voice_upload():
         """Przyjmuje plik audio z web UI (np. z telefonu), rozpoznaje tekst i zwraca go do UI."""
         if 'audio' not in request.files:
@@ -1393,18 +1193,18 @@ def create_app(queue: multiprocessing.Queue):
         return jsonify({'text': text})
 
     # --- Documentation Routes ---
-    @local_app.route('/docs')
+    @app.route('/docs')
 
     def docs_index():
         """Render the documentation index page."""
         return render_template('docs_index.html')
 
     # Documentation pages for web UI
-    @local_app.route('/documentation')
+    @app.route('/documentation')
     def documentation_main():
         """Main documentation page."""
         try:
-            with open(os.path.join(local_app.root_path, '..', 'docs', 'README.md'), 'r', encoding='utf-8') as f:
+            with open(os.path.join(app.root_path, '..', 'docs', 'README.md'), 'r', encoding='utf-8') as f:
                 content = f.read()
             html_content = markdown.markdown(content, extensions=['fenced_code', 'tables'])
             return render_template('documentation.html', 
@@ -1419,11 +1219,11 @@ def create_app(queue: multiprocessing.Queue):
             flash("Error loading documentation", "danger")
             return redirect(url_for('index'))
 
-    @local_app.route('/documentation/<section>/<path>')
+    @app.route('/documentation/<section>/<path>')
     def documentation_section(section, path):
         """Display a specific documentation file."""
         try:
-            file_path = os.path.join(local_app.root_path, '..', 'docs', section, f"{path}.md")
+            file_path = os.path.join(app.root_path, '..', 'docs', section, f"{path}.md")
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
             html_content = markdown.markdown(content, extensions=['fenced_code', 'tables'])
@@ -1440,14 +1240,14 @@ def create_app(queue: multiprocessing.Queue):
             flash("Error loading documentation", "danger")
             return redirect(url_for('documentation_main'))
 
-    @local_app.route('/docs/<path:filename>')
+    @app.route('/docs/<path:filename>')
     def docs_file(filename):
         """Serve a documentation file."""
         try:
             return send_file(os.path.join(os.path.dirname(__file__), '..', 'docs', filename))
         except Exception as e:
             logger.error(f"Error serving docs file {filename}: {e}")
-            return jsonify({"error": "File not found"}), 404    @local_app.route('/api/docs')
+            return jsonify({"error": "File not found"}), 404    @app.route('/api/docs')
     def api_docs():
         """API endpoint to get documentation files list."""
         docs_dir = os.path.join(os.path.dirname(__file__), '..', 'docs')
@@ -1459,22 +1259,205 @@ def create_app(queue: multiprocessing.Queue):
         except Exception as e:
             logger.error(f"Error listing docs directory: {e}")
             return jsonify({"error": "Failed to list documentation files"}), 500
-              # Return the configured app
+
+# --- App Creation Function ---
+def create_app(queue: multiprocessing.Queue):
+    global assistant_queue
+    assistant_queue = queue
+
+    # Create a new Flask app instance for this process
+    local_app = Flask(__name__, template_folder='templates', static_folder='static')
+    local_app.secret_key = SECRET_KEY
+    # --- Health check endpoint ---
+    @local_app.route('/health')
+    def health():
+        uptime = time.time() - _startup_time
+        qsize = assistant_queue.qsize() if assistant_queue else None
+        return jsonify({'version': DEFAULT_CONFIG.get('version'), 'uptime_sec': uptime, 'queue_size': qsize})
+    # --- Global error handlers ---
+    @local_app.errorhandler(404)
+    def handle_404(e):
+        return jsonify({'error': 'Not Found'}), 404
+    @local_app.errorhandler(500)
+    def handle_500(e):
+        # Log the actual error
+        logger.error(f"Internal Server Error: {e}", exc_info=True)
+        return jsonify({'error': 'Internal Server Error'}), 500
+
+
+    # Configure Flask logging
+    # Use a basic config, can be enhanced (e.g., rotating file handler)
+    # Avoid basicConfig here if the main process already configured it.
+    # Rely on the logger obtained at the module level.
+    # logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levellevel)s - %(message)s')
+    log_level = logging.WARNING # Or get from config/env
+    logging.getLogger(__name__).setLevel(log_level)
+    logging.getLogger('werkzeug').setLevel(logging.WARNING)  # Ogranicz logi Werkzeug do WARNING i wyżej
+    # Add specific handlers if needed (e.g., file handler for web_ui.log)
+    # handler = logging.FileHandler('web_ui.log')
+    # handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levellevel)s - %(message)s'))
+    # logging.getLogger(__name__).addHandler(handler)
+
+    logger.info("Flask app created and configured.")
+
+
+    # --- Register Blueprints or Routes --- Add routes to the app object
+
+    @local_app.route('/login', methods=['GET', 'POST'])
+    def login():
+        if request.method == 'POST':
+            username = request.form.get('username')
+            password = request.form.get('password')
+            user = get_user_by_username(username)
+
+            # Fetch password hash separately only if user exists
+            if user:
+                stored_password_hash = get_user_password_hash(username)
+                # TODO: Implement proper password hashing and verification (e.g., using werkzeug.security)
+                # Comparing plaintext or simple hash is INSECURE!
+                if stored_password_hash and stored_password_hash == password: # Check if hash exists and matches
+                    session['username'] = username
+                    session['role'] = user.role # Correct attribute access
+                    flash(f"Welcome, {username}!", "success")
+                    logger.info(f"User '{username}' logged in successfully.")
+                    return redirect(url_for('index'))
+
+            # If user not found or password incorrect
+            flash("Invalid username or password.", "danger")
+            logger.warning(f"Failed login attempt for username: '{username}'.")
+        return render_template('login.html')
+
+    @local_app.route('/logout')
+    def logout():
+        username = session.get('username', 'Unknown')
+        session.pop('username', None)
+        session.pop('role', None)
+        flash("You have been logged out.", "info")
+        logger.info(f"User '{username}' logged out.")
+        return redirect(url_for('login'))
+
+    @local_app.route('/')
+    @login_required()
+    def index():
+        """Main dashboard page."""
+        current_config = load_main_config()  # Use main config loader
+        # Fetch assistant status based on lock file (restarting or online)
+        lock_path = os.path.join(os.path.dirname(__file__), '..', 'assistant_restarting.lock')
+        if os.path.exists(lock_path):
+            status_str = "Restarting"
+        else:
+            status_str = "Online"
+        assistant_status = {
+            "status": status_str,
+            "wake_word": current_config.get('WAKE_WORD', 'N/A'),
+            "stt_engine": "Whisper" if current_config.get('USE_WHISPER_FOR_COMMAND') else "Vosk",
+            "mic_id": current_config.get('MIC_DEVICE_ID', 'N/A')
+        }
+        return render_template('index.html', config=current_config, status=assistant_status)
+
+    @local_app.route('/config')
+    @login_required(role="dev")
+    def config_page():
+        """Configuration management page."""
+        current_config = load_main_config() # Use main config loader
+        audio_devices = get_audio_input_devices() # Get the list of devices
+        return render_template('config.html', config=current_config, audio_devices=audio_devices)
+
+    @local_app.route('/history')
+    @login_required()
+    def history_page():
+        """Conversation history page."""
+        history = get_conversation_history()
+        return render_template('history.html', history=history)
+
+    @local_app.route('/ltm')
+    def ltm_page():
+        if 'username' not in session:
+            return redirect(url_for('login'))
+        try:
+            search_query = request.args.get('q', '')
+            memories = get_memories(query=search_query, limit=100) # Corrected function name
+            return render_template('ltm_page.html', memories=memories, search_query=search_query)
+        except Exception as e:
+            logger.error(f"Error loading LTM page: {e}")
+            flash("Wystąpił błąd podczas ładowania strony pamięci.", "danger")
+            return render_template('ltm_page.html', memories=[], search_query='')
+
+    @local_app.route('/logs')
+    @login_required()
+    def logs_page():
+        return render_template('logs.html')
+
+    @local_app.route('/dev')
+    @login_required(role="dev") # Changed role to dev for consistency
+    @measure_performance # Apply decorator here
+    def dev_page():
+        """Developer page for testing and diagnostics."""
+        current_users = list_users()
+        current_config = load_main_config() # Use main config loader
+        audio_devices = get_audio_input_devices() # Get the list of devices
+        # Performance stats will be loaded dynamically via JS/API
+        return render_template('dev.html', users=current_users, config=current_config, audio_devices=audio_devices)
+
+    @local_app.route('/plugins')
+    @login_required(role="dev")
+    def plugins_page():
+        return render_template('plugins.html')
+
+    @local_app.route('/mcp')
+    @login_required(role="dev")
+    def mcp_page():
+        return render_template('mcp.html')
+
+    # --- User Management (Dev Only) ---
+    @local_app.route('/dev/users', methods=['GET'])
+    @login_required(role="dev")
+    def dev_list_users():
+        users = list_users()
+        return render_template('dev.html', users=users)
+
+    @local_app.route('/dev/users/add', methods=['POST'])
+    @login_required(role="dev")
+    def dev_add_user():
+        data = request.json
+        username = data.get('username')
+        password = data.get('password')
+        role = data.get('role', 'user')
+        display_name = data.get('display_name')
+        ai_persona = data.get('ai_persona')
+        personalization = data.get('personalization')
+        if not username or not password:
+            return jsonify({'success': False, 'error': 'Username and password required.'}), 400
+        if get_user_by_username(username):
+            return jsonify({'success': False, 'error': 'User already exists.'}), 400
+        add_user(username, password, role, display_name, ai_persona, personalization)
+        return jsonify({'success': True})
+
+    @local_app.route('/dev/users/delete', methods=['POST']) # Fixed syntax error here
+    @login_required(role="dev")
+    def dev_delete_user():
+        data = request.json
+        username = data.get('username')
+        if username == 'dev':
+            return jsonify({'success': False, 'error': 'Cannot delete the default dev user.'}), 400 # Added return
+        if not get_user_by_username(username):
+            return jsonify({'success': False, 'error': 'User not found.'}), 404 # Added return
+        delete_user(username)
+        return jsonify({'success': True})
+
+    @local_app.route('/dev/users/update', methods=['POST'])
+    @login_required(role="dev")
+    def dev_update_user():
+        data = request.json
+        username = data.get('username')
+        fields = {k: v for k, v in data.items() if k != 'username'}
+        if not get_user_by_username(username):
+            return jsonify({'success': False, 'error': 'User not found.'}), 404
+        update_user(username, **fields)
+        return jsonify({'success': True})
+
+    # --- API Routes --- (Registered within create_app)
+    setup_api_routes(local_app, queue)
+
+    # Ensure the app instance is returned
     return local_app
-
-# --- Main Execution (for standalone testing) ---
-    if __name__ == '__main__':
-        # This block is for running the web UI standalone for testing/development
-        # It won't have a connection to the real assistant process in this mode.
-        print("Running Flask app in standalone debug mode...")
-        # Configure logging for standalone mode
-        logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levellevel)s - %(message)s')
-        # Create a dummy queue for standalone mode
-        dummy_queue = multiprocessing.Queue()
-        app = create_app(dummy_queue)
-        # Run Flask in debug mode for development
-        # Consider using a production server like Gunicorn or Waitress for deployment
-        # Running on 0.0.0.0 makes it accessible on the network
-        # Use use_reloader=False to prevent issues with multiprocessing in debug mode if needed
-        app.run(debug=True, host='0.0.0.0', port=5000, use_reloader=False)
-

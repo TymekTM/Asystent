@@ -8,6 +8,7 @@ import langid # Add import for langid
 from typing import Dict, Any, Optional, Tuple
 from config import STT_MODEL, MAIN_MODEL, PROVIDER, _config, DEEP_MODEL # Added DEEP_MODEL
 from prompts import CONVERT_QUERY_PROMPT, SYSTEM_PROMPT, DETECT_LANGUAGE_PROMPT # Added DETECT_LANGUAGE_PROMPT
+from performance_monitor import measure_performance # Add this import
 
 logger = logging.getLogger(__name__) # Add logger instance
 
@@ -223,6 +224,7 @@ class AIProviders:
 
 ai_providers = AIProviders()
 
+@measure_performance # Add decorator
 def health_check() -> Dict[str, bool]:
     return {provider: ai_providers.providers[provider]["check"]() for provider in ai_providers.providers}
 
@@ -242,6 +244,7 @@ def extract_json(text: str) -> str:
     match = re.search(r'({.*})', text, re.DOTALL)
     return match.group(1) if match else text
 
+@measure_performance # Add decorator
 def chat_with_providers(model: str, messages: list, images: list = None, provider_override: str = None) -> Optional[Dict[str, Any]]:
     selected_provider = provider_override or PROVIDER.lower()
     provider_config = ai_providers.providers.get(selected_provider)
@@ -293,6 +296,7 @@ def chat_with_providers(model: str, messages: list, images: list = None, provide
     return {"message": {"content": '{"command": "", "params": "", "text": "Błąd: Żaden dostawca nie odpowiada"}'}}
 
 # --- New Function: Language Detection ---
+@measure_performance # Add decorator
 def detect_language(text: str) -> Tuple[str, float, str]:
     """Detects the language of the input text using langid, with heuristics and fallback."""
     try:
@@ -331,6 +335,7 @@ def detect_language(text: str) -> Tuple[str, float, str]:
         return "pl", 0.0, "Detected language: pl\nRespond in Polish to all user inputs unless explicitly asked otherwise."
 
 # --- Improved Refiner: lock language, prevent translation ---
+@measure_performance # Add decorator
 def refine_query(query: str, detected_language: str = "Polish") -> str:
     """Refines the user query using the AI provider, focusing on transcription correction, never translation."""
     try:
@@ -355,6 +360,7 @@ def refine_query(query: str, detected_language: str = "Polish") -> str:
         return query
 
 # Change generate_response to accept optional system prompt override
+@measure_performance # Add decorator
 def generate_response(conversation_history: list, functions_info: str, system_prompt_override: str = None) -> str:
     """Generates the main AI response based on history and available functions. Always returns JSON string."""
     try:
@@ -409,6 +415,7 @@ def generate_response(conversation_history: list, functions_info: str, system_pr
             "params": {}
         }, ensure_ascii=False)
 
+@measure_performance # Add decorator
 def parse_response(response_text: str) -> dict:
     try:
         parsed = json.loads(extract_json(response_text))

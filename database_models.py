@@ -119,15 +119,26 @@ initialize_database = init_schema
 
 def get_user_by_username(username: str) -> User | None:
     with get_connection() as conn:
+        # Select only the columns needed for the User dataclass
         row = conn.execute(
-            "SELECT * FROM users WHERE username = ?", (username,)
+            "SELECT id, username, role, display_name, ai_persona, personalization FROM users WHERE username = ?", (username,)
         ).fetchone()
     return _row_to_user(row) if row else None
 
 
+def get_user_password_hash(username: str) -> str | None:
+    """Fetches only the password hash for a given username."""
+    with get_connection() as conn:
+        row = conn.execute(
+            "SELECT password FROM users WHERE username = ?", (username,)
+        ).fetchone()
+    return row['password'] if row else None
+
+
 def list_users() -> List[User]:
     with get_connection() as conn:
-        rows = conn.execute("SELECT * FROM users").fetchall()
+        # Select only the columns needed for the User dataclass
+        rows = conn.execute("SELECT id, username, role, display_name, ai_persona, personalization FROM users").fetchall()
     return [_row_to_user(r) for r in rows]
 
 

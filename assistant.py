@@ -19,6 +19,9 @@ from audio_modules.wakeword_detector import run_wakeword_detection
 # Import funkcji AI z nowego modułu
 from ai_module import refine_query, generate_response, parse_response, remove_chain_of_thought, detect_language
 
+# Import performance monitor
+from performance_monitor import measure_performance
+
 # Import specific config variables needed
 from config import (
     load_config, # Import load_config function
@@ -173,6 +176,7 @@ class Assistant:
             logger.error(f"Failed to reload configuration: {e}", exc_info=True)
             return False
 
+    @measure_performance # Add decorator
     def load_plugins(self):
         """Load all plugin modules from the modules folder."""
         # Determine plugin directory
@@ -242,6 +246,7 @@ class Assistant:
                 self.load_plugins()
             await asyncio.sleep(interval)
 
+    @measure_performance # Add decorator
     async def process_query(self, text_input: str):
         # Query refinement can be toggled in config
         if QUERY_REFINEMENT_ENABLED:
@@ -349,25 +354,40 @@ class Assistant:
                     await self.tts.speak(ai_response_text)
                 try:
                     # Execute handler (async or sync)
+                    result = None
                     if asyncio.iscoroutinefunction(handler):
                         result = await handler(**call_params)
                     else:
                         result = await asyncio.to_thread(handler, **call_params)
-                    # Unpack tuple results if needed
+
+                    # Ensure the result is awaited if it's a coroutine (defensive check)
+                    if asyncio.iscoroutine(result):
+                         logger.warning(f"Handler {found_module_key} returned a coroutine, awaiting it now.")
+                         result = await result
+
+                    # Unpack tuple results if needed, ensure result_text is a string
+                    result_text = None
                     if isinstance(result, tuple) and len(result) >= 1:
-                        result_text = result[0]
-                    else:
+                        result_text = str(result[0]) # Ensure it's a string
+                    elif isinstance(result, str):
                         result_text = result
-                    # Speak and record result
-                    if result_text:
-                        logger.info(f"Command '{found_module_key}' executed successfully, speaking result.")
-                        self.conversation_history.append({"role": "assistant", "content": result_text})
+                    elif result is not None: # Handle non-string, non-tuple results
+                        logger.warning(f"Command '{found_module_key}' returned non-string/non-tuple result: {type(result)}. Converting to string.")
+                        result_text = str(result)
+
+                    # Speak and record result (only if result_text is not None or empty)
+                    if result_text: # Check if result_text has content
+                        logger.info(f"Command '{found_module_key}' executed successfully. Result: '{result_text[:100]}...'") # Log snippet
+                        self.conversation_history.append({"role": "assistant", "content": result_text}) # Add string result to history
                         self.trim_conversation_history()
-                        await self.tts.speak(result_text)
-                    # else: no output to speak
+                        await self.tts.speak(result_text) # Speak the string result
+                    else:
+                         logger.info(f"Command '{found_module_key}' executed but produced no speakable result.")
+
                 except Exception as e:
                     logger.error(f"Error executing command {found_module_key}: {e}", exc_info=True)
                     error_message = f"Przepraszam, wystąpił błąd podczas wykonywania komendy {found_module_key}."
+                    # Ensure error message is added to history as string
                     self.conversation_history.append({"role": "assistant", "content": error_message})
                     self.trim_conversation_history()
                     await self.tts.speak(error_message)

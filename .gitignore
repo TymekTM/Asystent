@@ -8,3 +8,9 @@ assistant.log
 /.VSCodeCounter
 /__pycache__
 assistant_memory.db
+*.pyc
+__pycache__/config.cpython-313.pyc
+__pycache__/prompts.cpython-313.pyc
+modules/__pycache__/search_module.cpython-313.pyc
+modules/__pycache__/see_screen_module.cpython-313.pyc
+__pycache__/assistant.cpython-313.pyc

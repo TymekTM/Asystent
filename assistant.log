@@ -5339,3 +5339,1010 @@ Brak zapisanych wspomnień.
 2025-05-04 20:57:27,975 - Process-2 - __mp_main__ - INFO - Flask process finished.
 2025-05-04 20:57:27,990 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
 2025-05-04 20:57:27,992 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-05-05 16:59:22,636 - MainProcess - __main__ - INFO - Initializing application...
+2025-05-05 16:59:22,643 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-05-05 16:59:28,257 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-05-05 16:59:28,288 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-05-05 16:59:28,294 - Process-2 - __mp_main__ - ERROR - Critical error in Flask process: 'NoneType' object has no attribute 'run'
+Traceback (most recent call last):
+  File "F:\Asystent\main.py", line 67, in run_flask_process
+    flask_app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
+    ^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'run'
+2025-05-05 16:59:28,296 - Process-2 - __mp_main__ - INFO - Flask process finished.
+2025-05-05 16:59:28,593 - MainProcess - __main__ - WARNING - Detected process exit, shutting down main.
+2025-05-05 16:59:28,593 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-05-05 16:59:28,619 - MainProcess - __main__ - INFO - All processes terminated.
+2025-05-05 17:02:32,881 - MainProcess - __main__ - INFO - Initializing application...
+2025-05-05 17:02:32,887 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-05-05 17:02:37,817 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-05-05 17:02:37,817 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-05-05 17:02:37,824 - Process-2 - __mp_main__ - ERROR - Critical error in Flask process: 'NoneType' object has no attribute 'run'
+Traceback (most recent call last):
+  File "F:\Asystent\main.py", line 57, in run_flask_process
+    flask_app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
+    ^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'run'
+2025-05-05 17:02:37,828 - Process-2 - __mp_main__ - INFO - Flask process finished.
+2025-05-05 17:02:38,543 - MainProcess - __main__ - WARNING - Detected process exit, shutting down main.
+2025-05-05 17:02:38,543 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-05-05 17:02:38,577 - MainProcess - __main__ - INFO - All processes terminated.
+2025-05-05 17:08:48,605 - MainProcess - __main__ - INFO - Initializing application...
+2025-05-05 17:08:48,611 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-05-05 17:08:53,049 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-05-05 17:08:53,053 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-05-05 17:08:53,726 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-05-05 17:08:53,727 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-05-05 17:08:53,728 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta
+2025-05-05 17:08:53,858 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-05-05 17:08:53,930 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-05-05 17:08:53,933 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-05-05 17:09:01,331 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-05-05 17:09:02,348 - Process-2 - web_ui.app - ERROR - Exception on /login [POST]
+Traceback (most recent call last):
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "F:\Asystent\web_ui\app.py", line 1330, in login
+    user = get_user_by_username(username)
+  File "F:\Asystent\database_models.py", line 125, in get_user_by_username
+    return _row_to_user(row) if row else None
+           ~~~~~~~~~~~~^^^^^
+  File "F:\Asystent\database_models.py", line 93, in _row_to_user
+    return User(**row)
+TypeError: User.__init__() got an unexpected keyword argument 'password'
+2025-05-05 17:09:02,356 - Process-2 - web_ui.app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
+Traceback (most recent call last):
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "F:\Asystent\web_ui\app.py", line 1330, in login
+    user = get_user_by_username(username)
+  File "F:\Asystent\database_models.py", line 125, in get_user_by_username
+    return _row_to_user(row) if row else None
+           ~~~~~~~~~~~~^^^^^
+  File "F:\Asystent\database_models.py", line 93, in _row_to_user
+    return User(**row)
+TypeError: User.__init__() got an unexpected keyword argument 'password'
+2025-05-05 17:09:03,309 - Process-1 - assistant - INFO - Bot is starting...
+2025-05-05 17:09:03,323 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-05-05 17:09:03,325 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-05-05 17:09:03,327 - Process-1 - assistant - INFO - Detected changes in plugins. Reloading plugins...
+2025-05-05 17:09:03,331 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-05-05 17:09:03,332 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-05-05 17:09:03,335 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta
+2025-05-05 17:09:03,337 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-05-05 17:09:03,344 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-05-05 17:09:03,344 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-05-05 17:09:03,582 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-05-05 17:09:14,046 - Process-2 - web_ui.app - ERROR - Exception on /login [POST]
+Traceback (most recent call last):
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "F:\Asystent\web_ui\app.py", line 1330, in login
+    user = get_user_by_username(username)
+  File "F:\Asystent\database_models.py", line 125, in get_user_by_username
+    return _row_to_user(row) if row else None
+           ~~~~~~~~~~~~^^^^^
+  File "F:\Asystent\database_models.py", line 93, in _row_to_user
+    return User(**row)
+TypeError: User.__init__() got an unexpected keyword argument 'password'
+2025-05-05 17:09:14,048 - Process-2 - web_ui.app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
+Traceback (most recent call last):
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "F:\Asystent\web_ui\app.py", line 1330, in login
+    user = get_user_by_username(username)
+  File "F:\Asystent\database_models.py", line 125, in get_user_by_username
+    return _row_to_user(row) if row else None
+           ~~~~~~~~~~~~^^^^^
+  File "F:\Asystent\database_models.py", line 93, in _row_to_user
+    return User(**row)
+TypeError: User.__init__() got an unexpected keyword argument 'password'
+2025-05-05 17:14:52,239 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-05-05 17:14:52,239 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-05-05 17:14:52,379 - MainProcess - __main__ - INFO - All processes terminated.
+2025-05-05 17:14:57,563 - MainProcess - __main__ - INFO - Initializing application...
+2025-05-05 17:14:57,569 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-05-05 17:15:01,980 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-05-05 17:15:01,985 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-05-05 17:15:02,647 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-05-05 17:15:02,648 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-05-05 17:15:02,650 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta
+2025-05-05 17:15:02,764 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-05-05 17:15:02,838 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-05-05 17:15:02,842 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-05-05 17:15:09,812 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-05-05 17:15:11,913 - Process-1 - assistant - INFO - Bot is starting...
+2025-05-05 17:15:11,916 - Process-2 - web_ui.app - ERROR - Exception on /login [POST]
+Traceback (most recent call last):
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "F:\Asystent\web_ui\app.py", line 1331, in login
+    if user and user['password'] == password:
+                ~~~~^^^^^^^^^^^^
+TypeError: 'User' object is not subscriptable
+2025-05-05 17:15:11,920 - Process-2 - web_ui.app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
+Traceback (most recent call last):
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "F:\Asystent\web_ui\app.py", line 1331, in login
+    if user and user['password'] == password:
+                ~~~~^^^^^^^^^^^^
+TypeError: 'User' object is not subscriptable
+2025-05-05 17:15:11,936 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-05-05 17:15:11,946 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-05-05 17:15:11,951 - Process-1 - assistant - INFO - Detected changes in plugins. Reloading plugins...
+2025-05-05 17:15:11,960 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-05-05 17:15:11,965 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-05-05 17:15:11,970 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta
+2025-05-05 17:15:11,976 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-05-05 17:15:11,988 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-05-05 17:15:11,989 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-05-05 17:15:12,235 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-05-05 17:15:22,399 - Process-2 - web_ui.app - ERROR - Exception on /login [POST]
+Traceback (most recent call last):
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "F:\Asystent\web_ui\app.py", line 1331, in login
+    if user and user['password'] == password:
+                ~~~~^^^^^^^^^^^^
+TypeError: 'User' object is not subscriptable
+2025-05-05 17:15:22,401 - Process-2 - web_ui.app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
+Traceback (most recent call last):
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "F:\Asystent\web_ui\app.py", line 1331, in login
+    if user and user['password'] == password:
+                ~~~~^^^^^^^^^^^^
+TypeError: 'User' object is not subscriptable
+2025-05-05 17:15:28,077 - Process-2 - web_ui.app - ERROR - Exception on /login [POST]
+Traceback (most recent call last):
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "F:\Asystent\web_ui\app.py", line 1331, in login
+    if user and user['password'] == password:
+                ~~~~^^^^^^^^^^^^
+TypeError: 'User' object is not subscriptable
+2025-05-05 17:15:28,080 - Process-2 - web_ui.app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
+Traceback (most recent call last):
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "F:\Asystent\web_ui\app.py", line 1331, in login
+    if user and user['password'] == password:
+                ~~~~^^^^^^^^^^^^
+TypeError: 'User' object is not subscriptable
+2025-05-05 17:16:55,153 - Process-2 - __mp_main__ - INFO - Flask process finished.
+2025-05-05 17:16:55,153 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-05-05 17:16:55,153 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-05-05 17:16:55,283 - MainProcess - __main__ - INFO - All processes terminated.
+2025-05-05 17:17:00,438 - MainProcess - __main__ - INFO - Initializing application...
+2025-05-05 17:17:00,444 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-05-05 17:17:05,841 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-05-05 17:17:05,845 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-05-05 17:17:06,903 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-05-05 17:17:06,903 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-05-05 17:17:06,907 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta
+2025-05-05 17:17:07,029 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-05-05 17:17:07,101 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-05-05 17:17:07,105 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-05-05 17:17:14,014 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-05-05 17:17:15,774 - Process-2 - web_ui.app - ERROR - Exception on /login [POST]
+Traceback (most recent call last):
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "F:\Asystent\web_ui\app.py", line 1331, in login
+    if user and user['password'] == password:
+                ~~~~^^^^^^^^^^^^
+TypeError: 'User' object is not subscriptable
+2025-05-05 17:17:15,777 - Process-2 - web_ui.app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
+Traceback (most recent call last):
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "F:\Asystent\web_ui\app.py", line 1331, in login
+    if user and user['password'] == password:
+                ~~~~^^^^^^^^^^^^
+TypeError: 'User' object is not subscriptable
+2025-05-05 17:17:15,928 - Process-1 - assistant - INFO - Bot is starting...
+2025-05-05 17:17:15,948 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-05-05 17:17:15,949 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-05-05 17:17:15,958 - Process-1 - assistant - INFO - Detected changes in plugins. Reloading plugins...
+2025-05-05 17:17:15,967 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-05-05 17:17:15,968 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-05-05 17:17:15,971 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta
+2025-05-05 17:17:15,973 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-05-05 17:17:15,983 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-05-05 17:17:15,984 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-05-05 17:17:16,270 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-05-05 17:17:20,188 - Process-2 - web_ui.app - ERROR - Exception on /login [POST]
+Traceback (most recent call last):
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "F:\Asystent\web_ui\app.py", line 1331, in login
+    if user and user['password'] == password:
+                ~~~~^^^^^^^^^^^^
+TypeError: 'User' object is not subscriptable
+2025-05-05 17:17:20,189 - Process-2 - web_ui.app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
+Traceback (most recent call last):
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "F:\Asystent\web_ui\app.py", line 1331, in login
+    if user and user['password'] == password:
+                ~~~~^^^^^^^^^^^^
+TypeError: 'User' object is not subscriptable
+2025-05-05 17:17:31,568 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-05-05 17:17:31,569 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-05-05 17:17:31,572 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta
+2025-05-05 17:17:31,593 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-05-05 17:17:31,600 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-05-05 17:17:31,603 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-05-05 17:17:31,605 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-05-05 17:17:31,607 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta
+2025-05-05 17:17:31,609 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-05-05 17:17:31,616 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-05-05 17:17:45,994 - Process-1 - assistant - INFO - Detected changes in plugins. Reloading plugins...
+2025-05-05 17:17:46,000 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-05-05 17:17:46,001 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-05-05 17:17:46,003 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta
+2025-05-05 17:17:46,004 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-05-05 17:17:46,010 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-05-05 17:19:05,000 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-05-05 17:19:05,000 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-05-05 17:19:05,134 - MainProcess - __main__ - INFO - All processes terminated.
+2025-05-05 17:19:10,477 - MainProcess - __main__ - INFO - Initializing application...
+2025-05-05 17:19:10,483 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-05-05 17:19:15,741 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-05-05 17:19:15,762 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-05-05 17:19:16,627 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-05-05 17:19:16,631 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-05-05 17:19:16,634 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta
+2025-05-05 17:19:16,790 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-05-05 17:19:16,873 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-05-05 17:19:16,876 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-05-05 17:19:18,747 - Process-2 - web_ui.app - ERROR - Exception on /login [POST]
+Traceback (most recent call last):
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "F:\Asystent\web_ui\app.py", line 1332, in login
+    if user and user.password == password: # Check password hash here in a real app
+                ^^^^^^^^^^^^^
+AttributeError: 'User' object has no attribute 'password'
+2025-05-05 17:19:18,751 - Process-2 - web_ui.app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
+Traceback (most recent call last):
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "F:\Asystent\web_ui\app.py", line 1332, in login
+    if user and user.password == password: # Check password hash here in a real app
+                ^^^^^^^^^^^^^
+AttributeError: 'User' object has no attribute 'password'
+2025-05-05 17:19:24,533 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-05-05 17:19:25,167 - Process-2 - web_ui.app - ERROR - Exception on /login [POST]
+Traceback (most recent call last):
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "F:\Asystent\web_ui\app.py", line 1332, in login
+    if user and user.password == password: # Check password hash here in a real app
+                ^^^^^^^^^^^^^
+AttributeError: 'User' object has no attribute 'password'
+2025-05-05 17:19:25,172 - Process-2 - web_ui.app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
+Traceback (most recent call last):
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "F:\Asystent\web_ui\app.py", line 1332, in login
+    if user and user.password == password: # Check password hash here in a real app
+                ^^^^^^^^^^^^^
+AttributeError: 'User' object has no attribute 'password'
+2025-05-05 17:19:26,619 - Process-1 - assistant - INFO - Bot is starting...
+2025-05-05 17:19:26,634 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-05-05 17:19:26,637 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-05-05 17:19:26,638 - Process-1 - assistant - INFO - Detected changes in plugins. Reloading plugins...
+2025-05-05 17:19:26,644 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-05-05 17:19:26,644 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-05-05 17:19:26,647 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta
+2025-05-05 17:19:26,648 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-05-05 17:19:26,655 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-05-05 17:19:26,656 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-05-05 17:19:26,885 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-05-05 17:19:47,749 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-05-05 17:19:47,750 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-05-05 17:19:47,754 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta
+2025-05-05 17:19:47,756 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-05-05 17:19:47,762 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-05-05 17:23:24,859 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-05-05 17:23:24,859 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-05-05 17:23:24,996 - MainProcess - __main__ - INFO - All processes terminated.
+2025-05-05 17:30:18,611 - MainProcess - __main__ - INFO - Initializing application...
+2025-05-05 17:30:18,617 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-05-05 17:30:23,415 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-05-05 17:30:23,431 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-05-05 17:30:24,170 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-05-05 17:30:24,171 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-05-05 17:30:24,173 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta
+2025-05-05 17:30:24,292 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-05-05 17:30:24,369 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-05-05 17:30:24,372 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-05-05 17:30:32,609 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-05-05 17:30:35,053 - Process-1 - assistant - INFO - Bot is starting...
+2025-05-05 17:30:35,068 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-05-05 17:30:35,069 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-05-05 17:30:35,072 - Process-1 - assistant - INFO - Detected changes in plugins. Reloading plugins...
+2025-05-05 17:30:35,077 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-05-05 17:30:35,077 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-05-05 17:30:35,080 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta
+2025-05-05 17:30:35,083 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-05-05 17:30:35,089 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-05-05 17:30:35,092 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-05-05 17:30:35,377 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-05-05 17:30:35,886 - Process-2 - web_ui.app - ERROR - Exception on /dev/users [GET]
+Traceback (most recent call last):
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "F:\Asystent\web_ui\app.py", line 561, in decorated_view
+    if role == "dev" and user['role'] != "dev":
+                         ~~~~^^^^^^^^
+TypeError: 'User' object is not subscriptable
+2025-05-05 17:30:35,889 - Process-2 - web_ui.app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
+Traceback (most recent call last):
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "F:\Asystent\web_ui\app.py", line 561, in decorated_view
+    if role == "dev" and user['role'] != "dev":
+                         ~~~~^^^^^^^^
+TypeError: 'User' object is not subscriptable
+2025-05-05 17:30:39,992 - Process-2 - web_ui.app - ERROR - Exception on /dev/users [GET]
+Traceback (most recent call last):
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "F:\Asystent\web_ui\app.py", line 561, in decorated_view
+    if role == "dev" and user['role'] != "dev":
+                         ~~~~^^^^^^^^
+TypeError: 'User' object is not subscriptable
+2025-05-05 17:30:39,993 - Process-2 - web_ui.app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
+Traceback (most recent call last):
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "F:\Asystent\web_ui\app.py", line 561, in decorated_view
+    if role == "dev" and user['role'] != "dev":
+                         ~~~~^^^^^^^^
+TypeError: 'User' object is not subscriptable
+2025-05-05 17:30:43,204 - Process-2 - web_ui.app - ERROR - Exception on /dev [GET]
+Traceback (most recent call last):
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "F:\Asystent\web_ui\app.py", line 561, in decorated_view
+    if role == "dev" and user['role'] != "dev":
+                         ~~~~^^^^^^^^
+TypeError: 'User' object is not subscriptable
+2025-05-05 17:30:43,205 - Process-2 - web_ui.app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
+Traceback (most recent call last):
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "F:\Asystent\web_ui\app.py", line 561, in decorated_view
+    if role == "dev" and user['role'] != "dev":
+                         ~~~~^^^^^^^^
+TypeError: 'User' object is not subscriptable
+2025-05-05 17:30:55,447 - Process-2 - web_ui.app - ERROR - Exception on /config [GET]
+Traceback (most recent call last):
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "F:\Asystent\web_ui\app.py", line 561, in decorated_view
+    if role == "dev" and user['role'] != "dev":
+                         ~~~~^^^^^^^^
+TypeError: 'User' object is not subscriptable
+2025-05-05 17:30:55,449 - Process-2 - web_ui.app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
+Traceback (most recent call last):
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "F:\Asystent\web_ui\app.py", line 561, in decorated_view
+    if role == "dev" and user['role'] != "dev":
+                         ~~~~^^^^^^^^
+TypeError: 'User' object is not subscriptable
+2025-05-05 17:30:57,953 - Process-2 - web_ui.app - ERROR - Exception on /mcp [GET]
+Traceback (most recent call last):
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "F:\Asystent\web_ui\app.py", line 561, in decorated_view
+    if role == "dev" and user['role'] != "dev":
+                         ~~~~^^^^^^^^
+TypeError: 'User' object is not subscriptable
+2025-05-05 17:30:57,954 - Process-2 - web_ui.app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
+Traceback (most recent call last):
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "F:\Asystent\web_ui\app.py", line 561, in decorated_view
+    if role == "dev" and user['role'] != "dev":
+                         ~~~~^^^^^^^^
+TypeError: 'User' object is not subscriptable
+2025-05-05 17:30:59,507 - Process-2 - web_ui.app - ERROR - Exception on /plugins [GET]
+Traceback (most recent call last):
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "F:\Asystent\web_ui\app.py", line 561, in decorated_view
+    if role == "dev" and user['role'] != "dev":
+                         ~~~~^^^^^^^^
+TypeError: 'User' object is not subscriptable
+2025-05-05 17:30:59,508 - Process-2 - web_ui.app - ERROR - Internal Server Error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.
+Traceback (most recent call last):
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "F:\Asystent\web_ui\app.py", line 561, in decorated_view
+    if role == "dev" and user['role'] != "dev":
+                         ~~~~^^^^^^^^
+TypeError: 'User' object is not subscriptable
+2025-05-05 17:34:02,705 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-05-05 17:34:02,706 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-05-05 17:34:02,840 - MainProcess - __main__ - INFO - All processes terminated.
+2025-05-05 17:34:08,355 - MainProcess - __main__ - INFO - Initializing application...
+2025-05-05 17:34:08,361 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-05-05 17:34:14,397 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-05-05 17:34:14,402 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-05-05 17:34:15,140 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-05-05 17:34:15,140 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-05-05 17:34:15,142 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta
+2025-05-05 17:34:15,268 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-05-05 17:34:15,355 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-05-05 17:34:15,358 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-05-05 17:34:23,499 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-05-05 17:34:26,041 - Process-1 - assistant - INFO - Bot is starting...
+2025-05-05 17:34:26,065 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-05-05 17:34:26,067 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-05-05 17:34:26,071 - Process-1 - assistant - INFO - Detected changes in plugins. Reloading plugins...
+2025-05-05 17:34:26,082 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-05-05 17:34:26,082 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-05-05 17:34:26,084 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta
+2025-05-05 17:34:26,093 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-05-05 17:34:26,103 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-05-05 17:34:26,105 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-05-05 17:34:26,461 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-05-05 17:34:52,065 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-05-05 17:34:52,066 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-05-05 17:34:52,126 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-05-05 17:34:52,126 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-05-05 17:34:55,255 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-05-05 17:34:55,267 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-05-05 17:34:55,267 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-05-05 17:34:56,286 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Jaka jest pogoda w Warszawie?
+2025-05-05 17:34:56,287 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-05 17:34:58,050 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-05 17:34:58,066 - Process-1 - assistant - INFO - Refined query: Jaka jest pogoda w Warszawie?
+2025-05-05 17:34:58,066 - Process-1 - langid.langid - INFO - initializing identifier
+2025-05-05 17:34:59,756 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-05-05 17:34:59,756 - Process-1 - assistant - INFO - Intent classified as: weather_query
+2025-05-05 17:34:59,757 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-05 17:35:00,245 - Process-1 - audio_modules.speech_recognition - WARNING - Audio callback status: input overflow
+2025-05-05 17:35:00,587 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-05 17:35:00,591 - Process-1 - assistant - INFO - AI response: {"text": "Sprawdzam pogodę w Warszawie", "command": "web", "params": {"query": "pogoda Warszawa"}}
+2025-05-05 17:35:00,591 - Process-1 - assistant - INFO - Executing command: search (sub: None) with params: pogoda Warszawa
+2025-05-05 17:35:00,593 - Process-1 - assistant - INFO - Speaking initial AI response before command: Sprawdzam pogodę w Warszawie
+2025-05-05 17:35:00,593 - Process-1 - audio_modules.tts_module - INFO - TTS: Sprawdzam pogodę w Warszawie
+2025-05-05 17:35:04,739 - Process-1 - assistant - INFO - Command 'search' executed successfully, speaking result.
+2025-05-05 17:35:04,740 - Process-1 - audio_modules.tts_module - INFO - TTS: <coroutine object search_handler at 0x000001C69CA93340>
+2025-05-05 17:35:04,740 - Process-1 - assistant - ERROR - Error executing command search: text must be str
+Traceback (most recent call last):
+  File "F:\Asystent\assistant.py", line 371, in process_query
+    await self.tts.speak(result_text)
+  File "F:\Asystent\audio_modules\tts_module.py", line 20, in speak
+    tts = Communicate(text, "pl-PL-MarekNeural")
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\edge_tts\communicate.py", line 258, in __init__
+    raise TypeError("text must be str")
+TypeError: text must be str
+2025-05-05 17:35:04,742 - Process-1 - audio_modules.tts_module - INFO - TTS: Przepraszam, wystąpił błąd podczas wykonywania komendy search.
+2025-05-05 17:35:28,244 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-05-05 17:35:28,245 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-05-05 17:35:28,268 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-05-05 17:35:28,268 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-05-05 17:35:30,804 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-05-05 17:35:30,816 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-05-05 17:35:30,816 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-05-05 17:35:31,470 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Powiedz mi coś o sobie.
+2025-05-05 17:35:31,471 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-05 17:35:32,533 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-05 17:35:32,547 - Process-1 - assistant - INFO - Refined query: Powiedz mi coś o sobie.
+2025-05-05 17:35:32,551 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-05-05 17:35:32,551 - Process-1 - assistant - INFO - Intent classified as: general
+2025-05-05 17:35:32,552 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-05 17:35:32,561 - Process-1 - ai_module - ERROR - OpenAI chat error: Object of type coroutine is not JSON serializable
+Traceback (most recent call last):
+  File "F:\Asystent\ai_module.py", line 155, in chat_openai
+    response = openai_module.chat.completions.create(
+        model=model,
+    ...<2 lines>...
+        max_tokens=_config.get("max_tokens", 150)
+    )
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\openai\_utils\_utils.py", line 279, in wrapper
+    return func(*args, **kwargs)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\openai\resources\chat\completions\completions.py", line 914, in create
+    return self._post(
+           ~~~~~~~~~~^
+        "/chat/completions",
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<41 lines>...
+        stream_cls=Stream[ChatCompletionChunk],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\openai\_base_client.py", line 1242, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\openai\_base_client.py", line 919, in request
+    return self._request(
+           ~~~~~~~~~~~~~^
+        cast_to=cast_to,
+        ^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        retries_taken=retries_taken,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\openai\_base_client.py", line 945, in _request
+    request = self._build_request(options, retries_taken=retries_taken)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\openai\_base_client.py", line 506, in _build_request
+    return self._client.build_request(  # pyright: ignore[reportUnknownMemberType]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        headers=headers,
+        ^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+        **kwargs,
+        ^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_client.py", line 358, in build_request
+    return Request(
+        method,
+    ...<8 lines>...
+        extensions=extensions,
+    )
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_models.py", line 342, in __init__
+    headers, stream = encode_request(
+                      ~~~~~~~~~~~~~~^
+        content=content,
+        ^^^^^^^^^^^^^^^^
+    ...<7 lines>...
+        ),
+        ^^
+    )
+    ^
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_content.py", line 214, in encode_request
+    return encode_json(json)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_content.py", line 177, in encode_json
+    body = json_dumps(json).encode("utf-8")
+           ~~~~~~~~~~^^^^^^
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\json\__init__.py", line 231, in dumps
+    return _default_encoder.encode(obj)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\json\encoder.py", line 200, in encode
+    chunks = self.iterencode(o, _one_shot=True)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\json\encoder.py", line 261, in iterencode
+    return _iterencode(o, 0)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\json\encoder.py", line 180, in default
+    raise TypeError(f'Object of type {o.__class__.__name__} '
+                    f'is not JSON serializable')
+TypeError: Object of type coroutine is not JSON serializable
+2025-05-05 17:35:32,587 - Process-1 - assistant - INFO - AI response: {"text": "Błąd OpenAI: Object of type coroutine is not JSON serializable", "command": "", "params": {}}
+2025-05-05 17:35:32,588 - Process-1 - assistant - INFO - No command executed. Speaking AI response text.
+2025-05-05 17:35:32,588 - Process-1 - audio_modules.tts_module - INFO - TTS: Błąd OpenAI: Object of type coroutine is not JSON serializable
+2025-05-05 17:35:45,243 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-05-05 17:35:45,244 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-05-05 17:35:45,270 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-05-05 17:35:45,270 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-05-05 17:35:47,803 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-05-05 17:35:47,814 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-05-05 17:35:47,815 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-05-05 17:35:48,470 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Powiedz mi coś o sobie.
+2025-05-05 17:35:48,471 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-05 17:35:49,227 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-05 17:35:49,235 - Process-1 - assistant - INFO - Refined query: Powiedz mi coś o sobie.
+2025-05-05 17:35:49,238 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-05-05 17:35:49,238 - Process-1 - assistant - INFO - Intent classified as: general
+2025-05-05 17:35:49,238 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-05 17:35:49,247 - Process-1 - ai_module - ERROR - OpenAI chat error: Object of type coroutine is not JSON serializable
+Traceback (most recent call last):
+  File "F:\Asystent\ai_module.py", line 155, in chat_openai
+    response = openai_module.chat.completions.create(
+        model=model,
+    ...<2 lines>...
+        max_tokens=_config.get("max_tokens", 150)
+    )
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\openai\_utils\_utils.py", line 279, in wrapper
+    return func(*args, **kwargs)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\openai\resources\chat\completions\completions.py", line 914, in create
+    return self._post(
+           ~~~~~~~~~~^
+        "/chat/completions",
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<41 lines>...
+        stream_cls=Stream[ChatCompletionChunk],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\openai\_base_client.py", line 1242, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\openai\_base_client.py", line 919, in request
+    return self._request(
+           ~~~~~~~~~~~~~^
+        cast_to=cast_to,
+        ^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        retries_taken=retries_taken,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\openai\_base_client.py", line 945, in _request
+    request = self._build_request(options, retries_taken=retries_taken)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\openai\_base_client.py", line 506, in _build_request
+    return self._client.build_request(  # pyright: ignore[reportUnknownMemberType]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        headers=headers,
+        ^^^^^^^^^^^^^^^^
+    ...<10 lines>...
+        **kwargs,
+        ^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_client.py", line 358, in build_request
+    return Request(
+        method,
+    ...<8 lines>...
+        extensions=extensions,
+    )
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_models.py", line 342, in __init__
+    headers, stream = encode_request(
+                      ~~~~~~~~~~~~~~^
+        content=content,
+        ^^^^^^^^^^^^^^^^
+    ...<7 lines>...
+        ),
+        ^^
+    )
+    ^
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_content.py", line 214, in encode_request
+    return encode_json(json)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_content.py", line 177, in encode_json
+    body = json_dumps(json).encode("utf-8")
+           ~~~~~~~~~~^^^^^^
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\json\__init__.py", line 231, in dumps
+    return _default_encoder.encode(obj)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\json\encoder.py", line 200, in encode
+    chunks = self.iterencode(o, _one_shot=True)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\json\encoder.py", line 261, in iterencode
+    return _iterencode(o, 0)
+  File "C:\Users\Tymek\AppData\Local\Programs\Python\Python313\Lib\json\encoder.py", line 180, in default
+    raise TypeError(f'Object of type {o.__class__.__name__} '
+                    f'is not JSON serializable')
+TypeError: Object of type coroutine is not JSON serializable
+2025-05-05 17:35:49,252 - Process-1 - assistant - INFO - AI response: {"text": "Błąd OpenAI: Object of type coroutine is not JSON serializable", "command": "", "params": {}}
+2025-05-05 17:35:49,253 - Process-1 - assistant - INFO - No command executed. Speaking AI response text.
+2025-05-05 17:35:49,253 - Process-1 - audio_modules.tts_module - INFO - TTS: Błąd OpenAI: Object of type coroutine is not JSON serializable
+2025-05-05 17:36:18,294 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-05-05 17:36:18,295 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-05-05 17:36:18,469 - MainProcess - __main__ - INFO - All processes terminated.
+2025-05-05 17:37:25,424 - MainProcess - __main__ - INFO - Initializing application...
+2025-05-05 17:37:25,433 - MainProcess - __main__ - INFO - Starting Flask process...
+2025-05-05 17:37:30,286 - Process-1 - __mp_main__ - INFO - Starting Assistant process...
+2025-05-05 17:37:30,286 - Process-2 - __mp_main__ - INFO - Starting Flask Web UI process...
+2025-05-05 17:37:31,010 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-05-05 17:37:31,010 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-05-05 17:37:31,013 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta
+2025-05-05 17:37:31,134 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-05-05 17:37:31,212 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-05-05 17:37:31,215 - Process-1 - assistant - INFO - Loaded assistant long-term memory at startup:
+Brak zapisanych wspomnień.
+2025-05-05 17:37:38,127 - Process-1 - audio_modules.whisper_asr - INFO - Loading Whisper model (openai/whisper-small) on cuda...
+2025-05-05 17:37:40,057 - Process-1 - assistant - INFO - Bot is starting...
+2025-05-05 17:37:40,080 - Process-1 - assistant - INFO - Audio stream opened. Waiting for activation...
+2025-05-05 17:37:40,090 - Process-1 - assistant - INFO - Starting/Restarting wake word detection task...
+2025-05-05 17:37:40,094 - Process-1 - assistant - INFO - Detected changes in plugins. Reloading plugins...
+2025-05-05 17:37:40,098 - Process-1 - assistant - INFO - Loaded plugin: api -> Obsługuje zapytania API na podstawie konfiguracji w JSON.
+2025-05-05 17:37:40,098 - Process-1 - assistant - INFO - Plugin deepseek_module jest wyłączony - pomijam ładowanie.
+2025-05-05 17:37:40,102 - Process-1 - assistant - INFO - Loaded plugin: memory -> Zarządza długoterminową pamięcią asystenta
+2025-05-05 17:37:40,104 - Process-1 - assistant - INFO - Loaded plugin: search -> Wyszukuje informacje w internecie i podsumowuje wyniki.
+2025-05-05 17:37:40,115 - Process-1 - assistant - INFO - Loaded plugin: screenshot -> Wykonuje zrzut ekranu i analizuje go.
+2025-05-05 17:37:40,118 - Process-1 - assistant - INFO - Starting command queue processing task...
+2025-05-05 17:37:40,359 - Process-1 - audio_modules.wakeword_detector - INFO - Starting wake word detection for 'asystencie'...
+2025-05-05 17:38:00,077 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-05-05 17:38:00,077 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-05-05 17:38:00,119 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-05-05 17:38:00,119 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-05-05 17:38:02,657 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-05-05 17:38:02,668 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-05-05 17:38:02,669 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-05-05 17:38:03,568 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Powiedz mi coś o sobie.
+2025-05-05 17:38:03,570 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-05 17:38:04,701 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-05 17:38:04,709 - Process-1 - assistant - INFO - Refined query: Powiedz mi coś o sobie.
+2025-05-05 17:38:04,709 - Process-1 - langid.langid - INFO - initializing identifier
+2025-05-05 17:38:06,423 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-05-05 17:38:06,423 - Process-1 - assistant - INFO - Intent classified as: general
+2025-05-05 17:38:06,424 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-05 17:38:07,428 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-05 17:38:07,433 - Process-1 - assistant - INFO - AI response: {"text": "Jestem Jarvis, dużym modelem językowym stworzonym, by pomagać w rozmowach i dostarczać informacji na różne tematy. Chętnie pomogę Ci w każdej sprawie, o którą zapytasz.", "command": "", "params": ""}
+2025-05-05 17:38:07,434 - Process-1 - assistant - INFO - No command executed. Speaking AI response text.
+2025-05-05 17:38:07,434 - Process-1 - audio_modules.tts_module - INFO - TTS: Jestem Jarvis, dużym modelem językowym stworzonym, by pomagać w rozmowach i dostarczać informacji na różne tematy. Chętnie pomogę Ci w każdej sprawie, o którą zapytasz.
+2025-05-05 17:38:29,612 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (full).
+2025-05-05 17:38:29,613 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-05-05 17:38:29,620 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-05-05 17:38:29,620 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-05-05 17:38:32,206 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-05-05 17:38:32,218 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-05-05 17:38:32,218 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-05-05 17:38:32,898 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Jaka pododa jest w Wataszawie?
+2025-05-05 17:38:32,899 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-05 17:38:33,399 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-05 17:38:33,400 - Process-1 - assistant - INFO - Refined query: Jaka pogoda jest w Warszawie?
+2025-05-05 17:38:33,403 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-05-05 17:38:33,404 - Process-1 - assistant - INFO - Intent classified as: weather_query
+2025-05-05 17:38:33,404 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-05 17:38:34,427 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-05 17:38:34,432 - Process-1 - assistant - INFO - AI response: {"text": "Sprawdzam pogodę w Warszawie.", "command": "web", "params": {"query": "pogoda Warszawa"}}
+2025-05-05 17:38:34,433 - Process-1 - assistant - INFO - Executing command: search (sub: None) with params: pogoda Warszawa
+2025-05-05 17:38:34,433 - Process-1 - assistant - INFO - Speaking initial AI response before command: Sprawdzam pogodę w Warszawie.
+2025-05-05 17:38:34,434 - Process-1 - audio_modules.tts_module - INFO - TTS: Sprawdzam pogodę w Warszawie.
+2025-05-05 17:38:38,704 - Process-1 - assistant - WARNING - Handler search returned a coroutine, awaiting it now.
+2025-05-05 17:38:38,705 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'search' z pliku: resources/sounds/search_beep.mp3 (Loop: False)
+2025-05-05 17:38:39,529 - Process-1 - primp - INFO - response: https://lite.duckduckgo.com/lite/ 200
+2025-05-05 17:38:40,732 - Process-1 - primp - INFO - response: https://lite.duckduckgo.com/lite/ 200
+2025-05-05 17:38:41,322 - Process-1 - httpx - INFO - HTTP Request: GET https://pogoda.interia.pl/prognoza-dlugoterminowa-warszawa,cId,36917 "HTTP/2 200 OK"
+2025-05-05 17:38:41,447 - Process-1 - httpx - INFO - HTTP Request: GET https://pogoda.interia.pl/prognoza-szczegolowa-warszawa,cId,36917 "HTTP/2 200 OK"
+2025-05-05 17:38:42,062 - Process-1 - httpx - INFO - HTTP Request: GET https://pogoda.onet.pl/prognoza-pogody/warszawa-357732 "HTTP/2 200 OK"
+2025-05-05 17:38:42,226 - Process-1 - httpx - INFO - HTTP Request: GET https://www.twojapogoda.pl/prognoza-polska/mazowieckie-warszawa/ "HTTP/2 200 OK"
+2025-05-05 17:38:42,366 - Process-1 - httpx - INFO - HTTP Request: GET https://www.accuweather.com/pl/pl/warsaw/274663/weather-forecast/274663 "HTTP/2 200 OK"
+2025-05-05 17:38:42,443 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-05 17:38:43,726 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-05 17:38:43,731 - Process-1 - assistant - INFO - Command 'search' executed successfully. Result: 'Obecna pogoda w Warszawie to 12°C, odczuwalna temperatura to 10°C, zachmurzenie wynosi około 87%, wi...'
+2025-05-05 17:38:43,731 - Process-1 - audio_modules.tts_module - INFO - TTS: Obecna pogoda w Warszawie to 12°C, odczuwalna temperatura to 10°C, zachmurzenie wynosi około 87%, wiatr wieje z prędkością 14 km/h, możliwe są opady deszczu o wysokości 1 mm. Nie prognozuje się burz.
+2025-05-05 17:39:39,095 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (full).
+2025-05-05 17:39:39,095 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-05-05 17:39:39,102 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-05-05 17:39:39,102 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-05-05 17:39:42,992 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-05-05 17:39:43,004 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-05-05 17:39:43,004 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-05-05 17:39:43,635 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Jakie są wyniki wczorajszych kwalifikacje F1?
+2025-05-05 17:39:43,636 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-05 17:39:44,194 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-05 17:39:44,201 - Process-1 - assistant - INFO - Refined query: Jakie są wyniki wczorajszych kwalifikacji F1?
+2025-05-05 17:39:44,204 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-05-05 17:39:44,204 - Process-1 - assistant - INFO - Intent classified as: general
+2025-05-05 17:39:44,204 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-05 17:39:44,893 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-05 17:39:44,895 - Process-1 - assistant - INFO - AI response: {"text": "Zamierzam sprawdzić wyniki wczorajszych kwalifikacji F1, zaraz to zrobię.", "command": "", "params": {}}
+2025-05-05 17:39:44,895 - Process-1 - assistant - INFO - No command executed. Speaking AI response text.
+2025-05-05 17:39:44,896 - Process-1 - audio_modules.tts_module - INFO - TTS: Zamierzam sprawdzić wyniki wczorajszych kwalifikacji F1, zaraz to zrobię.
+2025-05-05 17:39:55,572 - Process-1 - audio_modules.wakeword_detector - INFO - Wake word detected (partial).
+2025-05-05 17:39:55,572 - Process-1 - audio_modules.beep_sounds - INFO - Odtwarzam dźwięk 'keyword' z pliku: resources/sounds/beep.mp3 (Loop: False)
+2025-05-05 17:39:55,599 - Process-1 - audio_modules.wakeword_detector - INFO - Recording audio for Whisper command...
+2025-05-05 17:39:55,599 - Process-1 - audio_modules.speech_recognition - INFO - Dynamic command recording at 16000Hz...
+2025-05-05 17:39:58,911 - Process-1 - audio_modules.speech_recognition - INFO - Silence detected, ending recording.
+2025-05-05 17:39:58,923 - Process-1 - audio_modules.wakeword_detector - INFO - Transcribing command with Whisper...
+2025-05-05 17:39:58,923 - Process-1 - audio_modules.whisper_asr - INFO - Transcribing audio with Whisper...
+2025-05-05 17:39:59,398 - Process-1 - audio_modules.wakeword_detector - INFO - Command:  Sprawdzisz jaka pogoda jest w stosnowcu?
+2025-05-05 17:39:59,399 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-05 17:40:00,080 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-05 17:40:00,084 - Process-1 - assistant - INFO - Refined query: Sprawdzisz, jaka pogoda jest w Stołecznowcu?
+2025-05-05 17:40:00,087 - Process-1 - assistant - INFO - Detected language: pl (confidence 0.80)
+2025-05-05 17:40:00,087 - Process-1 - assistant - INFO - Intent classified as: weather_query
+2025-05-05 17:40:00,087 - Process-1 - ai_module - INFO - Attempting to use configured provider: openai
+2025-05-05 17:40:01,128 - Process-1 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-05 17:40:01,136 - Process-1 - assistant - INFO - AI response: {"text": "Chętnie sprawdzę, jaka jest pogoda w Stołecznowcu, zaraz to zrobię.", "command": "", "params": {}}
+2025-05-05 17:40:01,137 - Process-1 - assistant - INFO - No command executed. Speaking AI response text.
+2025-05-05 17:40:01,137 - Process-1 - audio_modules.tts_module - INFO - TTS: Chętnie sprawdzę, jaka jest pogoda w Stołecznowcu, zaraz to zrobię.
+2025-05-05 17:40:51,523 - Process-2 - __mp_main__ - INFO - Flask process finished.
+2025-05-05 17:40:51,616 - MainProcess - __main__ - INFO - Main process received KeyboardInterrupt. Exiting.
+2025-05-05 17:40:51,616 - MainProcess - __main__ - INFO - Terminating child processes...
+2025-05-05 17:40:51,806 - MainProcess - __main__ - INFO - All processes terminated.

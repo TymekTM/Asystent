@@ -24,6 +24,25 @@
     </details>
 
     <hr>
+    <h1>Statystyki wydajności</h1>
+    <button id="clear-perf-stats-btn" class="btn btn-warning btn-sm mb-2">Wyczyść statystyki</button> <!-- Add Clear Button -->
+    <div id="perf-stats-table-container">
+        <table class="table table-sm table-striped" id="perf-stats-table">
+            <thead>
+                <tr>
+                    <th>Funkcja</th>
+                    <th>Średni czas (ms)</th> <!-- Changed unit to ms -->
+                    <th>Liczba wywołań</th>
+                    <th>Całkowity czas (s)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Dane zostaną załadowane przez JS -->
+            </tbody>
+        </table>
+    </div>
+
+    <hr>
     <h2>Zarządzanie użytkownikami</h2>
     <div class="mb-3">
         <form id="add-user-form" class="row g-2">
@@ -201,24 +220,27 @@
 
     function pollBench() {
         fetch('/api/bench_status').then(r => r.json()).then(data => {
-            setBenchStatus(data.running ? 'running' : (data.summary && !data.running ? 'completed' : 'idle'));
+            if (data.running && !benchPolling) {
+                benchPolling = true;
+                setTimeout(pollBench, 2000); // Poll faster when running
+            } else if (!data.running && benchPolling) {
+                benchPolling = false;
+                // Optionally poll slower when idle, or stop
+            }
+            setBenchStatus(data.running ? 'running' : 'completed');
             benchSummaryDiv.textContent = data.summary || '';
             benchLogDiv.textContent = data.log || '';
-            if (data.running) {
-                setTimeout(pollBench, 1000);
-            } else {
-                benchPolling = false;
-            }
+            // Update results table if needed based on data.result
         });
     }
 
     benchBtn.addEventListener('click', () => {
         fetch('/api/run_benchmarks', {method: 'POST'}).then(r => {
             if (r.ok) {
-                benchPolling = true;
-                pollBench();
+                pollBench(); // Start polling after initiating run
             } else {
-                alert('Benchmark już trwa!');
+                console.error('Failed to start benchmarks');
+                setBenchStatus('error'); // Or some other indicator
             }
         });
         setBenchStatus('running'); benchSummaryDiv.textContent = ''; benchLogDiv.textContent = '';
@@ -242,7 +264,7 @@
         });
     }
     loadTestHistory();
-    setInterval(loadTestHistory, 30000); // odśwież co 30s
+    // setInterval(loadTestHistory, 30000); // odśwież co 30s - Commented out or adjust interval
 
     // Scheduling tests
     async function loadScheduleStatus() {
@@ -269,6 +291,64 @@
         }
     };
     loadScheduleStatus();
+
+    // Performance Stats JS
+    const perfTableBody = document.getElementById('perf-stats-table').querySelector('tbody');
+    const clearPerfStatsBtn = document.getElementById('clear-perf-stats-btn');
+
+    async function loadPerfStats() {
+        try {
+            const response = await fetch('/api/performance_stats');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const stats = await response.json();
+            perfTableBody.innerHTML = ''; // Clear existing rows
+            if (Object.keys(stats).length === 0) {
+                perfTableBody.innerHTML = '<tr><td colspan="4">Brak danych o wydajności. Użyj dekoratora @measure_performance.</td></tr>';
+                return;
+            }
+            // Sort stats by average time descending before displaying
+            const sortedStats = Object.entries(stats).sort(([,a],[,b]) => b.average_ms - a.average_ms);
+
+            for (const [funcName, data] of sortedStats) {
+                const row = perfTableBody.insertRow();
+                row.insertCell().textContent = funcName;
+                // Display average time in milliseconds
+                row.insertCell().textContent = data.average_ms.toFixed(3); // Use average_ms
+                row.insertCell().textContent = data.count;
+                // Calculate and display total time in seconds
+                const total_time_sec = (data.average_ms * data.count) / 1000;
+                row.insertCell().textContent = total_time_sec.toFixed(3);
+            }
+        } catch (error) {
+            console.error('Error fetching performance stats:', error);
+            perfTableBody.innerHTML = '<tr><td colspan="4">Błąd podczas ładowania statystyk wydajności.</td></tr>';
+        }
+    }
+
+    clearPerfStatsBtn.addEventListener('click', async () => {
+        if (!confirm('Czy na pewno chcesz wyczyścić wszystkie statystyki wydajności? Tej operacji nie można cofnąć.')) {
+            return;
+        }
+        try {
+            const response = await fetch('/api/performance_stats', { method: 'DELETE' });
+            if (response.ok) {
+                alert('Statystyki wydajności zostały wyczyszczone.');
+                loadPerfStats(); // Reload stats after clearing
+            } else {
+                const errorData = await response.json();
+                alert(`Błąd podczas czyszczenia statystyk: ${errorData.error || response.statusText}`);
+            }
+        } catch (error) {
+            console.error('Error clearing performance stats:', error);
+            alert('Wystąpił błąd sieciowy podczas próby wyczyszczenia statystyk.');
+        }
+    });
+
+    // Initial load and periodic refresh for performance stats
+    loadPerfStats();
+    setInterval(loadPerfStats, 15000); // Refresh every 15 seconds
 
     // User management JS
     document.getElementById('add-user-form').onsubmit = async function(e) {
@@ -320,5 +400,15 @@
         .list-group-item.test-fail { border-left: 6px solid #f44336; }
         .list-group-item.test-error { border-left: 6px solid #ffc107; }
         .list-group-item { margin-bottom: 0.5em; }
+        #perf-stats-table-container {
+            max-height: 400px; /* Limit height and make scrollable */
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: .25rem;
+            margin-bottom: 1rem; /* Add some space below the table */
+        }
+        #perf-stats-table th, #perf-stats-table td {
+             white-space: nowrap; /* Prevent function names from wrapping */
+        }
     </style>
 {% endblock %}

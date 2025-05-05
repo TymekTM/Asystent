@@ -1,26 +1,21 @@
 import multiprocessing
 import asyncio
 import logging
-import logging.handlers  # Add this import
+import logging.handlers 
 import sys
 import os
-import time # Import the time module
+import time 
 from threading import Thread
 
-# Ensure the web_ui directory is in the Python path if running main.py from the root
-# This might not be necessary depending on how the project is structured/run,
-# but it's safer for direct execution of main.py.
 sys.path.append(os.path.join(os.path.dirname(__file__), 'web_ui'))
 
-# Import necessary components
 from assistant import Assistant
-from web_ui.app import create_app # Import the factory function
-from config import load_config # Import load_config from config.py
+from web_ui.app import create_app 
+from config import load_config 
 
 # --- Logging Configuration ---
-# Configure root logger - both processes will inherit this
 log_filename = "assistant.log"
-log_level = logging.INFO # Zmieniono z INFO na WARNING
+log_level = logging.INFO 
 log_format = "%(asctime)s - %(processName)s - %(name)s - %(levelname)s - %(message)s"
 
 # Use RotatingFileHandler for log rotation
@@ -58,12 +53,7 @@ def run_flask_process(queue: multiprocessing.Queue):
     """Target function to run the Flask Web UI in its own process."""
     logger.info("Starting Flask Web UI process...")
     try:
-        # Create the Flask app using the factory, passing the queue
         flask_app = create_app(queue)
-        # Run the Flask app
-        # Use '0.0.0.0' to make it accessible on the network
-        # Turn off debug mode and reloader for production/multiprocessing stability
-        # Port can be loaded from config if needed
         flask_app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
     except KeyboardInterrupt:
         logger.info("Flask process received KeyboardInterrupt. Exiting.")
