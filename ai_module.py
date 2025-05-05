@@ -11,6 +11,7 @@ import importlib
 import logging
 from functools import lru_cache
 from typing import Any, Dict, List, Optional, Tuple, Callable
+from collections import deque
 
 import langid  # type: ignore
 import requests  # type: ignore
@@ -403,18 +404,34 @@ def chat_with_providers(
 
 @measure_performance
 def generate_response(
-    conversation_history: List[dict],
+    conversation_history: deque, # Update type hint to deque
     functions_info: str,
     system_prompt_override: Optional[str] = None,
+    detected_language: Optional[str] = None, # Add new parameter
+    language_confidence: Optional[float] = None # Add new parameter
 ) -> str:
     try:
-        system_prompt = (system_prompt_override or SYSTEM_PROMPT) + f"\n\nAvailable tools: {functions_info}"
-        messages = conversation_history[:]
+        # Start with the base system prompt (override or default)
+        base_system_prompt = system_prompt_override or SYSTEM_PROMPT
+
+        # Add language detection info if available
+        language_info_prompt = ""
+        if detected_language:
+            confidence_str = f" (confidence: {language_confidence:.2f})" if language_confidence is not None else ""
+            # Add a clear instruction for the AI
+            language_info_prompt = f"\n\nUser query language was detected as: {detected_language} Confidence: {confidence_str}. Respond in the detected language unless the query explicitly asks for a different language or the confidence is very low."
+
+        # Combine prompts and add available tools
+        system_prompt = f"{base_system_prompt}{language_info_prompt}\n\nAvailable tools: {functions_info}"
+
+        # Convert deque to list for slicing and modification
+        messages = list(conversation_history)
         if messages and messages[0]["role"] == "system":
             messages[0]["content"] = system_prompt
         else:
             messages.insert(0, {"role": "system", "content": system_prompt})
 
+        # Assuming chat_with_providers expects a list
         resp = chat_with_providers(MAIN_MODEL, messages)
         content = resp["message"]["content"].strip() if resp else ""
         if not content:
