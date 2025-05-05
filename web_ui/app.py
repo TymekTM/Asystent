@@ -4,32 +4,30 @@ import asyncio
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash, send_file
 from functools import wraps
 import logging
-import time # Import time for potential timestamping or delays
-import shutil # Import shutil for potential file operations like archiving
-import multiprocessing # Import multiprocessing for the queue
-import re # Import re for log parsing
+import time
+import shutil
+import multiprocessing
+import re 
 import subprocess
-import tempfile  # for secure temp files
+import tempfile
 import threading
 import queue
 from functools import wraps
-import sounddevice as sd # Import sounddevice
-import collections # Import collections for deque
+import sounddevice as sd 
+import collections 
 import platform
-import markdown # Import markdown for documentation rendering
-from performance_monitor import get_average_times, measure_performance, clear_performance_stats # Add clear_performance_stats
+import markdown
+from performance_monitor import get_average_times, measure_performance, clear_performance_stats 
 
 # --- Configuration ---
 
-# Import the main config loading/saving functions
+
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-# Import main config loaders
 from config import load_config as load_main_config, save_config as save_main_config, CONFIG_FILE as MAIN_CONFIG_FILE, DEFAULT_CONFIG
-# Import memory functions
 from database_manager import get_db_connection
 from database_models import (get_user_by_username, get_user_password_hash, list_users, add_user, delete_user, update_user, 
-                           get_memories, add_memory, delete_memory) # Corrected function names
+                           get_memories, add_memory, delete_memory) 
 
 # --- Configuration ---
 SECRET_KEY = os.environ.get('SECRET_KEY')

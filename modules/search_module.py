@@ -12,7 +12,7 @@ from charset_normalizer import from_bytes
 from duckduckgo_search import DDGS
 
 from ai_module import chat_with_providers, remove_chain_of_thought
-from audio_modules.beep_sounds import play_beep
+from audio_modules.beep_sounds import play_beep, stop_beep
 from config import MAIN_MODEL
 from prompts import SEARCH_SUMMARY_PROMPT
 from performance_monitor import measure_performance # Add this import
@@ -153,7 +153,8 @@ async def search_handler(params: str = "", conversation_history: list | None = N
         logger.info("Returning cached result for %s", params)
         return cached_response
 
-    await asyncio.to_thread(play_beep, "search")
+    # Start search beep in loop until search completes
+    beep_process = await asyncio.to_thread(play_beep, "search", True)
 
     try:
         urls = await _search_duckduckgo(params)
@@ -194,7 +195,9 @@ async def search_handler(params: str = "", conversation_history: list | None = N
         logger.error("Search handler error: %s", e, exc_info=True)
         return "Błąd podczas przetwarzania wyszukiwania."
     finally:
-        await asyncio.to_thread(play_beep, "stop")
+        # Stop the search beep when action completes
+        if beep_process:
+            await asyncio.to_thread(stop_beep, beep_process)
 
 # ──────────────────────────────────────────
 #  Command registration – same interface

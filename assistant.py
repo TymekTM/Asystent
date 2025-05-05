@@ -348,10 +348,11 @@ class Assistant:
                     call_params['user_lang'] = lang_code
                 if 'user' in sig_params:
                     call_params['user'] = 'assistant'
-                # Speak initial AI response before command
+                # Speak initial AI response before command asynchronously
                 if ai_response_text:
                     logger.info(f"Speaking initial AI response before command: {ai_response_text}")
-                    await self.tts.speak(ai_response_text)
+                    # Do not block command execution; play TTS asynchronously
+                    asyncio.create_task(self.tts.speak(ai_response_text))
                 try:
                     # Execute handler (async or sync)
                     result = None
@@ -380,7 +381,8 @@ class Assistant:
                         logger.info(f"Command '{found_module_key}' executed successfully. Result: '{result_text[:100]}...'") # Log snippet
                         self.conversation_history.append({"role": "assistant", "content": result_text}) # Add string result to history
                         self.trim_conversation_history()
-                        await self.tts.speak(result_text) # Speak the string result
+                        # Speak result asynchronously without blocking
+                        asyncio.create_task(self.tts.speak(result_text))
                     else:
                          logger.info(f"Command '{found_module_key}' executed but produced no speakable result.")
 
@@ -390,7 +392,8 @@ class Assistant:
                     # Ensure error message is added to history as string
                     self.conversation_history.append({"role": "assistant", "content": error_message})
                     self.trim_conversation_history()
-                    await self.tts.speak(error_message)
+                    # Speak error asynchronously without blocking
+                    asyncio.create_task(self.tts.speak(error_message))
 
         else:
             # Command not found or not specified by AI
@@ -398,14 +401,16 @@ class Assistant:
                 logger.info("No command executed. Speaking AI response text.")
                 self.conversation_history.append({"role": "assistant", "content": ai_response_text})
                 self.trim_conversation_history()
-                await self.tts.speak(ai_response_text) # Use await self.tts.speak
+                # Play TTS asynchronously
+                asyncio.create_task(self.tts.speak(ai_response_text))
             else:
                 # Fallback if AI provides neither text nor command
                 logger.warning("AI provided no command and no text response.")
                 fallback_response = "Nie rozumiem polecenia lub nie wiem, jak odpowiedzieć."
                 self.conversation_history.append({"role": "assistant", "content": fallback_response})
                 self.trim_conversation_history()
-                await self.tts.speak(fallback_response)
+                # Play fallback TTS asynchronously
+                asyncio.create_task(self.tts.speak(fallback_response))
 
         # History trimming is now done within the branches after adding messages
 

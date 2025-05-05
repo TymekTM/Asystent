@@ -6,11 +6,13 @@ class APIManager:
     def __init__(self, config_path="modules\\api_integrations_config.json"):
         self.config_path = config_path
         self.integrations = self.load_config()
-        # Async HTTP session for non-blocking requests
+        # Async HTTP session for non-blocking requests; created lazily in async context
         try:
             import aiohttp
-            self._aio_session = aiohttp.ClientSession()
+            self._aio_module = aiohttp
+            self._aio_session = None
         except ImportError:
+            self._aio_module = None
             self._aio_session = None
 
     def load_config(self) -> dict:
@@ -28,8 +30,11 @@ class APIManager:
         Dla przykładu wywołuje zapytanie GET z domyślnym parametrem.
         """
         integration = self.integrations.get(integration_name)
-        if not integration or not self._aio_session:
+        if not integration or not self._aio_module:
             return False
+        # ensure session is initialized in async context
+        if self._aio_session is None:
+            self._aio_session = self._aio_module.ClientSession()
         default_location = integration.get("default_params", {}).get("location", "")
         url = integration["url_template"].format(default_location)
         try:
@@ -39,9 +44,17 @@ class APIManager:
             return False
     
     def check_integration(self, integration_name: str) -> bool:
-        """Synchronous wrapper for async check_integration."""
-        import asyncio
-        return asyncio.run(self.check_integration_async(integration_name))
+        """Synchronous check using requests library."""
+        integration = self.integrations.get(integration_name)
+        if not integration:
+            return False
+        default_location = integration.get("default_params", {}).get("location", "")
+        url = integration["url_template"].format(default_location)
+        try:
+            resp = requests.get(url, timeout=5)
+            return resp.status_code == 200
+        except Exception:
+            return False
 
     def get_best_integration(self, query: str) -> str:
         """
@@ -62,8 +75,11 @@ class APIManager:
         Jeśli nie podano parametrów, używa wartości domyślnych.
         """
         integration = self.integrations.get(integration_name)
-        if not integration or not self._aio_session:
+        if not integration or not self._aio_module:
             return f"Nie znaleziono integracji o nazwie {integration_name}."
+        # ensure session is initialized in async context
+        if self._aio_session is None:
+            self._aio_session = self._aio_module.ClientSession()
         location = params.get("location", integration.get("default_params", {}).get("location", ""))
         url = integration["url_template"].format(location)
         try:
@@ -77,9 +93,20 @@ class APIManager:
             return f"Wystąpił wyjątek: {e}"
     
     def call_integration(self, integration_name: str, params: dict) -> str:
-        """Synchronous wrapper for async call_integration."""
-        import asyncio
-        return asyncio.run(self.call_integration_async(integration_name, params))
+        """Synchronous call using requests library."""
+        integration = self.integrations.get(integration_name)
+        if not integration:
+            return f"Nie znaleziono integracji o nazwie {integration_name}."
+        location = params.get("location", integration.get("default_params", {}).get("location", ""))
+        url = integration["url_template"].format(location)
+        try:
+            resp = requests.get(url, timeout=5)
+            if resp.status_code == 200:
+                return resp.text.strip()
+            else:
+                return f"API zwróciło błąd: {resp.status_code}"
+        except Exception as e:
+            return f"Wystąpił wyjątek: {e}"
 
     async def handle_api_query_async(self, query: str, params: dict) -> str:
         """
@@ -92,9 +119,11 @@ class APIManager:
         return "Żadna integracja API nie jest dostępna."
     
     def handle_api_query(self, query: str, params: dict) -> str:
-        """Synchronous wrapper for async handle_api_query."""
-        import asyncio
-        return asyncio.run(self.handle_api_query_async(query, params))
+        """Synchronous handler using sync integration calls."""
+        best = self.get_best_integration(query)
+        if best:
+            return self.call_integration(best, params)
+        return "Żadna integracja API nie jest dostępna."
 
 # Globalna instancja managera API
 api_manager = APIManager()
@@ -110,8 +139,8 @@ def handle_api_query_wrapper(params: str, conversation_history: list = None) -> 
     # W tym przykładzie query jest ignorowane i zakładamy, że chodzi o pogodę.
     # conversation_history is available but not used in this specific tool
     # Wrap async handler in sync call
-    import asyncio
-    return asyncio.run(api_manager.handle_api_query_async("Pogoda", {"location": location}))
+    # Delegate to synchronous handler
+    return api_manager.handle_api_query("Pogoda", {"location": location})
 
 def register():
     """
