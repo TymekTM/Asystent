@@ -300,10 +300,14 @@ class Assistant:
                     break # Found the module
 
         # Prepare parameters based on expected type (simple string extraction for now)
-        if isinstance(ai_params, dict) and 'query' in ai_params:
-             actual_params_for_handler = ai_params['query']
+        if isinstance(ai_params, dict):
+            # If AI provides a 'query', use it; otherwise pass the whole dict for handlers that expect structured params
+            if 'query' in ai_params:
+                actual_params_for_handler = ai_params['query']
+            else:
+                actual_params_for_handler = ai_params
         elif isinstance(ai_params, str):
-             actual_params_for_handler = ai_params
+            actual_params_for_handler = ai_params
 
         # --- Heurystyka: jeśli AI nie wywołało narzędzia, a pytanie użytkownika zawiera słowa kluczowe pamięci ---
         memory_keywords = ["pamiętasz", "przypomnij", "zapamiętałeś", "zapamiętać", "zapomniałeś", "a poza tym", "co jeszcze", "co miałeś zapamiętać"]
