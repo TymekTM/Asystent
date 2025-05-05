@@ -1,5 +1,6 @@
 import asyncio, logging, os, subprocess, uuid
 from edge_tts import Communicate
+from performance_monitor import measure_performance
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +16,7 @@ class TTSModule:
                 logger.error("Error stopping TTS: %s", e)
             self.current_process = None
 
+    @measure_performance
     async def speak(self, text: str):
         logger.info("TTS: %s", text)
         tts = Communicate(text, "pl-PL-MarekNeural")
