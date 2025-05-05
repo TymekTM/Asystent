@@ -2,6 +2,8 @@
 
 ## Priority Tasks
 - Full mobile version with chat and voice chat options
+- Allow assistant to open web pages
+- Allow assistant to ask question and instantly listen do what user wants to say 
 
 ## Feature Enhancements
 - TTS and voice personalization (user-selectable voice, language, speed, test preview)
