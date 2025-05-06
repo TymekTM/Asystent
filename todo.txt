@@ -3,7 +3,6 @@
 ## Priority Tasks
 - Full mobile version with chat and voice chat options
 - Allow assistant to ask question and instantly listen do what user wants to say 
-- Deloading of everything on app exit
 
 ## Feature Enhancements
 - TTS and voice personalization (user-selectable voice, language, speed, test preview)
@@ -20,3 +19,6 @@
 - API integrations: add more external services (weather, calendar, IoT, etc.)
 - Security review and improvements (rate limiting, audit logs, config secrets)
 - Cloud synchronization of memories and preferences
+
+## Fixes
+- Zarządzanie pluginami, nowe się nie wyświetlają. Auto plugin state?

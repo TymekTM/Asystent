@@ -1,0 +1,94 @@
+# Voice Interaction Guide
+
+This guide provides detailed instructions on using Asystent's voice interaction capabilities.
+
+## Wake Word Detection
+
+Asystent can be activated by speaking its wake word:
+
+1. **Default Wake Word**: The default wake word is "asystent" (pronounced in Polish)
+2. **Customization**: You can change the wake word in the Configuration page
+3. **Activation**: When the wake word is detected, the system will play a sound and begin listening for your command
+
+## Voice Commands
+
+Asystent understands natural language commands across various domains. Here are examples of implemented command types:
+
+### General Information
+- "What time is it?"
+- "What's the weather like today?"
+- "Tell me about [topic]"
+
+### System Commands
+- "Take a screenshot"
+- "Search for [query]"
+- "Remember this information"
+
+### Memory Commands
+- **Adding memories**: "Remember that [information]"
+- **Retrieving memories**: "What do you remember about [topic]?"
+- **Deleting memories**: "Forget about [specific memory]"
+
+### Using Plugins
+- **Search**: "Search for recent news about artificial intelligence"
+- **Deep reasoning**: "Think deeply about [complex topic]"
+- **Screen analysis**: "What's on my screen right now?"
+- **API queries**: "What's the weather in Warsaw?"
+
+## Voice Settings
+
+You can customize the voice interaction experience through the Configuration page:
+
+### Microphone Selection
+1. Go to the Configuration page
+2. Find the "Microphone Device" dropdown
+3. Select your preferred microphone
+4. Save configuration
+
+### Voice Recognition Model
+Asystent currently supports two voice recognition systems:
+
+- **Vosk**: Offline, lightweight recognition
+- **Whisper**: Higher accuracy but may require more resources
+
+To configure:
+1. Go to Configuration
+2. Toggle "Use Whisper for Command" based on your preference
+3. Select Whisper model type if applicable
+4. Save configuration
+
+### Silence Threshold
+You can adjust how quickly the system determines you've finished speaking:
+
+1. Go to Configuration
+2. Find "STT Silence Threshold"
+3. Adjust the value (lower values make the system more sensitive)
+4. Save configuration
+
+## Manual Activation
+
+If you prefer not to use the wake word, you can activate the assistant manually:
+
+1. On the Dashboard or Chat page, click the "Activate Manually" button
+2. Speak your command when you hear the activation sound
+3. The system will process your command just as if you had used the wake word
+
+## Troubleshooting Voice Issues
+
+### Wake Word Not Detected
+- Ensure your microphone is properly connected and selected
+- Speak clearly and at a moderate volume
+- Try adjusting your microphone position
+- Check that the wake word is correctly configured
+
+### Poor Voice Recognition
+- Try using a different STT model (Whisper may be more accurate than Vosk)
+- Reduce background noise
+- Speak more slowly and clearly
+- Check microphone quality and positioning
+
+### No Audio Response
+- Verify your speakers are connected and volume is up
+- Check the logs for TTS errors
+- Restart the assistant if needed
+- Confirm ffplay is properly installed (required for audio playback)
