@@ -198,7 +198,7 @@ async def search_handler(params: str = "", conversation_history: list | None = N
         # Stop the search beep when action completes
         if beep_process:
             await asyncio.to_thread(stop_beep, beep_process)
-
+    
 # ──────────────────────────────────────────
 #  Command registration – same interface
 # ──────────────────────────────────────────

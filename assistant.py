@@ -263,7 +263,12 @@ class Assistant:
     # Removed async def monitor_plugins - Watchdog handles this now
 
     @measure_performance # Add decorator
-    async def process_query(self, text_input: str):
+    async def process_query(self, text_input: str, TextMode: bool = False):
+        if TextMode == True:
+            QUERY_REFINEMENT_ENABLED = False # Disable refinement in text mode
+        else:
+            QUERY_REFINEMENT_ENABLED = True
+            
         # Query refinement can be toggled in config
         if QUERY_REFINEMENT_ENABLED:
             refined_query = refine_query(text_input)
@@ -410,7 +415,7 @@ class Assistant:
                     call_params['user'] = 'assistant'
 
                 # Speak initial AI response before command asynchronously
-                if ai_response_text:
+                if ai_response_text and not TextMode:
                     logger.info(f"Speaking initial AI response before command: {ai_response_text}")
                     asyncio.create_task(self.tts.speak(ai_response_text)) # Non-blocking
 
@@ -590,7 +595,7 @@ class Assistant:
                     if command_text:
                         logger.info("Command (manual trigger): %s", command_text)
                         # Schedule process_query to run in the main event loop
-                        asyncio.run_coroutine_threadsafe(self.process_query(command_text), self.loop)
+                        asyncio.run_coroutine_threadsafe(self.process_query(command_text, False), self.loop)
                     else:
                         logger.info("No command detected after manual trigger.")
                 except Exception as e:

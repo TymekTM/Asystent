@@ -2,6 +2,7 @@ import os
 import json
 import asyncio
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash, send_file
+from flask import Response, stream_with_context
 from functools import wraps
 import logging
 import time
@@ -55,10 +56,18 @@ def convert_audio(input_path: str) -> str:
     ], check=True, capture_output=True)
     return wav_path
 
+
+from assistant import Assistant
+_assistant_instance = None
+def get_assistant_instance():
+    global _assistant_instance
+    if _assistant_instance is None:
+        _assistant_instance = Assistant()
+    return _assistant_instance
+
 def transcribe_audio(wav_path: str) -> str:
     """Transcribe WAV file via assistant instance if available."""
     try:
-        from assistant import get_assistant_instance
         assistant = get_assistant_instance()
         if getattr(assistant, 'whisper_asr', None):
             return assistant.whisper_asr.transcribe(wav_path)
@@ -1055,6 +1064,54 @@ def setup_api_routes(app, queue):
     @login_required(role="user")
     def chat_page():
         return render_template('chat.html')
+    
+
+    @app.route('/api/chat/stream')
+    @login_required(role="user")
+    def chat_stream_api():
+        import json
+        import asyncio
+        from flask import Response, stream_with_context
+        from database_manager import get_db_connection
+        message = request.args.get('message', '').strip()
+        if not message:
+            return ('', 204)
+        username = session['username']
+        user = get_user_by_username(username)
+        user_id = user.id if user else None
+        # Zapisz wiadomość usera
+        with get_db_connection() as conn:
+            if user_id:
+                conn.execute("INSERT INTO memories (content, user_id) VALUES (?, ?)", (message, user_id))
+        assistant = get_assistant_instance()
+        async def run_and_stream():
+            # Wywołaj asynchronicznie process_query i zbieraj odpowiedzi do kolejki
+            await assistant.process_query(message, True)
+            # Po zakończeniu, pobierz ostatnią odpowiedź z historii
+            last = None
+            for msg in reversed(assistant.conversation_history):
+                if msg['role'] == 'assistant':
+                    last = msg['content']
+                    break
+            if last:
+                for chunk in [last[i:i+100] for i in range(0, len(last), 100)]:
+                    yield json.dumps({'type': 'chunk', 'content': chunk})
+            yield json.dumps({'type': 'final'})
+
+        def generate():
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                async def collect():
+                    items = []
+                    async for item in run_and_stream():
+                        items.append(item)
+                    return items
+                for item in loop.run_until_complete(collect()):
+                    yield f'data: {item}\n\n'
+            finally:
+                loop.close()
+        return Response(stream_with_context(generate()), mimetype='text/event-stream')
 
     @app.route('/personalization')
     @login_required(role="user")
@@ -1068,11 +1125,18 @@ def setup_api_routes(app, queue):
         user = get_user_by_username(username)
         if not user:
             return jsonify({'history': []})
-        user_id = user['id']
-        conn = get_db_connection()
+        user_id = user.id
+        from database_manager import get_db_connection
         # Pobierz tylko wiadomości tego usera i AI, posortowane rosnąco
-        rows = conn.execute("SELECT m.content, m.timestamp, m.user_id, u.username FROM memories m LEFT JOIN users u ON m.user_id = u.id WHERE m.user_id = ? OR m.user_id IS NULL ORDER BY m.id ASC", (user_id,)).fetchall()
-        conn.close()
+        with get_db_connection() as conn:
+            rows = conn.execute(
+                "SELECT m.content, m.timestamp, m.user_id, u.username"
+                " FROM memories m"
+                " LEFT JOIN users u ON m.user_id = u.id"
+                " WHERE m.user_id = ? OR m.user_id IS NULL"
+                " ORDER BY m.id ASC",
+                (user_id,)
+            ).fetchall()
         history = []
         for row in rows:
             if row['user_id'] == user_id:
@@ -1205,7 +1269,7 @@ def setup_api_routes(app, queue):
         user = get_user_by_username(username)
         if not user:
             return jsonify({'success': False})
-        user_id = user['id']
+        user_id = user.id if user else None
         conn = get_db_connection()
         conn.execute("DELETE FROM memories WHERE user_id = ? OR user_id IS NULL", (user_id,))
         conn.commit()

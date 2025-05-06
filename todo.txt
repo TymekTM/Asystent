@@ -1,7 +1,6 @@
 # Asystent TODO (2025-2026)
 
 ## Priority Tasks
-- Full mobile version with chat and voice chat options
 - Allow assistant to ask question and instantly listen do what user wants to say 
 
 ## Feature Enhancements
@@ -16,9 +15,19 @@
 - Fix config page to display API keys and corectly dosplay sound devices
 
 ## Integration and Security
-- API integrations: add more external services (weather, calendar, IoT, etc.)
+- API integrations: add more external services (weather, calendar, IoT, etc.) - MCP
 - Security review and improvements (rate limiting, audit logs, config secrets)
-- Cloud synchronization of memories and preferences
+- Core module - Timers, internal calendar for events, reminders
+- Spotify integration
 
 ## Fixes
 - Zarządzanie pluginami, nowe się nie wyświetlają. Auto plugin state?
+
+## Optimisations
+-Entire app start speed
+
+## Upgrades
+- Whisper.cpp zamiast zwykłego
+- Wakeword za pomocą open wake word
+- wykrywanie rozmówcy za pomocą speach brain
+- Custom AI od intencji
