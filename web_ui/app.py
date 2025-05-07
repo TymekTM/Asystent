@@ -1105,11 +1105,11 @@ def setup_api_routes(app, queue):
                     last = msg['content']
                     break
             if last:
-                # Zapisz odpowiedź asystenta do chat_history
+                # Zapisz odpowiedź asystenta do chat_history z user_id użytkownika (nie NULL)
                 with get_db_connection() as conn:
                     conn.execute(
                         "INSERT INTO chat_history (message, user_id, timestamp) VALUES (?, ?, ?)",
-                        (last, None, datetime.utcnow())
+                        (last, user_id, datetime.utcnow())
                     )
                 # Strumieniuj odpowiedź po fragmentach
                 for chunk in [last[i:i+100] for i in range(0, len(last), 100)]:
@@ -1285,11 +1285,12 @@ def setup_api_routes(app, queue):
                 reply = f"(Błąd AI: {e})"
         else:
             reply = "(Brak odpowiedzi AI)"
-        # Zapisz odpowiedź AI (user_id NULL = assistant)
-        conn = get_db_connection()
-        conn.execute("INSERT INTO memories (content, user_id) VALUES (?, NULL)", (reply,))
-        conn.commit()
-        conn.close()
+        # Zapisz odpowiedź AI do chat_history z user_id użytkownika (nie NULL)
+        with get_db_connection() as conn:
+            conn.execute(
+                "INSERT INTO chat_history (message, user_id, timestamp) VALUES (?, ?, ?)",
+                (reply, user_id, datetime.utcnow())
+            )
         return jsonify({'reply': reply})
 
     @app.route('/api/chat/clear', methods=['POST'])
@@ -1299,11 +1300,15 @@ def setup_api_routes(app, queue):
         user = get_user_by_username(username)
         if not user:
             return jsonify({'success': False})
-        user_id = user.id if user else None
+        user_id = user.id
         # Usuń historię czatu z tabeli chat_history
         with get_db_connection() as conn:
+            # Fix: Prevent clearing voice mode history when text chat history is cleared.
+            # Original query was: "DELETE FROM chat_history WHERE user_id = ? OR user_id IS NULL"
+            # This new query only deletes messages directly from the logged-in user.
+            # Assistant messages (user_id IS NULL), which may include voice mode history, are preserved.
             conn.execute(
-                "DELETE FROM chat_history WHERE user_id = ? OR user_id IS NULL",
+                "DELETE FROM chat_history WHERE user_id = ?",
                 (user_id,)
             )
         return jsonify({'success': True})

@@ -18,6 +18,7 @@
 - API integrations: add more external services (weather, calendar, IoT, etc.) - MCP
 - Security review and improvements (rate limiting, audit logs, config secrets)
 - Spotify integration
+- Update tests for new code
 
 ## Fixes
 - Zarządzanie pluginami, nowe się nie wyświetlają. Auto plugin state?
