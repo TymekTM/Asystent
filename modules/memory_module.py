@@ -152,17 +152,62 @@ def _handle_get(params: str, conversation_history=None, user=None):
 def _handle_delete(params: str, conversation_history=None, user=None):
     """Wrapper for deleting memory as plugin command"""
     return delete_memory(params, None)
+
+# --- Main handler to dispatch sub-commands ---
+def handler(params=None, conversation_history=None, user=None):
+    """
+    Dispatch memory sub-commands: add, get, delete.
+    Params can be dict with 'action' or single key for sub-command.
+    """
+    reg = register()
+    subs = reg.get('sub_commands', {})
+    # Case: dict with explicit action
+    if isinstance(params, dict) and 'action' in params:
+        action = params.get('action')
+        sub_params = {k: v for k, v in params.items() if k != 'action'}
+        if len(sub_params) == 1:
+            sub_params = next(iter(sub_params.values()))
+        sub = subs.get(action)
+        if not sub:
+            for name, sc in subs.items():
+                if action in sc.get('aliases', []):
+                    sub = sc
+                    break
+        if sub:
+            return sub['function'](sub_params, conversation_history, user)
+        return f"Nieznana subkomenda pamięci: {action}"
+    # Case: dict with single key as sub-command
+    if isinstance(params, dict) and len(params) == 1:
+        key, value = next(iter(params.items()))
+        sub = subs.get(key)
+        if not sub:
+            for name, sc in subs.items():
+                if key in sc.get('aliases', []):
+                    sub = sc
+                    break
+        if sub:
+            return sub['function'](value, conversation_history, user)
+    # Default: usage
+    cmds = ', '.join([k for k in subs if k in subs and k == subs[k]['function'].__name__ or True])
+    return f"Użyj sub-komend pamięci: add, get, delete"
     
 # Plugin registration
 def register():
-    """Register memory plugin with sub-commands for add, get, and delete"""
-    return {
+    """Register memory plugin with main handler and sub-commands for add, get, and delete"""
+    info = {
         "command": "memory",
         "aliases": ["memory", "pamięć", "pamiec"],
         "description": "Zarządza długoterminową pamięcią asystenta",
+        "handler": handler,
         "sub_commands": {
-            "add": {"function": _handle_add, "description": "Zapisuje nową informację do pamięci"},
-            "get": {"function": _handle_get, "description": "Pobiera informacje z pamięci"},
-            "delete": {"function": _handle_delete, "description": "Usuwa informację z pamięci"},
+            "add":    {"function": _handle_add,    "description": "Zapisuje nową informację do pamięci", "aliases": []},
+            "get":    {"function": _handle_get,    "description": "Pobiera informacje z pamięci",      "aliases": []},
+            "delete": {"function": _handle_delete, "description": "Usuwa informację z pamięci",      "aliases": []}
         }
     }
+    # Expand aliases for sub_commands (if any)
+    subs = info["sub_commands"]
+    for name, sc in list(subs.items()):
+        for alias in sc.get("aliases", []):
+            subs.setdefault(alias, sc)
+    return info

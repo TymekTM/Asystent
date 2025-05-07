@@ -329,23 +329,113 @@ class Assistant:
         # Find the module by checking command name and aliases
         if target_command_name:
             for module_key, info in self.modules.items():
-                aliases = [a.lower() for a in info.get("aliases", [])]
-                if target_command_name == module_key.lower() or target_command_name in aliases:
+                # top-level module match (command itself)
+                if target_command_name == module_key.lower():
                     found_module_key = module_key
                     module_info = info
-                    break # Found the module
+                    break
+                # otherwise check module aliases (if any)
+                for alias in info.get('aliases', []):
+                    if target_command_name == alias.lower():
+                        found_module_key = module_key
+                        module_info = info
+                        break
+                if found_module_key:
+                    break
 
         # Prepare parameters based on expected type
         if isinstance(ai_params, dict):
-            # If AI provides a 'query', use it; otherwise pass the whole dict
+            # If AI provides a 'query', extract it
             if 'query' in ai_params and isinstance(ai_params['query'], str):
                 actual_params_for_handler = ai_params['query']
             else:
-                # Pass the dict itself if the handler expects it (checked via signature later)
                 actual_params_for_handler = ai_params
         elif isinstance(ai_params, str):
             actual_params_for_handler = ai_params
-        # else: handle other potential types or log warning
+        else:
+            actual_params_for_handler = ai_params
+
+        # Fallback: map subcommand names to modules with sub_commands
+        if not found_module_key and target_command_name:
+            for module_key, info in self.modules.items():
+                subs = info.get('sub_commands')
+                if not subs:
+                    continue
+                for sub_name, sub_info in subs.items():
+                    aliases = [a.lower() for a in sub_info.get('aliases', [])]
+                    if target_command_name == sub_name.lower() or target_command_name in aliases:
+                        found_module_key = module_key
+                        module_info = info
+                        # wrap params for subcommand handler
+                        actual_params_for_handler = {sub_name: actual_params_for_handler}
+                        break
+                if found_module_key:
+                    break
+
+        # Additional fallback: detect core subcommands in free text
+        if not found_module_key and 'core' in self.modules:
+            core_info = self.modules['core']
+            subs = core_info.get('sub_commands', {})
+            if isinstance(refined_query, str) and refined_query:
+                parts = refined_query.split()
+                key = parts[0]
+                # match primary or alias
+                if key in subs or any(key in sc.get('aliases', []) for sc in subs.values()):
+                    found_module_key = 'core'
+                    module_info = core_info
+                    # param is rest of string or empty
+                    actual_params_for_handler = {key: ' '.join(parts[1:])}
+
+        # Execute found module commands
+        if found_module_key and module_info:
+            # For modules with sub_commands (e.g., core, memory), use their handler to dispatch
+            if module_info.get('sub_commands') and module_info.get('handler') == module_info['handler']:
+                # Core-like plugin: dispatch via its main handler, passing conversation history
+                handler = module_info['handler']
+                asyncio.create_task(asyncio.to_thread(play_beep, 'action'))
+                try:
+                    # Pass conversation_history for subcommands that require context
+                    result = handler(actual_params_for_handler, self.conversation_history)
+                    if inspect.isawaitable(result):
+                        result = await result
+                except Exception as e:
+                    logger.error(f"Error executing core handler: {e}", exc_info=True)
+                    err = f"Przepraszam, wystąpił błąd podczas wykonywania komendy core."
+                    self.conversation_history.append({"role":"assistant","content":err})
+                    asyncio.create_task(self.tts.speak(err))
+                    return
+            else:
+                # Direct module handler (no sub_commands)
+                handler = module_info.get('handler')
+                # Prepare call for standard handler signatures
+                kwargs = {}
+                # If handler expects params
+                sig = inspect.signature(handler)
+                if 'params' in sig.parameters:
+                    kwargs['params'] = actual_params_for_handler
+                # Optionally pass conversation_history
+                if 'conversation_history' in sig.parameters:
+                    kwargs['conversation_history'] = self.conversation_history
+                if 'user_lang' in sig.parameters:
+                    kwargs['user_lang'] = lang_code
+                # Play action beep
+                asyncio.create_task(asyncio.to_thread(play_beep, 'action'))
+                try:
+                    result = handler(**kwargs)
+                    if inspect.isawaitable(result):
+                        result = await result
+                except Exception as e:
+                    logger.error(f"Error executing command {found_module_key}: {e}", exc_info=True)
+                    err = f"Przepraszam, wystąpił błąd podczas wykonywania komendy {found_module_key}."
+                    self.conversation_history.append({"role":"assistant","content":err})
+                    asyncio.create_task(self.tts.speak(err))
+                    return
+            # Handle and speak result
+            result_text = '' if result is None else str(result[0] if isinstance(result, tuple) else result)
+            if result_text:
+                self.conversation_history.append({"role":"assistant","content":result_text})
+                asyncio.create_task(self.tts.speak(result_text))
+            return
 
         # --- Heurystyka: jeśli AI nie wywołało narzędzia, a pytanie użytkownika zawiera słowa kluczowe pamięci ---
         memory_keywords = ["pamiętasz", "przypomnij", "zapamiętałeś", "zapamiętać", "zapomniałeś", "a poza tym", "co jeszcze", "co miałeś zapamiętać"]
@@ -356,23 +446,32 @@ class Assistant:
             # ustaw puste params, by wywołać domyślną subkomendę 'get'
             ai_params = {}
 
-        if found_module_key and module_info:
-            # Handle modules with sub_commands (e.g., memory)
-            handler = None
-            description = module_info.get('description', '')
-            sub_action = None
-            if 'sub_commands' in module_info:
-                # Expect params dict with single action key
-                if isinstance(ai_params, dict) and ai_params:
-                    sub_action = next(iter(ai_params.keys()))
-                # Default to 'get' if no dict params
-                if not sub_action:
-                    sub_action = 'get'
-                sub_info = module_info['sub_commands'].get(sub_action)
-                if sub_info:
-                    handler = sub_info['function']
-                    description = sub_info.get('description', description)
-                    actual_params_for_handler = ai_params.get(sub_action, '') if isinstance(ai_params, dict) else actual_params_for_handler
+            if found_module_key and module_info:
+                # Choose handler: if AI provided 'action', defer to module's main handler
+                handler = None
+                description = module_info.get('description', '')
+                sub_action = None
+                # AI returned structured params with 'action' key: use module handler
+                if isinstance(ai_params, dict) and 'action' in ai_params and module_info.get('handler'):
+                    handler = module_info['handler']
+                    # pass full params dict to handler (it will interpret 'action' internally)
+                    actual_params_for_handler = ai_params
+                # Handle modules with sub_commands directly when no top-level 'action'
+                elif 'sub_commands' in module_info:
+                    # Determine sub-command key
+                    if isinstance(ai_params, dict) and ai_params:
+                        sub_action = next(iter(ai_params.keys()))
+                    # Default to 'get' if none provided
+                    if not sub_action:
+                        sub_action = 'get'
+                    sub_info = module_info['sub_commands'].get(sub_action)
+                    if sub_info:
+                        handler = sub_info['function']
+                        description = sub_info.get('description', description)
+                        # extract params for this sub-command
+                        if isinstance(ai_params, dict):
+                            # param under sub_action key or full dict
+                            actual_params_for_handler = ai_params.get(sub_action, ai_params)
             else:
                 handler = module_info.get('handler')
                 description = module_info.get('description', description)

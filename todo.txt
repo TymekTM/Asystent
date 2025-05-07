@@ -17,14 +17,18 @@
 ## Integration and Security
 - API integrations: add more external services (weather, calendar, IoT, etc.) - MCP
 - Security review and improvements (rate limiting, audit logs, config secrets)
-- Core module - Timers, internal calendar for events, reminders
 - Spotify integration
 
 ## Fixes
 - Zarządzanie pluginami, nowe się nie wyświetlają. Auto plugin state?
+- Chat tekstowy zapisuje do pamięci long term a nie odzielnej
+- Przycisk wyczyść historię w tekst czacie czyści historię voice mode
+- Zweryfikować działanie innych rzeczy w core (timer działa)
+- pytest warnings
 
 ## Optimisations
--Entire app start speed
+- Entire app start speed
+- Wczytywać tylko te pluginy, które się dopiero pojawiły/zmieniły
 
 ## Upgrades
 - Whisper.cpp zamiast zwykłego

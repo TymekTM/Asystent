@@ -40,3 +40,11 @@ class TTSModule:
                 except Exception as e:
                     logger.error(f"Błąd przy usuwaniu pliku {temp_path}: {e}")
             self.current_process = None
+
+# Create a global instance of TTSModule
+_tts_module_instance = TTSModule()
+
+# Define a module-level async speak function
+async def speak(text: str):
+    """Module-level function to handle text-to-speech."""
+    await _tts_module_instance.speak(text)

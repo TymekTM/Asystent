@@ -6,10 +6,13 @@ logger = logging.getLogger(__name__)
 
 # Słownik mapujący typ dźwięku do ścieżki do pliku
 BEEP_SOUNDS = {
+    # General-purpose beep (alias of keyword)
+    "beep": "resources/sounds/beep.mp3",
     "keyword": "resources/sounds/beep.mp3",
     "search": "resources/sounds/search_beep.mp3",
     "screenshot": "resources/sounds/screenshot_beep.mp3",
-    "deep": "resources/sounds/deepthink_beep.mp3"
+    "deep": "resources/sounds/deepthink_beep.mp3",
+    "alarm": "resources/sounds/alarm.wav",
 }
 
 def play_beep(sound_type: str = "keyword", loop: bool = False) -> subprocess.Popen | None:

@@ -8,14 +8,16 @@ Asystent features a modular plugin system that allows extending the assistant's 
 
 ## Basic Plugin Structure
 
-Create a new Python file in the `modules/` directory with the following structure:
+Create a new Python file named `<your_plugin>_module.py` in the `modules/` directory with the following structure.
+The filename suffix `_module.py` is required for automatic plugin loading.
 
 ```python
 import logging
+from audio_modules.beep_sounds import play_beep
+from collections import deque
 
-logger = logging.getLogger(__name__)
-
-def handler_function(params: str = "", conversation_history: list = None) -> str:
+# Main handler; can also accept 'user_lang' or other context params
+def handler(params: str = "", conversation_history: deque = None, user_lang: str = None) -> str:
     """
     Main function that processes requests to this plugin.
     
@@ -27,23 +29,25 @@ def handler_function(params: str = "", conversation_history: list = None) -> str
         String response to be sent back to the user
     """
     try:
+        # Optional: play a 'action' sound to signal execution
+        play_beep("action")
         # Your plugin logic here
         result = process_input(params)
         return result
     except Exception as e:
         logger.error(f"Error in plugin: {e}", exc_info=True)
-        return f"Error occurred: {str(e)}"
+        return f"Error occurred: {e}"
 
 def register():
     """
-    Required function that registers the plugin with the system.
+    Required function that returns plugin metadata.
     """
     return {
-        "command": "my_plugin",  # Primary command name
-        "aliases": ["plugin", "mp"],  # Alternative ways to call this plugin
-        "description": "What this plugin does",  # Help text
-        "handler": handler_function,  # Function to call when plugin is invoked
-        "prompt": "OPTIONAL_SYSTEM_PROMPT"  # Context for LLM when using this plugin
+        "command": "my_plugin",       # Primary command name
+        "aliases": ["plugin", "mp"], # Optional alternative names
+        "description": "What this plugin does (shown in tools list)",
+        "handler": handler,            # Main entry point for this plugin
+        # "prompt": "OPTIONAL_SYSTEM_PROMPT", # Optional: custom system prompt for LLM
     }
 ```
 
@@ -62,20 +66,20 @@ def register():
 
 ## Advanced Plugin Example
 
-Here's an example of a more complex plugin with sub-commands:
+Here's an example of a more complex plugin with sub-commands. You can either define a top-level `handler` that accepts `{action: params}` dict, or list individual functions under `sub_commands` for automatic dispatch.
 
 ```python
-def add_data(params: str, conversation_history: list = None) -> str:
+def add_data(params: str, conversation_history: deque = None) -> str:
     """Add data to storage"""
     # Implementation...
     return f"Added: {params}"
 
-def retrieve_data(params: str, conversation_history: list = None) -> str:
+def retrieve_data(params: str, conversation_history: deque = None) -> str:
     """Retrieve data from storage"""
     # Implementation... 
     return f"Found: {result}"
 
-def delete_data(params: str, conversation_history: list = None) -> str:
+def delete_data(params: str, conversation_history: deque = None) -> str:
     """Delete data from storage"""
     # Implementation...
     return f"Deleted: {params}"
@@ -83,6 +87,7 @@ def delete_data(params: str, conversation_history: list = None) -> str:
 def register():
     return {
         "command": "data",
+        "aliases": ["data", "d"],
         "description": "Manages data in the system",
         "sub_commands": {
             "add": {
