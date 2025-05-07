@@ -867,23 +867,24 @@ def setup_api_routes(app, queue):
         """API endpoint for plugin list and status."""
         import os, json
         plugins_file = os.path.join(os.path.dirname(__file__), '..', 'plugins_state.json')
+        modules_dir = os.path.join(os.path.dirname(__file__), '..', 'modules')
         plugins = {}
         try:
+            # Load plugin states from file if exists
             if os.path.exists(plugins_file):
                 with open(plugins_file, 'r', encoding='utf-8') as f:
                     plugins_data = json.load(f)
-                    # plugins_data może być {'plugins': {...}} lub {...}
                     if 'plugins' in plugins_data:
                         plugins = plugins_data['plugins']
                     else:
                         plugins = plugins_data
-            else:
-                # Fallback: scan modules dir
-                modules_dir = os.path.join(os.path.dirname(__file__), '..', 'modules')
+            # Always scan modules dir for *_module.py files
+            if os.path.exists(modules_dir):
                 for fname in os.listdir(modules_dir):
                     if fname.endswith('_module.py'):
                         name = fname[:-3]
-                        plugins[name] = {'enabled': True}
+                        if name not in plugins:
+                            plugins[name] = {'enabled': True}
             return jsonify(plugins)
         except Exception as e:
             logger.error(f"Failed to load plugins: {e}", exc_info=True)

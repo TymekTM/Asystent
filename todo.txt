@@ -22,7 +22,6 @@
 
 ## Fixes
 - Zarządzanie pluginami, nowe się nie wyświetlają. Auto plugin state?
-- Przycisk wyczyść historię w tekst czacie czyści historię voice mode
 - Zweryfikować działanie innych rzeczy w core (timer działa)
 - pytest warnings
 
