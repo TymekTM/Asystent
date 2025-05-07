@@ -63,18 +63,19 @@
                         </div>
                         <!-- ... MIC_DEVICE_ID ... -->
                         <div class="mb-3">
-                            <label for="mic-device-id-select" class="form-label">
-                                Urządzenie wejściowe (Mikrofon)
-                                <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Wybierz mikrofon, którego ma używać asystent. 'Domyślny systemowy' użyje standardowego mikrofonu ustawionego w systemie operacyjnym. Jeśli masz problemy, wybierz konkretny mikrofon z listy."></i>
+                            <label for="MIC_DEVICE_ID" class="form-label">Urządzenie wejściowe (mikrofon)
+                                <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Wybierz urządzenie wejściowe audio. Kliknij przycisk odświeżania obok listy, aby zaktualizować dostępne urządzenia."></i>
                             </label>
                             <div class="input-group">
                                 <select class="form-select" id="mic-device-id-select" name="MIC_DEVICE_ID">
-                                    <option value="" selected>Ładowanie urządzeń...</option> <!-- Placeholder, selected initially -->
+                                    <option value="" selected>Ładowanie urządzeń...</option>
+                                    <!-- Options will be populated by JavaScript -->
                                 </select>
-                                <button type="button" class="btn btn-secondary device-refresh-btn" onclick="refreshAudioDevices()" title="Odśwież listę urządzeń">
+                                <button class="btn btn-outline-secondary device-refresh-btn" type="button" id="refresh-mic-devices-btn" data-bs-toggle="tooltip" title="Odśwież listę urządzeń">
                                     <i class="fas fa-sync-alt"></i>
                                 </button>
                             </div>
+                            <div class="form-text">Wybierz mikrofon, który ma być używany przez asystenta.</div>
                         </div>
                         <!-- ... STT_SILENCE_THRESHOLD ... -->
                         <div class="mb-3">
@@ -199,31 +200,31 @@
                 </div>
             </div>
 
-            <!-- API Keys Column -->
             <div class="col-lg-6 mb-4">
                 <div class="card h-100 shadow-sm rounded-4">
                     <div class="card-header"><i class="fas fa-key"></i> Klucze API</div>
                     <div class="card-body">
-                        <!-- API Key fields will be dynamically shown/hidden by JS -->
-                        <div class="mb-3 api-key-field" id="api-key-openai" style="display: none;">
-                            <label for="API_KEYS.openai" class="form-label">OpenAI API Key
+                    <div class="card-body">
+                        <div class="mb-3 api-key-field" id="api-key-openai">
+                            <label for="API_KEYS.OPENAI_API_KEY" class="form-label">OpenAI API Key
                                 <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Klucz API dla usług OpenAI (GPT, Whisper API)."></i>
                             </label>
-                            <input type="password" class="form-control" id="API_KEYS.openai" name="API_KEYS.openai" value="" placeholder="Wprowadź klucz API dla OpenAI">
+                            <input type="password" class="form-control" id="API_KEYS.OPENAI_API_KEY" name="API_KEYS.OPENAI_API_KEY" value="{{ config.API_KEYS.OPENAI_API_KEY if config.API_KEYS and 'OPENAI_API_KEY' in config.API_KEYS else '' }}" placeholder="Wprowadź klucz API dla OpenAI">
                         </div>
-                        <div class="mb-3 api-key-field" id="api-key-deepseek" style="display: none;">
-                            <label for="API_KEYS.deepseek" class="form-label">Deepseek API Key
+                        <div class="mb-3 api-key-field" id="api-key-deepseek">
+                            <label for="API_KEYS.DEEPSEEK_API_KEY" class="form-label">Deepseek API Key
                                 <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Klucz API dla usług Deepseek (modele chat/coder)."></i>
                             </label>
-                            <input type="password" class="form-control" id="API_KEYS.deepseek" name="API_KEYS.deepseek" value="" placeholder="Wprowadź klucz API dla Deepseek">
+                            <input type="password" class="form-control" id="API_KEYS.DEEPSEEK_API_KEY" name="API_KEYS.DEEPSEEK_API_KEY" value="{{ config.API_KEYS.DEEPSEEK_API_KEY if config.API_KEYS and 'DEEPSEEK_API_KEY' in config.API_KEYS else '' }}" placeholder="Wprowadź klucz API dla Deepseek">
                         </div>
-                        <div class="mb-3 api-key-field" id="api-key-anthropic" style="display: none;"> <!-- Added Anthropic field structure -->
-                            <label for="API_KEYS.anthropic" class="form-label">Anthropic API Key
+                        <div class="mb-3 api-key-field" id="api-key-anthropic">
+                            <label for="API_KEYS.ANTHROPIC_API_KEY" class="form-label">Anthropic API Key
                                 <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Klucz API dla usług Anthropic (Claude)."></i>
                             </label>
-                            <input type="password" class="form-control" id="API_KEYS.anthropic" name="API_KEYS.anthropic" value="" placeholder="Wprowadź klucz API dla Anthropic">
+                            <input type="password" class="form-control" id="API_KEYS.ANTHROPIC_API_KEY" name="API_KEYS.ANTHROPIC_API_KEY" value="{{ config.API_KEYS.ANTHROPIC_API_KEY if config.API_KEYS and 'ANTHROPIC_API_KEY' in config.API_KEYS else '' }}" placeholder="Wprowadź klucz API dla Anthropic">
                         </div>
-                         <p class="form-text">Pola kluczy API pojawią się w zależności od wybranego dostawcy.</p>
+                        <p class="form-text">Wszystkie pola kluczy API są widoczne jednocześnie. Wypełnij tylko te, które są potrzebne dla wybranego dostawcy.</p>
+                    </div>
                     </div>
                 </div>
             </div>
@@ -252,14 +253,12 @@
     </form>
 </div>
 
-<script>
     // Inicjalizacja tooltipów Bootstrapa
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-      return new bootstrap.Tooltip(tooltipTriggerEl)
-    })
-
     // Funkcja do odświeżania listy urządzeń audio
+    window.refreshAudioDevices = async function() {
+    async function refreshAudioDevices() {
     async function refreshAudioDevices() {
         const selectElement = document.getElementById('mic-device-id-select');
         const currentDeviceId = '{{ config.MIC_DEVICE_ID if config.MIC_DEVICE_ID is not none else "" }}'; // Get current ID from Jinja, handle None
@@ -314,24 +313,11 @@
             console.error('Error fetching audio devices:', error);
             selectElement.innerHTML = '<option value="">Błąd ładowania urządzeń</option>'; // Show error in select
         }
-    }
-
-    // Function to show/hide API key fields based on provider
-    function updateApiKeyFields() {
-        const provider = document.getElementById('PROVIDER').value;
-        const allApiKeyFields = document.querySelectorAll('.api-key-field');
-
-        // Hide all fields first
-        allApiKeyFields.forEach(field => {
-            field.style.display = 'none';
-        });
-
-        // Show the relevant field(s) based on the selected provider's ID
-        const fieldToShow = document.getElementById(`api-key-${provider}`);
-        if (fieldToShow) {
-            fieldToShow.style.display = 'block';
-        }
-        // Add logic here if a provider needs multiple keys visible
+    // Automatyczne ładowanie urządzeń po załadowaniu strony
+    document.addEventListener('DOMContentLoaded', function() {
+        refreshAudioDevices();
+    });
+    });
     }
 
     // Funkcja do obsługi wysyłania formularza
@@ -345,35 +331,38 @@
         // Convert FormData to a plain object, handling nested keys and types
         formData.forEach((value, key) => {
             const element = form.elements[key]; // Get the form element itself
-
-            // Handle nested keys like 'API_KEYS.openai' or 'query_refinement.enabled'
-            if (key.includes('.')) {
+            // Handle nested keys like 'API_KEYS.OPENAI_API_KEY' or 'query_refinement.enabled'
+            if (key.startsWith('API_KEYS.')) {
+                // API key fields: ensure correct structure
+                if (!configData.API_KEYS) configData.API_KEYS = {};
+                const apiKeyName = key.substring('API_KEYS.'.length);
+                if (element && element.type === 'password' && value === '') {
+                    // Don't send empty password fields to avoid overwriting existing keys unintentionally
+                } else {
+                    configData.API_KEYS[apiKeyName] = value;
+                }
+            } else if (key.includes('.')) {
+                // Other nested keys (e.g., query_refinement.enabled)
                 const keys = key.split('.');
                 let current = configData;
                 keys.forEach((subKey, index) => {
                     if (index === keys.length - 1) {
-                        // Last key, assign value
                         if (element && element.type === 'checkbox') {
                             current[subKey] = element.checked;
                         } else if (element && element.type === 'number') {
-                            // Try to parse as number, fallback to string if invalid
                             const numValue = parseFloat(value);
                             current[subKey] = isNaN(numValue) ? value : numValue;
-                        } else if (element && element.type === 'password' && value === '') {
-                            // Don't send empty password fields to avoid overwriting existing keys unintentionally
-                            // If you want to allow clearing a key, the backend needs to handle an empty string specifically.
-                            // delete current[subKey]; // Alternative: remove the key if empty
                         } else {
                             current[subKey] = value;
                         }
                     } else {
-                        // Create nested object if it doesn't exist
                         if (!current[subKey] || typeof current[subKey] !== 'object') {
                             current[subKey] = {};
                         }
                         current = current[subKey];
                     }
                 });
+            } else {
             } else {
                  // Handle top-level elements
                  if (element && element.type === 'checkbox') {
@@ -474,13 +463,13 @@
     // Attach event listener to the form
     document.getElementById('config-form').addEventListener('submit', saveConfig);
 
-    // Attach event listener for provider change to update API key visibility
+    // document.getElementById('PROVIDER').addEventListener('change', updateApiKeyFields); // Niepotrzebne – wszystkie pola są widoczne
     document.getElementById('PROVIDER').addEventListener('change', updateApiKeyFields);
 
-    // Load audio devices and set initial API key field visibility when the page loads
     document.addEventListener('DOMContentLoaded', () => {
         refreshAudioDevices(); // Load devices on page load
-        updateApiKeyFields(); // Set the initial state of API key fields based on current provider
+        // updateApiKeyFields(); // Niepotrzebne – wszystkie pola są widoczne
+    });
     });
 
 </script>
