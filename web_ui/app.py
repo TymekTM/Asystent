@@ -2,7 +2,9 @@ import os
 import json
 import asyncio
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash, send_file
+from datetime import datetime  # Added for timestamping chat history
 from flask import Response, stream_with_context
+from datetime import datetime
 from functools import wraps
 import logging
 import time
@@ -27,6 +29,9 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from config import load_config as load_main_config, save_config as save_main_config, CONFIG_FILE as MAIN_CONFIG_FILE, DEFAULT_CONFIG
 from database_manager import get_db_connection
+from database_models import init_schema
+# Ensure chat_history table exists
+init_schema()
 from database_models import (get_user_by_username, get_user_password_hash, list_users, add_user, delete_user, update_user, 
                            get_memories, add_memory, delete_memory) 
 
@@ -111,7 +116,7 @@ scheduled_interval = None  # in minutes
 scheduled_timer = None
 scheduler_lock = threading.Lock()
 
-import unittest, io, datetime
+import unittest, io
 
 def run_unit_tests():
     """Run unit tests incrementally and update test_status for real-time UI."""
@@ -1073,16 +1078,22 @@ def setup_api_routes(app, queue):
         import asyncio
         from flask import Response, stream_with_context
         from database_manager import get_db_connection
+        # Ensure chat_history schema exists
+        from database_models import init_schema
+        init_schema()
         message = request.args.get('message', '').strip()
         if not message:
             return ('', 204)
         username = session['username']
         user = get_user_by_username(username)
         user_id = user.id if user else None
-        # Zapisz wiadomość usera
+        # Zapisz wiadomość użytkownika do chat_history
         with get_db_connection() as conn:
             if user_id:
-                conn.execute("INSERT INTO memories (content, user_id) VALUES (?, ?)", (message, user_id))
+                conn.execute(
+                    "INSERT INTO chat_history (message, user_id, timestamp) VALUES (?, ?, ?)",
+                    (message, user_id, datetime.utcnow())
+                )
         assistant = get_assistant_instance()
         async def run_and_stream():
             # Wywołaj asynchronicznie process_query i zbieraj odpowiedzi do kolejki
@@ -1094,6 +1105,13 @@ def setup_api_routes(app, queue):
                     last = msg['content']
                     break
             if last:
+                # Zapisz odpowiedź asystenta do chat_history
+                with get_db_connection() as conn:
+                    conn.execute(
+                        "INSERT INTO chat_history (message, user_id, timestamp) VALUES (?, ?, ?)",
+                        (last, None, datetime.utcnow())
+                    )
+                # Strumieniuj odpowiedź po fragmentach
                 for chunk in [last[i:i+100] for i in range(0, len(last), 100)]:
                     yield json.dumps({'type': 'chunk', 'content': chunk})
             yield json.dumps({'type': 'final'})
@@ -1121,6 +1139,9 @@ def setup_api_routes(app, queue):
     @app.route('/api/chat/history')
     @login_required(role="user")
     def chat_history_api():
+        # Ensure chat_history schema exists
+        from database_models import init_schema
+        init_schema()
         username = session['username']
         user = get_user_by_username(username)
         if not user:
@@ -1130,19 +1151,19 @@ def setup_api_routes(app, queue):
         # Pobierz tylko wiadomości tego usera i AI, posortowane rosnąco
         with get_db_connection() as conn:
             rows = conn.execute(
-                "SELECT m.content, m.timestamp, m.user_id, u.username"
-                " FROM memories m"
-                " LEFT JOIN users u ON m.user_id = u.id"
-                " WHERE m.user_id = ? OR m.user_id IS NULL"
-                " ORDER BY m.id ASC",
+                "SELECT ch.message, ch.timestamp, ch.user_id, u.username"
+                " FROM chat_history ch"
+                " LEFT JOIN users u ON ch.user_id = u.id"
+                " WHERE ch.user_id = ? OR ch.user_id IS NULL"
+                " ORDER BY ch.id ASC",
                 (user_id,)
             ).fetchall()
         history = []
         for row in rows:
             if row['user_id'] == user_id:
-                history.append({'role': 'user', 'content': row['content'], 'timestamp': row['timestamp']})
+                history.append({'role': 'user', 'content': row['message'], 'timestamp': row['timestamp']})
             else:
-                history.append({'role': 'assistant', 'content': row['content'], 'timestamp': row['timestamp']})
+                history.append({'role': 'assistant', 'content': row['message'], 'timestamp': row['timestamp']})
         return jsonify({'history': history})
 
     @app.route('/api/chat/send', methods=['POST'])
@@ -1162,13 +1183,22 @@ def setup_api_routes(app, queue):
         if not user:
             return jsonify({'reply': '(Błąd użytkownika)'}), 400
         user_id = user['id']
-        # Zapisz wiadomość usera
-        conn = get_db_connection()
-        conn.execute("INSERT INTO memories (content, user_id) VALUES (?, ?)", (message, user_id))
-        conn.commit()
-        # Pobierz całą historię tego chatu
-        rows = conn.execute("SELECT m.content, m.user_id, u.username FROM memories m LEFT JOIN users u ON m.user_id = u.id WHERE m.user_id = ? OR m.user_id IS NULL ORDER BY m.id ASC", (user_id,)).fetchall()
-        conn.close()
+        # Zapisz wiadomość usera do oddzielnej tabeli chat_history
+        with get_db_connection() as conn:
+            conn.execute(
+                "INSERT INTO chat_history (message, user_id, timestamp) VALUES (?, ?, ?) ",
+                (message, user_id, datetime.utcnow())
+            )
+        # Pobierz całą historię tego chatu z chat_history
+        with get_db_connection() as conn:
+            rows = conn.execute(
+                "SELECT ch.message, ch.timestamp, ch.user_id, u.username"
+                " FROM chat_history ch"
+                " LEFT JOIN users u ON ch.user_id = u.id"
+                " WHERE ch.user_id = ? OR ch.user_id IS NULL"
+                " ORDER BY ch.id ASC",
+                (user_id,)
+            ).fetchall()
         chat_msgs = []
         for row in rows:
             if row['user_id'] == user_id:
@@ -1270,10 +1300,12 @@ def setup_api_routes(app, queue):
         if not user:
             return jsonify({'success': False})
         user_id = user.id if user else None
-        conn = get_db_connection()
-        conn.execute("DELETE FROM memories WHERE user_id = ? OR user_id IS NULL", (user_id,))
-        conn.commit()
-        conn.close()
+        # Usuń historię czatu z tabeli chat_history
+        with get_db_connection() as conn:
+            conn.execute(
+                "DELETE FROM chat_history WHERE user_id = ? OR user_id IS NULL",
+                (user_id,)
+            )
         return jsonify({'success': True})
 
     @app.route('/api/logs/download')
@@ -1384,6 +1416,9 @@ def setup_api_routes(app, queue):
 
 # --- App Creation Function ---
 def create_app(queue: multiprocessing.Queue):
+    from database_models import init_schema
+    # Ensure chat_history table exists for this Flask process
+    init_schema()
     global assistant_queue
     assistant_queue = queue
 

@@ -66,6 +66,13 @@ def run_flask_process(queue: multiprocessing.Queue):
 
 def main():
     logger.info("Initializing application...")
+    # Ensure database schema is initialized (creates chat_history, memories, etc.)
+    try:
+        from database_models import init_schema
+        init_schema()
+        logger.info("Database schema initialized.")
+    except Exception as e:
+        logger.error(f"Failed to initialize database schema: {e}", exc_info=True)
 
     # Create a multiprocessing queue for IPC
     command_queue = multiprocessing.Queue()

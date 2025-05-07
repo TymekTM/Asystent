@@ -70,6 +70,23 @@ def init_schema(seed_dev: bool = True) -> None:
                 config  TEXT,
                 FOREIGN KEY(user_id) REFERENCES users(id)
             );
+            -- Table to store transient chat history separate from long-term memories
+            CREATE TABLE IF NOT EXISTS chat_history (
+                id        INTEGER PRIMARY KEY AUTOINCREMENT,
+                message   TEXT NOT NULL,
+                user_id   INTEGER,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(user_id) REFERENCES users(id)
+            );
+
+            -- Table for chat history separate from long-term memories
+            CREATE TABLE IF NOT EXISTS chat_history (
+                id        INTEGER PRIMARY KEY AUTOINCREMENT,
+                message   TEXT NOT NULL,
+                user_id   INTEGER,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(user_id) REFERENCES users(id)
+            );
             """
         )
 

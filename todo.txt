@@ -21,7 +21,6 @@
 
 ## Fixes
 - Zarządzanie pluginami, nowe się nie wyświetlają. Auto plugin state?
-- Chat tekstowy zapisuje do pamięci long term a nie odzielnej
 - Przycisk wyczyść historię w tekst czacie czyści historię voice mode
 - Zweryfikować działanie innych rzeczy w core (timer działa)
 - pytest warnings
@@ -35,3 +34,5 @@
 - Wakeword za pomocą open wake word
 - wykrywanie rozmówcy za pomocą speach brain
 - Custom AI od intencji
+- Kontekst aplikacji 
+- Wheel decide do robienia czegoś
