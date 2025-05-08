@@ -24,6 +24,7 @@
 - Fix config page to corectly dosplay sound devices
 - Modules make sound while in chat mode
 - Historia chat się nie wyświetla
+- Włączy wyłącz plugin
 
 ## Optimisations
 - Entire app start speed
@@ -36,6 +37,7 @@
 - Custom AI od intencji
 - Kontekst aplikacji 
 - Wheel decide do robienia czego
+- Rozbudować weather na więcej opcji
 
 ## Testing
 - Log all prompts send (final)

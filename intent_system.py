@@ -28,6 +28,7 @@ from modules.memory_module import register as register_memory_command
 from modules.deepseek_module import register as register_deepseek_command
 from modules.core_module import register as register_core_command
 from modules.open_web_module import register as register_open_web_command
+from modules.weather_module import register as register_weather_command
 
 
 # Paths to the trained model artifacts
@@ -72,7 +73,7 @@ LANGUAGES = ["Polish", "English"]
 # Each register function should return a dictionary with command metadata (e.g., name, description).
 COMMAND_REGISTRATION_FUNCTIONS: Dict[str, Callable[[], Dict[str, Any]]] = {
     'search': register_search_module_command,
-    # 'weather_query': register_weather_command,  # Disabled: module not found
+    'weather_query': register_weather_command,  
     'screenshot': register_screenshot_command,
     'memory_add': register_memory_command,
     'memory_get': register_memory_command,
@@ -144,7 +145,7 @@ def _get_handler_from_module_register(register_func, subcommand=None):
 HANDLERS: Dict[str, Callable[..., Union[Any, Awaitable[Any]]]] = {
     'general': lambda text, **kwargs: "Nie obsługuję jeszcze tej intencji.",
     'about_assistant': lambda text, **kwargs: "Jestem asystentem AI. Zapytaj mnie o coś!",
-    'weather_query': _get_handler_from_module_register(register_api_command),
+    'weather_query': _get_handler_from_module_register(register_weather_command),
     'screenshot': _get_handler_from_module_register(register_screenshot_command),
     'search': _get_handler_from_module_register(register_search_module_command),
     'memory_add': _get_handler_from_module_register(register_memory_command, 'add'),
@@ -159,6 +160,8 @@ def _memory_get_with_full_memory(text, **kwargs):
     if isinstance(result, dict) and 'all_memories' in result:
         return result
     return {'summary': result, 'success': True, 'all_memories': []}
+
+HANDLERS.update({
     'memory_delete': _get_handler_from_module_register(register_memory_command, 'delete'),
     'deep_reasoning': _get_handler_from_module_register(register_deepseek_command),
     'timer_set': _get_handler_from_module_register(register_core_command, 'set_timer'),
@@ -175,7 +178,7 @@ def _memory_get_with_full_memory(text, **kwargs):
     'task_complete': _get_handler_from_module_register(register_core_command, 'complete_task'),
     'task_remove': _get_handler_from_module_register(register_core_command, 'remove_task'),
     'none': lambda text, **kwargs: None,
-}
+})
 
 #------------------------------------------------------------------------------
 # Dispatcher

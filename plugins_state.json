@@ -1,7 +1,7 @@
 {
   "plugins": {
     "api_module": {
-      "enabled": true
+      "enabled": false
     },
     "deepseek_module": {
       "enabled": false
