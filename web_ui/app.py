@@ -27,7 +27,7 @@ from performance_monitor import get_average_times, measure_performance, clear_pe
 
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from config import load_config as load_main_config, save_config as save_main_config, CONFIG_FILE as MAIN_CONFIG_FILE, DEFAULT_CONFIG
+from config import load_config as load_main_config, save_config as save_main_config, CONFIG_FILE as MAIN_CONFIG_FILE, DEFAULT_CONFIG, _config
 from database_manager import get_db_connection
 from database_models import init_schema
 # Ensure chat_history table exists
@@ -49,6 +49,36 @@ LTM_FILE = os.path.join(os.path.dirname(__file__), '..', 'long_term_memory.json'
 app = Flask(__name__, template_folder='templates', static_folder='static')
 app.secret_key = SECRET_KEY
 assistant_queue = None
+# Translation mapping for UI
+TRANSLATIONS = {
+    'en': {
+        'Assistant CP': 'Assistant CP', 'Documentation': 'Documentation', 'Chat': 'Chat',
+        'Personalization': 'Personalization', 'Dashboard': 'Dashboard', 'History': 'History',
+        'Logs': 'Logs', 'Plugins': 'Plugins', 'MCP': 'MCP', 'Configuration': 'Configuration',
+        'Long-Term Memory': 'Long-Term Memory', 'Dev': 'Dev', 'Login': 'Login', 'Logout': 'Logout'
+    },
+    'pl': {
+        'Assistant CP': 'Panel Asystenta', 'Documentation': 'Dokumentacja', 'Chat': 'Czat',
+        'Personalization': 'Personalizacja', 'Dashboard': 'Panel', 'History': 'Historia',
+        'Logs': 'Logi', 'Plugins': 'Pluginy', 'MCP': 'MCP', 'Configuration': 'Konfiguracja',
+        'Long-Term Memory': 'Pamięć długoterminowa', 'Dev': 'Dev', 'Login': 'Zaloguj', 'Logout': 'Wyloguj'
+    }
+}
+# Ensure language in session and expose translations
+@app.before_request
+def ensure_language():
+    if 'lang' not in session:
+        session['lang'] = _config.get('ui_language', 'en')
+    # expose to templates
+    app.jinja_env.globals['translations'] = TRANSLATIONS
+    app.jinja_env.globals['current_lang'] = session['lang']
+
+@app.route('/set_language/<lang>')
+def set_language(lang):
+    if lang in TRANSLATIONS:
+        session['lang'] = lang
+    ref = request.referrer or url_for('index')
+    return redirect(ref)
 _startup_time = time.time()
 
 # --- Audio upload helpers ---
@@ -1431,6 +1461,19 @@ def create_app(queue: multiprocessing.Queue):
     # Create a new Flask app instance for this process
     local_app = Flask(__name__, template_folder='templates', static_folder='static')
     local_app.secret_key = SECRET_KEY
+    # --- Internationalization (i18n) middleware and routes ---
+    @local_app.before_request
+    def ensure_language_local():
+        if 'lang' not in session:
+            session['lang'] = _config.get('ui_language', 'en')
+        local_app.jinja_env.globals['translations'] = TRANSLATIONS
+        local_app.jinja_env.globals['current_lang'] = session['lang']
+    @local_app.route('/set_language/<lang>', endpoint='set_language')  # expose as 'set_language' for templates
+    def set_language_local(lang):
+        if lang in TRANSLATIONS:
+            session['lang'] = lang
+        ref = request.referrer or url_for('index')
+        return redirect(ref)
     # --- Health check endpoint ---
     @local_app.route('/health')
     def health():

@@ -17,12 +17,13 @@
 - API integrations: add more external services (weather, calendar, IoT, etc.) - MCP
 - Security review and improvements (rate limiting, audit logs, config secrets)
 - Spotify integration
-- Update tests for new code
 
 ## Fixes
 - Zweryfikować działanie innych rzeczy w core (timer działa)
 - pytest warnings
 - Fix config page to corectly dosplay sound devices
+- Modules make sound while in chat mode
+- Historia chat się nie wyświetla
 
 ## Optimisations
 - Entire app start speed
@@ -34,4 +35,8 @@
 - wykrywanie rozmówcy za pomocą speach brain
 - Custom AI od intencji
 - Kontekst aplikacji 
-- Wheel decide do robienia czegoś
+- Wheel decide do robienia czego
+
+## Testing
+- Log all prompts send (final)
+- logs all user inputs for intents

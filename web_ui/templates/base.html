@@ -57,11 +57,21 @@
                     {% endif %}
                 </ul>
                 <ul class="navbar-nav ms-auto">
-                     <li class="nav-item me-2">
+                    <li class="nav-item me-2">
                         <button id="theme-toggle-btn" class="btn btn-outline-secondary btn-sm" title="Toggle Theme">
                             <i class="fas fa-sun" id="theme-icon-light"></i>
                             <i class="fas fa-moon d-none" id="theme-icon-dark"></i>
                         </button>
+                    </li>
+                    <!-- Language selector -->
+                    <li class="nav-item dropdown me-2">
+                        <a class="nav-link dropdown-toggle" href="#" id="langDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            {{ 'PL' if current_lang == 'pl' else 'EN' }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('set_language', lang='en') }}">English</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('set_language', lang='pl') }}">Polski</a></li>
+                        </ul>
                     </li>
                     {% if session.username %}
                        <li class="nav-item dropdown">

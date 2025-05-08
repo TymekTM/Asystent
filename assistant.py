@@ -18,6 +18,7 @@ from audio_modules.wakeword_detector import run_wakeword_detection
 
 # Import funkcji AI z nowego modułu
 from ai_module import refine_query, generate_response, parse_response, remove_chain_of_thought, detect_language
+from intent_system import classify_intent, handle_intent
 
 # Import performance monitor
 from performance_monitor import measure_performance
@@ -61,24 +62,6 @@ def save_plugins_state(plugins):
     except Exception as e:
         logger.error(f"Failed to save plugins state: {e}")
 
-class IntentClassifier:
-    """Simple intent classifier using LLM or rules."""
-    def __init__(self, provider=None):
-        self.provider = provider
-
-    def classify(self, text: str) -> str:
-        # For demo: use simple rules, or call LLM for intent
-        text_l = text.lower()
-        if any(x in text_l for x in ["pogoda", "jaka temperatura", "czy będzie padać"]):
-            return "weather_query"
-        if any(x in text_l for x in ["kim jesteś", "opowiedz o sobie", "co potrafisz"]):
-            return "about_assistant"
-        if any(x in text_l for x in ["zrób zdjęcie", "screenshot"]):
-            return "screenshot"
-        if any(x in text_l for x in ["wyszukaj", "znajdź", "search"]):
-            return "search"
-        # Fallback: ask LLM (optional, not implemented here)
-        return "general"
 
 class Assistant:
     def __init__(self, vosk_model_path: str = None, mic_device_id: int = None, wake_word: str = None, stt_silence_threshold: int = None, command_queue: queue.Queue = None): # Type hint for command_queue
@@ -109,40 +92,42 @@ class Assistant:
         )
         self.modules = {}
         self.plugin_mod_times = {}
-        # Load plugins and start file watcher for changes
-        self.load_plugins()
+        # Start file watcher for plugin changes with debounce
         self._plugin_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), 'modules'))
         os.makedirs(self._plugin_folder, exist_ok=True)
         self._observer = Observer()
         class _Handler(FileSystemEventHandler):
             def __init__(self, outer):
                 self.outer = outer
+                self._timer = None
+            def _schedule_reload(self, path, action):
+                # Debounce rapid file events
+                if self._timer:
+                    self._timer.cancel()
+                logger.info(f"Scheduling plugin reload due to {action} on {path}")
+                self._timer = threading.Timer(0.5, self.outer.load_plugins)
+                self._timer.daemon = True
+                self._timer.start()
             def on_modified(self, event):
-                # Reload only if a python file in the modules folder is modified
-                if event.src_path.endswith('.py') and os.path.dirname(event.src_path) == self.outer._plugin_folder:
-                     logger.info(f"Detected change in {event.src_path}, reloading plugins.")
-                     # Consider adding debounce logic here if rapid changes cause issues
-                     self.outer.load_plugins() # Reload plugins on modification
+                if not event.is_directory and event.src_path.endswith('.py') and os.path.dirname(event.src_path) == self.outer._plugin_folder:
+                    self._schedule_reload(event.src_path, 'modification')
+            def on_created(self, event):
+                if not event.is_directory and event.src_path.endswith('.py') and os.path.dirname(event.src_path) == self.outer._plugin_folder:
+                    self._schedule_reload(event.src_path, 'creation')
+            def on_deleted(self, event):
+                if not event.is_directory and event.src_path.endswith('.py') and os.path.dirname(event.src_path) == self.outer._plugin_folder:
+                    self._schedule_reload(event.src_path, 'deletion')
         handler = _Handler(self)
-        self._observer.schedule(handler, self._plugin_folder, recursive=False) # Watch only the modules folder
+        self._observer.schedule(handler, self._plugin_folder, recursive=False)
         self._observer.daemon = True
         self._observer.start()
+        # Initial plugin load
+        self.load_plugins()
         self.loop = None
         self.command_queue = command_queue
         # self.manual_listen_triggered = False # Flag for manual activation - Replaced by queue signal logic
 
-        # --- Load all memories for assistant user at startup ---
-        # --- Load all memories for assistant user at startup ---
-        try:
-            from modules.memory_module import retrieve_memories
-            # Use correct parameter name 'query' instead of 'params'
-            result, success = retrieve_memories(query="", user="assistant")
-            if success and result.strip():
-                logger.info(f"Loaded assistant long-term memory at startup:\n{result}")
-            else:
-                logger.info("No long-term memory found for assistant at startup.")
-        except Exception as e:
-            logger.error(f"Failed to load assistant long-term memory at startup: {e}")
+        # Long-term memory loading deferred until first query to improve startup speed
 
         if self.use_whisper:
             from audio_modules.whisper_asr import WhisperASR
@@ -196,6 +181,14 @@ class Assistant:
         plugin_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), 'modules'))
         os.makedirs(plugin_folder, exist_ok=True)
         plugins_state = load_plugins_state()
+        # Clean up stale modification times for removed modules
+        current_files = set(os.path.join(plugin_folder, f) for f in os.listdir(plugin_folder)
+                            if f.endswith('_module.py') and not f.startswith('__'))
+        for old_path in list(self.plugin_mod_times.keys()):
+            if old_path not in current_files:
+                del self.plugin_mod_times[old_path]
+        # Keep track of current modules to diff changes
+        old_modules = self.modules if hasattr(self, 'modules') else {}
         new_modules = {}
         # Ensure modules package is importable
         import sys # Moved import here as it's only used here now
@@ -206,58 +199,85 @@ class Assistant:
             if not filename.endswith('_module.py') or filename.startswith('__'): # Skip __init__.py etc.
                 continue
             filepath = os.path.join(plugin_folder, filename)
-            # Update mod time only if loading succeeds
-            # self.plugin_mod_times[filepath] = mod_time # Moved update after successful load
             module_name = filename[:-3]
             # Skip disabled plugins
             state = plugins_state.get(module_name, {})
             if state.get('enabled') is False:
                 logger.info(f"Plugin {module_name} jest wyłączony - pomijam ładowanie.")
-                if module_name in self.modules: # Remove if previously loaded
-                    del self.modules[module_name]
-                continue
-            module_full_name = f"modules.{module_name}"
-            try:
-                if module_full_name in sys.modules:
-                    # Reload the module if it exists
-                    module = importlib.reload(sys.modules[module_full_name])
-                    logger.debug(f"Reloaded module: {module_full_name}")
-                else:
-                    # Import the module for the first time
-                    module = importlib.import_module(module_full_name)
-                    logger.debug(f"Imported module: {module_full_name}")
-                # Update modification time after successful load/reload
-                self.plugin_mod_times[filepath] = os.path.getmtime(filepath)
-            except Exception as e:
-                logger.error("Błąd przy ładowaniu/przeładowaniu pluginu %s: %s", module_name, e, exc_info=True)
-                # Optionally remove the module from tracking if load fails
-                if module_name in self.modules:
-                    del self.modules[module_name]
+                # Remove any previous registration for this module
+                for cmd, info in list(self.modules.items()):
+                    if info.get('_module_name') == module_name:
+                        del self.modules[cmd]
+                # Clean up modification tracking
                 if filepath in self.plugin_mod_times:
                     del self.plugin_mod_times[filepath]
                 continue
+            # Check modification time to skip unchanged plugins
+            mod_time = os.path.getmtime(filepath)
+            module_full_name = f"modules.{module_name}"
+            if filepath in self.plugin_mod_times and self.plugin_mod_times[filepath] == mod_time and module_full_name in sys.modules:
+                logger.debug(f"No changes in plugin {module_name}, reusing existing plugin info.")
+                # Reuse existing plugin info without re-importing or re-registering
+                for cmd, info in self.modules.items():
+                    if info.get('_module_name') == module_name:
+                        new_modules[cmd] = info
+                continue
+            else:
+                try:
+                    if module_full_name in sys.modules:
+                        # Reload the module if it exists
+                        module = importlib.reload(sys.modules[module_full_name])
+                        logger.debug(f"Reloaded module: {module_full_name}")
+                    else:
+                        # Import the module for the first time
+                        module = importlib.import_module(module_full_name)
+                        logger.debug(f"Imported module: {module_full_name}")
+                    # Update modification time after successful load/reload
+                    self.plugin_mod_times[filepath] = mod_time
+                except Exception as e:
+                    logger.error("Błąd przy ładowaniu/przeładowaniu pluginu %s: %s", module_name, e, exc_info=True)
+                    # Remove any previous registration for this module
+                    for cmd, info in list(self.modules.items()):
+                        if info.get('_module_name') == module_name:
+                            del self.modules[cmd]
+                    # Clean up modification tracking
+                    if filepath in self.plugin_mod_times:
+                        del self.plugin_mod_times[filepath]
+                    continue
             # Register plugin if valid
             if hasattr(module, 'register'):
                 try:
-                    plugin_info = module.register() # Should return a dict
+                    plugin_info = module.register()  # Should return a dict
                     if not isinstance(plugin_info, dict):
-                         logger.error(f"Plugin {module_name} register() did not return a dictionary.")
-                         continue
+                        logger.error(f"Plugin {module_name} register() did not return a dictionary.")
+                        continue
+                    # Tag plugin with its source module for change tracking
+                    plugin_info['_module_name'] = module_name
                 except Exception as e:
                     logger.error("Błąd podczas register() pluginu %s: %s", module_name, e, exc_info=True)
                     continue
                 command = plugin_info.get('command')
                 if command and isinstance(command, str):
-                    # TODO: Validate plugin_info structure further (e.g., handler exists)
+                    # Register valid plugin
                     new_modules[command] = plugin_info
-                    logger.info("Loaded plugin: %s -> %s", command, plugin_info.get('description', 'No description'))
                 else:
                     logger.warning("Plugin %s missing 'command' key or command is not a string, skipping.", module_name)
             else:
                 logger.debug("Plugin file %s has no register(), skipping.", filename)
-        # Update the modules dictionary atomically
+        # Determine plugin changes
+        old_keys = set(old_modules.keys())
+        new_keys = set(new_modules.keys())
+        added = new_keys - old_keys
+        removed = old_keys - new_keys
+        # Atomically update modules
         self.modules = new_modules
-        logger.info(f"Plugins loaded: {list(self.modules.keys())}")
+        # Log changes
+        for cmd in added:
+            info = new_modules.get(cmd, {})
+            logger.info("Plugin enabled: %s -> %s", cmd, info.get('description', ''))
+        for cmd in removed:
+            logger.info("Plugin disabled/removed: %s", cmd)
+        logger.info("Plugins loaded: %s", list(self.modules.keys()))
 
 
     # Removed async def monitor_plugins - Watchdog handles this now
@@ -269,6 +289,7 @@ class Assistant:
         else:
             QUERY_REFINEMENT_ENABLED = True
             
+
         # Query refinement can be toggled in config
         if QUERY_REFINEMENT_ENABLED:
             refined_query = refine_query(text_input)
@@ -277,16 +298,25 @@ class Assistant:
             refined_query = text_input
             logger.info("Query refinement disabled, using raw input: %s", refined_query)
 
+        # Log intent interpretation after refinement
+        intent, confidence = classify_intent(refined_query)
+        logger.info(f"[INTENT] Interpreted intent: {intent} (confidence: {confidence:.2f}) for: '{refined_query}'")
+
         # --- Language Detection Layer (langid) ---
         lang_code, lang_conf, lang_prompt = detect_language(refined_query)
         logger.info(f"Detected language: {lang_code} (confidence {lang_conf:.2f})")
 
         # Intent classification (new layer)
-        intent = IntentClassifier().classify(refined_query)
-        logger.info("Intent classified as: %s", intent)
+        intent, confidence = classify_intent(refined_query)
+        logger.info("Intent classified as: %s (%.2f)", intent, confidence)
         # Add user message BEFORE calling the main model
         # Deque handles maxlen automatically
-        self.conversation_history.append({"role": "user", "content": refined_query, "intent": intent})
+        self.conversation_history.append({
+            "role": "user", 
+            "content": refined_query, 
+            "intent": intent,
+            "confidence": confidence
+        })
         # self.trim_conversation_history() # No longer needed, deque handles it
 
         # Przygotowanie listy dostępnych funkcji (tool descriptions)

@@ -159,37 +159,44 @@ def handler(params=None, conversation_history=None, user=None):
     Dispatch memory sub-commands: add, get, delete.
     Params can be dict with 'action' or single key for sub-command.
     """
-    reg = register()
-    subs = reg.get('sub_commands', {})
-    # Case: dict with explicit action
+    # Load registered sub-commands
+    subs = register().get('sub_commands', {})
+    # Case: explicit 'action' key
     if isinstance(params, dict) and 'action' in params:
-        action = params.get('action')
+        raw_action = params.get('action')
+        action = raw_action.lower().strip() if isinstance(raw_action, str) else str(raw_action).lower()
+        # Extract remaining parameters
         sub_params = {k: v for k, v in params.items() if k != 'action'}
         if len(sub_params) == 1:
             sub_params = next(iter(sub_params.values()))
+        if not sub_params:
+            sub_params = ""
+        # Find matching sub-command by name or alias
         sub = subs.get(action)
         if not sub:
-            for name, sc in subs.items():
+            for sc in subs.values():
                 if action in sc.get('aliases', []):
                     sub = sc
                     break
         if sub:
             return sub['function'](sub_params, conversation_history, user)
         return f"Nieznana subkomenda pamięci: {action}"
-    # Case: dict with single key as sub-command
+    # Case: shorthand dict {cmd: value}
     if isinstance(params, dict) and len(params) == 1:
-        key, value = next(iter(params.items()))
+        raw_key, value = next(iter(params.items()))
+        key = raw_key.lower().strip() if isinstance(raw_key, str) else str(raw_key).lower()
         sub = subs.get(key)
         if not sub:
-            for name, sc in subs.items():
+            for sc in subs.values():
                 if key in sc.get('aliases', []):
                     sub = sc
                     break
         if sub:
             return sub['function'](value, conversation_history, user)
-    # Default: usage
-    cmds = ', '.join([k for k in subs if k in subs and k == subs[k]['function'].__name__ or True])
-    return f"Użyj sub-komend pamięci: add, get, delete"
+        return f"Nieznana subkomenda pamięci: {key}"
+    # Default usage message
+    base_cmds = sorted(set(cmd for cmd in subs if cmd in ['add', 'get', 'delete']))
+    return f"Użyj sub-komend pamięci: {', '.join(base_cmds)}"
     
 # Plugin registration
 def register():
@@ -201,7 +208,7 @@ def register():
         "handler": handler,
         "sub_commands": {
             "add":    {"function": _handle_add,    "description": "Zapisuje nową informację do pamięci", "aliases": []},
-            "get":    {"function": _handle_get,    "description": "Pobiera informacje z pamięci",      "aliases": []},
+            "get":    {"function": _handle_get,    "description": "Pobiera informacje z pamięci",      "aliases": ["show", "check"]},
             "delete": {"function": _handle_delete, "description": "Usuwa informację z pamięci",      "aliases": []}
         }
     }
