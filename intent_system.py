@@ -1,3 +1,10 @@
+# Custom handler for memory_get to always return all memories for AI
+def _memory_get_with_full_memory(text, **kwargs):
+    handler = _get_handler_from_module_register(register_memory_command, 'get')
+    result = handler(text, **kwargs)
+    if isinstance(result, dict) and 'all_memories' in result:
+        return result
+    return {'summary': result, 'success': True, 'all_memories': []}
 """
 Intent system for the assistant.
 Uses trained model from intent_pipeline_multilang to classify user text and dispatch to handlers.
@@ -5,8 +12,22 @@ All handler functions are stubs and should be implemented according to business 
 """
 
 import joblib
-from typing import Tuple, Any, Dict
+import asyncio  # Added for async operations
+from typing import Tuple, Any, Dict, Callable, Awaitable, Union  # Added Awaitable, Union, Callable
+
 from performance_monitor import measure_performance
+# Import actual handler and register function from search_module
+from modules.search_module import search_handler as actual_module_search_handler
+from modules.search_module import register as register_search_module_command
+
+# TODO: Import register functions from other modules as they are created
+
+from modules.api_module import register as register_api_command
+from modules.see_screen_module import register as register_screenshot_command
+from modules.memory_module import register as register_memory_command
+from modules.deepseek_module import register as register_deepseek_command
+from modules.core_module import register as register_core_command
+from modules.open_web_module import register as register_open_web_command
 
 
 # Paths to the trained model artifacts
@@ -44,6 +65,38 @@ INTENTS = [
 LANGUAGES = ["Polish", "English"]
 
 #------------------------------------------------------------------------------
+# Command Registration Mapping
+#------------------------------------------------------------------------------
+
+# Maps intent names to their respective command registration functions.
+# Each register function should return a dictionary with command metadata (e.g., name, description).
+COMMAND_REGISTRATION_FUNCTIONS: Dict[str, Callable[[], Dict[str, Any]]] = {
+    'search': register_search_module_command,
+    # 'weather_query': register_weather_command,  # Disabled: module not found
+    'screenshot': register_screenshot_command,
+    'memory_add': register_memory_command,
+    'memory_get': register_memory_command,
+    'memory_delete': register_memory_command,
+    'deep_reasoning': register_deepseek_command,
+    # All core-related intents use register_core_command
+    'timer_set': register_core_command,
+    'timer_view': register_core_command,
+    'event_add': register_core_command,
+    'event_view': register_core_command,
+    'reminder_set': register_core_command,
+    'reminder_view': register_core_command,
+    'shopping_add': register_core_command,
+    'shopping_view': register_core_command,
+    'shopping_remove': register_core_command,
+    'task_add': register_core_command,
+    'task_view': register_core_command,
+    'task_complete': register_core_command,
+    'task_remove': register_core_command,
+    # Intents like 'general', 'about_assistant' might not have specific commands to register,
+    # unless they trigger a specific module action that should be described.
+}
+
+#------------------------------------------------------------------------------
 # Model loading and inference
 #------------------------------------------------------------------------------
 
@@ -77,156 +130,88 @@ def classify_intent(text: str) -> Tuple[str, float]:
     return intent, confidence
 
 #------------------------------------------------------------------------------
-# Handler stubs for each intent
-#------------------------------------------------------------------------------
 
-def handle_general(text: str, **kwargs) -> Any:
-    # TODO: Implement handling for general chit-chat intent
-    pass
-
-
-def handle_weather_query(text: str, **kwargs) -> Any:
-    # TODO: Implement weather query logic
-    pass
+# --- Unified intent handler mapping using module registrations ---
+def _get_handler_from_module_register(register_func, subcommand=None):
+    info = register_func()
+    if subcommand and 'sub_commands' in info:
+        return info['sub_commands'][subcommand]['function']
+    return info['handler']
 
 
-def handle_about_assistant(text: str, **kwargs) -> Any:
-    # TODO: Implement information about assistant
-    pass
 
+# Map intent names to handler functions (async if needed)
+HANDLERS: Dict[str, Callable[..., Union[Any, Awaitable[Any]]]] = {
+    'general': lambda text, **kwargs: "Nie obsługuję jeszcze tej intencji.",
+    'about_assistant': lambda text, **kwargs: "Jestem asystentem AI. Zapytaj mnie o coś!",
+    'weather_query': _get_handler_from_module_register(register_api_command),
+    'screenshot': _get_handler_from_module_register(register_screenshot_command),
+    'search': _get_handler_from_module_register(register_search_module_command),
+    'memory_add': _get_handler_from_module_register(register_memory_command, 'add'),
+    # Custom handler for memory_get to always return all memories for AI
+    'memory_get': _memory_get_with_full_memory,
+}
 
-def handle_screenshot(text: str, **kwargs) -> Any:
-    # TODO: Implement screenshot capture
-    pass
-
-
-def handle_search(text: str, **kwargs) -> Any:
-    # TODO: Implement web or local search
-    pass
-
-
-def handle_memory_add(text: str, **kwargs) -> Any:
-    # TODO: Add entry to memory
-    pass
-
-
-def handle_memory_get(text: str, **kwargs) -> Any:
-    # TODO: Retrieve entry from memory
-    pass
-
-
-def handle_memory_delete(text: str, **kwargs) -> Any:
-    # TODO: Delete entry from memory
-    pass
-
-
-def handle_deep_reasoning(text: str, **kwargs) -> Any:
-    # TODO: Implement deep reasoning logic
-    pass
-
-
-def handle_timer_set(text: str, **kwargs) -> Any:
-    # TODO: Set a timer
-    pass
-
-
-def handle_timer_view(text: str, **kwargs) -> Any:
-    # TODO: View existing timers
-    pass
-
-
-def handle_event_add(text: str, **kwargs) -> Any:
-    # TODO: Add calendar event
-    pass
-
-
-def handle_event_view(text: str, **kwargs) -> Any:
-    # TODO: View events
-    pass
-
-
-def handle_reminder_set(text: str, **kwargs) -> Any:
-    # TODO: Set a reminder
-    pass
-
-
-def handle_reminder_view(text: str, **kwargs) -> Any:
-    # TODO: View reminders
-    pass
-
-
-def handle_shopping_add(text: str, **kwargs) -> Any:
-    # TODO: Add item to shopping list
-    pass
-
-
-def handle_shopping_view(text: str, **kwargs) -> Any:
-    # TODO: View shopping list items
-    pass
-
-
-def handle_shopping_remove(text: str, **kwargs) -> Any:
-    # TODO: Remove item from shopping list
-    pass
-
-
-def handle_task_add(text: str, **kwargs) -> Any:
-    # TODO: Add task to to-do list
-    pass
-
-
-def handle_task_view(text: str, **kwargs) -> Any:
-    # TODO: View tasks
-    pass
-
-
-def handle_task_complete(text: str, **kwargs) -> Any:
-    # TODO: Mark task as complete
-    pass
-
-
-def handle_task_remove(text: str, **kwargs) -> Any:
-    # TODO: Remove task from list
-    pass
+# Custom handler for memory_get to always return all memories for AI
+def _memory_get_with_full_memory(text, **kwargs):
+    handler = _get_handler_from_module_register(register_memory_command, 'get')
+    result = handler(text, **kwargs)
+    if isinstance(result, dict) and 'all_memories' in result:
+        return result
+    return {'summary': result, 'success': True, 'all_memories': []}
+    'memory_delete': _get_handler_from_module_register(register_memory_command, 'delete'),
+    'deep_reasoning': _get_handler_from_module_register(register_deepseek_command),
+    'timer_set': _get_handler_from_module_register(register_core_command, 'set_timer'),
+    'timer_view': _get_handler_from_module_register(register_core_command, 'view_timers'),
+    'event_add': _get_handler_from_module_register(register_core_command, 'add_event'),
+    'event_view': _get_handler_from_module_register(register_core_command, 'view_calendar'),
+    'reminder_set': _get_handler_from_module_register(register_core_command, 'set_reminder'),
+    'reminder_view': _get_handler_from_module_register(register_core_command, 'view_reminders'),
+    'shopping_add': _get_handler_from_module_register(register_core_command, 'add_item'),
+    'shopping_view': _get_handler_from_module_register(register_core_command, 'view_list'),
+    'shopping_remove': _get_handler_from_module_register(register_core_command, 'remove_item'),
+    'task_add': _get_handler_from_module_register(register_core_command, 'add_task'),
+    'task_view': _get_handler_from_module_register(register_core_command, 'view_tasks'),
+    'task_complete': _get_handler_from_module_register(register_core_command, 'complete_task'),
+    'task_remove': _get_handler_from_module_register(register_core_command, 'remove_task'),
+    'none': lambda text, **kwargs: None,
+}
 
 #------------------------------------------------------------------------------
 # Dispatcher
 #------------------------------------------------------------------------------
 
-# Map intent names to handler functions
-HANDLERS: Dict[str, Any] = {
-    'general': handle_general,
-    'weather_query': handle_weather_query,
-    'about_assistant': handle_about_assistant,
-    'screenshot': handle_screenshot,
-    'search': handle_search,
-    'memory_add': handle_memory_add,
-    'memory_get': handle_memory_get,
-    'memory_delete': handle_memory_delete,
-    'deep_reasoning': handle_deep_reasoning,
-    'timer_set': handle_timer_set,
-    'timer_view': handle_timer_view,
-    'event_add': handle_event_add,
-    'event_view': handle_event_view,
-    'reminder_set': handle_reminder_set,
-    'reminder_view': handle_reminder_view,
-    'shopping_add': handle_shopping_add,
-    'shopping_view': handle_shopping_view,
-    'shopping_remove': handle_shopping_remove,
-    'task_add': handle_task_add,
-    'task_view': handle_task_view,
-    'task_complete': handle_task_complete,
-    'task_remove': handle_task_remove,
-    'none': lambda text, **kwargs: None,
-}
+# Map intent names to handler functions (async if needed)
+# (moved above, unified with module-based approach)
 
 
-def handle_intent(text: str, **kwargs) -> Any:
+async def handle_intent(text: str, **kwargs) -> Any: # Made async
     """
     Classify the input text and dispatch to the appropriate handler.
+    If the intent corresponds to a registered command, it fetches command metadata.
     Returns whatever the handler returns.
     """
     intent, confidence = classify_intent(text)
-    handler = HANDLERS.get(intent, HANDLERS['none'])
-    # Pass text, confidence and other context to handler
-    return handler(text=text, confidence=confidence, **kwargs)
+    
+    # Prepare kwargs for the specific handler, including original kwargs and confidence
+    specific_handler_kwargs = {**kwargs, 'confidence': confidence}
+
+    # Fetch command metadata if a registration function exists for the intent
+    if intent in COMMAND_REGISTRATION_FUNCTIONS:
+        register_func = COMMAND_REGISTRATION_FUNCTIONS[intent]
+        if register_func: # Ensure the function is not None (e.g. if placeholder was not removed)
+            try:
+                command_info = register_func()
+                specific_handler_kwargs['command_metadata'] = command_info
+            except Exception as e:
+                # Log error if metadata fetching fails, but continue
+                print(f"Error fetching command metadata for intent '{intent}': {e}")
+
+
+    handler_func = HANDLERS.get(intent, HANDLERS['none'])
+    
+    # Call the handler, awaiting if it's an async function
+    if asyncio.iscoroutinefunction(handler_func):
+        return await handler_func(text=text, **specific_handler_kwargs)
+    else:
+        return handler_func(text=text, **specific_handler_kwargs)

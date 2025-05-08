@@ -147,7 +147,21 @@ def _handle_add(params: str, conversation_history=None, user=None):
 
 def _handle_get(params: str, conversation_history=None, user=None):
     """Wrapper for retrieving memories as plugin command"""
-    return retrieve_memories(query=params, user=user)
+    # Get both summary and full memory list for AI
+    summary, success = retrieve_memories(query=params, user=user)
+    # Always fetch all memories for AI context
+    all_memories = get_memories_db(limit=10000)
+    # Convert to dicts for serialization if needed
+    def mem_to_dict(m):
+        if hasattr(m, '__dict__'):
+            return dict(m.__dict__)
+        return dict(m)
+    all_memories_dicts = [mem_to_dict(m) for m in all_memories]
+    return {
+        'summary': summary,
+        'success': success,
+        'all_memories': all_memories_dicts
+    }
 
 def _handle_delete(params: str, conversation_history=None, user=None):
     """Wrapper for deleting memory as plugin command"""

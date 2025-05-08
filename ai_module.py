@@ -18,7 +18,10 @@ import requests  # type: ignore
 from transformers import pipeline  # lazy‑loaded w chat_transformer
 
 from config import STT_MODEL, MAIN_MODEL, PROVIDER, _config, DEEP_MODEL
-from prompts import CONVERT_QUERY_PROMPT, SYSTEM_PROMPT, DETECT_LANGUAGE_PROMPT
+from prompt_builder import (
+    build_convert_query_prompt,
+    build_full_system_prompt,
+)
 from performance_monitor import measure_performance
 
 # -----------------------------------------------------------------------------
@@ -290,35 +293,26 @@ def extract_json(text: str) -> str:
 # ---------------------------------------------------------------- language ---
 
 @measure_performance
-def detect_language(text: str) -> Tuple[str, float, str]:
+def detect_language(text: str) -> Tuple[str, float]: # Return type changed
     try:
         text = text.strip()
         if len(text) < 4:
-            return "pl", 1.0, "Detected language: pl\nRespond in Polish."
+            return "pl", 1.0 # Return only lang_code and confidence
+
         lang_code, conf = langid.classify(text)
         if conf < 0.7:
-            if any(c in text for c in "ąćęłńóśźż"):
-                lang_code, conf = "pl", 0.8
+            # Heuristic for Polish if confidence is low but Polish characters are present
+            if any(c in text for c in "ąćęłńóśźż"): # Polish specific characters
+                lang_code, conf = "pl", 0.8 # Assume Polish with higher confidence
             else:
-                lang_code = "pl"
-        lang_name = {
-            "en": "English",
-            "pl": "Polish",
-            "de": "German",
-            "es": "Spanish",
-            "fr": "French",
-            "it": "Italian",
-            "ru": "Russian",
-            "sv": "Swedish",
-        }.get(lang_code, lang_code)
-        return (
-            lang_code,
-            conf,
-            f"Detected language: {lang_code}\nRespond in {lang_name}.",
-        )
+                # If no specific Polish chars and low confidence, default might be better or stick to 'pl' if it's common
+                lang_code = "pl" # Or consider a more neutral default if 'pl' isn't always best guess
+
+        # lang_name mapping is no longer needed here as we don't build the prompt string
+        return lang_code, conf # Return only lang_code and confidence
     except Exception as exc:  # pragma: no cover
         logger.error("Language detection failed: %s", exc)
-        return "pl", 0.0, "Detected language: pl\nRespond in Polish."
+        return "pl", 0.0 # Default fallback
 
 
 # ---------------------------------------------------------------- refiner ----
@@ -327,11 +321,7 @@ def detect_language(text: str) -> Tuple[str, float, str]:
 @measure_performance
 def refine_query(query: str, detected_language: str = "Polish") -> str:
     try:
-        language_lock = (
-            f"The user's language is {detected_language}. "
-            "DO NOT translate. Only correct transcription errors."
-        )
-        prompt = language_lock + "\n" + CONVERT_QUERY_PROMPT
+        prompt = build_convert_query_prompt(detected_language)
         resp = chat_with_providers(
             model=MAIN_MODEL,
             messages=[
@@ -405,24 +395,18 @@ def chat_with_providers(
 @measure_performance
 def generate_response(
     conversation_history: deque, # Update type hint to deque
-    functions_info: str,
+    tools_info: str,
     system_prompt_override: Optional[str] = None,
     detected_language: Optional[str] = None, # Add new parameter
     language_confidence: Optional[float] = None # Add new parameter
 ) -> str:
     try:
-        # Start with the base system prompt (override or default)
-        base_system_prompt = system_prompt_override or SYSTEM_PROMPT
-
-        # Add language detection info if available
-        language_info_prompt = ""
-        if detected_language:
-            confidence_str = f" (confidence: {language_confidence:.2f})" if language_confidence is not None else ""
-            # Add a clear instruction for the AI
-            language_info_prompt = f"\n\nUser query language was detected as: {detected_language} Confidence: {confidence_str}. Respond in the detected language unless the query explicitly asks for a different language or the confidence is very low."
-
-        # Combine prompts and add available tools
-        system_prompt = f"{base_system_prompt}{language_info_prompt}\n\nAvailable tools: {functions_info}"
+        system_prompt = build_full_system_prompt(
+            system_prompt_override=system_prompt_override,
+            detected_language=detected_language,
+            language_confidence=language_confidence,
+            tools_description=tools_info
+        )
 
         # Convert deque to list for slicing and modification
         messages = list(conversation_history)

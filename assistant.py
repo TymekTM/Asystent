@@ -33,8 +33,13 @@ from config import (
 )
 from config import _config
 QUERY_REFINEMENT_ENABLED = _config.get("query_refinement", {}).get("enabled", True)
-from prompts import CONVERT_QUERY_PROMPT, SYSTEM_PROMPT
-
+# Update imports to use the new prompt_builder functions - REMOVING as they are no longer directly used
+# from prompt_builder import (
+#     build_system_prompt,
+#     build_language_info_prompt,
+#     build_tools_prompt,
+#     build_full_system_prompt
+# )
 
 logger = logging.getLogger(__name__)
 # Configuration should be handled in main.py, not here.
@@ -285,30 +290,39 @@ class Assistant:
     @measure_performance # Add decorator
     async def process_query(self, text_input: str, TextMode: bool = False):
         if TextMode == True:
-            QUERY_REFINEMENT_ENABLED = False # Disable refinement in text mode
+            query_refinement_enabled = False # Disable refinement in text mode
         else:
-            QUERY_REFINEMENT_ENABLED = True
+            query_refinement_enabled = True
             
 
         # Query refinement can be toggled in config
-        if QUERY_REFINEMENT_ENABLED:
-            refined_query = refine_query(text_input)
+        if query_refinement_enabled:
+            # detect_language now returns (lang_code, lang_conf)
+            lang_code, lang_conf = detect_language(text_input) # Use initial text_input for language detection before refinement
+            logger.info(f"Detected language for refinement: {lang_code} (confidence {lang_conf:.2f})")
+            # Pass detected language to refine_query if it accepts it, assuming refine_query handles it
+            # For now, assuming refine_query might use it or it's passed to a model that needs it.
+            # If refine_query is from ai_module, it might call its own detect_language or expect it.
+            # Based on ai_module.py, refine_query takes detected_language as an argument.
+            refined_query = refine_query(text_input, detected_language=lang_code) 
             logger.info("Refined query: %s", refined_query)
         else:
             refined_query = text_input
             logger.info("Query refinement disabled, using raw input: %s", refined_query)
+            # Detect language on the raw input if refinement is off
+            lang_code, lang_conf = detect_language(refined_query)
+            logger.info(f"Detected language: {lang_code} (confidence {lang_conf:.2f})")
 
         # Log intent interpretation after refinement
         intent, confidence = classify_intent(refined_query)
         logger.info(f"[INTENT] Interpreted intent: {intent} (confidence: {confidence:.2f}) for: '{refined_query}'")
 
-        # --- Language Detection Layer (langid) ---
-        lang_code, lang_conf, lang_prompt = detect_language(refined_query)
-        logger.info(f"Detected language: {lang_code} (confidence {lang_conf:.2f})")
+        # Language detection is now done above, before or after refinement block.
+        # The lang_code and lang_conf from that detection will be used.
 
         # Intent classification (new layer)
-        intent, confidence = classify_intent(refined_query)
-        logger.info("Intent classified as: %s (%.2f)", intent, confidence)
+        # intent, confidence = classify_intent(refined_query) # This is duplicated, remove one.
+        # logger.info("Intent classified as: %s (%.2f)", intent, confidence) # Duplicated log
         # Add user message BEFORE calling the main model
         # Deque handles maxlen automatically
         self.conversation_history.append({
@@ -322,16 +336,12 @@ class Assistant:
         # Przygotowanie listy dostępnych funkcji (tool descriptions)
         functions_info = ", ".join([f"{cmd} - {info['description']}" for cmd, info in self.modules.items()])
 
-        # --- Inject language context into system prompt ---
-        # Combine original prompt, langid's suggestion, and explicit lang info
-        system_prompt = f"{SYSTEM_PROMPT}\\n{lang_prompt}" # Keep langid's prompt for now
-
         # Generowanie odpowiedzi przy użyciu funkcji z ai_module
         # Pass lang_code and lang_conf to generate_response
         response_text = generate_response(
             self.conversation_history,
-            functions_info,
-            system_prompt_override=system_prompt,
+            tools_info=functions_info,
+            system_prompt_override=None, # Let ai_module.generate_response handle default system prompt assembly
             detected_language=lang_code,
             language_confidence=lang_conf
         )
@@ -849,5 +859,3 @@ class Assistant:
                 logger.info("TTS stopped.")
 
             logger.info("Assistant cleanup complete.")
-
-    # Remove the old listen_and_process method if it exists, run_async is the main entry point now.
