@@ -90,7 +90,15 @@
                             <input class="form-check-input" type="checkbox" id="USE_WHISPER_FOR_COMMAND" name="USE_WHISPER_FOR_COMMAND" {% if config.USE_WHISPER_FOR_COMMAND %}checked{% endif %}>
                             <label class="form-check-label" for="USE_WHISPER_FOR_COMMAND">
                                 Użyj Whisper do rozpoznawania komend
-                                <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Jeśli zaznaczone, do rozpoznawania mowy po słowie wybudzającym używany będzie model Whisper (wymaga połączenia z API lub lokalnego modelu). Jeśli odznaczone, używany będzie Vosk (offline)."></i>
+                                <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Użyj silnika Whisper (OpenAI) do rozpoznawania komend głosowych zamiast Vosk. Może być dokładniejszy, ale wymaga połączenia z internetem lub lokalnej instalacji Whisper."></i>
+                            </label>
+                        </div>
+                        <!-- ... AUTO_LISTEN_AFTER_TTS ... -->
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="AUTO_LISTEN_AFTER_TTS" name="AUTO_LISTEN_AFTER_TTS" {% if config.AUTO_LISTEN_AFTER_TTS %}checked{% endif %}>
+                            <label class="form-check-label" for="AUTO_LISTEN_AFTER_TTS">
+                                Automatyczne nasłuchiwanie po odpowiedzi TTS
+                                <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Włącz, aby asystent automatycznie zaczynał nasłuchiwać odpowiedzi użytkownika zaraz po zakończeniu mówienia (TTS)."></i>
                             </label>
                         </div>
                         <!-- ... WHISPER_MODEL ... -->

@@ -97,6 +97,8 @@ class Assistant:
         )
         self.modules = {}
         self.plugin_mod_times = {}
+        self.auto_listen_after_tts = self.config.get('AUTO_LISTEN_AFTER_TTS', False) # Add this line
+        self.current_query_should_re_listen = False # ADDED: Flag for current query
         # Start file watcher for plugin changes with debounce
         self._plugin_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), 'modules'))
         os.makedirs(self._plugin_folder, exist_ok=True)
@@ -153,6 +155,7 @@ class Assistant:
             self.whisper_model = self.config.get('WHISPER_MODEL', WHISPER_MODEL)
             self.max_history_length = self.config.get('MAX_HISTORY_LENGTH', MAX_HISTORY_LENGTH)
             # self.plugin_monitor_interval = self.config.get('PLUGIN_MONITOR_INTERVAL', PLUGIN_MONITOR_INTERVAL) # Removed
+            self.auto_listen_after_tts = self.config.get('AUTO_LISTEN_AFTER_TTS', False) # Add this line
 
             # Update deque maxlen if history length changed
             if self.conversation_history.maxlen != self.max_history_length:
@@ -291,8 +294,10 @@ class Assistant:
     async def process_query(self, text_input: str, TextMode: bool = False):
         if TextMode == True:
             query_refinement_enabled = False # Disable refinement in text mode
+            self.current_query_should_re_listen = False # ADDED: Reset for text mode
         else:
             query_refinement_enabled = True
+            # self.current_query_should_re_listen will be set by AI response
             
 
         # Query refinement can be toggled in config
@@ -302,7 +307,6 @@ class Assistant:
             logger.info(f"Detected language for refinement: {lang_code} (confidence {lang_conf:.2f})")
             # Pass detected language to refine_query if it accepts it, assuming refine_query handles it
             # For now, assuming refine_query might use it or it's passed to a model that needs it.
-            # If refine_query is from ai_module, it might call its own detect_language or expect it.
             # Based on ai_module.py, refine_query takes detected_language as an argument.
             refined_query = refine_query(text_input, detected_language=lang_code) 
             logger.info("Refined query: %s", refined_query)
@@ -353,18 +357,17 @@ class Assistant:
         ai_command = structured_output.get("command")
         ai_params = structured_output.get("params", "") # Default to "" if missing
         ai_response_text = structured_output.get("text", "") # Text AI wants to say
+        # ADDED: Get the listen_after_tts flag from the AI's response
+        self.current_query_should_re_listen = structured_output.get("listen_after_tts", False)
+
+        logger.info(f"AI response parsed. listen_after_tts flag is: {self.current_query_should_re_listen}")
+
 
         # --- Tool Execution Logic ---
         target_command_name = ai_command.lower().strip() if ai_command else None
         found_module_key = None
         module_info = None
-        actual_params_for_handler = "" # Default to empty string for handlers expecting string
-
-        # --- Parameter Sanitization Placeholder ---
-        # TODO: Implement robust sanitization for ai_params based on expected types
-        # This is crucial to prevent injection attacks if params are used in shell commands, file paths etc.
-        # Example (very basic): if isinstance(ai_params, str): ai_params = re.sub(r'[^\w\s\-]', '', ai_params)
-        logger.debug(f"Raw AI params: {ai_params}") # Log raw params before potential sanitization
+        actual_params_for_handler = "" 
 
         # Find the module by checking command name and aliases
         if target_command_name:
@@ -428,24 +431,27 @@ class Assistant:
 
         # Execute found module commands
         if found_module_key and module_info:
-            # For modules with sub_commands (e.g., core, memory), use their handler to dispatch
-            if module_info.get('sub_commands') and module_info.get('handler') == module_info['handler']:
-                # Core-like plugin: dispatch via its main handler, passing conversation history
+            if module_info.get('sub_commands') and module_info.get('handler') == module_info['handler']: # Core-like plugin
                 handler = module_info['handler']
                 asyncio.create_task(asyncio.to_thread(play_beep, 'action'))
                 try:
-                    # Pass conversation_history for subcommands that require context
                     result = handler(actual_params_for_handler, self.conversation_history)
                     if inspect.isawaitable(result):
                         result = await result
                 except Exception as e:
                     logger.error(f"Error executing core handler: {e}", exc_info=True)
-                    err = f"Przepraszam, wystąpił błąd podczas wykonywania komendy core."
-                    self.conversation_history.append({"role":"assistant","content":err})
-                    asyncio.create_task(self.tts.speak(err))
+                    err_msg = f"Przepraszam, wystąpił błąd podczas wykonywania komendy core."
+                    self.conversation_history.append({"role":"assistant","content":err_msg})
+                    if self.current_query_should_re_listen and not TextMode:
+                        logger.info(f"[Core Error Path] AI requested listen. Speaking and awaiting: '{err_msg}'")
+                        await self.tts.speak(err_msg)
+                        logger.info("[Core Error Path] TTS for error finished. Triggering manual listen.")
+                        self.trigger_manual_listen()
+                    else:
+                        logger.info(f"[Core Error Path] Speaking error (no re-listen): '{err_msg}'")
+                        asyncio.create_task(self.tts.speak(err_msg))
                     return
-            else:
-                # Direct module handler (no sub_commands)
+            else: # Direct module handler
                 handler = module_info.get('handler')
                 # Prepare call for standard handler signatures
                 kwargs = {}
@@ -458,7 +464,7 @@ class Assistant:
                     kwargs['conversation_history'] = self.conversation_history
                 if 'user_lang' in sig.parameters:
                     kwargs['user_lang'] = lang_code
-                # Play action beep
+                
                 asyncio.create_task(asyncio.to_thread(play_beep, 'action'))
                 try:
                     result = handler(**kwargs)
@@ -466,24 +472,63 @@ class Assistant:
                         result = await result
                 except Exception as e:
                     logger.error(f"Error executing command {found_module_key}: {e}", exc_info=True)
-                    err = f"Przepraszam, wystąpił błąd podczas wykonywania komendy {found_module_key}."
-                    self.conversation_history.append({"role":"assistant","content":err})
-                    asyncio.create_task(self.tts.speak(err))
+                    err_msg = f"Przepraszam, wystąpił błąd podczas wykonywania komendy {found_module_key}."
+                    self.conversation_history.append({"role":"assistant","content":err_msg})
+                    if self.current_query_should_re_listen and not TextMode:
+                        logger.info(f"[Module Error Path] AI requested listen for {found_module_key}. Speaking and awaiting: '{err_msg}'")
+                        await self.tts.speak(err_msg)
+                        logger.info(f"[Module Error Path] TTS for error finished. Triggering manual listen for {found_module_key}.")
+                        self.trigger_manual_listen()
+                    else:
+                        logger.info(f"[Module Error Path] Speaking error for {found_module_key} (no re-listen): '{err_msg}'")
+                        asyncio.create_task(self.tts.speak(err_msg))
                     return
-            # Handle and speak result
+            
+            # Handle and speak result from successful command
             result_text = '' if result is None else str(result[0] if isinstance(result, tuple) else result)
             if result_text:
                 self.conversation_history.append({"role":"assistant","content":result_text})
-                asyncio.create_task(self.tts.speak(result_text))
-            return
+                if self.current_query_should_re_listen and not TextMode:
+                    logger.info(f"[Command Success Path] Command '{found_module_key}' successful, AI requested listen. Speaking and awaiting: '{result_text[:100]}...'")
+                    await self.tts.speak(result_text)
+                    logger.info(f"[Command Success Path] TTS for command result finished. Triggering manual listen for '{found_module_key}'.")
+                    self.trigger_manual_listen()
+                else:
+                    logger.info(f"[Command Success Path] Command '{found_module_key}' successful. Speaking (no re-listen): '{result_text[:100]}...'")
+                    asyncio.create_task(self.tts.speak(result_text))
+            else:
+                # Command executed but produced no speakable result.
+                # If AI provided initial text (ai_response_text) and wanted to listen, that should be handled.
+                # This case might need to fall through to the "No command executed" logic if ai_response_text is to be used.
+                # For now, if command runs and has no text, and AI wanted to listen, what happens?
+                # Let's assume if a command runs, its output (or lack thereof) is the primary focus.
+                # If ai_response_text was important, it should perhaps be part of the command's logic or a separate step.
+                # If listen_after_tts is true but result_text is empty, we might still want to speak ai_response_text if available.
+                # This part is tricky. The current structure implies if a command is found, ai_response_text is secondary.
+                # Let's ensure if result_text is empty but ai_response_text exists and listen is true, we speak ai_response_text and listen.
+                if not result_text and ai_response_text and self.current_query_should_re_listen and not TextMode:
+                    logger.info(f"[Command Success Path - No Result] Command '{found_module_key}' had no output, AI requested listen. Speaking initial AI text and awaiting: '{ai_response_text[:100]}...'")
+                    self.conversation_history.append({"role": "assistant", "content": ai_response_text}) # Add to history if speaking it
+                    await self.tts.speak(ai_response_text)
+                    logger.info(f"[Command Success Path - No Result] TTS for initial AI text finished. Triggering manual listen.")
+                    self.trigger_manual_listen()
+                elif not result_text and ai_response_text: # No result, but initial text, no re-listen
+                     logger.info(f"[Command Success Path - No Result] Command '{found_module_key}' had no output. Speaking initial AI text (no re-listen): '{ai_response_text[:100]}...'")
+                     self.conversation_history.append({"role": "assistant", "content": ai_response_text})
+                     asyncio.create_task(self.tts.speak(ai_response_text))
 
-        # --- Heurystyka: jeśli AI nie wywołało narzędzia, a pytanie użytkownika zawiera słowa kluczowe pamięci ---
+            return # End of found_module_key and module_info block
+
+        # --- Heurystyka: (This block was complex, ensure TTS logic is consistent) ---
+        # This heuristic block is effectively another type of command execution.
+        # Let's simplify by assuming if it runs, it will set a text_to_speak and then the final TTS block handles it.
+        # For now, I will apply the same pattern directly within its old structure.
         memory_keywords = ["pamiętasz", "przypomnij", "zapamiętałeś", "zapamiętać", "zapomniałeś", "a poza tym", "co jeszcze", "co miałeś zapamiętać"]
         if not found_module_key and any(kw in refined_query.lower() for kw in memory_keywords):
             # Heurystyczne wywołanie narzędzia pamięci - domyślnie pobranie wspomnień
             found_module_key = 'memory'
             module_info = self.modules.get('memory')
-            # ustaw puste params, by wywołać domyślną subkomendę 'get'
+            # ustaw puste params, by wywołać domyślna subkomendę 'get'
             ai_params = {}
 
             if found_module_key and module_info:
@@ -593,7 +638,13 @@ class Assistant:
                         self.conversation_history.append({"role": "assistant", "content": result_text}) # Add string result to history (deque handles maxlen)
                         # self.trim_conversation_history() # No longer needed
                         # Speak result asynchronously without blocking
-                        asyncio.create_task(self.tts.speak(result_text))
+                        asyncio.create_task(self.tts.speak(result_text)) # TTS task
+                        # Check for re-listen after TTS
+                        if self.current_query_should_re_listen and not TextMode:
+                            await asyncio.sleep(0.1) # Small delay to ensure TTS starts
+                            while self.tts.is_speaking(): # Wait for TTS to finish
+                                await asyncio.sleep(0.1)
+                            self.trigger_manual_listen()
                     else:
                          logger.info(f"Command '{found_module_key}' executed but produced no speakable result.")
 
@@ -602,7 +653,14 @@ class Assistant:
                     error_message = f"Przepraszam, wystąpił błąd podczas wykonywania komendy {found_module_key}."
                     self.conversation_history.append({"role": "assistant", "content": error_message}) # Deque handles maxlen
                     # self.trim_conversation_history() # No longer needed
-                    asyncio.create_task(self.tts.speak(error_message)) # Non-blocking
+                    if self.current_query_should_re_listen and not TextMode:
+                        logger.info(f"[Command Error Path] AI requested listen. Speaking error and awaiting: '{error_message}'")
+                        await self.tts.speak(error_message)
+                        logger.info(f"[Command Error Path] TTS for error finished. Triggering manual listen.")
+                        self.trigger_manual_listen()
+                    else:
+                        logger.info(f"[Command Error Path] Speaking error (no re-listen): '{error_message}'")
+                        asyncio.create_task(self.tts.speak(error_message))
 
         else:
             # Command not found or not specified by AI
@@ -610,31 +668,46 @@ class Assistant:
                 logger.info("No command executed. Speaking AI response text.")
                 self.conversation_history.append({"role": "assistant", "content": ai_response_text}) # Deque handles maxlen
                 # self.trim_conversation_history() # No longer needed
-                asyncio.create_task(self.tts.speak(ai_response_text)) # Non-blocking
+                if self.current_query_should_re_listen and not TextMode:
+                    logger.info(f"[No Command Path] AI requested listen. Speaking and awaiting: '{ai_response_text}'")
+                    await self.tts.speak(ai_response_text)
+                    logger.info("[No Command Path] TTS finished. Triggering manual listen.")
+                    self.trigger_manual_listen()
+                else:
+                    logger.info(f"[No Command Path] Speaking (no re-listen or TextMode): '{ai_response_text}'")
+                    asyncio.create_task(self.tts.speak(ai_response_text))
             else:
                 # Fallback if AI provides neither text nor command
                 logger.warning("AI provided no command and no text response.")
                 fallback_response = "Nie rozumiem polecenia lub nie wiem, jak odpowiedzieć."
                 self.conversation_history.append({"role": "assistant", "content": fallback_response}) # Deque handles maxlen
                 # self.trim_conversation_history() # No longer needed
-                asyncio.create_task(self.tts.speak(fallback_response)) # Non-blocking
-
-        # History trimming is handled by deque automatically
+                if self.current_query_should_re_listen and not TextMode:
+                    logger.info(f"[Fallback Path] AI requested listen. Speaking and awaiting: '{fallback_response}'")
+                    await self.tts.speak(fallback_response)
+                    logger.info("[Fallback Path] TTS finished. Triggering manual listen.")
+                    self.trigger_manual_listen()
+                else:
+                    logger.info(f"[Fallback Path] Speaking (no re-listen): '{fallback_response}'")
+                    asyncio.create_task(self.tts.speak(fallback_response))
 
     # Removed trim_conversation_history method
 
     def trigger_manual_listen(self):
-        """Puts a special marker onto the audio queue to trigger manual listening."""
-        logger.info("Manual listen trigger requested. Sending signal to audio queue.")
-        try:
-            # Put a special marker onto the audio queue to interrupt the detector
-            # Use put_nowait to avoid blocking if the queue is somehow full
-            self.speech_recognizer.audio_q.put_nowait("__MANUAL_TRIGGER__")
-            logger.info("Signal sent to audio queue.")
-        except queue.Full:
-             logger.error("Audio queue is full, cannot send manual trigger signal.")
-        except Exception as e:
-            logger.error(f"Failed to put manual trigger signal onto audio queue: {e}")
+        """Triggers a manual listen cycle by putting a signal on the audio queue."""
+        # This method should signal the audio processing loop (process_audio)
+        # by putting a specific message onto self.speech_recognizer.audio_q.
+        # It should NOT use self.command_queue.
+        if self.speech_recognizer and hasattr(self.speech_recognizer, 'audio_q') and self.speech_recognizer.audio_q is not None:
+            logger.info("Signaling audio processing loop for manual listen via self.speech_recognizer.audio_q.")
+            try:
+                self.speech_recognizer.audio_q.put_nowait("__MANUAL_TRIGGER__")
+            except queue.Full:
+                logger.error("Audio queue (self.speech_recognizer.audio_q) is full. Cannot signal manual listen.")
+            except Exception as e:
+                logger.error(f"Error putting manual trigger signal into self.speech_recognizer.audio_q: {e}", exc_info=True)
+        else:
+            logger.warning("Speech recognizer or its audio_q is not available. Cannot trigger manual listen signal via audio_q.")
 
     async def process_command_queue(self):
         """Processes commands from the web UI or other sources."""
@@ -761,7 +834,7 @@ class Assistant:
                         elif result == "WAKE_WORD_DETECTED":
                              logger.info("Wake word detected and command processed by run_wakeword_detection.")
                         elif result == "NO_COMMAND":
-                             logger.info("Wake word detected but no command followed.")
+                             logger.info("Wake word detected but no command followed.") 
 
 
                     except Exception as e:
@@ -859,3 +932,45 @@ class Assistant:
                 logger.info("TTS stopped.")
 
             logger.info("Assistant cleanup complete.")
+
+    def stop(self):
+        logger.info("Stopping Assistant...")
+        if self._observer:
+            self._observer.stop()
+            self._observer.join()
+        if self.speech_recognizer:
+            self.speech_recognizer.stop() # Ensure recognizer resources are cleaned up
+        # Signal the main loop to stop if it's running
+        if self.loop and self.loop.is_running():
+            self.loop.call_soon_threadsafe(self.loop.stop)
+        logger.info("Assistant stopped.")
+
+# Example usage (typically called from main.py)
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    logger.info("Starting assistant directly for testing...")
+
+    # Create a command queue for testing manual listen trigger
+    test_command_queue = queue.Queue()
+
+    assistant = Assistant(command_queue=test_command_queue) # Pass the queue
+
+    # Simulate triggering manual listen after a delay (for testing)
+    def simulate_manual_trigger():
+        time.sleep(10) # Wait for assistant to start
+        logger.info("Simulating manual listen trigger via queue...")
+        test_command_queue.put("listen")
+        time.sleep(10)
+        logger.info("Simulating another manual listen trigger...")
+        test_command_queue.put("listen")
+
+    # Start simulation in a separate thread
+    # threading.Thread(target=simulate_manual_trigger, daemon=True).start()
+
+    try:
+        asyncio.run(assistant.run_async())
+    except KeyboardInterrupt:
+        logger.info("Assistant stopped by user.")
+    finally:
+        assistant.stop()
+        logger.info("Assistant has been shut down.")

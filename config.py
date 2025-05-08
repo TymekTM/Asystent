@@ -23,6 +23,7 @@ DEFAULT_CONFIG = {
   "LOW_POWER_MODE": False, # Default to False
   "EXIT_WITH_CONSOLE": True, # Default to True
   "DEV_MODE": False, # Default to False - prevents model unloading on exit if True
+  "AUTO_LISTEN_AFTER_TTS": False, # Default to False
   "API_KEYS": {
     "OPENAI_API_KEY": "None",
     "DEEPSEEK_API_KEY": "None",
@@ -113,6 +114,7 @@ USE_WHISPER_FOR_COMMAND = _config.get("USE_WHISPER_FOR_COMMAND")
 WHISPER_MODEL = _config.get("WHISPER_MODEL")
 MAX_HISTORY_LENGTH = _config.get("MAX_HISTORY_LENGTH")
 PLUGIN_MONITOR_INTERVAL = _config.get("PLUGIN_MONITOR_INTERVAL")
+AUTO_LISTEN_AFTER_TTS = _config.get("AUTO_LISTEN_AFTER_TTS") # Add this line
 
 # Load API keys into environment variables if they exist in the config and are not None
 # This maintains compatibility with how ai_module checks for keys

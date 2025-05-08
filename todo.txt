@@ -1,13 +1,14 @@
 # Asystent TODO (2025-2026)
 
 ## Priority Tasks
-- Allow assistant to ask question and instantly listen do what user wants to say 
+- New better system prompt
+- Rozbudować weather na więcej opcji
+- Improved long-term memory (search, tagging, context linking, memory management)
+- Kontekst aplikacji 
 
 ## Feature Enhancements
 - TTS and voice personalization (user-selectable voice, language, speed, test preview)
 - Multi-modal input support (text, voice, image analysis in web UI)
-- Improved long-term memory (search, tagging, context linking, memory management)
-- Advanced plugin system with simple API for third-party extensions
 
 ## Web UI and UX
 - Advanced user authentication and role management (roles, password reset, etc.)
@@ -18,9 +19,11 @@
 - Security review and improvements (rate limiting, audit logs, config secrets)
 - Spotify integration
 
+## Output Config
+- Allow assistant to ask question and instantly listen do what user wants to say (re-listen after TTS finishes)
+
 ## Fixes
 - Zweryfikować działanie innych rzeczy w core (timer działa)
-- pytest warnings
 - Fix config page to corectly dosplay sound devices
 - Modules make sound while in chat mode
 - Historia chat się nie wyświetla
@@ -28,16 +31,12 @@
 
 ## Optimisations
 - Entire app start speed
-- Wczytywać tylko te pluginy, które się dopiero pojawiły/zmieniły
 
 ## Upgrades
 - Whisper.cpp zamiast zwykłego
 - Wakeword za pomocą open wake word
 - wykrywanie rozmówcy za pomocą speach brain
-- Custom AI od intencji
-- Kontekst aplikacji 
 - Wheel decide do robienia czego
-- Rozbudować weather na więcej opcji
 
 ## Testing
 - Log all prompts send (final)

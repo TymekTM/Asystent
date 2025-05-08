@@ -29,6 +29,7 @@ SYSTEM_PROMPT = (
     '  "text": "<response text>" // NECESSARY\n'
     '  "command": "<command_name>", // NECESSARY, can be blank\n'
     '  "params": "<params>", // NECESSARY\n'
+    '  "listen_after_tts": "<bool>", // NECESSARY, When you need user to specify some information that were not provided\n'
     "}}\n"  # Escaped literal brace
     "Example:\n"
     '{{"text": "Ok, i will check weather in washington", "command": "web", "params": {{"query": "weather washington"}}}}'
@@ -36,8 +37,8 @@ SYSTEM_PROMPT = (
     '{{"text": "I am searching for results of last formula 1 gran prix", "command": "web", "params": {{"query": "formula 1 gran prix results {current_date}"}}}}' # Inner {current_date} will be formatted
     '{{"text": "Już sprawdzam pogodę w Warszawie", "command": "web", "params": {{"query": "weather Warszawa"}}}}'
     '{{"text": "Sprawdzam wyniki wczorajszych kwalifikacji F1", "command": "web", "params": {{"query": "wyniki kwalifikacji F1 wczoraj"}}}}'
+    '{{"text": "Sprawdzę dla ciebie pogodę, proszę powiedzi mi w jakim mieście", "command": "", "params": " ", "listen_after_tts": "true"}}}}'
 )
-
 
 SEE_SCREEN_PROMPT = (
     "Describe what you can see on an image to an user"

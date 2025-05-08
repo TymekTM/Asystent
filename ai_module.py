@@ -495,9 +495,13 @@ def parse_response(response_text: str) -> Dict[str, Any]:
                 "text": parsed.get("text", ""),
                 "command": parsed.get("command", ""),
                 "params": params,
+                "listen_after_tts": parsed.get("listen_after_tts", False) # ADDED
             }
         if isinstance(parsed, str):
-            return {"text": parsed, "command": "", "params": {}}
-    except Exception:
-        pass
-    return {"text": "Nieprawidłowa odpowiedź AI", "command": "", "params": {}}
+            return {"text": parsed, "command": "", "params": {}, "listen_after_tts": False} # ADDED listen_after_tts
+    except Exception as e: # pragma: no cover
+        logger.error(f"Error parsing AI response: {response_text}, Error: {e}", exc_info=True) # Log the problematic response and error
+        pass  # Fallthrough to default error response
+
+    # Default error response or if parsing completely fails
+    return {"text": "Nieprawidłowa odpowiedź AI", "command": "", "params": {}, "listen_after_tts": False} # ADDED listen_after_tts
