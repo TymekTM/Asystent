@@ -9,6 +9,7 @@ import queue # Import queue for Empty exception
 import threading
 import logging.handlers # Add this import
 from collections import deque # Import deque for conversation history
+import numpy as np # Added for model warm-up
 
 # Import modułów audio z nowej lokalizacji
 from audio_modules.tts_module import TTSModule
@@ -70,6 +71,7 @@ def save_plugins_state(plugins):
 
 
 class Assistant:
+    @measure_performance
     def __init__(self, vosk_model_path: str = None, mic_device_id: int = None, wake_word: str = None, stt_silence_threshold: int = None, command_queue: queue.Queue = None): # Type hint for command_queue
         # Load initial config
         self.config = load_config()
@@ -138,10 +140,61 @@ class Assistant:
         # Long-term memory loading deferred until first query to improve startup speed
 
         if self.use_whisper:
-            from audio_modules.whisper_asr import WhisperASR
+            from audio_modules.whisper_asr import WhisperASR # This import is fine here for conditional init
             self.whisper_asr = WhisperASR(model_name=self.whisper_model)
         else:
-            self.whisper_asr = None # Ensure it's defined even if not used
+            self.whisper_asr = None # Ensure it\'s defined even if not used
+
+        # --- Warm up models at startup ---
+        logger.info("Attempting to warm up models at startup...")
+
+        # Warm up WhisperASR
+        if self.use_whisper and self.whisper_asr:
+            logger.info("Warming up Whisper model...")
+            try:
+                # Using a very short silent audio array (e.g., 0.01 seconds of silence at 16kHz)
+                # whisper expects float32 numpy array
+                dummy_audio_whisper = np.zeros(int(16000 * 0.01), dtype=np.float32)
+                self.whisper_asr.transcribe(dummy_audio_whisper)
+                logger.info("Whisper model warmed up.")
+            except Exception as e:
+                logger.error(f"Error warming up Whisper model: {e}", exc_info=True)
+        else:
+            if not self.use_whisper:
+                logger.info("Whisper is disabled, skipping warm-up.")
+            elif not self.whisper_asr: # Should not happen if use_whisper is true and init succeeded
+                logger.info("Whisper ASR model not loaded, skipping warm-up.")
+
+        # Warm up Intent_AI model
+        logger.info("Warming up Intent_AI model...")
+        try:
+            # classify_intent itself loads the model if not already loaded
+            classify_intent("test query for intent model warmup") # Assuming classify_intent is imported
+            logger.info("Intent_AI model warmed up.")
+        except Exception as e:
+            logger.error(f"Error warming up Intent_AI model: {e}", exc_info=True)
+
+        # Warm up Vosk model (via SpeechRecognizer)
+        # The SpeechRecognizer itself and its Vosk model are initialized earlier in __init__
+        if self.speech_recognizer and hasattr(self.speech_recognizer, 'recognizer') and self.speech_recognizer.recognizer:
+            logger.info("Warming up Vosk model (SpeechRecognizer)...")
+            try:
+                # Feed some silent audio bytes to KaldiRecognizer to ensure it's ready
+                sample_rate = self.speech_recognizer.sample_rate
+                num_samples = int(0.1 * sample_rate) # 0.1 seconds of audio
+                # Vosk expects bytes, 16-bit mono PCM
+                dummy_audio_bytes_vosk = b'\\x00' * num_samples * 2 # 2 bytes per sample
+
+                self.speech_recognizer.recognizer.AcceptWaveform(dummy_audio_bytes_vosk)
+                self.speech_recognizer.recognizer.Result() # Process it
+                logger.info("Vosk model (SpeechRecognizer) warmed up with test data.")
+            except Exception as e:
+                logger.error(f"Error warming up Vosk model: {e}", exc_info=True)
+        else:
+            logger.info("Vosk SpeechRecognizer or its internal recognizer not available, skipping warm-up.")
+        
+        logger.info("Model warm-up sequence complete.")
+        # --- End of __init__ ---
 
     def reload_config_values(self):
         """Reloads configuration from file and updates relevant instance variables."""
