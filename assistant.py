@@ -25,13 +25,17 @@ from intent_system import classify_intent, handle_intent
 # Import performance monitor
 from performance_monitor import measure_performance
 
+# Import active window module if tracking is enabled
+from modules.active_window_module import get_active_window_title
+
 # Import specific config variables needed
 from config import (
     load_config, # Import load_config function
     # Default values for direct use if needed
     VOSK_MODEL_PATH, MIC_DEVICE_ID, WAKE_WORD, STT_SILENCE_THRESHOLD,
     USE_WHISPER_FOR_COMMAND, WHISPER_MODEL, MAX_HISTORY_LENGTH, # Removed PLUGIN_MONITOR_INTERVAL
-    LOW_POWER_MODE, DEV_MODE # Import LOW_POWER_MODE and DEV_MODE directly
+    LOW_POWER_MODE, DEV_MODE, # Import LOW_POWER_MODE and DEV_MODE directly
+    TRACK_ACTIVE_WINDOW, ACTIVE_WINDOW_POLL_INTERVAL # Import new config settings
 )
 from config import _config
 QUERY_REFINEMENT_ENABLED = _config.get("query_refinement", {}).get("enabled", True)
@@ -85,6 +89,11 @@ class Assistant:
         self.whisper_model = self.config.get('WHISPER_MODEL', WHISPER_MODEL)
         self.max_history_length = self.config.get('MAX_HISTORY_LENGTH', MAX_HISTORY_LENGTH)
         # self.plugin_monitor_interval = self.config.get('PLUGIN_MONITOR_INTERVAL', PLUGIN_MONITOR_INTERVAL) # Removed, monitor_plugins is gone
+        self.track_active_window = self.config.get('TRACK_ACTIVE_WINDOW', TRACK_ACTIVE_WINDOW)
+        self.active_window_poll_interval = self.config.get('ACTIVE_WINDOW_POLL_INTERVAL', ACTIVE_WINDOW_POLL_INTERVAL)
+        self.current_active_window = None
+        self._active_window_thread = None
+        self._stop_event_active_window = threading.Event()
 
         # Use deque for efficient history management
         self.conversation_history = deque(maxlen=self.max_history_length)
@@ -136,6 +145,9 @@ class Assistant:
         self.loop = None
         self.command_queue = command_queue
         # self.manual_listen_triggered = False # Flag for manual activation - Replaced by queue signal logic
+
+        if self.track_active_window:
+            self.start_active_window_tracker()
 
         # Long-term memory loading deferred until first query to improve startup speed
 
@@ -196,6 +208,41 @@ class Assistant:
         logger.info("Model warm-up sequence complete.")
         # --- End of __init__ ---
 
+    def start_active_window_tracker(self):
+        if not self.track_active_window:
+            return
+        if self._active_window_thread and self._active_window_thread.is_alive():
+            return # Already running
+        
+        self._stop_event_active_window.clear()
+        self._active_window_thread = threading.Thread(target=self._track_active_window_loop, daemon=True)
+        self._active_window_thread.start()
+        logger.info("Active window tracker started.")
+
+    def stop_active_window_tracker(self):
+        if self._active_window_thread and self._active_window_thread.is_alive():
+            self._stop_event_active_window.set()
+            self._active_window_thread.join(timeout=self.active_window_poll_interval + 1)
+            if self._active_window_thread.is_alive():
+                logger.warning("Active window tracker thread did not stop in time.")
+            else:
+                logger.info("Active window tracker stopped.")
+        self._active_window_thread = None
+
+    def _track_active_window_loop(self):
+        while not self._stop_event_active_window.is_set():
+            try:
+                current_title = get_active_window_title()
+                if current_title != self.current_active_window:
+                    logger.info(f"Active window changed from '{self.current_active_window}' to '{current_title}'")
+                    self.current_active_window = current_title
+                # Use the specific poll interval from config
+                time.sleep(self.active_window_poll_interval)
+            except Exception as e:
+                logger.error(f"Error in active window tracking loop: {e}")
+                # Avoid busy-looping on error, wait before retrying
+                time.sleep(self.active_window_poll_interval) 
+
     def reload_config_values(self):
         """Reloads configuration from file and updates relevant instance variables."""
         logger.info("Reloading configuration...")
@@ -210,6 +257,15 @@ class Assistant:
             self.max_history_length = self.config.get('MAX_HISTORY_LENGTH', MAX_HISTORY_LENGTH)
             # self.plugin_monitor_interval = self.config.get('PLUGIN_MONITOR_INTERVAL', PLUGIN_MONITOR_INTERVAL) # Removed
             self.auto_listen_after_tts = self.config.get('AUTO_LISTEN_AFTER_TTS', False) # Add this line
+            new_track_setting = self.config.get('TRACK_ACTIVE_WINDOW', TRACK_ACTIVE_WINDOW)
+            new_poll_interval = self.config.get('ACTIVE_WINDOW_POLL_INTERVAL', ACTIVE_WINDOW_POLL_INTERVAL)
+
+            if new_track_setting != self.track_active_window or new_poll_interval != self.active_window_poll_interval:
+                self.track_active_window = new_track_setting
+                self.active_window_poll_interval = new_poll_interval
+                self.stop_active_window_tracker() # Stop existing tracker
+                if self.track_active_window:
+                    self.start_active_window_tracker() # Start new one if enabled
 
             # Update deque maxlen if history length changed
             if self.conversation_history.maxlen != self.max_history_length:
@@ -403,7 +459,9 @@ class Assistant:
             tools_info=functions_info,
             system_prompt_override=None, # Let ai_module.generate_response handle default system prompt assembly
             detected_language=lang_code,
-            language_confidence=lang_conf
+            language_confidence=lang_conf,
+            active_window_title=self.current_active_window if self.track_active_window else None, # Pass current window
+            track_active_window_setting=self.track_active_window # Pass setting status
         )
         logger.info("AI response: %s", response_text)
 
@@ -988,32 +1046,18 @@ class Assistant:
 
             logger.info("Assistant cleanup complete.")
 
-    def stop(self):
+    async def stop(self):
         logger.info("Stopping Assistant...")
-        if self._observer and self._observer.is_alive(): # Check if observer is alive before stopping
+        if self._observer:
             self._observer.stop()
             self._observer.join()
-            logger.info("Watchdog observer stopped.")
-        else:
-            logger.info("Watchdog observer was not running or already stopped.")
-
-        if self.speech_recognizer:
-            self.speech_recognizer.stop() # Ensure recognizer resources are cleaned up
-            logger.info("Speech recognizer stopped.")
-
-
-        # Signal the main loop to stop if it's running
-        if self.loop and self.loop.is_running():
-            logger.info("Requesting main event loop to stop...")
-            self.loop.call_soon_threadsafe(self.loop.stop)
-        else:
-            logger.info("Main event loop was not running or already stopped.")
+            logger.info("Plugin file watcher stopped.")
         
-        # Stop TTS, ensure it's done after other cleanup that might use it.
+        self.stop_active_window_tracker() # Stop active window tracker
+
+        # Stop TTS if it's running
         if self.tts:
-            self.tts.stop() # Ensure TTS is stopped
+            self.tts.stop()
             logger.info("TTS stopped.")
 
         logger.info("Assistant stop sequence complete.")
-
-# Example usage (typically called from main.py)

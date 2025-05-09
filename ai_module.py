@@ -15,16 +15,16 @@ from functools import lru_cache
 from typing import Any, Dict, List, Optional, Tuple, Callable
 from collections import deque
 
-"""Language detection constants for heuristic detection"""
+import requests # Added requests import
+from transformers import pipeline # Added pipeline import
+
+# Language detection constants
 POLISH_DIACRITICS = set("ąćęłńóśźż")
 COMMON_POLISH_WORDS = {"nie","tak","jest","to","i","w","się","z","na","że","co","do","jak","po","za","od","dla"}
 COMMON_EN_WORDS = {"the","is","and","to","of","it","in","that","we","you","for","on","a","an"}
 
-# import langid removed; using fast heuristic
-import requests  # type: ignore
-from transformers import pipeline  # lazy‑loaded w chat_transformer
 
-from config import STT_MODEL, MAIN_MODEL, PROVIDER, _config, DEEP_MODEL
+from config import STT_MODEL, MAIN_MODEL, PROVIDER, _config, DEEP_MODEL, load_config # Added load_config import
 from prompt_builder import (
     build_convert_query_prompt,
     build_full_system_prompt,
@@ -414,19 +414,96 @@ def chat_with_providers(
 
 
 @measure_performance
-def generate_response(
-    conversation_history: deque, # Update type hint to deque
+def generate_response_logic(
+    provider_name: str,
+    model_name: str,
+    messages: List[Dict[str, Any]],
     tools_info: str,
     system_prompt_override: Optional[str] = None,
-    detected_language: Optional[str] = None, # Add new parameter
-    language_confidence: Optional[float] = None # Add new parameter
+    detected_language: Optional[str] = None,
+    language_confidence: Optional[float] = None,
+    images: Optional[List[str]] = None, # Added images
+    active_window_title: Optional[str] = None, # Added
+    track_active_window_setting: bool = False # Added
 ) -> str:
+    """Core logic to generate a response from a chosen AI provider."""
+    # Build the full system prompt
+    # The first message in 'messages' is typically the system prompt.
+    # We will replace it or prepend a new one if it doesn't exist.
+    system_message_content = build_full_system_prompt(
+        system_prompt_override=system_prompt_override,
+        detected_language=detected_language,
+        language_confidence=language_confidence,
+        tools_description=tools_info,
+        active_window_title=active_window_title, # Pass through
+        track_active_window_setting=track_active_window_setting # Pass through
+    )
+
+    # Convert deque to list for slicing and modification
+    messages_list = list(messages)
+    if messages_list and messages_list[0]["role"] == "system":
+        messages_list[0]["content"] = system_message_content
+    else:
+        messages_list.insert(0, {"role": "system", "content": system_message_content})
+
+    # Send the modified messages to the AI provider
+    response = chat_with_providers(
+        model=model_name,
+        messages=messages_list,
+        images=images,  # Pass images to the provider
+        provider_override=provider_name,  # Ensure the correct provider is used
+    )
+
+    # Extract and return the response content
+    return (
+        response["message"]["content"].strip()
+        if response and response.get("message", {}).get("content")
+        else ""
+    )
+
+
+@measure_performance
+def generate_response(
+    conversation_history: deque,
+    tools_info: str = "",
+    system_prompt_override: str = None,
+    detected_language: str = "en",
+    language_confidence: float = 1.0,
+    active_window_title: str = None, 
+    track_active_window_setting: bool = False
+) -> str:
+    """
+    Generates a response from the AI model based on conversation history and available tools.
+
+    Args:
+        conversation_history: A deque of previous messages.
+        tools_info: A string describing available tools/plugins.
+        system_prompt_override: An optional string to override the default system prompt.
+        detected_language: The detected language code (e.g., "en", "pl").
+        language_confidence: The confidence score for the detected language.
+        active_window_title: The title of the currently active window.
+        track_active_window_setting: Boolean indicating if active window tracking is enabled.
+
+    Returns:
+        A string containing the AI's response, potentially in JSON format for commands.
+    """
     try:
+        config = load_config() # Use imported load_config
+        api_keys = config.get("API_KEYS", {}) # Get the nested API_KEYS dictionary
+        api_key = api_keys.get("OPENAI_API_KEY") # Get the OpenAI API key from the nested dictionary
+        model_name = config.get("OPENAI_MODEL", "gpt-4-turbo")
+
+        if not api_key:
+            logger.error("OpenAI API key not found in configuration.")
+            return '{"text": "Błąd: Klucz API OpenAI nie został skonfigurowany.", "command": "", "params": {}}'
+
         system_prompt = build_full_system_prompt(
             system_prompt_override=system_prompt_override,
             detected_language=detected_language,
             language_confidence=language_confidence,
-            tools_description=tools_info
+            tools_description=tools_info,
+            active_window_title=active_window_title, # Pass through
+            track_active_window_setting=track_active_window_setting # Pass through
         )
 
         # Convert deque to list for slicing and modification

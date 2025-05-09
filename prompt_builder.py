@@ -5,7 +5,7 @@ Centralized prompt building utilities for Asystent AI system.
 All logic for constructing prompts for AI models, including system prompts, module prompts, and dynamic prompt generation, should be placed here.
 """
 
-from typing import Optional
+from typing import Optional, List # Added List
 from prompts import (
     CONVERT_QUERY_PROMPT,
     SYSTEM_PROMPT,
@@ -36,6 +36,12 @@ def build_language_info_prompt(detected_language: Optional[str], language_confid
 def build_tools_prompt(functions_info: str) -> str:
     return f"\n\nAvailable tools: {functions_info}"
 
+def build_active_window_prompt(active_window_title: Optional[str]) -> str:
+    """Builds the prompt segment for the currently active window."""
+    if active_window_title:
+        return f"\nUser is currently using: {active_window_title}."
+    return ""
+
 def build_convert_query_prompt(detected_language: str) -> str:
     """Builds the prompt for refining/correcting a user query based on detected language."""
     language_lock = (
@@ -49,13 +55,19 @@ def build_full_system_prompt(
     system_prompt_override: Optional[str],
     detected_language: Optional[str],
     language_confidence: Optional[float],
-    tools_description: str
+    tools_description: str,
+    active_window_title: Optional[str], # Added
+    track_active_window_setting: bool # Added to control inclusion
 ) -> str:
     """Builds the complete system prompt by assembling various components."""
     base_prompt_content = system_prompt_override if system_prompt_override else build_system_prompt()
     language_segment = build_language_info_prompt(detected_language, language_confidence)
     tools_segment = build_tools_prompt(tools_description)
-    return f"{base_prompt_content}{language_segment}{tools_segment}"
+    active_window_segment = ""
+    if track_active_window_setting:
+        active_window_segment = build_active_window_prompt(active_window_title)
+    
+    return f"{base_prompt_content}{language_segment}{tools_segment}{active_window_segment}"
 
 # --- Utility for module result prompt ---
 def build_module_result_prompt(module_result: str) -> str:

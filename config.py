@@ -24,6 +24,7 @@ DEFAULT_CONFIG = {
   "EXIT_WITH_CONSOLE": True, # Default to True
   "DEV_MODE": False, # Default to False - prevents model unloading on exit if True
   "AUTO_LISTEN_AFTER_TTS": False, # Default to False
+  "TRACK_ACTIVE_WINDOW": True, # Default to True
   "API_KEYS": {
     "OPENAI_API_KEY": "None",
     "DEEPSEEK_API_KEY": "None",
@@ -33,7 +34,8 @@ DEFAULT_CONFIG = {
     "enabled": True,
     "model": "gpt-4.1-nano"
   },
-  "version": "1.1.0" # Add version here
+  "version": "1.1.0", # Add version here
+  "ACTIVE_WINDOW_POLL_INTERVAL": 5 # Seconds
 }
 
 # Extract default values for direct import elsewhere
@@ -43,6 +45,8 @@ MAX_HISTORY_LENGTH = DEFAULT_CONFIG['MAX_HISTORY_LENGTH']
 LOW_POWER_MODE = DEFAULT_CONFIG['LOW_POWER_MODE']
 EXIT_WITH_CONSOLE = DEFAULT_CONFIG['EXIT_WITH_CONSOLE']
 DEV_MODE = DEFAULT_CONFIG['DEV_MODE'] # Add DEV_MODE here
+TRACK_ACTIVE_WINDOW = DEFAULT_CONFIG['TRACK_ACTIVE_WINDOW']
+ACTIVE_WINDOW_POLL_INTERVAL = DEFAULT_CONFIG['ACTIVE_WINDOW_POLL_INTERVAL']
 
 def load_config():
     if os.path.exists(CONFIG_FILE):

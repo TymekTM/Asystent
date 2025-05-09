@@ -38,9 +38,9 @@ def run_assistant_process(queue: multiprocessing.Queue):
     try:
         assistant = Assistant(command_queue=queue)
         # Ustaw callback do obsługi zapytań (AI/STT)
-        async def process_query_callback(text):
-            await assistant.process_query(text)
-        assistant.process_query_callback = process_query_callback
+        # async def process_query_callback(text): # This callback seems unused with current Assistant.run_async()
+        #     await assistant.process_query(text)
+        # assistant.process_query_callback = process_query_callback
         asyncio.run(assistant.run_async())
     except KeyboardInterrupt:
         logger.info("Assistant process received KeyboardInterrupt. Exiting.")
@@ -48,6 +48,8 @@ def run_assistant_process(queue: multiprocessing.Queue):
         logger.error(f"Critical error in Assistant process: {e}", exc_info=True)
     finally:
         logger.info("Assistant process finished.")
+        if 'assistant' in locals() and hasattr(assistant, 'stop_active_window_tracker'):
+            assistant.stop_active_window_tracker() # Ensure tracker is stopped on exit
 
 def run_flask_process(queue: multiprocessing.Queue):
     """Target function to run the Flask Web UI in its own process."""
@@ -100,39 +102,56 @@ def main():
 
     try:
         while True:
-            # Sprawdź, czy istnieje plik stop_lock
+            # Check for stop signal (e.g., from web UI or other mechanism)
             if os.path.exists(stop_lock_path):
-                logger.warning("Detected stop signal via lock file. Shutting down.")
-                os.remove(stop_lock_path)  # Usuń plik lock
-                break
-                
-            if exit_with_console:
-                # Wait for both processes, exit if parent dies
-                assistant_process.join(0.5)
-                flask_process.join(0.5)
-                if not assistant_process.is_alive() or not flask_process.is_alive():
-                    logger.warning("Detected process exit, shutting down main.")
-                    break
-            else:
-                time.sleep(1)
+                logger.info("Stop signal detected. Terminating processes.")
+                break 
+            
+            if not assistant_process.is_alive():
+                logger.warning("Assistant process died. Attempting to restart...")
+                # The 'assistant' instance from the dead process is out of scope here.
+                # Cleanup for that instance is handled in its own 'run_assistant_process' finally block.
+                assistant_process = multiprocessing.Process(target=run_assistant_process, args=(command_queue,))
+                assistant_process.start()
+                logger.info("Assistant process restarted.")
+
+            if not flask_process.is_alive():
+                logger.warning("Flask process died. Attempting to restart...")
+                flask_process = multiprocessing.Process(target=run_flask_process, args=(command_queue,))
+                flask_process.start()
+                logger.info("Flask process restarted.")
+            
+            time.sleep(5)  # Check every 5 seconds
+
     except KeyboardInterrupt:
-        logger.info("Main process received KeyboardInterrupt. Exiting.")
+        logger.info("Main process received KeyboardInterrupt. Terminating child processes.")
     finally:
         logger.info("Terminating child processes...")
-        # Usuń pliki lock przy zamykaniu, jeśli istnieją
+        if assistant_process.is_alive():
+            assistant_process.terminate()
+            assistant_process.join(timeout=5)
+            if assistant_process.is_alive(): # Force kill if terminate failed
+                logger.warning("Assistant process did not terminate gracefully, killing.")
+                assistant_process.kill()
+                assistant_process.join()
+
+
+        if flask_process.is_alive():
+            flask_process.terminate()
+            flask_process.join(timeout=5)
+            if flask_process.is_alive(): # Force kill if terminate failed
+                logger.warning("Flask process did not terminate gracefully, killing.")
+                flask_process.kill()
+                flask_process.join()
+        
+        # Clean up lock files on exit
         if os.path.exists(stop_lock_path):
             os.remove(stop_lock_path)
         if os.path.exists(restart_lock_path):
             os.remove(restart_lock_path)
-        # Zamknij procesy
-        assistant_process.terminate()
-        flask_process.terminate()
-        assistant_process.join()
-        flask_process.join()
-        logger.info("All processes terminated.")
+
+        logger.info("Application shut down.")
 
 if __name__ == "__main__":
-    # Required for multiprocessing to work correctly on Windows when freezing apps
-    # Also good practice on other platforms.
-    multiprocessing.freeze_support()
+    multiprocessing.freeze_support() # Important for Windows
     main()
