@@ -1,6 +1,6 @@
 *.log
 /screenshots
-assistant.log
+user_data/assistant.log
 *.pyc
 *.pyc
 /__pycache__

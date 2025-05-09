@@ -48,6 +48,7 @@ QUERY_REFINEMENT_ENABLED = _config.get("query_refinement", {}).get("enabled", Tr
 # )
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARNING)
 # Configuration should be handled in main.py, not here.
 
 PLUGINS_STATE_FILE = os.path.join(os.path.dirname(__file__), 'plugins_state.json')

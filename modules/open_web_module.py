@@ -2,6 +2,7 @@ import webbrowser
 import logging
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARNING)
 
 
 def open_web_handler(params: str = "", conversation_history=None) -> str:

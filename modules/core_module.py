@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from audio_modules.beep_sounds import play_beep
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARNING)
 
 # storage paths
 BASE_DIR = os.path.dirname(__file__)

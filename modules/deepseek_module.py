@@ -5,6 +5,7 @@ from audio_modules.beep_sounds import play_beep
 from ai_module import chat_with_providers, remove_chain_of_thought
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARNING)
 
 # Modify handler to accept conversation_history (and potentially system_prompt, though unused here)
 def deep_reasoning_handler(params: str = "", conversation_history: list = None) -> str:

@@ -5,6 +5,7 @@ import logging
 import psutil  # for environment detection
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARNING)
 
 CONFIG_FILE = "config.json"
 # Default configuration values

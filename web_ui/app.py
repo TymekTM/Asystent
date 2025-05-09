@@ -42,7 +42,7 @@ if not SECRET_KEY:
     SECRET_KEY = os.urandom(24)
 # Use the config file path from the main config module
 CONFIG_FILE = MAIN_CONFIG_FILE
-HISTORY_FILE = os.path.join(os.path.dirname(__file__), '..', 'assistant.log')
+HISTORY_FILE = os.path.join(os.path.dirname(__file__), '..', 'user_data', 'assistant.log')
 HISTORY_ARCHIVE_DIR = os.path.join(os.path.dirname(__file__), '..', 'history_archive')
 LTM_FILE = os.path.join(os.path.dirname(__file__), '..', 'long_term_memory.json')
 # --- Flask app (module-level) and startup time ---
@@ -854,7 +854,7 @@ def setup_api_routes(app, queue):
         level = request.args.get('level', 'ALL')
         page = int(request.args.get('page', 1))
         page_size = int(request.args.get('page_size', 100))
-        log_path = os.path.join(os.path.dirname(__file__), '..', 'assistant.log')
+        log_path = os.path.join(os.path.dirname(__file__), '..', 'user_data', 'assistant.log')
         try:
             with open(log_path, 'r', encoding='utf-8') as f:
                 lines = f.readlines()
@@ -1418,7 +1418,7 @@ def setup_api_routes(app, queue):
         """Download the current and rotated log files as a zip archive."""
         import zipfile, io, glob
         log_dir = os.path.dirname(os.path.dirname(__file__))
-        log_files = glob.glob(os.path.join(log_dir, 'assistant.log*'))
+        log_files = glob.glob(os.path.join(log_dir, 'user_data', 'assistant.log*'))
         mem_zip = io.BytesIO()
         with zipfile.ZipFile(mem_zip, 'w', zipfile.ZIP_DEFLATED) as zf:
             for log_file in log_files:

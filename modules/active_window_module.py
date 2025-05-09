@@ -134,7 +134,7 @@ def get_active_window_title():
 if __name__ == '__main__':
     # Test the function
     # Setup basic logging for testing
-    logging.basicConfig(level=logging.DEBUG) # Changed to DEBUG for more verbose test output
+    logging.basicConfig(level=logging.WARNING) # Changed to WARNING for less verbose test output
     logger.info("Attempting to get active window title...")
     title = get_active_window_title()
     if title:

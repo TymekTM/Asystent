@@ -14,11 +14,13 @@ from web_ui.app import create_app
 from config import load_config 
 
 # --- Logging Configuration ---
-log_filename = "assistant.log"
+log_filename = os.path.join("user_data", "assistant.log")
 log_level = logging.INFO 
 log_format = "%(asctime)s - %(processName)s - %(name)s - %(levelname)s - %(message)s"
 
 # Use RotatingFileHandler for log rotation
+if not os.path.exists("user_data"):
+    os.makedirs("user_data", exist_ok=True)
 rotating_handler = logging.handlers.RotatingFileHandler(
     log_filename, maxBytes=5*1024*1024, backupCount=5, encoding='utf-8', mode='a'
 )

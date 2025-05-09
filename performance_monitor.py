@@ -8,7 +8,12 @@ from collections import defaultdict
 import threading
 
 logger = logging.getLogger(__name__)
-STATS_FILE = 'performance_stats.jsonl'  # Use JSON Lines for easier appending
+logger.setLevel(logging.WARNING)
+STATS_FILE = os.path.join('user_data', 'performance_stats.jsonl')  # Use JSON Lines for easier appending
+
+# Ensure user_data directory exists
+if not os.path.exists('user_data'):
+    os.makedirs('user_data', exist_ok=True)
 stats_lock = threading.Lock()
 
 # In-memory aggregation for averages to avoid reading the file constantly

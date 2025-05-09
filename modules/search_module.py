@@ -18,6 +18,7 @@ from prompts import SEARCH_SUMMARY_PROMPT
 from performance_monitor import measure_performance # Add this import
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARNING)
 
 # ──────────────────────────────────────────
 #  Constants

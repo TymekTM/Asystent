@@ -4,6 +4,7 @@ from audio_modules.beep_sounds import play_beep
 from collections import deque
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARNING)
 WTTR_URL = "https://wttr.in"
 
 

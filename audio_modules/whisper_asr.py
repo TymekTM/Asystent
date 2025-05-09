@@ -3,6 +3,7 @@ from transformers import pipeline
 from performance_monitor import measure_performance
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARNING)
 
 
 class WhisperASR:

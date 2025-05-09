@@ -1,7 +1,6 @@
 # Asystent TODO (2025-2026)
 
 ## Priority Tasks
-- New better system prompt
 - Rozbudować weather na więcej opcji
 - Improved long-term memory (search, tagging, context linking, memory management)
 - Kontekst aplikacji V2 - Może nazwa okna?
@@ -13,7 +12,6 @@
 ## Web UI and UX
 - Advanced user authentication and role management (roles, password reset, etc.)
 - Internationalizationok, (multi-language UI, easy translation)
-- Update Docs(giga update)
 
 ## Integration and Security
 - API integrations: add more external services (weather, calendar, IoT, etc.) - MCP
@@ -36,5 +34,3 @@
 - Upgrade continue speak (question detection)
 
 ## Testing
-- Log all prompts send (final)
-- logs all user inputs for intents

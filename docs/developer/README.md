@@ -353,7 +353,7 @@ def your_function():
 
 ### Performance Logs
 
-Performance data is stored in `performance_stats.jsonl` for analysis and can be viewed in the web UI's Performance page.
+Performance data is stored in `user_data/performance_stats.jsonl` for analysis and can be viewed in the web UI's Performance page.
 
 ## Testing
 
