@@ -13,7 +13,12 @@ from functools import lru_cache
 from typing import Any, Dict, List, Optional, Tuple, Callable
 from collections import deque
 
-import langid  # type: ignore
+"""Language detection constants for heuristic detection"""
+POLISH_DIACRITICS = set("ąćęłńóśźż")
+COMMON_POLISH_WORDS = {"nie","tak","jest","to","i","w","się","z","na","że","co","do","jak","po","za","od","dla"}
+COMMON_EN_WORDS = {"the","is","and","to","of","it","in","that","we","you","for","on","a","an"}
+
+# import langid removed; using fast heuristic
 import requests  # type: ignore
 from transformers import pipeline  # lazy‑loaded w chat_transformer
 
@@ -290,29 +295,23 @@ def extract_json(text: str) -> str:
     return text
 
 
+import langid  # Language detection library for broad language support
 # ---------------------------------------------------------------- language ---
 
 @measure_performance
-def detect_language(text: str) -> Tuple[str, float]: # Return type changed
+def detect_language(text: str) -> Tuple[str, float]:
+    """Detect language using langid library for broad language coverage."""
+    text = text.strip()
+    if not text:
+        return "", 0.0
+    # langid.classify returns (language_code, confidence_score)
+    lang, score = langid.classify(text)
+    # Ensure confidence is a float between 0 and 1
     try:
-        text = text.strip()
-        if len(text) < 4:
-            return "pl", 1.0 # Return only lang_code and confidence
-
-        lang_code, conf = langid.classify(text)
-        if conf < 0.7:
-            # Heuristic for Polish if confidence is low but Polish characters are present
-            if any(c in text for c in "ąćęłńóśźż"): # Polish specific characters
-                lang_code, conf = "pl", 0.8 # Assume Polish with higher confidence
-            else:
-                # If no specific Polish chars and low confidence, default might be better or stick to 'pl' if it's common
-                lang_code = "pl" # Or consider a more neutral default if 'pl' isn't always best guess
-
-        # lang_name mapping is no longer needed here as we don't build the prompt string
-        return lang_code, conf # Return only lang_code and confidence
-    except Exception as exc:  # pragma: no cover
-        logger.error("Language detection failed: %s", exc)
-        return "pl", 0.0 # Default fallback
+        confidence = float(score)
+    except (TypeError, ValueError):
+        confidence = 0.0
+    return lang, confidence
 
 
 # ---------------------------------------------------------------- refiner ----

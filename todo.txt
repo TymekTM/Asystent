@@ -22,7 +22,6 @@
 ## Fixes
 - Zweryfikować działanie innych rzeczy w core (timer działa)
 - Fix config page to corectly dosplay sound devices
-- Modules make sound while in chat mode
 - Historia chat się nie wyświetla
 
 ## Optimisations
