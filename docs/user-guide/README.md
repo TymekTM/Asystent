@@ -1,6 +1,6 @@
 # Asystent User Guide
 
-This guide helps you navigate and use all the features of the Asystent AI assistant system.
+This guide helps you navigate and use all the features of the Asystent AI assistant system, updated for version 1.1.0.
 
 ## Table of Contents
 
@@ -10,22 +10,37 @@ This guide helps you navigate and use all the features of the Asystent AI assist
 4. [Voice Interaction](#voice-interaction)
 5. [System Configuration](#system-configuration)
 6. [Long-term Memory Management](#long-term-memory-management)
-7. [Multilingual Support](#multilingual-support)
-8. [Plugins and Extensions](#plugins-and-extensions)
-9. [Troubleshooting](#troubleshooting)
+7. [Available Modules and Tools](#available-modules-and-tools)
+8. [Context-Aware Features](#context-aware-features)
+9. [Performance Settings](#performance-settings)
+10. [Troubleshooting](#troubleshooting)
 
 ## Introduction
 
-Asystent is an AI assistant system designed to help you with various tasks through natural language interaction. It supports both voice and text-based interfaces and includes a web control panel for configuration and management.
+Asystent is an advanced AI assistant system designed to help you with various tasks through natural language interaction. It supports multiple interaction methods including voice commands, text chat, and a comprehensive web interface for configuration and management. The system includes enhanced context awareness, multi-provider LLM support, and specialized tools for a more natural and helpful experience.
 
 ## Getting Started
 
 To start using Asystent:
 
-1. Ensure the system is running (check the dashboard for status)
-2. Access the web interface at `http://localhost:5000` (default address)
-3. Log in with your credentials
-4. Navigate to the chat interface to start interacting with the assistant
+1. Make sure Python 3.10 or higher is installed on your system
+2. Launch the application by running `python main.py` from the Asystent directory
+3. The system will start both the assistant process and the web UI server
+4. Access the web interface at `http://localhost:5000` (default address)
+5. Log in with your credentials (default is dev/devpassword or user/password)
+6. You can interact with the assistant in three ways:
+   - Through voice using the wake word "asystencie" (configurable)
+   - Via text input in the web UI chat interface
+   - Through the integrated API endpoints
+
+### First-time Setup
+
+For optimal experience, configure these settings after installation:
+
+1. Configure your preferred AI models in Config > AI Settings
+2. Set up your audio devices in Config > Audio Settings
+3. Customize the wake word if needed
+4. Enable desired modules in Modules page
 
 ## Web UI Interface
 
@@ -33,126 +48,171 @@ The Asystent web interface includes several pages:
 
 ### Dashboard
 
-The main control center displaying:
-- Assistant status (online/offline)
-- Quick actions (activate, restart, stop)
-- Recent activity
-- Usage statistics
-
-![Dashboard](dashboard.png) <!-- Create and add screenshots -->
+The main control center displaying:<br>
+- Assistant status (online/offline)<br>
+- Quick actions (activate, restart, stop)<br>
+- Recent activity and interaction history<br>
+- Performance statistics and response times<br>
+- System resource usage<br>
 
 ### Chat
 
-Direct text interaction with the assistant:
-- Type messages in the input field
-- Use the microphone button for voice input
-- View conversation history
-- Clear chat history as needed
+Text interaction with the assistant:<br>
+- Type messages in the input field<br>
+- Use the microphone button for voice input<br>
+- View full conversation history with timestamps<br>
+- Multi-language support with automatic detection<br>
+- Markdown rendering for formatted responses<br>
+- Code highlighting for programming responses<br>
 
 ### Configuration
 
-Adjust system settings including:
-- Voice recognition settings
-- Language model selection
-- Wake word customization
-- Microphone selection
-- API keys configuration
+Comprehensive system settings management: <br>
+- **AI Settings**: Choose between OpenAI, Ollama, DeepSeek, or Anthropic models<br>
+- **Voice Recognition**: Configure STT engines (Whisper or Vosk) and parameters<br>
+- **TTS Settings**: Voice settings with Edge TTS<br>
+- **Wake Word**: Customize activation phrase and sensitivity<br>
+- **Audio Devices**: Select microphone and output devices<br>
+- **API Keys**: Securely store provider credentials<br>
+- **Performance Mode**: Toggle low-power mode for resource-constrained systems<br>
+- **Active Window Tracking**: Enable/disable context-aware assistance<br>
 
 ### Long-Term Memory
 
-Manage what the assistant remembers:
-- View all stored memories
-- Add new memories manually
-- Search through existing memories
-- Delete specific memories
+Memory management interface:<br>
+- View stored memories with timestamps<br>
+- Add new memories manually<br>
+- Search through existing memories<br>
 
-### Plugins
+### Modules
 
-Manage the plugin system:
-- Enable/disable plugins
-- View plugin status
-- Reload plugins
+Module management system:<br>
+- Enable/disable individual modules<br>
 
-### Logs
+Out of the box asystent comes with those modules:<br>
+- Weather module with forecasting<br>
+- DeepSeek module for complex reasoning tasks - to be reworked<br>
+- Screen capture for visual analysis - broken<br>
+- Core utilities for timers and more<br>
+- Search module for web information access<br>
+- Screen capture module for visual context<br>
+- Web browser module for opening pages<br>
 
-Monitor system operations:
-- Filter logs by level (INFO, WARNING, ERROR)
-- Download logs for analysis
-- Navigate through log history
+### Logs & Analytics
 
-### History
-
-Review past conversations:
-- Chronological view of interactions
-- Archive conversations
+Comprehensive monitoring and analytics:<br>
+- Real-time log streaming with filtering by level and module<br>
+- Performance metrics tracking response times<br>
+- System resource usage monitoring<br>
+- Interaction history with timestamps<br>
+- Export options for logs and analytics data<br>
 
 ## Voice Interaction
 
-Asystent responds to voice commands when activated by:
-1. Speaking the wake word (default is "asystent")
-2. Clicking the "Activate Manually" button on the dashboard or chat interface
+Asystent provides a natural voice interaction experience:
 
-After activation, speak your command or question clearly. The system will process your speech and respond audibly.
+### Wake Word Detection
 
-### Speech Recognition Systems
+- Default wake word: "asystencie" (configurable)
+- Upon detection, the system plays a beep indicating it's listening
+- Speak your command or question after the beep
+- The system processes your speech and responds verbally
 
-Asystent supports two speech recognition systems:
+### Speech-to-Text Options
 
-- **Vosk**: For offline, lightweight recognition that works without internet connection
-- **Whisper**: Higher accuracy recognition that may require more processing power
+Asystent supports two STT engines:
 
-Which system is used is configurable in the settings. When Whisper is enabled, it will be used for processing your commands after wake word detection.
+1. **Vosk** (default):
+   - Offline operation
+   - Lower resource usage
+   - Works well for simple commands
+   - Available in downloaded languages only
 
-### Dynamic Audio Recording
+2. **Whisper(prefered)**:
+   - Higher accuracy for complex speech
+   - More resource intensive
+   - Better for natural conversations
+   - Excellent multilingual support
 
-The system uses advanced audio processing to automatically:
-- Detect when you've finished speaking
-- Adjust for background noise levels
-- Capture the full command before processing
+Configure your preference in the web UI settings.
 
-### Manual Activation Process
+### Voice Commands
 
-When you click "Activate Manually" in the web interface:
-1. A signal is sent to the assistant
-2. The system plays a beep to indicate it's listening
-3. Your speech is recorded until you stop speaking
-4. Your command is processed in the same way as with wake word activation
+Examples of supported voice commands:
+
+- "What's the weather like today?"
+- "Set a timer for 5 minutes"
+- "Remember that I need to buy groceries"
+- "Take a screenshot and tell me what you see"
+- "Search for quantum computing information"
+
+For more examples, see the [Voice Interaction Guide](voice-interaction.md).
+
+### Context-Aware Voice Interaction
+
+The system now maintains awareness of:<br>
+- Active window title for contextual responses<br>
+- Conversation continuity across interactions<br>
+- Intent detection for handling specific command types<br>
+- Question detection for automatic follow-up<br>
 
 ## System Configuration
 
-### Wake Word Customization
+### General Configuration
+
+Basic settings are stored in `config.json` and can be modified via the web UI:
+
+### Audio Configuration
+
+Configure audio settings for optimal voice interaction:
 
 1. Navigate to the Configuration page
-2. Find the "Wake Word" input field
-3. Enter your preferred wake word
-4. Save configuration
+2. Select "Audio Settings"
+3. Choose your input device (microphone)
+4. Adjust silence threshold if needed
+5. Select your output device for TTS
+6. Save changes
 
-### Voice Selection
+### AI Model Configuration
 
-1. Access the Configuration page
-2. Navigate to TTS (Text-to-Speech) settings
-3. Choose from available voices
-4. Adjust speed and other parameters as needed
+Asystent now supports an expanded range of AI models with enhanced configuration:
+
+1. Navigate to the AI Settings tab
+2. Select your preferred provider:
+   - OpenAI (gpt-4.1-mini, gpt-4o)
+   - Ollama (local models)
+   - DeepSeek
+   - Anthropic (Claude models)
+3. Configure separate models for different functions:
+   - Main conversation model
+   - Query refinement model
+   - Deep reasoning model
+4. Set API keys securely
+5. Configure context length and temperature settings
+
+### Wake Word Settings
+
+Customize the wake word detection:
+
+1. Go to Wake Word settings
+2. Enter your preferred activation phrase
+3. Adjust activation threshold (lower = more sensitive)
+4. Test the settings in a typical environment
 5. Save configuration
 
-### Model Selection
+### Active Window Tracking
 
-Asystent supports multiple AI models:
-1. Navigate to Configuration
-2. Under "LLM & Provider Settings"
-3. Select your preferred provider (OpenAI, Ollama, etc.)
-4. Specify model names for different functions
-5. Save configuration
+New context-aware feature to help the assistant understand what you're working on:
 
-### Performance Modes
+1. Enable/disable in Configuration > Context Settings
 
-Asystent includes special operating modes to accommodate different hardware capabilities:
+### Auto-Listen Feature
 
-- **Low Power Mode**: Reduces sampling rate (8000Hz instead of 16000Hz) for voice recognition, making it suitable for less powerful devices. This can be enabled in the configuration file.
+Configure the assistant to automatically listen after it speaks:
 
-- **Developer Mode**: Keeps models loaded in memory between sessions for faster testing and development. This reduces startup time but uses more memory.
-
-### Advanced Settings
+1. Enable in Configuration > Voice Interaction
+2. Set delay time between assistant response and listening activation
+3. Configure question detection sensitivity
 
 - **Query Refinement**: The system can automatically refine user queries to improve AI responses. This can be toggled on/off in settings.
 
@@ -179,122 +239,120 @@ Asystent includes special operating modes to accommodate different hardware capa
 
 1. Find the memory you wish to remove
 2. Click the "Delete" button next to it
-3. Confirm deletion when prompted
+3. The memory will be removed from the database
 
 ## Multilingual Support
 
-Asystent includes built-in language detection capabilities that allow it to operate in multiple languages.
+Asystent now features enhanced multilingual capabilities:
 
 ### Automatic Language Detection
 
-1. When you speak or type, the system automatically detects the language
-2. The assistant will respond in the same language that was detected
-3. You can switch languages at any time during conversation
+The system automatically detects the language you're using and responds in the same language. This applies to:<br>
+- Voice inputs<br>
+- Text chat messages<br>
+- Commands and queries<br>
 
 ### Supported Languages
 
-The system can detect and respond in multiple languages including:
-- Polish
-- English
-- German
-- Spanish
-- French
-- Italian
-- Russian
-- Swedish
+Primary languages with full support:<br>
+- English<br>
+- Polish<br>
 
-Language support may vary depending on the selected AI models and providers.
+## Available Modules and Tools
 
-### Query Refinement
+Asystent has a modular plugin system that extends functionality.
 
-The query refinement system works across languages:
-- Speech recognition errors are corrected while preserving the original language
-- The original meaning and intent of your query is maintained
-- No automatic translation is performed unless specifically requested
+### Currently Implemented Modules
 
-## Plugins and Extensions
+- **Search Module**: Performs web searches and summarizes results
+- **Memory Module**: Manages long-term memory storage and retrieval
+- **Screen Capture**: Captures and analyzes screen contents
+- **Deepseek Module**: Performs advanced reasoning tasks
+- **Core Module**: Provides timers, reminders, and task management
+- **Weather Module**: Fetches and reports weather information
+- **Active Window Module**: Tracks current application context
 
-Asystent has a modular plugin system that allows extending functionality.
+For detailed information about each module, see the [Plugins Documentation](plugins.md).
 
-### Enabled Plugins
+## Context-Aware Features
 
-- **Search Module**: Web search capabilities
-- **API Module**: Third-party service integration
-- **Screen Capture**: Analysis of screen contents
-- **Memory Module**: Long-term memory management
-- **Deepseek Module**: Advanced reasoning (when enabled)
+### Active Window Context
 
-### Managing Plugins
+When enabled, Asystent can track the currently active window:
 
-To manage plugins:
-1. Navigate to the Plugins page
-2. Toggle plugins on/off using the provided buttons
-3. Use "Reload" to refresh a plugin after changes
+1. Enable this feature in Configuration > Advanced Settings
+2. The assistant will now be aware of which application you're using
+3. Responses can be tailored to your current context
+4. This improves assistance for application-specific questions
 
-### Plugin Auto-Reloading
+### Multilingual Awareness
 
-The system monitors the plugin folder for changes:
+Asystent detects the language you're speaking:
 
-- When you modify a plugin file, it's automatically detected
-- The plugin is reloaded without requiring system restart
-- Status messages appear in the logs
+1. Automatic language detection for input
+2. Responses in the same language
+3. Currently supports Polish and English fully
+4. Limited support for other languages
 
-### Plugin Command System
+## Performance Settings
 
-Plugins can be invoked in conversation using their command names:
+### Low Power Mode
 
-1. Some plugins respond to direct commands (e.g., "search for...")
-2. Others are automatically triggered by AI when relevant
-3. Complex plugins may have sub-commands (e.g., memory has "get", "save", "forget" sub-commands)
+For systems with limited resources:
 
-### Memory Triggers
+1. Enable in Configuration > Performance
+2. Reduces model complexity
+3. Uses lighter STT processing
+4. May reduce accuracy but improves responsiveness
 
-The memory system has special functionality - it can be triggered automatically when:
+### Development Mode
 
-- You ask about something the assistant should remember
-- You reference past conversations
-- You use keywords like "remember" or "remind me"
+For developers and testing:
+
+1. Enable in Configuration (or use DEV_MODE environment variable)
+2. Keeps models loaded for faster turnaround
+3. Provides additional debugging information
+4. Shows technical details in responses
 
 ## Troubleshooting
 
-### Assistant Not Responding
-
-1. Check status on dashboard
-2. Verify microphone is working
-3. Try restarting the assistant
-4. Check logs for errors
-
 ### Voice Recognition Issues
 
-1. Ensure proper microphone is selected in Configuration
-2. Speak clearly and at a moderate pace
-3. Check if the wake word is correctly set
-4. Verify that voice models are properly installed
+If the assistant doesn't respond to your voice:
 
-### Performance Problems
+1. Check that your microphone is properly connected
+2. Verify the correct microphone is selected in settings
+3. Adjust the silence threshold (try lower values)
+4. Speak more clearly and loudly
+5. Try using the manual activation button
 
-1. Check if your system meets the minimum requirements
-2. Enable Low Power Mode in the configuration if running on limited hardware
-3. Monitor CPU and memory usage in the performance logs
-4. Consider using a lighter AI model if experiencing slowdowns
+### AI Response Problems
 
-### Plugin Errors
+If responses are incorrect or incomplete:
 
-1. Check the logs for plugin-specific error messages
-2. Try disabling and re-enabling the problematic plugin
-3. Use the "Reload Plugins" button to refresh all plugins
-4. If a plugin was recently modified, ensure it follows the correct format
+1. Check your internet connection (for cloud models)
+2. Verify API keys are correctly entered
+3. Try a different AI model or provider
+4. Restart the assistant
+5. Check system logs for errors
 
-### Configuration Changes Not Taking Effect
+### Web UI Access Issues
 
-1. Some settings (like microphone ID) require a full restart
-2. Most other settings should apply immediately after saving
-3. Check logs for any error messages during configuration reload
-4. Try clearing browser cache if changes in web UI aren't visible
+If you can't access the web interface:
 
-### Web Interface Problems
+1. Verify the application is running
+2. Check if the server address has been changed in config
+3. Make sure no other service is using the same port
+4. Check firewall settings if accessing from another device
+5. Look for server errors in the console output
 
-1. Clear browser cache
-2. Try a different browser
-3. Check if server is running
-4. Restart the web panel if needed
+### Module Functionality Issues
+
+If specific features aren't working:
+
+1. Check module is enabled in the Modules page
+2. Verify required API keys are provided (for external services)
+3. Check logs for specific module errors
+4. Restart the assistant after changing module settings
+
+For additional help or to report issues, please visit the project repository.

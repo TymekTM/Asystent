@@ -4,7 +4,7 @@ This guide provides detailed instructions on using Asystent's voice interaction 
 
 ## Wake Word Detection
 
-Asystent listens for a specific wake word to activate. By default, this is set to "asystent" but can be customized in the configuration.
+Asystent listens for a specific wake word to activate. By default, this is set to "asystencie" but can be customized in the configuration.
 
 ### How Wake Word Detection Works
 
@@ -19,6 +19,27 @@ Asystent listens for a specific wake word to activate. By default, this is set t
 - Ensure you're in a relatively quiet environment
 - Position yourself within 1-2 meters of the microphone
 - Use the manual activation button if the wake word isn't being detected
+- If using Whisper STT, wait for the beep before speaking your command
+
+## Speech-to-Text Options
+
+Asystent supports two STT (Speech-to-Text) systems:
+
+### Vosk
+- Operates completely offline
+- Uses less system resources
+- Better for simple commands and phrases
+- Available in multiple languages
+- Faster response time
+
+### Whisper
+- Higher accuracy for complex speech
+- Better at handling background noise
+- Superior multilingual capabilities
+- Larger model options for better accuracy
+- More resource-intensive
+
+You can select your preferred system in the Configuration page under Voice Recognition settings.
 
 ## Voice Commands
 
@@ -30,24 +51,67 @@ Asystent understands a wide range of natural language commands. Here are some ex
 - "Tell me about [topic]"
 
 ### System Control
-- "Turn on screen capture"
-- "Enable deep reasoning mode"
-- "Save this to memory"
+- "Take a screenshot and analyze it"
+- "Use deep reasoning to solve this problem"
+- "Save this information to memory"
 
 ### Memory Commands
 - "Remember that [information]"
 - "What do you remember about [topic]?"
-- "Forget about [specific memory]"
+- "Delete the memory about [specific topic]"
+
+### Core Functions
+- "Set a timer for 5 minutes"
+- "Add a reminder for tomorrow at 2pm"
+- "Add milk to my shopping list"
+
+### Search Commands
+- "Search the web for quantum computing"
+- "Find information about healthy recipes"
+- "Look up the latest news on AI development"
 
 ## Voice Settings
 
-You can customize the voice interaction experience:
+You can customize the voice interaction experience through the Configuration page:
 
 ### Microphone Selection
 1. Go to the Configuration page
 2. Find the "Microphone Device" dropdown
 3. Select your preferred microphone
 4. Save configuration
+
+### Wake Word Settings
+1. Navigate to Wake Word settings
+2. Enter your preferred activation phrase
+3. Test your new wake word
+4. Save changes
+
+### STT Engine Selection
+1. Go to Voice Recognition settings
+2. Choose between Vosk and Whisper
+3. If using Whisper, select model size (small/medium/large)
+4. Save configuration
+
+## Troubleshooting
+
+### Wake Word Not Detected
+- Try speaking more clearly and slightly louder
+- Reduce background noise in the environment
+- Check that your microphone is working correctly
+- Try using the manual activation button instead
+
+### Poor Speech Recognition
+- Switch between Vosk and Whisper to see which works better
+- Use a higher quality microphone if available
+- Speak at a moderate pace and articulate clearly
+- Try adjusting the silence threshold in audio settings
+- Verify the language settings match the language you're speaking
+
+### No Response After Recognition
+- Check if the assistant is connected to the AI provider
+- Verify internet connection if using cloud-based AI models
+- Restart the assistant if it becomes unresponsive
+- Check the logs for specific error messages
 
 ### Voice Recognition Model
 Asystent supports two voice recognition systems:

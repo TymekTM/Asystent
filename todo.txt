@@ -4,7 +4,7 @@
 - New better system prompt
 - Rozbudować weather na więcej opcji
 - Improved long-term memory (search, tagging, context linking, memory management)
-- Kontekst aplikacji (śledzenie aktywnego okna zaimplementowane)
+- Kontekst aplikacji V2 - Może nazwa okna?
 
 ## Feature Enhancements
 - TTS and voice personalization (user-selectable voice, language, speed, test preview)
@@ -23,6 +23,7 @@
 ## Fixes
 - Zweryfikować działanie innych rzeczy w core (timer działa)
 - Fix config page to corectly dosplay sound devices
+- When Ai wants to activate listening and user does the same at the same time(or similar times) it just hapens twice and funny stuff happens lol 
 
 ## Optimisations
 - Entire app start speed

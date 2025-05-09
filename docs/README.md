@@ -12,10 +12,12 @@ Welcome to the Asystent documentation. This guide provides comprehensive informa
 
 Asystent is an AI assistant system that provides voice, text, and web interface interactions. It features:
 
-- Voice recognition with wake word detection
-- Natural language processing via multiple LLM providers
-- Long-term memory
-- Modular plugin system
-- Web-based control panel
+- Voice recognition with wake word detection and Whisper integration
+- Advanced natural language processing via multiple LLM providers (OpenAI, Ollama, DeepSeek, Anthropic)
+- Basic long-term memory
+- Modular plugin system with weather, search, screen capture, and web capabilities out of the box
+- Web-based control panel and configuration
+- Active window tracking for context-aware assistance
+- Multilingual support and language detection
 
 See the [User Guide](./user-guide/README.md) to get started with using Asystent, or the [Developer Guide](./developer/README.md) if you want to contribute to the project or customize it for your needs.

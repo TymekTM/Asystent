@@ -18,50 +18,64 @@ The Dashboard provides an overview of system status and quick access to common a
 
 - **Assistant Status**: Shows if the assistant is online, offline, or restarting
 - **Wake Word**: Displays the current wake word configuration
+- **STT Engine**: Shows which speech recognition engine is being used
 - **Quick Actions**: 
-  - Activate Manually: Triggers the assistant to listen without wake word
-  - Restart Assistant: Restarts the assistant process
-  - Restart Web Panel: Restarts the web interface
-  - Restart All: Restarts both components
-  - Stop Assistant: Shuts down the assistant process
-- **Recent Activity**: Shows the most recent interactions with the assistant
-- **Usage Statistics**: Displays metrics like message count, unique users, and response time
+  - **Activate Manually**: Triggers the assistant to listen without wake word
+  - **Restart Assistant**: Restarts the assistant process
+  - **Restart Web Panel**: Restarts the web interface
+  - **Restart All**: Restarts both components
+  - **Stop Assistant**: Shuts down the assistant process
+- **Performance Stats**: Displays CPU, memory usage, and response times
+- **Recent Activity**: Shows recent interaction logs
 
 ## Chat Interface
 
-The Chat interface allows direct text conversation with the assistant.
+The chat page allows direct text interaction with the assistant.
 
 ### Features
 
-- **Text Input**: Type messages in the input field
-- **Voice Input**: Use the microphone button to speak your message
-- **Chat History**: Displays the ongoing conversation
-- **Clear Chat**: Removes the current conversation history
-
-### Chat Commands
-
-You can use special commands in chat by prefixing them with an exclamation mark:
-
-- `!search [query]`: Performs a web search
-- `!deep [query]`: Activates deep reasoning mode
-- `!memory add [content]`: Adds information to long-term memory
-- `!memory get [query]`: Retrieves information from memory
+- **Message Input**: Type your message in the input field at the bottom
+- **Send Button**: Click to send your message
+- **Microphone Button**: Click to activate voice input
+- **Conversation Display**: Shows the conversation history with user and assistant messages
+- **Clear Chat**: Button to clear the current conversation history
 
 ## Configuration Page
 
-The Configuration page allows customization of all system parameters.
+The configuration page allows you to customize various system settings.
 
-### Settings Categories
+### Configuration Sections
 
-- **Vosk Settings**: Configure wake word detection and speech-to-text
-- **LLM & Provider Settings**: Set up language models and AI providers
-- **TTS Settings**: Configure text-to-speech parameters
-- **API Keys**: Store credentials for external services
-- **Other Settings**: Miscellaneous system parameters
+- **Voice Recognition Settings**:
+  - Wake word customization
+  - Microphone device selection
+  - STT engine selection (Vosk/Whisper)
+  - Silence threshold adjustment
+  
+- **AI Settings**:
+  - Provider selection (OpenAI, Ollama, DeepSeek, Anthropic)
+  - Model selection for different functions
+  - API key management
+  - Context length and temperature settings
+  
+- **TTS Settings**:
+  - Voice selection
+  - Speech rate adjustment
+  - Output device selection
+  
+- **Performance Settings**:
+  - Low power mode toggle
+  - Development mode options
+  - Resource allocation settings
+
+- **Context Settings**:
+  - Active window tracking toggle
+  - Polling interval adjustment
+  - Privacy settings
 
 ### Saving Configuration
 
-After making changes, click the "Save Configuration" button at the bottom of the page. The system may restart to apply changes.
+After making changes, click the "Save Configuration" button at the bottom of the page. Some settings may require a restart to take effect.
 
 ## Long-Term Memory Page
 
@@ -71,8 +85,19 @@ The Long-Term Memory page manages the assistant's persistent knowledge.
 
 - **Adding Memories**: Enter content in the form at the top of the page
 - **Searching Memories**: Use the search box to filter memories by content
-- **Viewing Memories**: All memories are listed with ID, user attribution, and timestamp
+- **Viewing Memories**: All memories are listed with timestamp and content
 - **Deleting Memories**: Click the delete button next to any memory entry
+
+## Modules Page
+
+The Modules page allows management of system modules.
+
+### Module Management
+
+- **Status Toggles**: Enable or disable individual modules 
+- **Module Settings**: Configure specific module parameters
+- **Module Information**: View descriptions of each module's functionality
+- **Reload Button**: Refresh modules after configuration changes
 
 ## Logs Page
 
@@ -81,18 +106,20 @@ The Logs page provides access to system logs for troubleshooting.
 ### Features
 
 - **Log Level Filtering**: Filter by INFO, WARNING, or ERROR
-- **Pagination**: Navigate through log pages
+- **Component Filtering**: Filter logs by specific system components
+- **Real-time Updates**: View logs as they occur
 - **Download**: Save logs for offline analysis
 
-## Plugins Page
+## Performance Page
 
-The Plugins page allows management of system extensions.
+The Performance page displays system resource usage and response metrics.
 
-### Plugin Management
+### Features
 
-- **Status View**: See which plugins are enabled or disabled
-- **Toggle**: Enable or disable plugins without restart
-- **Reload**: Refresh a plugin after making changes to its configuration
+- **CPU/Memory Usage**: Graphs showing resource consumption over time
+- **Response Time**: Charts of AI and system response times
+- **Operation Counts**: Statistics on different types of operations
+- **Component Performance**: Breakdown of performance by system component
 
 ## History Page
 
