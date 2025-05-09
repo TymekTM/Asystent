@@ -470,7 +470,8 @@ def generate_response(
     detected_language: str = "en",
     language_confidence: float = 1.0,
     active_window_title: str = None, 
-    track_active_window_setting: bool = False
+    track_active_window_setting: bool = False,
+    tool_suggestion: str = None
 ) -> str:
     """
     Generates a response from the AI model based on conversation history and available tools.
@@ -487,6 +488,7 @@ def generate_response(
     Returns:
         A string containing the AI's response, potentially in JSON format for commands.
     """
+    import datetime
     try:
         config = load_config() # Use imported load_config
         api_keys = config.get("API_KEYS", {}) # Get the nested API_KEYS dictionary
@@ -497,14 +499,29 @@ def generate_response(
             logger.error("OpenAI API key not found in configuration.")
             return '{"text": "Błąd: Klucz API OpenAI nie został skonfigurowany.", "command": "", "params": {}}'
 
+
         system_prompt = build_full_system_prompt(
             system_prompt_override=system_prompt_override,
             detected_language=detected_language,
             language_confidence=language_confidence,
             tools_description=tools_info,
             active_window_title=active_window_title, # Pass through
-            track_active_window_setting=track_active_window_setting # Pass through
+            track_active_window_setting=track_active_window_setting, # Pass through
+            tool_suggestion=tool_suggestion
         )
+
+        # --- PROMPT LOGGING ---
+        # Log ONLY user/assistant messages, NOT the system prompt
+        try:
+            # Log only non-system messages (skip system prompt)
+            for msg in list(conversation_history):
+                if msg.get("role") != "system":
+                    with open("user_data/prompts_log.txt", "a", encoding="utf-8") as f:
+                        # If message is dict, log as JSON, else as string
+                        import json
+                        f.write(f"{datetime.datetime.now().isoformat()} | {json.dumps(msg, ensure_ascii=False)}\n")
+        except Exception as log_exc:
+            logger.warning(f"[PromptLog] Failed to log prompt: {log_exc}")
 
         # Convert deque to list for slicing and modification
         messages = list(conversation_history)

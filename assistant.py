@@ -429,31 +429,54 @@ class Assistant:
             refined_query = text_input
             logger.info("Query refinement disabled, using raw input: %s", refined_query)
 
+
         # Log intent interpretation after refinement
+        import datetime
         intent, confidence = classify_intent(refined_query)
         logger.info(f"[INTENT] Interpreted intent: {intent} (confidence: {confidence:.2f}) for: '{refined_query}'")
+        # --- USER INPUT LOGGING ---
+        try:
+            with open("user_data/user_inputs_log.txt", "a", encoding="utf-8") as f:
+                f.write(f"{datetime.datetime.now().isoformat()} | {refined_query} | intent={intent} | conf={confidence:.2f}\n")
+        except Exception as log_exc:
+            logger.warning(f"[UserInputLog] Failed to log user input: {log_exc}")
 
         # Language detection is now done above, before or after refinement block.
         # The lang_code and lang_conf from that detection will be used.
 
-        # Intent classification (new layer)
-        # intent, confidence = classify_intent(refined_query) # This is duplicated, remove one.
-        # logger.info("Intent classified as: %s (%.2f)", intent, confidence) # Duplicated log
         # Add user message BEFORE calling the main model
-        # Deque handles maxlen automatically
         self.conversation_history.append({
             "role": "user", 
             "content": refined_query, 
             "intent": intent,
             "confidence": confidence
         })
-        # self.trim_conversation_history() # No longer needed, deque handles it
 
         # Przygotowanie listy dostępnych funkcji (tool descriptions)
         functions_info = ", ".join([f"{cmd} - {info['description']}" for cmd, info in self.modules.items()])
 
+        # --- TOOL SUGGESTION LOGIC ---
+        tool_suggestion = None
+        # Only suggest if intent matches a module/tool
+        if intent and intent != "none":
+            # Try to find the module for this intent
+            # Map intent to module key (command) if possible
+            module_key = None
+            # Direct match (intent == command)
+            if intent in self.modules:
+                module_key = intent
+            else:
+                # Try to find by aliases
+                for k, info in self.modules.items():
+                    if "aliases" in info and intent in [a.lower() for a in info["aliases"]]:
+                        module_key = k
+                        break
+            if module_key:
+                mod = self.modules[module_key]
+                tool_suggestion = f"{module_key} - {mod.get('description','')}"
+        # --- END TOOL SUGGESTION LOGIC ---
+
         # Generowanie odpowiedzi przy użyciu funkcji z ai_module
-        # Pass lang_code and lang_conf to generate_response
         response_text = generate_response(
             self.conversation_history,
             tools_info=functions_info,
@@ -461,7 +484,8 @@ class Assistant:
             detected_language=lang_code,
             language_confidence=lang_conf,
             active_window_title=self.current_active_window if self.track_active_window else None, # Pass current window
-            track_active_window_setting=self.track_active_window # Pass setting status
+            track_active_window_setting=self.track_active_window, # Pass setting status
+            tool_suggestion=tool_suggestion
         )
         logger.info("AI response: %s", response_text)
 

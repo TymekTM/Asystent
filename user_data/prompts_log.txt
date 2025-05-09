@@ -1,0 +1,58 @@
+2025-05-09T20:19:09.442466 | {"role": "user", "content": "Powiedz mi, czy jutro będzie padać w Sosnowcu.", "intent": "weather_query", "confidence": 0.6877893748868639}
+2025-05-09T20:19:21.807756 | {"role": "user", "content": "Powiedz mi, czy jutro będzie padać w Sosnowcu.", "intent": "weather_query", "confidence": 0.6877893748868639}
+2025-05-09T20:19:21.808073 | {"role": "assistant", "content": "Chętnie sprawdzę pogodę dla Sosnowca na jutro, ale potrzebuję chwili..."}
+2025-05-09T20:19:21.808311 | {"role": "user", "content": "To, to zrób teraz, proszę.", "intent": "none", "confidence": 0.47538475458679974}
+2025-05-09T20:19:59.077403 | {"role": "user", "content": "Powiedz mi, czy jutro będzie padać w Sosnowcu.", "intent": "weather_query", "confidence": 0.6877893748868639}
+2025-05-09T20:19:59.077651 | {"role": "assistant", "content": "Chętnie sprawdzę pogodę dla Sosnowca na jutro, ale potrzebuję chwili..."}
+2025-05-09T20:19:59.077902 | {"role": "user", "content": "To, to zrób teraz, proszę.", "intent": "none", "confidence": 0.47538475458679974}
+2025-05-09T20:19:59.078120 | {"role": "assistant", "content": "Prognoza dla Sosnowiec na najbliższe 3 dni:\n2025-05-09: Partly Cloudy , od 3°C do 12°C\n2025-05-10: Light drizzle, od 7°C do 9°C\n2025-05-11: Patchy rain nearby, od 5°C do 13°C"}
+2025-05-09T20:19:59.078356 | {"role": "user", "content": "Wystarczy, nie musieć już się zabić.", "intent": "none", "confidence": 0.32677086375112957}
+2025-05-09T20:29:29.036679 | {"role": "user", "content": "Czy jutro w Warszawie będzie padać?", "intent": "weather_query", "confidence": 0.7877641434586609}
+2025-05-09T20:29:40.759518 | {"role": "user", "content": "Czy jutro w Warszawie będzie padać?", "intent": "weather_query", "confidence": 0.7877641434586609}
+2025-05-09T20:29:40.759972 | {"role": "assistant", "content": "Chcę sprawdzić prognozę dla Warszawy, zaraz to zrobię."}
+2025-05-09T20:29:40.760441 | {"role": "user", "content": "Please do it then.", "intent": "none", "confidence": 0.06222817713571313}
+2025-05-09T20:30:31.143531 | {"role": "user", "content": "Czy jutro w Warszawie będzie padać?", "intent": "weather_query", "confidence": 0.7877641434586609}
+2025-05-09T20:30:31.143815 | {"role": "assistant", "content": "Chcę sprawdzić prognozę dla Warszawy, zaraz to zrobię."}
+2025-05-09T20:30:31.144148 | {"role": "user", "content": "Please do it then.", "intent": "none", "confidence": 0.06222817713571313}
+2025-05-09T20:30:31.144498 | {"role": "assistant", "content": "Prognoza dla Warszawa na najbliższe 3 dni:\n2025-05-09: Cloudy , od 3°C do 11°C\n2025-05-10: Patchy rain nearby, od 5°C do 9°C\n2025-05-11: Patchy rain nearby, od 3°C do 14°C"}
+2025-05-09T20:30:31.144828 | {"role": "user", "content": "Can you open Facebook for me, please?", "intent": "none", "confidence": 0.21893509353416363}
+2025-05-09T20:30:50.509593 | {"role": "user", "content": "Czy jutro w Warszawie będzie padać?", "intent": "weather_query", "confidence": 0.7877641434586609}
+2025-05-09T20:30:50.509846 | {"role": "assistant", "content": "Chcę sprawdzić prognozę dla Warszawy, zaraz to zrobię."}
+2025-05-09T20:30:50.510086 | {"role": "user", "content": "Please do it then.", "intent": "none", "confidence": 0.06222817713571313}
+2025-05-09T20:30:50.510340 | {"role": "assistant", "content": "Prognoza dla Warszawa na najbliższe 3 dni:\n2025-05-09: Cloudy , od 3°C do 11°C\n2025-05-10: Patchy rain nearby, od 5°C do 9°C\n2025-05-11: Patchy rain nearby, od 3°C do 14°C"}
+2025-05-09T20:30:50.510577 | {"role": "user", "content": "Can you open Facebook for me, please?", "intent": "none", "confidence": 0.21893509353416363}
+2025-05-09T20:30:50.510914 | {"role": "assistant", "content": "Otwieram stronę: https://www.facebook.com"}
+2025-05-09T20:30:50.511210 | {"role": "user", "content": "Do czego służy ta aplikacja?", "intent": "none", "confidence": 0.15801478023255297}
+2025-05-09T20:31:10.754351 | {"role": "user", "content": "Czy jutro w Warszawie będzie padać?", "intent": "weather_query", "confidence": 0.7877641434586609}
+2025-05-09T20:31:10.754649 | {"role": "assistant", "content": "Chcę sprawdzić prognozę dla Warszawy, zaraz to zrobię."}
+2025-05-09T20:31:10.754876 | {"role": "user", "content": "Please do it then.", "intent": "none", "confidence": 0.06222817713571313}
+2025-05-09T20:31:10.755092 | {"role": "assistant", "content": "Prognoza dla Warszawa na najbliższe 3 dni:\n2025-05-09: Cloudy , od 3°C do 11°C\n2025-05-10: Patchy rain nearby, od 5°C do 9°C\n2025-05-11: Patchy rain nearby, od 3°C do 14°C"}
+2025-05-09T20:31:10.755319 | {"role": "user", "content": "Can you open Facebook for me, please?", "intent": "none", "confidence": 0.21893509353416363}
+2025-05-09T20:31:10.755530 | {"role": "assistant", "content": "Otwieram stronę: https://www.facebook.com"}
+2025-05-09T20:31:10.755741 | {"role": "user", "content": "Do czego służy ta aplikacja?", "intent": "none", "confidence": 0.15801478023255297}
+2025-05-09T20:31:10.755953 | {"role": "assistant", "content": "Ta aplikacja służy do rozmawiania i pomagania ci w różnych sprawach, od przypomnień, przez szukanie informacji, aż po wsparcie emocjonalne."}
+2025-05-09T20:31:10.756169 | {"role": "user", "content": "Attack to the Mammutatus at Fadaton.", "intent": "none", "confidence": 0.41945084666896104}
+2025-05-09T20:31:19.844015 | {"role": "user", "content": "Czy jutro w Warszawie będzie padać?", "intent": "weather_query", "confidence": 0.7877641434586609}
+2025-05-09T20:31:19.844288 | {"role": "assistant", "content": "Chcę sprawdzić prognozę dla Warszawy, zaraz to zrobię."}
+2025-05-09T20:31:19.844524 | {"role": "user", "content": "Please do it then.", "intent": "none", "confidence": 0.06222817713571313}
+2025-05-09T20:31:19.844752 | {"role": "assistant", "content": "Prognoza dla Warszawa na najbliższe 3 dni:\n2025-05-09: Cloudy , od 3°C do 11°C\n2025-05-10: Patchy rain nearby, od 5°C do 9°C\n2025-05-11: Patchy rain nearby, od 3°C do 14°C"}
+2025-05-09T20:31:19.845008 | {"role": "user", "content": "Can you open Facebook for me, please?", "intent": "none", "confidence": 0.21893509353416363}
+2025-05-09T20:31:19.845329 | {"role": "assistant", "content": "Otwieram stronę: https://www.facebook.com"}
+2025-05-09T20:31:19.845714 | {"role": "user", "content": "Do czego służy ta aplikacja?", "intent": "none", "confidence": 0.15801478023255297}
+2025-05-09T20:31:19.845952 | {"role": "assistant", "content": "Ta aplikacja służy do rozmawiania i pomagania ci w różnych sprawach, od przypomnień, przez szukanie informacji, aż po wsparcie emocjonalne."}
+2025-05-09T20:31:19.846200 | {"role": "user", "content": "Attack to the Mammutatus at Fadaton.", "intent": "none", "confidence": 0.41945084666896104}
+2025-05-09T20:31:19.846495 | {"role": "assistant", "content": "Brzmi jak coś z fantastycznego świata! Chcesz, żebym pomogła wymyślić, jak to wyglądałoby w opowieści?"}
+2025-05-09T20:31:19.846751 | {"role": "user", "content": "Attack to the Mamededas of Fadetom.", "intent": "none", "confidence": 0.33562165403908034}
+2025-05-09T20:31:37.578278 | {"role": "user", "content": "Czy jutro w Warszawie będzie padać?", "intent": "weather_query", "confidence": 0.7877641434586609}
+2025-05-09T20:31:37.578528 | {"role": "assistant", "content": "Chcę sprawdzić prognozę dla Warszawy, zaraz to zrobię."}
+2025-05-09T20:31:37.578757 | {"role": "user", "content": "Please do it then.", "intent": "none", "confidence": 0.06222817713571313}
+2025-05-09T20:31:37.578981 | {"role": "assistant", "content": "Prognoza dla Warszawa na najbliższe 3 dni:\n2025-05-09: Cloudy , od 3°C do 11°C\n2025-05-10: Patchy rain nearby, od 5°C do 9°C\n2025-05-11: Patchy rain nearby, od 3°C do 14°C"}
+2025-05-09T20:31:37.579214 | {"role": "user", "content": "Can you open Facebook for me, please?", "intent": "none", "confidence": 0.21893509353416363}
+2025-05-09T20:31:37.579431 | {"role": "assistant", "content": "Otwieram stronę: https://www.facebook.com"}
+2025-05-09T20:31:37.579644 | {"role": "user", "content": "Do czego służy ta aplikacja?", "intent": "none", "confidence": 0.15801478023255297}
+2025-05-09T20:31:37.579885 | {"role": "assistant", "content": "Ta aplikacja służy do rozmawiania i pomagania ci w różnych sprawach, od przypomnień, przez szukanie informacji, aż po wsparcie emocjonalne."}
+2025-05-09T20:31:37.580101 | {"role": "user", "content": "Attack to the Mammutatus at Fadaton.", "intent": "none", "confidence": 0.41945084666896104}
+2025-05-09T20:31:37.580310 | {"role": "assistant", "content": "Brzmi jak coś z fantastycznego świata! Chcesz, żebym pomogła wymyślić, jak to wyglądałoby w opowieści?"}
+2025-05-09T20:31:37.580519 | {"role": "user", "content": "Attack to the Mamededas of Fadetom.", "intent": "none", "confidence": 0.33562165403908034}
+2025-05-09T20:31:37.580728 | {"role": "assistant", "content": "To brzmi jak epicka przygoda! Chcesz, żebym pomogła rozwinąć tę historię albo wymyślić, co się dalej wydarzy?"}
+2025-05-09T20:31:37.580978 | {"role": "user", "content": "Jakiej aplikacji teraz używam?", "intent": "none", "confidence": 0.0737388918000885}

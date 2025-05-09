@@ -57,17 +57,19 @@ def build_full_system_prompt(
     language_confidence: Optional[float],
     tools_description: str,
     active_window_title: Optional[str], # Added
-    track_active_window_setting: bool # Added to control inclusion
+    track_active_window_setting: bool, # Added to control inclusion
+    tool_suggestion: Optional[str] = None # NEW
 ) -> str:
-    """Builds the complete system prompt by assembling various components."""
+    """Builds the complete system prompt by assembling various components, with optional tool suggestion."""
     base_prompt_content = system_prompt_override if system_prompt_override else build_system_prompt()
     language_segment = build_language_info_prompt(detected_language, language_confidence)
+    suggestion_segment = f"\n\nYou may want to use this tool: {tool_suggestion}" if tool_suggestion else ""
     tools_segment = build_tools_prompt(tools_description)
     active_window_segment = ""
     if track_active_window_setting:
         active_window_segment = build_active_window_prompt(active_window_title)
     
-    return f"{base_prompt_content}{language_segment}{tools_segment}{active_window_segment}"
+    return f"{base_prompt_content}{language_segment}{suggestion_segment}{tools_segment}{active_window_segment}"
 
 # --- Utility for module result prompt ---
 def build_module_result_prompt(module_result: str) -> str:
