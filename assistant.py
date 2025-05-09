@@ -18,7 +18,7 @@ import audio_modules.beep_sounds as beep_sounds
 from audio_modules.wakeword_detector import run_wakeword_detection
 
 # Import funkcji AI z nowego modułu
-from ai_module import refine_query, generate_response, parse_response, remove_chain_of_thought, detect_language
+from ai_module import refine_query, generate_response, parse_response, remove_chain_of_thought, detect_language, detect_language_async
 from intent_system import classify_intent, handle_intent
 
 # Import performance monitor
@@ -308,22 +308,17 @@ class Assistant:
             local_current_query_should_re_listen = False
             
 
+        # Initial language detection on raw query (used for refinement and main prompt)
+        lang_code, lang_conf = await detect_language_async(text_input)
+        logger.info(f"Detected language: {lang_code} (confidence {lang_conf:.2f})")
         # Query refinement can be toggled in config
         if query_refinement_enabled:
-            # detect_language now returns (lang_code, lang_conf)
-            lang_code, lang_conf = detect_language(text_input) # Use initial text_input for language detection before refinement
-            logger.info(f"Detected language for refinement: {lang_code} (confidence {lang_conf:.2f})")
-            # Pass detected language to refine_query if it accepts it, assuming refine_query handles it
-            # For now, assuming refine_query might use it or it's passed to a model that needs it.
-            # Based on ai_module.py, refine_query takes detected_language as an argument.
-            refined_query = refine_query(text_input, detected_language=lang_code) 
+            # Refine query based on initial detection
+            refined_query = refine_query(text_input, detected_language=lang_code)
             logger.info("Refined query: %s", refined_query)
         else:
             refined_query = text_input
             logger.info("Query refinement disabled, using raw input: %s", refined_query)
-            # Detect language on the raw input if refinement is off
-            lang_code, lang_conf = detect_language(refined_query)
-            logger.info(f"Detected language: {lang_code} (confidence {lang_conf:.2f})")
 
         # Log intent interpretation after refinement
         intent, confidence = classify_intent(refined_query)

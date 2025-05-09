@@ -1204,11 +1204,11 @@ def setup_api_routes(app, queue):
                     last = msg['content']
                     break
             if last:
-                # Zapisz odpowiedź asystenta do chat_history z user_id użytkownika (nie NULL)
+                # Zapisz odpowiedź asystenta do chat_history z user_id jako NULL
                 with get_db_connection() as conn:
                     conn.execute(
                         "INSERT INTO chat_history (message, user_id, timestamp) VALUES (?, ?, ?)",
-                        (last, user_id, datetime.utcnow())
+                        (last, None, datetime.utcnow())
                     )
                 # Strumieniuj odpowiedź po fragmentach
                 for chunk in [last[i:i+100] for i in range(0, len(last), 100)]:

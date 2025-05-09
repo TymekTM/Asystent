@@ -7,6 +7,8 @@ from __future__ import annotations
 import json
 import os
 import re
+# Precompile word regex for performance
+WORD_PATTERN = re.compile(r"\b\w+\b")
 import importlib
 import logging
 from functools import lru_cache
@@ -300,18 +302,38 @@ import langid  # Language detection library for broad language support
 
 @measure_performance
 def detect_language(text: str) -> Tuple[str, float]:
-    """Detect language using langid library for broad language coverage."""
+    """Fast heuristic language detection with diacritics and common word check, fallback to langid."""
     text = text.strip()
     if not text:
         return "", 0.0
-    # langid.classify returns (language_code, confidence_score)
-    lang, score = langid.classify(text)
-    # Ensure confidence is a float between 0 and 1
+    # Count Polish diacritics and common words
+    polish_dia = sum(text.count(ch) for ch in POLISH_DIACRITICS)
+    # Extract words using precompiled pattern
+    words = set(WORD_PATTERN.findall(text.lower()))
+    count_pl = sum(1 for w in words if w in COMMON_POLISH_WORDS)
+    count_en = sum(1 for w in words if w in COMMON_EN_WORDS)
+    total = len(words) or 1
+    # Decide based on diacritics and word lists
+    if polish_dia > 0 or count_pl > count_en:
+        confidence = min(1.0, (polish_dia + count_pl) / total)
+        return "pl", confidence
+    if count_en > 0:
+        confidence = min(1.0, count_en / total)
+        return "en", confidence
+    # Fallback to langid for other languages
     try:
+        lang, score = langid.classify(text)
         confidence = float(score)
-    except (TypeError, ValueError):
-        confidence = 0.0
+    except Exception:
+        lang, confidence = "", 0.0
     return lang, confidence
+# --- Asynchronous variant for non-blocking language detection ---
+import asyncio
+
+async def detect_language_async(text: str) -> Tuple[str, float]:
+    """Execute detect_language in thread for async contexts."""
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(None, detect_language, text)
 
 
 # ---------------------------------------------------------------- refiner ----

@@ -22,7 +22,6 @@
 ## Fixes
 - Zweryfikować działanie innych rzeczy w core (timer działa)
 - Fix config page to corectly dosplay sound devices
-- Historia chat się nie wyświetla
 
 ## Optimisations
 - Entire app start speed
@@ -32,6 +31,7 @@
 - Wakeword za pomocą open wake word
 - wykrywanie rozmówcy za pomocą speach brain
 - Wheel decide do robienia czego
+- Upgrade continue speak (question detection)
 
 ## Testing
 - Log all prompts send (final)
