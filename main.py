@@ -37,10 +37,6 @@ def run_assistant_process(queue: multiprocessing.Queue):
     logger.info("Starting Assistant process...")
     try:
         assistant = Assistant(command_queue=queue)
-        # Ustaw callback do obsługi zapytań (AI/STT)
-        # async def process_query_callback(text): # This callback seems unused with current Assistant.run_async()
-        #     await assistant.process_query(text)
-        # assistant.process_query_callback = process_query_callback
         asyncio.run(assistant.run_async())
     except KeyboardInterrupt:
         logger.info("Assistant process received KeyboardInterrupt. Exiting.")

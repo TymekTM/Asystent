@@ -261,12 +261,12 @@
     </form>
 </div>
 
-    <script>
-    // Inicjalizacja tooltipów Bootstrapa
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
+<script>
+    // Placeholder for updateApiKeyFields to prevent errors
+    function updateApiKeyFields() {
+        // No dynamic show/hide logic implemented currently
+    }
+
     // Obsługa odświeżania listy urządzeń audio
     async function refreshAudioDevices() {
         const selectElement = document.getElementById('mic-device-id-select');
@@ -304,11 +304,7 @@
             selectElement.innerHTML = '<option value="">Błąd ładowania urządzeń</option>';
         }
     }
-    document.addEventListener('DOMContentLoaded', function() {
-        refreshAudioDevices();
-        document.getElementById('refresh-mic-devices-btn').addEventListener('click', refreshAudioDevices);
-    });
-    </script>
+
 
     // Funkcja do obsługi wysyłania formularza
     async function saveConfig(event) {
@@ -352,7 +348,6 @@
                         current = current[subKey];
                     }
                 });
-            } else {
             } else {
                  // Handle top-level elements
                  if (element && element.type === 'checkbox') {
@@ -457,9 +452,18 @@
     document.getElementById('PROVIDER').addEventListener('change', updateApiKeyFields);
 
     document.addEventListener('DOMContentLoaded', () => {
-        refreshAudioDevices(); // Load devices on page load
-        // updateApiKeyFields(); // Niepotrzebne – wszystkie pola są widoczne
-    });
+        // Initialize Bootstrap tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+
+        // Load devices on page load and attach refresh button listener
+        refreshAudioDevices();
+        const refreshBtn = document.getElementById('refresh-mic-devices-btn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', refreshAudioDevices);
+        }
+        // updateApiKeyFields is placeholder for future logic
+        updateApiKeyFields();
     });
 
 </script>
