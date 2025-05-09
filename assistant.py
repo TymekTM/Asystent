@@ -14,6 +14,7 @@ from collections import deque # Import deque for conversation history
 from audio_modules.tts_module import TTSModule
 from audio_modules.speech_recognition import SpeechRecognizer
 from audio_modules.beep_sounds import play_beep
+import audio_modules.beep_sounds as beep_sounds
 from audio_modules.wakeword_detector import run_wakeword_detection
 
 # Import funkcji AI z nowego modułu
@@ -292,6 +293,10 @@ class Assistant:
 
     @measure_performance # Add decorator
     async def process_query(self, text_input: str, TextMode: bool = False):
+        # Mute beep sounds and TTS when in chat/text mode
+        beep_sounds.MUTE = bool(TextMode)
+        # Disable TTS in text/chat mode
+        self.tts.mute = bool(TextMode)
         local_current_query_should_re_listen: bool # Define local variable
 
         if TextMode == True:
@@ -445,7 +450,9 @@ class Assistant:
         if found_module_key and module_info:
             if module_info.get('sub_commands') and module_info.get('handler') == module_info['handler']: # Core-like plugin
                 handler = module_info['handler']
-                asyncio.create_task(asyncio.to_thread(play_beep, 'action'))
+                # Only play sound in voice mode, skip in chat/text mode
+                if not TextMode:
+                    asyncio.create_task(asyncio.to_thread(play_beep, 'action'))
                 try:
                     result = handler(actual_params_for_handler, self.conversation_history)
                     if inspect.isawaitable(result):
@@ -477,7 +484,9 @@ class Assistant:
                 if 'user_lang' in sig.parameters:
                     kwargs['user_lang'] = lang_code
                 
-                asyncio.create_task(asyncio.to_thread(play_beep, 'action'))
+                # Only play sound in voice mode
+                if not TextMode:
+                    asyncio.create_task(asyncio.to_thread(play_beep, 'action'))
                 try:
                     result = handler(**kwargs)
                     if inspect.isawaitable(result):
@@ -574,8 +583,9 @@ class Assistant:
                 description = module_info.get('description', description)
             if handler:
                 logger.info(f"Executing command: {found_module_key} (sub: {sub_action}) with params type: {type(actual_params_for_handler)}")
-                # Play beep asynchronously
-                asyncio.create_task(asyncio.to_thread(play_beep, "action"))
+                # Play beep asynchronously in voice mode only
+                if not TextMode:
+                    asyncio.create_task(asyncio.to_thread(play_beep, "action"))
                 # Parameter injection based on handler signature
                 sig = inspect.signature(handler)
                 sig_params = list(sig.parameters.keys())

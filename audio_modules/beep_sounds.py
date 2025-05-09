@@ -3,6 +3,8 @@ import os
 import logging
 
 logger = logging.getLogger(__name__)
+# Global mute flag to disable beeps (e.g., in chat/text mode)
+MUTE = False
 
 # Słownik mapujący typ dźwięku do ścieżki do pliku
 BEEP_SOUNDS = {
@@ -26,6 +28,9 @@ def play_beep(sound_type: str = "keyword", loop: bool = False) -> subprocess.Pop
                  Domyślnie False (dla pojedynczego odtwarzania).
     :return: Obiekt subprocess.Popen lub None.
     """
+    # If muted, skip playing sounds
+    if MUTE:
+        return None
     # Fallback for unknown tool types to a default sound or silence?
     # For now, just use the specific sound if available.
     beep_file = BEEP_SOUNDS.get(sound_type)

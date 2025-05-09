@@ -13,6 +13,8 @@ class TTSModule:
     INACTIVITY_THRESHOLD = 30  # seconds
 
     def __init__(self):
+        # Mute flag to disable TTS in text/chat mode
+        self.mute = False
         self.current_process = None
         self._last_activity = time.time()
         self._cleanup_task_started = False
@@ -60,6 +62,9 @@ class TTSModule:
 
     @measure_performance
     async def speak(self, text: str):
+        # Skip speaking if muted (e.g., in text/chat mode)
+        if getattr(self, 'mute', False):
+            return
         logger.info("TTS: %s", text)
         tts = Communicate(text, "pl-PL-MarekNeural")
         temp_filename = f"temp_tts_{uuid.uuid4().hex}.mp3"
