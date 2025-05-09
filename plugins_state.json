@@ -11,6 +11,18 @@
     },
     "see_screen_module": {
       "enabled": true
+    },
+    "open_web_module": {
+      "enabled": true
+    },
+    "core_module": {
+      "enabled": true
+    },
+    "memory_module": {
+      "enabled": true
+    },
+    "weather_module": {
+      "enabled": true
     }
   }
 }

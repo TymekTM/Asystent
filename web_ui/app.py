@@ -919,6 +919,74 @@ def setup_api_routes(app, queue):
         except Exception as e:
             logger.error(f"Failed to load plugins: {e}", exc_info=True)
             return jsonify({})
+    
+    # Enable or disable a plugin
+    @app.route('/api/plugins/<name>/enable', methods=['POST'])
+    @login_required(role="dev")
+    def api_plugin_enable(name):
+        """Enable a plugin by name."""
+        import os, json
+        plugins_file = os.path.join(os.path.dirname(__file__), '..', 'plugins_state.json')
+        try:
+            # load existing state
+            state = {}
+            if os.path.exists(plugins_file):
+                with open(plugins_file, 'r', encoding='utf-8') as f:
+                    state = json.load(f)
+            plugins = state.get('plugins', {})
+            # set enabled
+            plugins.setdefault(name, {})
+            plugins[name]['enabled'] = True
+            state['plugins'] = plugins
+            with open(plugins_file, 'w', encoding='utf-8') as f:
+                json.dump(state, f, indent=2, ensure_ascii=False)
+            # reload in assistant
+            try:
+                get_assistant_instance().load_plugins()
+            except Exception:
+                pass
+            return jsonify({"status": "enabled"}), 200
+        except Exception as e:
+            logger.error(f"Failed to enable plugin {name}: {e}", exc_info=True)
+            return jsonify({"error": str(e)}), 500
+
+    @app.route('/api/plugins/<name>/disable', methods=['POST'])
+    @login_required(role="dev")
+    def api_plugin_disable(name):
+        """Disable a plugin by name."""
+        import os, json
+        plugins_file = os.path.join(os.path.dirname(__file__), '..', 'plugins_state.json')
+        try:
+            state = {}
+            if os.path.exists(plugins_file):
+                with open(plugins_file, 'r', encoding='utf-8') as f:
+                    state = json.load(f)
+            plugins = state.get('plugins', {})
+            plugins.setdefault(name, {})
+            plugins[name]['enabled'] = False
+            state['plugins'] = plugins
+            with open(plugins_file, 'w', encoding='utf-8') as f:
+                json.dump(state, f, indent=2, ensure_ascii=False)
+            try:
+                get_assistant_instance().load_plugins()
+            except Exception:
+                pass
+            return jsonify({"status": "disabled"}), 200
+        except Exception as e:
+            logger.error(f"Failed to disable plugin {name}: {e}", exc_info=True)
+            return jsonify({"error": str(e)}), 500
+
+    @app.route('/api/plugins/<name>/reload', methods=['POST'])
+    @login_required(role="dev")
+    def api_plugin_reload(name):
+        """Reload a plugin by name."""
+        try:
+            # Trigger assistant to reload plugins
+            get_assistant_instance().load_plugins()
+            return jsonify({"status": "reloaded"}), 200
+        except Exception as e:
+            logger.error(f"Failed to reload plugin {name}: {e}", exc_info=True)
+            return jsonify({"error": str(e)}), 500
 
     @app.route('/api/performance_stats', methods=['GET', 'DELETE']) # Add DELETE method
     @login_required

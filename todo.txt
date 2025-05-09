@@ -19,15 +19,11 @@
 - Security review and improvements (rate limiting, audit logs, config secrets)
 - Spotify integration
 
-## Output Config
-- Allow assistant to ask question and instantly listen do what user wants to say (re-listen after TTS finishes)
-
 ## Fixes
 - Zweryfikować działanie innych rzeczy w core (timer działa)
 - Fix config page to corectly dosplay sound devices
 - Modules make sound while in chat mode
 - Historia chat się nie wyświetla
-- Włączy wyłącz plugin
 
 ## Optimisations
 - Entire app start speed
