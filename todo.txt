@@ -3,7 +3,9 @@
 ## Priority Tasks
 - Rozbudować weather na więcej opcji
 - Improved long-term memory (search, tagging, context linking, memory management)
-- Kontekst aplikacji V2 - Może nazwa okna?
+- Kontekst aplikacji V2 - to be tested/reimplemented
+- Wakeword za pomocą open wake word
+- Behaviour fixes
 
 ## Feature Enhancements
 - TTS and voice personalization (user-selectable voice, language, speed, test preview)
@@ -28,7 +30,6 @@
 - Manualne zapominanie historii poprzez voice chat
 - Fix duplicate code in web_ui/static/js/script.js (fetchAndDisplayMemories and attachDeleteMemoryListeners functions appear twice)
 - Fix error in escapeHtml function in script.js (it's declared but implementation is missing in the visible code)
-- Remove commented code line from test_see_screen_module_pytest.py (line 38: # Ensure screenshots folder is created)
 - Fix redundant DOMContentLoaded event listeners in script.js (multiple instances at lines 142, 244, 426)
 
 ## Optimisations
@@ -36,12 +37,9 @@
 - Refactor script.js to organize code better and avoid duplicate functions
 - Implement proper error handling in fetchAndDisplayMemories function 
 - Add loading indicators for long-running operations in web UI
-- Optimized audio device listing and selection
-- Cache audio device list with refresh option
 
 ## Upgrades
 - Whisper.cpp zamiast zwykłego
-- Wakeword za pomocą open wake word
 - Wykrywanie rozmówcy za pomocą speech brain
 - Wheel decide do robienia czego
 - Upgrade continue speak (question detection)

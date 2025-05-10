@@ -61,21 +61,17 @@
                             </label>
                             <input type="text" class="form-control" id="WAKE_WORD" name="WAKE_WORD" value="{{ config.WAKE_WORD }}">
                         </div>
-                        <!-- ... MIC_DEVICE_ID ... -->
                         <div class="mb-3">
                             <label for="MIC_DEVICE_ID" class="form-label">Urządzenie wejściowe (mikrofon)
                                 <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Wybierz urządzenie wejściowe audio. Kliknij przycisk odświeżania obok listy, aby zaktualizować dostępne urządzenia."></i>
                             </label>
-                            <div class="input-group">
-                                <select class="form-select" id="mic-device-id-select" name="MIC_DEVICE_ID">
-                                    <option value="" selected>Ładowanie urządzeń...</option>
-                                    <!-- Options will be populated by JavaScript -->
-                                </select>
-                                <button class="btn btn-outline-secondary device-refresh-btn" type="button" id="refresh-mic-devices-btn" data-bs-toggle="tooltip" title="Odśwież listę urządzeń">
-                                    <i class="fas fa-sync-alt"></i>
-                                </button>
-                            </div>
-                            <div class="form-text">Wybierz mikrofon, który ma być używany przez asystenta.</div>
+                            <select class="form-select" id="mic-device-id-select" name="MIC_DEVICE_ID" data-current-value="{{ config.MIC_DEVICE_ID }}">
+                                <option value="" selected>Ładowanie urządzeń...</option>
+                                <!-- Options will be populated by JavaScript -->
+                            </select>
+                            <button class="btn btn-outline-secondary device-refresh-btn" type="button" id="refresh-mic-devices-btn" data-bs-toggle="tooltip" title="Odśwież listę urządzeń">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
                         </div>
                         <!-- ... STT_SILENCE_THRESHOLD ... -->
                         <div class="mb-3">

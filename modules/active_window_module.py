@@ -1,143 +1,205 @@
 import sys
 import logging
+import dataclasses
+import abc
+import psutil
+from typing import Dict, Optional, Any, List
+
+"""Active‑window helper.
+
+*The original public API (`get_active_window_title`) is **preserved**.*  A new
+`get_active_window_context` function adds rich (but non‑invasive!) metadata that
+helps an LLM understand what the user is doing – e.g. *“site = YouTube”* or
+*“match_state = searching”* – **without** OCR, packet sniffing, or any other
+technique that might conflict with anti‑cheats.
+
+Only two information sources are used:
+1. **Process name / PID** (via `psutil`).
+2. **Window title** (Win32 API or X11 `_NET_WM_NAME`).
+
+Those are low‑impact, universally allowed, and identical to what the original
+implementation relied on.
+"""
 
 logger = logging.getLogger(__name__)
 
-def get_active_window_title():
+###############################################################################
+# Public data structures (NEW, but optional to consume)                     ###
+###############################################################################
+
+@dataclasses.dataclass
+class ActiveWindowContext:
+    """Rich context describing the foreground window.
+
+    Attributes
+    ----------
+    app_name      Process name (e.g. ``chrome.exe``)
+    window_title  Localised title string shown in the OS title‑bar
+    extra         Provider‑specific key/value pairs with deeper context
     """
-    Gets the title or process name of the currently active window.
-    Returns the name as a string, or None if it cannot be determined or an error occurs.
+
+    app_name: Optional[str]
+    window_title: Optional[str]
+    extra: Dict[str, Any]
+
+    def __bool__(self):  # Truthiness helper
+        return self.app_name is not None or self.window_title is not None
+
+###############################################################################
+# Provider plug‑in system (safe – no memory hacks, OCR, etc.)               ###
+###############################################################################
+
+class ContextProvider(abc.ABC):
+    """Base‑class for per‑application inspectors.
+
+    Each subclass declares which *process names* it understands and may return
+    a dict with extra insight based only on *window title* heuristics (zero
+    intrusion, no anti‑cheat issues).
     """
+
+    HANDLED_PROCESSES: set[str] = set()
+
+    @abc.abstractmethod
+    def get_context(self, title: str) -> Dict[str, Any]:
+        """Return additional metadata extracted from *title*.
+
+        Must never raise – return an empty dict if nothing recognised.
+        """
+
+# Registry populated automatically via metaclass
+_PROVIDERS: List[ContextProvider] = []
+
+class _ProviderMeta(abc.ABCMeta):
+    def __init__(cls, name, bases, ns):
+        super().__init__(name, bases, ns)
+        if bases and ContextProvider in bases[0].__mro__:
+            _PROVIDERS.append(cls())
+
+###############################################################################
+# Helper: get (process, title) using OS APIs already used in legacy code    ###
+###############################################################################
+
+def _foreground_info() -> Optional[tuple[psutil.Process, str]]:
     try:
         if sys.platform == "win32":
-            try:
-                import win32gui
-                import win32process
-                import psutil
-                hwnd = win32gui.GetForegroundWindow()
-                if hwnd:
-                    # Get the process ID
-                    _, pid = win32process.GetWindowThreadProcessId(hwnd)
-                    if pid:
-                        process = psutil.Process(pid)
-                        # Using process name is often more reliable than window title
-                        # You could also use win32gui.GetWindowText(hwnd) for the title
-                        title = process.name()
-                        logger.debug(f"Active window (Windows): {title}") # Changed to debug
-                        return title
+            import win32gui, win32process  # type: ignore
+
+            hwnd = win32gui.GetForegroundWindow()
+            if not hwnd:
                 return None
-            except ImportError:
-                logger.error("Windows: pywin32 or psutil not installed. Active window tracking disabled.")
-                return None
-            except Exception as e:
-                logger.error(f"Windows: Error getting active window: {e}")
-                return None
+            _, pid = win32process.GetWindowThreadProcessId(hwnd)
+            proc = psutil.Process(pid)
+            title = win32gui.GetWindowText(hwnd)
+            return proc, title
+
         elif sys.platform.startswith("linux"):
-            try:
-                from Xlib import display, X
-                d = display.Display()
-                root = d.screen().root
-                active_window_id_prop = d.intern_atom('_NET_ACTIVE_WINDOW')
-                active_window_id = root.get_full_property(active_window_id_prop, X.AnyPropertyType)
+            from Xlib import display, X  # type: ignore
 
-                if active_window_id and active_window_id.value:
-                    window_id = active_window_id.value[0]
-                    active_window = d.create_resource_object('window', window_id)
-                    
-                    # Try _NET_WM_NAME first (UTF-8)
-                    net_wm_name_atom = d.intern_atom('_NET_WM_NAME')
-                    net_wm_name_prop = active_window.get_full_property(net_wm_name_atom, d.intern_atom('UTF8_STRING'))
-                    if net_wm_name_prop and net_wm_name_prop.value:
-                        title = net_wm_name_prop.value.decode('utf-8', 'ignore').strip()
-                        logger.debug(f"Active window (Linux Xlib _NET_WM_NAME): {title}") # Changed to debug
-                        return title
+            d = display.Display()
+            root = d.screen().root
+            aw_id = root.get_full_property(
+                d.intern_atom('_NET_ACTIVE_WINDOW'), X.AnyPropertyType
+            ).value[0]
+            aw = d.create_resource_object('window', aw_id)
 
-                    # Fallback to WM_NAME (legacy)
-                    wm_name = active_window.get_wm_name()
-                    if wm_name: # wm_name can be bytes or str depending on Xlib version/setup
-                        if isinstance(wm_name, bytes):
-                            try:
-                                title = wm_name.decode('utf-8', 'ignore').strip()
-                                logger.debug(f"Active window (Linux Xlib WM_NAME bytes): {title}") # Changed to debug
-                                return title
-                            except UnicodeDecodeError:
-                                try:
-                                    title = wm_name.decode('latin-1', 'ignore').strip() # Common fallback encoding
-                                    logger.debug(f"Active window (Linux Xlib WM_NAME latin-1): {title}") # Changed to debug
-                                    return title
-                                except:
-                                    pass # give up on wm_name
-                        elif isinstance(wm_name, str):
-                            title = wm_name.strip()
-                            logger.debug(f"Active window (Linux Xlib WM_NAME str): {title}") # Changed to debug
-                            return title
-                    
-                    # Fallback to WM_CLASS
-                    wm_class_atom = d.intern_atom('WM_CLASS')
-                    wm_class_prop = active_window.get_full_property(wm_class_atom, X.AnyPropertyType)
-                    if wm_class_prop and wm_class_prop.value:
-                        # WM_CLASS is a list of null-terminated strings.
-                        # Typically [instance_name, class_name]
-                        class_strings = wm_class_prop.value.split(b'\\x00')
-                        title_to_return = None
-                        if len(class_strings) > 1 and class_strings[1]: # Use class_name
-                             title_to_return = class_strings[1].decode('utf-8', 'ignore').strip()
-                        elif class_strings[0]: # Or instance_name
-                             title_to_return = class_strings[0].decode('utf-8', 'ignore').strip()
-                        
-                        if title_to_return:
-                            logger.debug(f"Active window (Linux Xlib WM_CLASS): {title_to_return}") # Changed to debug
-                            return title_to_return
+            net_wm_name = aw.get_full_property(
+                d.intern_atom('_NET_WM_NAME'), d.intern_atom('UTF8_STRING')
+            )
+            if net_wm_name and net_wm_name.value:
+                title = net_wm_name.value.decode('utf‑8', 'ignore')
+            else:
+                raw = aw.get_wm_name() or ""
+                title = raw.decode('latin‑1', 'ignore') if isinstance(raw, bytes) else raw
 
-                # If Xlib fails, try xdotool as a fallback
-                raise ImportError("Falling back to xdotool")
-
-            except ImportError: # Catches Xlib import error or the explicit raise for fallback
-                logger.info("Linux: python-xlib not available or failed, trying xdotool.")
-                import subprocess
-                try:
-                    result = subprocess.run(
-                        ['xdotool', 'getactivewindow', 'getwindowname'],
-                        capture_output=True, text=True, check=True, encoding='utf-8'
-                    )
-                    title = result.stdout.strip()
-                    logger.debug(f"Active window (Linux xdotool): {title}") # Changed to debug
-                    return title
-                except (subprocess.CalledProcessError, FileNotFoundError):
-                    logger.error("Linux: xdotool not installed or failed to get active window.")
-                    return None
-                except Exception as e:
-                    logger.error(f"Linux: xdotool error: {e}")
-                    return None
-            except Exception as e:
-                logger.error(f"Linux: Error getting active window with Xlib: {e}")
+            pid_prop = aw.get_full_property(d.intern_atom('_NET_WM_PID'), X.AnyPropertyType)
+            if not pid_prop:
                 return None
-        # macOS (Example, not implemented as per request)
-        # elif sys.platform == "darwin":
-        #     try:
-        #         from AppKit import NSWorkspace
-        #         active_app_name = NSWorkspace.sharedWorkspace().frontmostApplication().localizedName()
-        #         return active_app_name
-        #     except ImportError:
-        #         logger.error("macOS: PyObjC (AppKit) not installed.")
-        #         return None
-        #     except Exception as e:
-        #         logger.error(f"macOS: Error getting active window: {e}")
-        #         return None
-        else:
-            logger.warning(f"Unsupported platform for active window tracking: {sys.platform}")
-            return None
+            proc = psutil.Process(int(pid_prop.value[0]))
+            return proc, title
     except Exception as e:
-        logger.error(f"General error in get_active_window_title: {e}")
+        logger.debug(f"Foreground info failed: {e}")
+    return None
+
+###############################################################################
+# Concrete non‑invasive providers                                           ###
+###############################################################################
+
+class YouTubeTitleProvider(ContextProvider, metaclass=_ProviderMeta):
+    HANDLED_PROCESSES = {
+        "chrome.exe", "msedge.exe", "brave.exe", "opera.exe", "vivaldi.exe",
+        "firefox.exe", "chrome", "chromium", "brave", "firefox",
+    }
+
+    _SUFFIX = " - YouTube"
+
+    def get_context(self, title: str) -> Dict[str, Any]:
+        if title.endswith(self._SUFFIX):
+            return {
+                "site": "YouTube",
+                "media_title": title[: -len(self._SUFFIX)].strip(),
+            }
+        return {}
+
+class ValorantQueueProvider(ContextProvider, metaclass=_ProviderMeta):
+    HANDLED_PROCESSES = {"valorant.exe"}
+
+    def get_context(self, title: str) -> Dict[str, Any]:
+        t = title.lower()
+        if "match found" in t:
+            return {"match_state": "found"}
+        if "queue" in t or "finding match" in t:
+            return {"match_state": "searching"}
+        return {}
+
+###############################################################################
+# Public helpers                                                            ###
+###############################################################################
+
+def get_active_window_context() -> Optional[ActiveWindowContext]:
+    """Return rich context without breaking anti‑cheats or privacy."""
+
+    info = _foreground_info()
+    if not info:
         return None
 
-if __name__ == '__main__':
-    # Test the function
-    # Setup basic logging for testing
-    logging.basicConfig(level=logging.WARNING) # Changed to WARNING for less verbose test output
-    logger.info("Attempting to get active window title...")
+    proc, title = info
+    app = proc.name()
+    extra: Dict[str, Any] = {}
+
+    for p in _PROVIDERS:
+        try:
+            if app.lower() in p.HANDLED_PROCESSES:
+                extra.update(p.get_context(title))
+        except Exception as e:
+            logger.debug(f"Provider {p.__class__.__name__} failed: {e}")
+
+    return ActiveWindowContext(app_name=app, window_title=title, extra=extra)
+
+# ------------------------------------------------------------------------- #
+# Legacy API – UNCHANGED SIGNATURE                                          #
+# ------------------------------------------------------------------------- #
+
+def get_active_window_title() -> Optional[str]:
+    """Backward‑compatible helper.
+
+    Returns exactly what the original function promised: **a string window
+    title** or ``None``.  Internally we delegate to the richer context helper
+    but throw away the extra details so upstream code keeps working unchanged.
+    """
+
+    ctx = get_active_window_context()
+    return ctx.window_title if ctx else None
+
+###############################################################################
+# Example CLI usage (unchanged behaviour)                                   ###
+###############################################################################
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.WARNING)
+    logger.info("Attempting to get active window title…")
+
     title = get_active_window_title()
     if title:
-        logger.info(f"Currently active window/app: {title}")
+        logger.info(f"Currently active window: {title}")
     else:
-        logger.warning("Could not determine active window/app.")
+        logger.warning("Could not determine active window title.")

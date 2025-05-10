@@ -388,6 +388,12 @@ def get_audio_input_devices():
         # Optionally return a default/error indicator
         devices.append({"id": "error", "name": "Nie można pobrać urządzeń", "is_default": False})
     return devices
+ 
+@app.route('/api/audio/devices', methods=['GET'])
+def api_audio_devices():
+    """API endpoint to list available audio input devices with IDs and names."""
+    devices = get_audio_input_devices()
+    return jsonify(devices)
 
 def load_ltm():
     if not os.path.exists(LTM_FILE):

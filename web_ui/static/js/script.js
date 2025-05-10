@@ -48,6 +48,54 @@ prefersDarkScheme.addEventListener('change', (e) => {
 console.log("Assistant CP UI script loaded.");
 
 
+// Audio device selection: cache and refresh
+let cachedAudioDevices = null;
+function populateAudioDevices(devices) {
+    const select = document.getElementById('mic-device-id-select');
+    if (!select) return;
+    const current = select.getAttribute('data-current-value');
+    select.innerHTML = '';
+    devices.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.id;
+        opt.textContent = d.name + (d.is_default ? ' (Domyślny)' : '');
+        if (current != null && d.id.toString() === current.toString()) {
+            opt.selected = true;
+        }
+        select.appendChild(opt);
+    });
+}
+async function loadAudioDevices(useCache = true) {
+    if (useCache && cachedAudioDevices) {
+        populateAudioDevices(cachedAudioDevices);
+        return;
+    }
+    try {
+        const res = await fetch('/api/audio/devices');
+        if (res.ok) {
+            const devices = await res.json();
+            cachedAudioDevices = devices;
+            populateAudioDevices(devices);
+        } else {
+            console.error('Failed to load audio devices');
+        }
+    } catch (e) {
+        console.error('Error fetching audio devices:', e);
+    }
+}
+// Load devices on page load and set up refresh button
+document.addEventListener('DOMContentLoaded', function() {
+    if (document.getElementById('mic-device-id-select')) {
+        // Load cached devices first; will fetch on first call
+        loadAudioDevices();
+        const btn = document.getElementById('refresh-mic-devices-btn');
+        if (btn) {
+            btn.addEventListener('click', function() {
+                loadAudioDevices(false);
+            });
+        }
+    }
+});
 // Example: Close flash messages after a delay
 document.addEventListener('DOMContentLoaded', (event) => {
     const alerts = document.querySelectorAll('.alert-dismissible');
