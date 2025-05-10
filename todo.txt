@@ -11,7 +11,10 @@
 
 ## Web UI and UX
 - Advanced user authentication and role management (roles, password reset, etc.)
-- Internationalizationok, (multi-language UI, easy translation)
+- Internationalization (multi-language UI, easy translation)
+- Improve microphone device selection with dynamic loading and refreshing
+- Implement audio device preview/test function in config page
+- Fix tooltip placement and width on smaller screens
 
 ## Integration and Security
 - API integrations: add more external services (weather, calendar, IoT, etc.) - MCP
@@ -20,17 +23,39 @@
 
 ## Fixes
 - Zweryfikować działanie innych rzeczy w core (timer działa)
-- Fix config page to corectly dosplay sound devices
-- When Ai wants to activate listening and user does the same at the same time(or similar times) it just hapens twice and funny stuff happens lol 
+- When AI wants to activate listening and user does the same at the same time(or similar times) it just happens twice and funny stuff happens lol 
+- ffplay download
+- Manualne zapominanie historii poprzez voice chat
+- Fix duplicate code in web_ui/static/js/script.js (fetchAndDisplayMemories and attachDeleteMemoryListeners functions appear twice)
+- Fix error in escapeHtml function in script.js (it's declared but implementation is missing in the visible code)
+- Remove commented code line from test_see_screen_module_pytest.py (line 38: # Ensure screenshots folder is created)
+- Fix redundant DOMContentLoaded event listeners in script.js (multiple instances at lines 142, 244, 426)
 
 ## Optimisations
 - Entire app start speed
+- Refactor script.js to organize code better and avoid duplicate functions
+- Implement proper error handling in fetchAndDisplayMemories function 
+- Add loading indicators for long-running operations in web UI
+- Optimized audio device listing and selection
+- Cache audio device list with refresh option
 
 ## Upgrades
 - Whisper.cpp zamiast zwykłego
 - Wakeword za pomocą open wake word
-- wykrywanie rozmówcy za pomocą speach brain
+- Wykrywanie rozmówcy za pomocą speech brain
 - Wheel decide do robienia czego
 - Upgrade continue speak (question detection)
+- Interakcje z przeglądarką
+- Add visual feedback for microphone and speech recognition status
+- Improve mobile UI/UX for voice interactions
 
 ## Testing
+- Consolidate testing approach between unittest and pytest frameworks
+- Improve test coverage for see_screen_module.py
+- Add proper cleanup for test files in test_see_screen_module.py (line 30)
+- Create automated tests for config page functionality
+- Add tests for audio device selection and handling
+  
+## Codebase TODO
+- In web_ui/app.py (line 1590): TODO: Implement proper password hashing and verification (e.g., using werkzeug.security)
+- In intent_system.py (line 23): TODO: Import register functions from other modules as they are created

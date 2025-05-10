@@ -75,6 +75,12 @@ def load_config():
                 if updated:
                     save_config(config)
 
+                # Fix type inconsistency for MIC_DEVICE_ID: ensure it's an int or None
+                if config.get('MIC_DEVICE_ID') is not None:
+                    try:
+                        config['MIC_DEVICE_ID'] = int(config['MIC_DEVICE_ID'])
+                    except (ValueError, TypeError):
+                        config['MIC_DEVICE_ID'] = None
                 return config
         except (json.JSONDecodeError, IOError) as e:
             logger.error(f"Error loading {CONFIG_FILE}: {e}. Using default config.")
