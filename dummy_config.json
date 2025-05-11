@@ -1,0 +1,29 @@
+{
+  "VOSK_MODEL_PATH": "vosk_model",
+  "WAKE_WORD": "asystencie",
+  "MIC_DEVICE_ID": null,
+  "STT_SILENCE_THRESHOLD": 600,
+  "PROVIDER": "openai",
+  "STT_MODEL": "gpt-4.1-nano",
+  "MAIN_MODEL": "gpt-4.1-nano",
+  "DEEP_MODEL": "openthinker",
+  "USE_WHISPER_FOR_COMMAND": true,
+  "WHISPER_MODEL": "openai/whisper-small",
+  "MAX_HISTORY_LENGTH": 20,
+  "LOW_POWER_MODE": false,
+  "EXIT_WITH_CONSOLE": true,
+  "DEV_MODE": false,
+  "AUTO_LISTEN_AFTER_TTS": false,
+  "TRACK_ACTIVE_WINDOW": true,
+  "API_KEYS": {
+    "OPENAI_API_KEY": "None",
+    "DEEPSEEK_API_KEY": "None",
+    "ANTHROPIC_API_KEY": "None"
+  },
+  "query_refinement": {
+    "enabled": true,
+    "model": "gpt-4.1-nano"
+  },
+  "version": "1.1.0",
+  "ACTIVE_WINDOW_POLL_INTERVAL": 5
+}

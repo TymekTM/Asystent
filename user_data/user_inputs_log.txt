@@ -11,3 +11,18 @@
 2025-05-09T20:31:10.753694 | Attack to the Mammutatus at Fadaton. | intent=none | conf=0.42
 2025-05-09T20:31:19.843229 | Attack to the Mamededas of Fadetom. | intent=none | conf=0.34
 2025-05-09T20:31:37.577607 | Jakiej aplikacji teraz używam? | intent=none | conf=0.07
+2025-05-10T14:09:56.354427 | Co aktualnie odłączam? | intent=none | conf=0.14
+2025-05-10T14:10:09.981859 | Co aktualnie odladam w Przylądku? | intent=none | conf=0.14
+2025-05-10T14:10:23.358384 | Nie, nie musisz. | intent=none | conf=0.22
+2025-05-10T14:11:03.913590 | Co mam aktualnie odfajkowane? | intent=none | conf=0.38
+2025-05-10T14:12:11.445393 | Co to jest ta aplikacja? | intent=none | conf=0.39
+2025-05-10T14:12:25.140565 | Attack to the Mamede das Otvathatom | intent=none | conf=0.32
+2025-05-10T14:12:47.388767 | Chodziło mi o aplikację, którą mam teraz otwartą, co ona robi. | intent=none | conf=0.15
+2025-05-10T14:13:29.837100 | Czy dzisiaj w Sosnowcu będzie padać? | intent=weather_query | conf=0.91
+2025-05-10T14:13:47.641346 | Tak, poproszę. | intent=none | conf=0.37
+2025-05-10T14:14:23.146381 | Czy dzisiaj w Krakowie będzie padać? | intent=weather_query | conf=0.90
+2025-05-11T18:08:05.422817 | Powiedz mi coś o sobie. | intent=about_assistant | conf=0.59
+2025-05-11T18:08:30.748644 | Dobrze, a sprawdzisz mi, jaka będzie pogoda na YouTube w Ładzie Sławowie? | intent=weather_query | conf=0.81
+2025-05-11T18:09:06.424627 | Odtworzysz mi YouTube? | intent=none | conf=0.32
+2025-05-11T18:09:23.235306 | Możesz to zrobić za pomocą komendy open, jak coś. | intent=none | conf=0.38
+2025-05-11T18:09:40.044654 | Tak, poproszę. | intent=none | conf=0.37

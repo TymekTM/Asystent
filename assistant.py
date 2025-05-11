@@ -873,7 +873,20 @@ class Assistant:
                 logger.info("Stopping command queue processing.")
                 return
             logger.info(f"Processing command from queue: {command}")
-            # Process the command (this is where the main logic happens)
+            # Handle internal commands from web UI or other processes
+            if isinstance(command, dict):
+                cmd_name = command.get('command') or command.get('action')
+                # Reload configuration on demand
+                if cmd_name == 'reload_config':
+                    self.reload_config_values()
+                    continue
+                # Manual activation trigger
+                if cmd_name == 'activate':
+                    self.trigger_manual_listen()
+                    continue
+                # Unknown dict-based command, skip
+                continue
+            # Process the command text (user query)
             try:
                 await self.process_query(command)
             except Exception as e:

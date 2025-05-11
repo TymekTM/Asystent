@@ -1,18 +1,28 @@
 import sounddevice as sd
 
-print("Dostępne urządzenia wejściowe (mikrofony):")
-devices = sd.query_devices()
-input_devices = [device for device in devices if device['max_input_channels'] > 0]
+def list_input_audio_devices():
+    """Returns a list of available audio input device descriptions."""
+    try:
+        devices = sd.query_devices()
+        result = []
+        for i, device in enumerate(devices):
+            if device.get('max_input_channels', 0) > 0:
+                result.append(f"{device.get('name')} (Index: {i})")
+        return result
+    except Exception as e:
+        # Return error indicator
+        return [f"Could not retrieve audio devices: {e}"]
 
-if not input_devices:
-    print("Nie znaleziono żadnych urządzeń wejściowych (mikrofonów).")
-else:
-    for i, device in enumerate(devices):
-         # Sprawdzamy, czy urządzenie ma kanały wejściowe
-         if device['max_input_channels'] > 0:
-              # Sprawdzamy, czy to domyślne urządzenie wejściowe systemu
-              is_default = (i == sd.default.device[0])
-              default_marker = " (Domyślny)" if is_default else ""
-              print(f"  ID: {i}, Nazwa: {device['name']}{default_marker}")
-
-print("\nSkopiuj ID wybranego mikrofonu i wklej je jako wartość dla 'MIC_DEVICE_ID' w pliku config.json.")
+if __name__ == '__main__':
+    # CLI behavior for listing devices
+    print("Dostępne urządzenia wejściowe (mikrofony):")
+    try:
+        devices = sd.query_devices()
+        for i, device in enumerate(devices):
+            if device.get('max_input_channels', 0) > 0:
+                is_default = (i == sd.default.device[0])
+                default_marker = " (Domyślny)" if is_default else ""
+                print(f"  ID: {i}, Nazwa: {device.get('name')}{default_marker}")
+    except Exception:
+        print("Nie można pobrać urządzeń wejściowych (mikrofony).")
+    print("\nSkopiuj ID wybranego mikrofonu i wklej je jako wartość dla 'MIC_DEVICE_ID' w pliku config.json.")

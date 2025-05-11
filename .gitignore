@@ -5,3 +5,4 @@ assistant_memory.db
 *.pyc
 __pycache__/
 .VSCodeCounter
+/user_data

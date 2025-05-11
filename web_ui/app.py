@@ -388,6 +388,43 @@ def get_audio_input_devices():
         # Optionally return a default/error indicator
         devices.append({"id": "error", "name": "Nie można pobrać urządzeń", "is_default": False})
     return devices
+
+# Public config page route for module-level app (for tests)
+@app.route('/config', methods=['GET', 'POST'], endpoint='config')
+def config_page_public():
+    """Configuration management page (public for tests)."""
+    from config import DEFAULT_CONFIG
+    if request.method == 'POST':
+        data = request.form
+        current = load_main_config()
+        # Handle MIC_DEVICE_ID
+        mic_val = data.get('MIC_DEVICE_ID', '')
+        try:
+            mic_id = int(mic_val)
+            current['MIC_DEVICE_ID'] = mic_id
+        except (ValueError, TypeError):
+            flash('Invalid MIC_DEVICE_ID', 'danger')
+            return render_template('config.html', config=current,
+                                   audio_devices=get_audio_input_devices(),
+                                   default_api_keys=DEFAULT_CONFIG.get('API_KEYS', {}))
+        # Update Wake Word
+        if 'WAKE_WORD' in data:
+            current['WAKE_WORD'] = data.get('WAKE_WORD')
+        # Update boolean fields
+        for key in ['USE_WHISPER_FOR_COMMAND', 'LOW_POWER_MODE', 'EXIT_WITH_CONSOLE', 'DEV_MODE', 'AUTO_LISTEN_AFTER_TTS']:
+            current[key] = True if data.get(key) == 'True' else False
+        # Save updated config
+        save_main_config(current)
+        flash('Configuration saved successfully!', 'success')
+        return render_template('config.html', config=current,
+                               audio_devices=get_audio_input_devices(),
+                               default_api_keys=DEFAULT_CONFIG.get('API_KEYS', {}))
+    else:
+        current = load_main_config()
+        return render_template('config.html', config=current,
+                               audio_devices=get_audio_input_devices(),
+                               default_api_keys=DEFAULT_CONFIG.get('API_KEYS', {}))
+    
  
 @app.route('/api/audio/devices', methods=['GET'])
 def api_audio_devices():
