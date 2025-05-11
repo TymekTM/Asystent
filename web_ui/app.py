@@ -12,6 +12,7 @@ import shutil
 import multiprocessing
 import re 
 import subprocess
+from audio_modules.ffmpeg_installer import ensure_ffmpeg_installed
 import tempfile
 import threading
 import queue
@@ -84,6 +85,8 @@ _startup_time = time.time()
 # --- Audio upload helpers ---
 def convert_audio(input_path: str) -> str:
     """Convert any audio file to WAV and return new path."""
+    # Ensure ffmpeg is installed and available
+    ensure_ffmpeg_installed()
     wav_path = input_path + '.wav'
     subprocess.run([
         'ffmpeg', '-y', '-i', input_path,

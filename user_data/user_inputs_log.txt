@@ -26,3 +26,4 @@
 2025-05-11T18:09:06.424627 | Odtworzysz mi YouTube? | intent=none | conf=0.32
 2025-05-11T18:09:23.235306 | Możesz to zrobić za pomocą komendy open, jak coś. | intent=none | conf=0.38
 2025-05-11T18:09:40.044654 | Tak, poproszę. | intent=none | conf=0.37
+2025-05-11T18:30:57.606105 | Yestiştahm | intent=none | conf=0.06

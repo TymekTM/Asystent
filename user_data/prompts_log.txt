@@ -181,3 +181,4 @@
 2025-05-11T18:09:40.048457 | {"role": "user", "content": "Możesz to zrobić za pomocą komendy open, jak coś.", "intent": "none", "confidence": 0.38004450249412236}
 2025-05-11T18:09:40.049300 | {"role": "assistant", "content": "Rozumiem, spróbuję to zrobić. Chcesz, żebym otworzyła główną stronę YouTube?"}
 2025-05-11T18:09:40.049782 | {"role": "user", "content": "Tak, poproszę.", "intent": "none", "confidence": 0.3706418437461333}
+2025-05-11T18:30:57.610022 | {"role": "user", "content": "Yestiştahm", "intent": "none", "confidence": 0.05730402324002544}

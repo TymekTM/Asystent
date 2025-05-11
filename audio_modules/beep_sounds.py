@@ -1,6 +1,7 @@
 import subprocess
 import os
 import logging
+from .ffmpeg_installer import ensure_ffmpeg_installed
 
 logger = logging.getLogger(__name__)
 # Global mute flag to disable beeps (e.g., in chat/text mode)
@@ -28,6 +29,8 @@ def play_beep(sound_type: str = "keyword", loop: bool = False) -> subprocess.Pop
                  Domyślnie False (dla pojedynczego odtwarzania).
     :return: Obiekt subprocess.Popen lub None.
     """
+    # Ensure ffmpeg/ffplay is installed before playback
+    ensure_ffmpeg_installed()
     # If muted, skip playing sounds
     if MUTE:
         return None

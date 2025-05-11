@@ -1,6 +1,7 @@
 import asyncio, logging, os, subprocess, uuid, threading
 from edge_tts import Communicate
 from performance_monitor import measure_performance
+from .ffmpeg_installer import ensure_ffmpeg_installed
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +74,8 @@ class TTSModule:
         try:
             await tts.save(temp_path)
             self.cancel()
+            # Ensure ffplay is available for playback
+            ensure_ffmpeg_installed()
             self.current_process = subprocess.Popen(
                 ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", temp_path]
             )
