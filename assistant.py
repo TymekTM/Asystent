@@ -155,7 +155,7 @@ class Assistant:
 
         if self.use_whisper:
             from audio_modules.whisper_asr import WhisperASR # This import is fine here for conditional init
-            self.whisper_asr = WhisperASR(model_name=self.whisper_model)
+            self.whisper_asr = WhisperASR(model_size=self.whisper_model)
         else:
             self.whisper_asr = None # Ensure it\'s defined even if not used
 

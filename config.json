@@ -9,7 +9,7 @@
   "MAIN_MODEL": "gpt-4.1-nano",
   "DEEP_MODEL": "openthinker",
   "USE_WHISPER_FOR_COMMAND": true,
-  "WHISPER_MODEL": "openai/whisper-small",
+  "WHISPER_MODEL": "base",
   "MAX_HISTORY_LENGTH": 20,
   "PLUGIN_MONITOR_INTERVAL": 30,
   "API_KEYS": {
