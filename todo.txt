@@ -4,7 +4,6 @@
 - Rozbudować weather na więcej opcji
 - Improved long-term memory (search, tagging, context linking, memory management)
 - Kontekst aplikacji V2 - to be tested/reimplemented
-- Wakeword za pomocą open wake word
 - Behaviour fixes
 
 ## Feature Enhancements
@@ -45,6 +44,7 @@
 - Interakcje z przeglądarką
 - Add visual feedback for microphone and speech recognition status
 - Improve mobile UI/UX for voice interactions
+- RAG
 
 ## Testing
 - Consolidate testing approach between unittest and pytest frameworks

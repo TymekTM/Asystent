@@ -28,7 +28,7 @@ from performance_monitor import get_average_times, measure_performance, clear_pe
 
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from config import load_config as load_main_config, save_config as save_main_config, CONFIG_FILE as MAIN_CONFIG_FILE, DEFAULT_CONFIG, _config
+from config import load_config as load_main_config, save_config as save_main_config, CONFIG_FILE_PATH as MAIN_CONFIG_FILE, DEFAULT_CONFIG, _config
 from database_manager import get_db_connection
 from database_models import init_schema
 # Ensure chat_history table exists

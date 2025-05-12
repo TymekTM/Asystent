@@ -35,7 +35,7 @@ from config import (
     VOSK_MODEL_PATH, MIC_DEVICE_ID, WAKE_WORD, STT_SILENCE_THRESHOLD,
     USE_WHISPER_FOR_COMMAND, WHISPER_MODEL, MAX_HISTORY_LENGTH, # Removed PLUGIN_MONITOR_INTERVAL
     LOW_POWER_MODE, DEV_MODE, # Import LOW_POWER_MODE and DEV_MODE directly
-    TRACK_ACTIVE_WINDOW, ACTIVE_WINDOW_POLL_INTERVAL # Import new config settings
+    TRACK_ACTIVE_WINDOW, ACTIVE_WINDOW_POLL_INTERVAL, WAKE_WORD_SENSITIVITY_THRESHOLD # Import new config settings
 )
 from config import _config
 QUERY_REFINEMENT_ENABLED = _config.get("query_refinement", {}).get("enabled", True)
@@ -85,6 +85,7 @@ class Assistant:
         self.vosk_model_path = vosk_model_path if vosk_model_path is not None else self.config.get('VOSK_MODEL_PATH', VOSK_MODEL_PATH) # Use default from import if not in JSON
         self.mic_device_id = mic_device_id if mic_device_id is not None else self.config.get('MIC_DEVICE_ID', MIC_DEVICE_ID)
         self.wake_word = (wake_word if wake_word is not None else self.config.get('WAKE_WORD', WAKE_WORD)).lower()
+        self.wake_word_sensitivity_threshold = self.config.get('WAKE_WORD_SENSITIVITY_THRESHOLD', WAKE_WORD_SENSITIVITY_THRESHOLD) # Load sensitivity
         self.stt_silence_threshold = stt_silence_threshold if stt_silence_threshold is not None else self.config.get('STT_SILENCE_THRESHOLD', STT_SILENCE_THRESHOLD)
         self.use_whisper = self.config.get('USE_WHISPER_FOR_COMMAND', USE_WHISPER_FOR_COMMAND)
         self.whisper_model = self.config.get('WHISPER_MODEL', WHISPER_MODEL)
@@ -251,6 +252,7 @@ class Assistant:
             self.config = load_config()
             # Update relevant attributes, falling back to original defaults if keys are missing
             self.wake_word = self.config.get('WAKE_WORD', WAKE_WORD).lower()
+            self.wake_word_sensitivity_threshold = self.config.get('WAKE_WORD_SENSITIVITY_THRESHOLD', WAKE_WORD_SENSITIVITY_THRESHOLD) # Reload sensitivity
             self.mic_device_id = self.config.get('MIC_DEVICE_ID', MIC_DEVICE_ID) # Note: Changing mic might require restart
             self.stt_silence_threshold = self.config.get('STT_SILENCE_THRESHOLD', STT_SILENCE_THRESHOLD)
             self.use_whisper = self.config.get('USE_WHISPER_FOR_COMMAND', USE_WHISPER_FOR_COMMAND)
@@ -917,9 +919,12 @@ class Assistant:
                         try: self.speech_recognizer.audio_q.get_nowait()
                         except queue.Empty: break
                 else:
-                    # Put other data back if it wasn't the signal (shouldn't happen often)
-                    logger.warning("Unexpected item found in audio queue during signal check. Item: %s", signal)
-                    # self.speech_recognizer.audio_q.put(signal) # Careful about re-queuing
+                    # Non-sentinel audio data during manual trigger check: re-queue and suppress warning
+                    try:
+                        self.speech_recognizer.audio_q.put_nowait(signal)
+                    except Exception:
+                        pass
+                    logger.debug("Re-queued non-sentinel audio chunk during manual trigger check.")
             except queue.Empty:
                 pass # No signal, continue normally
             except Exception as e:
@@ -991,23 +996,22 @@ class Assistant:
                         logger.error(f"Wake word detection task failed: {e}", exc_info=True)
                         # time.sleep(2) # Blocking sleep in thread before retrying
 
-                # Start/Restart the wake word detection task in the main event loop's executor
-                logger.info("Starting/Restarting wake word detection task...")
-                # We pass the synchronous process_audio method's context (self)
-                # and the necessary components to run_wakeword_detection.
-                # run_wakeword_detection itself needs to handle calling process_query via run_coroutine_threadsafe.
-                wake_word_task_future = asyncio.run_coroutine_threadsafe(
-                    run_wakeword_detection( # This should be an async function now
-                        self.speech_recognizer,
-                        self.wake_word,
-                        self.tts,
-                        self.use_whisper,
-                        self.process_query, # Pass the async coroutine
-                        self.loop, # Pass the loop for scheduling back
-                        self.whisper_asr
-                    ), self.loop
+                # Start/Restart the wake word detection task in a background thread
+                logger.info("Starting/Restarting wake word detection task in executor...")
+                # Offload blocking detection loop to thread pool
+                wake_word_task = self.loop.run_in_executor(
+                    None,
+                    run_wakeword_detection,
+                    self.speech_recognizer,
+                    self.wake_word,
+                    self.tts,
+                    self.use_whisper,
+                    self.process_query, # Pass the bound method process_query
+                    self.loop,
+                    self.wake_word_sensitivity_threshold, # Pass sensitivity
+                    self.whisper_asr
                 )
-                logger.info("Wake word detection task submitted to event loop.")
+                wake_word_task_future = asyncio.ensure_future(wake_word_task, loop=self.loop)
 
 
             # --- Wait / Yield ---

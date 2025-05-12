@@ -1,19 +1,31 @@
 {
   "VOSK_MODEL_PATH": "vosk_model",
-  "WAKE_WORD": "asystencie",
+  "WAKE_WORD": "gaja",
+  "WAKE_WORD_SENSITIVITY_THRESHOLD": 0.35,
   "MIC_DEVICE_ID": 14,
   "STT_SILENCE_THRESHOLD": 600,
-  "PROVIDER": "lmstudio",
-  "STT_MODEL": "gemma3:4b-it-q4_K_M",
-  "MAIN_MODEL": "gemma3:4b-it-q4_K_M",
+  "PROVIDER": "openai",
+  "STT_MODEL": "gpt-4.1-nano",
+  "MAIN_MODEL": "gpt-4.1-nano",
   "DEEP_MODEL": "openthinker",
   "USE_WHISPER_FOR_COMMAND": true,
   "WHISPER_MODEL": "openai/whisper-small",
   "MAX_HISTORY_LENGTH": 20,
   "PLUGIN_MONITOR_INTERVAL": 30,
   "API_KEYS": {
-    "OPENAI_API_KEY": "None",
-    "DEEPSEEK_API_KEY": "None",
-    "ANTHROPIC_API_KEY": "None"
-  }
+    "ANTHROPIC_API_KEY": "None",
+    "OPENAI_API_KEY": "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",
+    "DEEPSEEK_API_KEY": "None"
+  },
+  "LOW_POWER_MODE": false,
+  "EXIT_WITH_CONSOLE": true,
+  "DEV_MODE": false,
+  "query_refinement": {
+    "model": "gpt-4.1-nano",
+    "enabled": true
+  },
+  "version": "1.1.0",
+  "AUTO_LISTEN_AFTER_TTS": false,
+  "TRACK_ACTIVE_WINDOW": true,
+  "ACTIVE_WINDOW_POLL_INTERVAL": 5
 }

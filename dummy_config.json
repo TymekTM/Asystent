@@ -1,6 +1,7 @@
 {
   "VOSK_MODEL_PATH": "vosk_model",
   "WAKE_WORD": "asystencie",
+  "WAKE_WORD_SENSITIVITY_THRESHOLD": 0.35,
   "MIC_DEVICE_ID": null,
   "STT_SILENCE_THRESHOLD": 600,
   "PROVIDER": "openai",
