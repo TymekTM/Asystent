@@ -252,9 +252,9 @@
         const selectElement = document.getElementById('mic-device-id-select');
         const currentDeviceId = '{{ config.MIC_DEVICE_ID if config.MIC_DEVICE_ID is not none else "" }}';
         try {
-            const response = await fetch('/api/audio_devices');
+            const response = await fetch('/api/audio/devices'); // Changed from /api/audio_devices
             const devices = response.ok ? await response.json() : [];
-            selectElement.innerHTML = '';
+            selectElement.innerHTML = ''; // Clear existing options
             const defaultOption = document.createElement('option');
             defaultOption.value = '';
             defaultOption.textContent = 'Domyślny systemowy';

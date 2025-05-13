@@ -28,9 +28,6 @@
 - Zweryfikować działanie innych rzeczy w core (timer działa)
 - When AI wants to activate listening and user does the same at the same time(or similar times) it just happens twice and funny stuff happens lol 
 - Manualne zapominanie historii poprzez voice chat
-- Fix duplicate code in web_ui/static/js/script.js (fetchAndDisplayMemories and attachDeleteMemoryListeners functions appear twice)
-- Fix error in escapeHtml function in script.js (it's declared but implementation is missing in the visible code)
-- Fix redundant DOMContentLoaded event listeners in script.js (multiple instances at lines 142, 244, 426)
 
 ## Optimisations
 - Entire app start speed

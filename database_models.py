@@ -183,6 +183,21 @@ def _row_to_memory(row) -> Memory:
     # Map 'user_id' to 'user' for compatibility
     if 'user_id' in data:
         data['user'] = data.pop('user_id')
+    
+    # Convert timestamp string to datetime object
+    if 'timestamp' in data and isinstance(data['timestamp'], str):
+        try:
+            # Attempt to parse common ISO formats, adjust if your format is different
+            data['timestamp'] = datetime.fromisoformat(data['timestamp'].replace('Z', '+00:00'))
+        except ValueError:
+            try:
+                # Fallback for other common formats, e.g., "YYYY-MM-DD HH:MM:SS"
+                data['timestamp'] = datetime.strptime(data['timestamp'], '%Y-%m-%d %H:%M:%S')
+            except ValueError:
+                logger.error(f"Could not parse timestamp string: {data['timestamp']}")
+                # Handle error appropriately, e.g., set to None or raise, or use current time
+                data['timestamp'] = datetime.now() # Or None, depending on desired behavior
+
     return Memory(**data)
 
 def add_memory(content: str, user: str = "assistant") -> int:

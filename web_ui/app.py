@@ -23,6 +23,10 @@ import platform
 import markdown
 from performance_monitor import get_average_times, measure_performance, clear_performance_stats 
 
+# Define custom exception for file lock errors
+class LogFileLockedError(IOError):
+    pass
+
 # --- Configuration ---
 
 
@@ -392,6 +396,29 @@ def get_audio_input_devices():
         devices.append({"id": "error", "name": "Nie można pobrać urządzeń", "is_default": False})
     return devices
 
+# --- Authentication ---
+def login_required(_func=None, *, role="user"):
+    def decorator(fn):
+        @wraps(fn)
+        def decorated_view(*args, **kwargs):
+            if 'username' not in session:
+                flash("Please log in to access this page.", "warning")
+                return redirect(url_for('login'))
+            user = get_user_by_username(session['username'])
+            if not user:
+                session.clear()
+                flash("User not found.", "danger")
+                return redirect(url_for('login'))
+            if role == "dev" and user.role != "dev": # Corrected attribute access
+                flash("You do not have permission to access this page.", "danger")
+                return redirect(url_for('index'))
+            return fn(*args, **kwargs)
+        return decorated_view
+    if _func is None:
+        return decorator
+    else:
+        return decorator(_func)
+
 # Public config page route for module-level app (for tests)
 @app.route('/config', methods=['GET', 'POST'], endpoint='config')
 def config_page_public():
@@ -431,9 +458,10 @@ def config_page_public():
                                default_api_keys=DEFAULT_CONFIG.get('API_KEYS', {}))
     
  
-@app.route('/api/audio/devices', methods=['GET'])
+@app.route('/api/audio/devices', methods=['GET']) # Changed from /api/audio_devices
+@login_required
 def api_audio_devices():
-    """API endpoint to list available audio input devices with IDs and names."""
+    """API endpoint to get the list of audio input devices."""
     devices = get_audio_input_devices()
     return jsonify(devices)
 
@@ -629,7 +657,9 @@ def clear_conversation_history():
          return True
      except IOError as e:
          logger.error(f"IOError clearing/archiving history file {HISTORY_FILE}: {e}")
-         return False
+         if hasattr(e, 'winerror') and e.winerror == 32: # Specifically for WinError 32
+             raise LogFileLockedError(f"Log file {HISTORY_FILE} is locked by another process and cannot be archived.") from e
+         return False # For other IOErrors
      except Exception as e:
          logger.error(f"Unexpected error clearing history: {e}")
          return False
@@ -766,7 +796,7 @@ def setup_api_routes(app, queue):
                  config_data['API_KEYS'] = {k: '********' if v else '' for k, v in config_data['API_KEYS'].items()}
             return jsonify(config_data)
 
-    @app.route('/api/audio_devices', methods=['GET'])
+    @app.route('/api/audio/devices', methods=['GET']) # Changed from /api/audio_devices
     @login_required
     def api_audio_devices():
         """API endpoint to get the list of audio input devices."""
@@ -778,13 +808,20 @@ def setup_api_routes(app, queue):
     def api_history_route(): # Renamed
         """API endpoint for getting and clearing conversation history."""
         if request.method == 'DELETE':
-             logger.warning(f"Request to clear history received from user '{session.get('username')}'.")
-             if clear_conversation_history():
-                  logger.info("Conversation history cleared successfully.")
-                  return jsonify({"message": "Conversation history cleared and archived."}), 200
-             else:
-                  logger.error("Failed to clear conversation history.")
-                  return jsonify({"error": "Failed to clear history due to server error."}), 500
+            logger.warning(f"Request to clear history received from user '{session.get('username')}'.")
+            try:
+                if clear_conversation_history():
+                    logger.info("Conversation history cleared successfully.")
+                    return jsonify({"message": "Conversation history cleared and archived."}), 200
+                else:
+                    logger.error("Failed to clear conversation history due to an unspecified issue in clear_conversation_history.")
+                    return jsonify({"error": "Failed to clear history due to a server error (not a file lock)."}), 500
+            except LogFileLockedError as e:
+                logger.warning(f"Could not archive history: {e}")
+                return jsonify({"error": str(e), "detail": "The log file is currently in use by another process. Please try again later."}), 409 # Conflict
+            except Exception as e: # Catch any other unexpected errors
+                logger.error(f"Unexpected error during history clearing: {e}", exc_info=True)
+                return jsonify({"error": "An unexpected server error occurred."}), 500
         else: # GET
             logger.info(f"History requested by user '{session.get('username')}'.")
             history = get_conversation_history()
@@ -1378,6 +1415,7 @@ def setup_api_routes(app, queue):
                     except Exception:
                         pass
                 if isinstance(parsed, dict) and (parsed.get('command') or parsed.get('tool')):
+
                     # Tool call detected
                     ai_command = parsed.get('command') or parsed.get('tool')
                     ai_params = parsed.get('params', '')
@@ -1602,7 +1640,7 @@ def create_app(queue: multiprocessing.Queue):
     # --- Global error handlers ---
     @local_app.errorhandler(404)
     def handle_404(e):
-        return jsonify({'error': 'Not Found'}), 404
+        return jsonify({'error': 'Not Found'}),  404
     @local_app.errorhandler(500)
     def handle_500(e):
         # Log the actual error
@@ -1673,10 +1711,18 @@ def create_app(queue: multiprocessing.Queue):
             status_str = "Restarting"
         else:
             status_str = "Online"
+        
+        # Safely check wake_word_detector
+        wake_word_active = False
+        if _assistant_instance and hasattr(_assistant_instance, 'wake_word_detector') and _assistant_instance.wake_word_detector:
+            try:
+                wake_word_active = _assistant_instance.wake_word_detector.is_running()
+            except Exception as e:
+                logger.error(f"Error checking wake_word_detector status: {e}")
+
         assistant_status = {
-            "wake_word_active": _assistant_instance.wake_word_detector.is_running() if _assistant_instance and _assistant_instance.wake_word_detector else False,
-            # "stt_engine": "Whisper" if current_config.get('USE_WHISPER_FOR_COMMAND') else "Vosk", # Removed
-            "stt_engine": "Whisper", # Default to Whisper or make dynamic if other STTs are added
+            "wake_word_active": wake_word_active,
+            "stt_engine": "Whisper", 
             "mic_device_id": current_config.get('MIC_DEVICE_ID', 'Not Set')
         }
         return render_template('index.html', config=current_config, status=assistant_status)

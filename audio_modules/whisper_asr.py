@@ -69,11 +69,11 @@ class WhisperASR:
         if _gpu_ready():
             self.device = "cuda"
             os.environ.pop("CT2_FORCE_CPU", None)     # pozwól na GPU
-            log.info("GPU wykryte – używam CUDA.")
+            log.info("GPU wykryte - używam CUDA.")
         else:
             self.device = "cpu"
             os.environ["CT2_FORCE_CPU"] = "1"         # zablokuj CUDA w CT2
-            log.warning("GPU niedostępne (brak cuBLAS) – przechodzę na CPU.")
+            log.warning("GPU niedostępne (brak cuBLAS) - przechodzę na CPU.")
 
         self.compute_type = compute_type
         self.model_id = None
