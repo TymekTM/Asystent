@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+    <!-- Background circle -->
+    <circle cx="100" cy="100" r="90" fill="#98E6C0" />
+    
+    <!-- Inner circle -->
+    <circle cx="100" cy="100" r="70" fill="#B0D9E8" opacity="0.5" />
+    
+    <!-- Leaf elements symbolizing nature/growth -->
+    <path d="M100,55 C130,75 140,105 120,125 C100,145 80,135 70,115 C60,95 70,75 100,55 Z" fill="#F5D6A0" />
+    <path d="M100,55 C70,75 60,105 80,125 C100,145 120,135 130,115 C140,95 130,75 100,55 Z" fill="#98E6C0" />
+    
+    <!-- G for Gaja -->
+    <path d="M88,140 C75,140 65,130 65,112 C65,94 75,84 90,84 C98,84 105,87 110,94 L100,104 C98,100 95,98 90,98 C83,98 79,104 79,112 C79,120 83,126 91,126 C95,126 98,124 100,122 L100,116 L90,116 L90,104 L112,104 L112,128 C107,136 99,140 88,140 Z" fill="#222222" />
+</svg>

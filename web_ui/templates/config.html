@@ -1,4 +1,4 @@
-<!-- filepath: f:\Asystent\web_ui\templates\config.html -->
+<!-- filepath: f:\Asystent\web_ui\templates\config.html.new -->
 {% extends 'base.html' %}
 
 {% block title %}Konfiguracja Asystenta{% endblock %}
@@ -9,442 +9,503 @@
 <style>
     .info-icon {
         margin-left: 5px;
-        color: #0d6efd; /* Bootstrap primary color */
+        color: #0d6efd; 
         cursor: help;
     }
-    .card-header i { /* Styl dla ikon w nagłówkach kart */
-        margin-right: 8px;
+    
+    .config-accordion {
+        margin-bottom: 1.5rem;
     }
-    /* Styl dla tooltipów (opcjonalnie, Bootstrap domyślnie stylizuje) */
+    
+    .config-accordion .accordion-item {
+        background-color: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        margin-bottom: 1rem;
+        border-radius: 0.75rem;
+        overflow: hidden;
+    }
+    
+    .config-accordion .accordion-button {
+        padding: 1rem 1.25rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        background-color: rgba(255, 255, 255, 0.05);
+        color: inherit;
+    }
+    
+    .config-accordion .accordion-button:not(.collapsed) {
+        color: var(--gaja-primary);
+        background-color: rgba(152, 230, 192, 0.05);
+        box-shadow: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .config-accordion .accordion-button:focus {
+        box-shadow: none;
+        border-color: rgba(152, 230, 192, 0.5);
+    }
+    
+    .config-accordion .accordion-button::after {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+    }
+    
+    .config-accordion .accordion-button i {
+        margin-right: 10px;
+    }
+    
+    .config-accordion .accordion-body {
+        padding: 1.25rem;
+    }
+    
     .tooltip-inner {
-        max-width: 300px; /* Maksymalna szerokość tooltipa */
+        max-width: 300px;
         text-align: left;
     }
+    
     .device-refresh-btn {
         margin-left: 10px;
     }
+    
     #mic-device-id-select {
-        max-width: calc(100% - 50px); /* Adjust width to leave space for button */
+        max-width: calc(100% - 50px);
         display: inline-block;
         vertical-align: middle;
+    }
+    
+    .config-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 1rem;
+    }
+    
+    /* Card styling */
+    .config-card {
+        border-radius: 0.75rem;
+        background-color: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+    
+    .config-card-header {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        font-weight: 600;
+    }
+    
+    .config-card-header i {
+        margin-right: 0.75rem;
+        color: var(--gaja-primary);
+    }
+    
+    .config-card-body {
+        padding: 1.25rem;
+    }
+    
+    .btn-save {
+        border-radius: 2rem;
+        padding: 0.5rem 2rem;
+        font-weight: 600;
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <h2><i class="fas fa-cogs"></i> Konfiguracja Asystenta</h2>
-    <p>Zarządzaj ustawieniami asystenta głosowego. Najedź kursorem na ikonę <i class="fas fa-info-circle info-icon"></i>, aby uzyskać więcej informacji.</p>
+    <h2 class="mb-3"><i class="fas fa-cogs"></i> Konfiguracja Asystenta</h2>
+    <p class="mb-4">Zarządzaj ustawieniami asystenta głosowego. Najedź kursorem na ikonę <i class="fas fa-info-circle info-icon"></i>, aby uzyskać więcej informacji.</p>
+    
     <div id="flash-message-container"></div> <!-- Container for flash messages -->
 
     <form id="config-form">
-        <div class="row g-4">
-
-            <!-- Audio Settings Column -->
-            <div class="col-lg-6 mb-4">
-                <div class="card h-100 shadow-sm rounded-4">
-                    <div class="card-header"><i class="fas fa-microphone-alt"></i> Ustawienia Audio</div>
-                    <div class="card-body">
-                        <!-- ... WAKE_WORD ... -->
-                        <div class="mb-3">
-                            <label for="WAKE_WORD" class="form-label">
-                                Słowo wybudzające
-                                <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Słowo lub fraza używana do aktywacji asystenta."></i>
-                            </label>
-                            <input type="text" class="form-control" id="WAKE_WORD" name="WAKE_WORD" value="{{ config.WAKE_WORD }}">
-                        </div>
-                        <div class="mb-3">
-                            <label for="MIC_DEVICE_ID" class="form-label">Urządzenie wejściowe (mikrofon)
-                                <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Wybierz urządzenie wejściowe audio. Kliknij przycisk odświeżania obok listy, aby zaktualizować dostępne urządzenia."></i>
-                            </label>
-                            <select class="form-select" id="mic-device-id-select" name="MIC_DEVICE_ID" data-current-value="{{ config.MIC_DEVICE_ID }}">
-                                <option value="" selected>Ładowanie urządzeń...</option>
-                                <!-- Options will be populated by JavaScript -->
-                            </select>
-                            <button class="btn btn-outline-secondary device-refresh-btn" type="button" id="refresh-mic-devices-btn" data-bs-toggle="tooltip" title="Odśwież listę urządzeń">
-                                <i class="fas fa-sync-alt"></i>
-                            </button>
-                        </div>
-                        <!-- ... STT_SILENCE_THRESHOLD ... -->
-                        <div class="mb-3">
-                            <label for="sttSilenceThreshold" class="form-label">
-                            Próg ciszy STT
-                            </label>
-                            <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Próg głośności (RMS) dla dynamicznego nagrywania komend. Niższa wartość = bardziej czuły na ciszę. Dostosuj, jeśli nagrywanie kończy się zbyt wcześnie/późno."></i>
-                            <input type="number" class="form-control" id="sttSilenceThreshold" name="STT_SILENCE_THRESHOLD" value="{{ config.STT_SILENCE_THRESHOLD }}" step="100">
-                        </div>
-                        <!-- ... AUTO_LISTEN_AFTER_TTS ... -->
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="AUTO_LISTEN_AFTER_TTS" name="AUTO_LISTEN_AFTER_TTS" {% if config.AUTO_LISTEN_AFTER_TTS %}checked{% endif %}>
-                            <label class="form-check-label" for="AUTO_LISTEN_AFTER_TTS">
-                                Automatyczne nasłuchiwanie po odpowiedzi TTS
-                                <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Włącz, aby asystent automatycznie zaczynał nasłuchiwać odpowiedzi użytkownika zaraz po zakończeniu mówienia (TTS)."></i>
-                            </label>
-                        </div>
-                        <!-- ... WHISPER_MODEL ... -->
-                        <div class="mb-3">
-                            <label for="WHISPER_MODEL" class="form-label">
-                                Model Whisper
-                                <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Nazwa modelu Whisper do użycia (np. 'openai/whisper-small', 'openai/whisper-large-v3'). Wymagane, jeśli używasz Whisper."></i>
-                            </label>
-                            <input type="text" class="form-control" id="WHISPER_MODEL" name="WHISPER_MODEL" value="{{ config.WHISPER_MODEL }}">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- LLM & Provider Settings Column -->
-            <div class="col-lg-6 mb-4">
-                <div class="card h-100 shadow-sm rounded-4">
-                    <div class="card-header"><i class="fas fa-brain"></i> Ustawienia Modeli Językowych (LLM)</div>
-                    <div class="card-body">
-                        <!-- ... PROVIDER ... -->
-                        <div class="mb-3">
-                            <label for="PROVIDER" class="form-label">
-                                Dostawca modelu
-                                <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Wybierz dostawcę usług AI (np. 'openai', 'deepseek'). Wpływa na używane modele i klucze API."></i>
-                            </label>
-                            <select class="form-select" id="PROVIDER" name="PROVIDER">
-                                <option value="openai" {% if config.PROVIDER == 'openai' %}selected{% endif %}>OpenAI</option>
-                                <option value="deepseek" {% if config.PROVIDER == 'deepseek' %}selected{% endif %}>Deepseek</option>
-                                <!-- Dodaj innych dostawców, jeśli są obsługiwani -->
-                            </select>
-                        </div>
-                        <!-- ... STT_MODEL ... -->
-                        <div class="mb-3">
-                            <label for="STT_MODEL" class="form-label">
-                                Model STT (jeśli inny niż Whisper)
-                                <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Model używany do transkrypcji mowy na tekst, jeśli nie używasz Whisper (np. starsze API OpenAI)."></i>
-                            </label>
-                            <input type="text" class="form-control" id="STT_MODEL" name="STT_MODEL" value="{{ config.STT_MODEL }}">
-                        </div>
-                        <!-- ... MAIN_MODEL ... -->
-                        <div class="mb-3">
-                            <label for="MAIN_MODEL" class="form-label">
-                                Główny model konwersacyjny
-                                <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Model używany do standardowych odpowiedzi i zadań (np. 'gpt-4.1-nano', 'deepseek-chat')."></i>
-                            </label>
-                            <input type="text" class="form-control" id="MAIN_MODEL" name="MAIN_MODEL" value="{{ config.MAIN_MODEL }}">
-                        </div>
-                        <!-- ... DEEP_MODEL ... -->
-                        <div class="mb-3">
-                            <label for="DEEP_MODEL" class="form-label">
-                                Model "głębokiego myślenia"
-                                <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Potężniejszy model używany do złożonych zadań, analizy, generowania kodu (np. 'openthinker', 'gpt-4-turbo', 'deepseek-coder')."></i>
-                            </label>
-                            <input type="text" class="form-control" id="DEEP_MODEL" name="DEEP_MODEL" value="{{ config.DEEP_MODEL }}">
-                        </div>
-                        <hr>
-                        <!-- ... Query Refinement ... -->
-                        <h6><i class="fas fa-filter"></i> Uściślanie Zapytań</h6>
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" id="query_refinement.enabled" name="query_refinement.enabled" {% if config.query_refinement.enabled %}checked{% endif %}>
-                            <label class="form-check-label" for="query_refinement.enabled">
-                                Włącz uściślanie zapytań
-                                <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Jeśli zaznaczone, asystent może próbować przeformułować lub doprecyzować Twoje zapytanie przed przetworzeniem, aby uzyskać lepsze wyniki."></i>
-                            </label>
-                        </div>
-                        <div class="mb-3">
-                            <label for="query_refinement.model" class="form-label">
-                                Model do uściślania
-                                <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Model LLM używany do procesu uściślania zapytań (np. \'gpt-4.1-nano\')."></i>
-                            </label>
-                            <input type="text" class="form-control" id="query_refinement.model" name="query_refinement.model" value="{{ config.query_refinement.model }}">
+        <div class="accordion config-accordion" id="configAccordion">
+            <!-- Audio Settings Section -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingAudio">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAudio" aria-expanded="true" aria-controls="collapseAudio">
+                        <i class="fas fa-microphone-alt"></i> Ustawienia Audio
+                    </button>
+                </h2>
+                <div id="collapseAudio" class="accordion-collapse collapse show" aria-labelledby="headingAudio" data-bs-parent="#configAccordion">
+                    <div class="accordion-body">
+                        <div class="config-grid">
+                            <!-- Wake Word -->
+                            <div class="mb-3">
+                                <label for="WAKE_WORD" class="form-label">
+                                    Słowo wybudzające
+                                    <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Słowo lub fraza używana do aktywacji asystenta."></i>
+                                </label>
+                                <input type="text" class="form-control" id="WAKE_WORD" name="WAKE_WORD" value="{{ config.WAKE_WORD }}">
+                            </div>
+                            
+                            <!-- Mic Device -->
+                            <div class="mb-3">
+                                <label for="MIC_DEVICE_ID" class="form-label">Urządzenie wejściowe (mikrofon)
+                                    <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Wybierz urządzenie wejściowe audio. Kliknij przycisk odświeżania obok listy, aby zaktualizować dostępne urządzenia."></i>
+                                </label>
+                                <div class="d-flex">
+                                    <select class="form-select" id="mic-device-id-select" name="MIC_DEVICE_ID" data-current-value="{{ config.MIC_DEVICE_ID }}">
+                                        <option value="" selected>Ładowanie urządzeń...</option>
+                                    </select>
+                                    <button class="btn btn-outline-secondary device-refresh-btn" type="button" id="refresh-mic-devices-btn" data-bs-toggle="tooltip" title="Odśwież listę urządzeń">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- STT Silence Threshold -->
+                            <div class="mb-3">
+                                <label for="sttSilenceThreshold" class="form-label">
+                                    Próg ciszy STT
+                                    <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Próg głośności (RMS) dla dynamicznego nagrywania komend. Niższa wartość = bardziej czuły na ciszę. Dostosuj, jeśli nagrywanie kończy się zbyt wcześnie/późno."></i>
+                                </label>
+                                <input type="number" class="form-control" id="sttSilenceThreshold" name="STT_SILENCE_THRESHOLD" value="{{ config.STT_SILENCE_THRESHOLD }}" step="100">
+                            </div>
+                            
+                            <!-- Auto Listen -->
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="AUTO_LISTEN_AFTER_TTS" name="AUTO_LISTEN_AFTER_TTS" {% if config.AUTO_LISTEN_AFTER_TTS %}checked{% endif %}>
+                                    <label class="form-check-label" for="AUTO_LISTEN_AFTER_TTS">
+                                        Automatyczne nasłuchiwanie po odpowiedzi TTS
+                                        <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Włącz, aby asystent automatycznie zaczynał nasłuchiwać odpowiedzi użytkownika zaraz po zakończeniu mówienia (TTS)."></i>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Whisper Model -->
+                            <div class="mb-3">
+                                <label for="WHISPER_MODEL" class="form-label">
+                                    Model Whisper
+                                    <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Nazwa modelu Whisper do użycia (np. 'openai/whisper-small', 'openai/whisper-large-v3'). Wymagane, jeśli używasz Whisper."></i>
+                                </label>
+                                <input type="text" class="form-control" id="WHISPER_MODEL" name="WHISPER_MODEL" value="{{ config.WHISPER_MODEL }}">
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Performance & Behavior Column -->
-             <div class="col-lg-6 mb-4">
-                <div class="card h-100 shadow-sm rounded-4">
-                    <div class="card-header"><i class="fas fa-tachometer-alt"></i> Wydajność i Zachowanie</div>
-                    <div class="card-body">
-                        <!-- ... MAX_HISTORY_LENGTH ... -->
-                        <div class="mb-3">
-                            <label for="MAX_HISTORY_LENGTH" class="form-label">
-                                Maksymalna długość historii
-                                <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Maksymalna liczba ostatnich wiadomości przechowywanych w krótkoterminowej pamięci konwersacji."></i>
-                            </label>
-                            <input type="number" class="form-control" id="MAX_HISTORY_LENGTH" name="MAX_HISTORY_LENGTH" value="{{ config.MAX_HISTORY_LENGTH }}">
-                        </div>
-                        <!-- ... LOW_POWER_MODE ... -->
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="LOW_POWER_MODE" name="LOW_POWER_MODE" {% if config.LOW_POWER_MODE %}checked{% endif %}>
-                            <label class="form-check-label" for="LOW_POWER_MODE">
-                                Tryb niskiego zużycia energii
-                                <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Ogranicza użycie zasobów, może wpływać na szybkość reakcji lub jakość niektórych funkcji. Przydatne na słabszych urządzeniach."></i>
-                            </label>
-                        </div>
-                        <!-- ... EXIT_WITH_CONSOLE ... -->
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="EXIT_WITH_CONSOLE" name="EXIT_WITH_CONSOLE" {% if config.EXIT_WITH_CONSOLE %}checked{% endif %}>
-                            <label class="form-check-label" for="EXIT_WITH_CONSOLE">
-                                Zakończ razem z konsolą
-                                <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Jeśli zaznaczone, zamknięcie okna konsoli zakończy działanie asystenta."></i>
-                            </label>
+            
+            <!-- LLM Settings Section -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingLLM">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLLM" aria-expanded="false" aria-controls="collapseLLM">
+                        <i class="fas fa-brain"></i> Ustawienia Modeli Językowych (LLM)
+                    </button>
+                </h2>
+                <div id="collapseLLM" class="accordion-collapse collapse" aria-labelledby="headingLLM" data-bs-parent="#configAccordion">
+                    <div class="accordion-body">
+                        <div class="config-grid">
+                            <!-- Provider -->
+                            <div class="mb-3">
+                                <label for="PROVIDER" class="form-label">
+                                    Dostawca LLM
+                                    <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Wybierz dostawcę API modelu językowego."></i>
+                                </label>
+                                <select class="form-select" id="PROVIDER" name="PROVIDER">
+                                    <option value="ollama" {% if config.PROVIDER == 'ollama' %}selected{% endif %}>Ollama (lokalnie)</option>
+                                    <option value="openai" {% if config.PROVIDER == 'openai' %}selected{% endif %}>OpenAI</option>
+                                    <option value="anthropic" {% if config.PROVIDER == 'anthropic' %}selected{% endif %}>Anthropic (Claude)</option>
+                                    <option value="groq" {% if config.PROVIDER == 'groq' %}selected{% endif %}>Groq</option>
+                                    <option value="together" {% if config.PROVIDER == 'together' %}selected{% endif %}>Together AI</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Model Name -->
+                            <div class="mb-3">
+                                <label for="MODEL_NAME" class="form-label">
+                                    Nazwa modelu
+                                    <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Nazwa modelu używanego przez wybranego dostawcę LLM."></i>
+                                </label>
+                                <input type="text" class="form-control" id="MODEL_NAME" name="MODEL_NAME" value="{{ config.MODEL_NAME }}">
+                            </div>
+                            
+                            <!-- API Keys Configuration -->
+                            {% for provider_key, display_name in [
+                                ('OPENAI_API_KEY', 'OpenAI API Key'),
+                                ('ANTHROPIC_API_KEY', 'Anthropic API Key'),
+                                ('TOGETHER_API_KEY', 'Together AI API Key'),
+                                ('GROQ_API_KEY', 'Groq API Key')
+                            ] %}
+                            <div class="mb-3 api-key-field" id="api-key-{{ provider_key.lower().replace('_api_key', '') }}">
+                                <label for="API_KEYS.{{ provider_key }}" class="form-label">{{ display_name }}
+                                    <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Klucz API dla usług {{ display_name.split(' API')[0] }}."></i>
+                                </label>
+                                <input type="password" class="form-control" id="API_KEYS.{{ provider_key }}" name="API_KEYS.{{ provider_key }}" value="{{ config.API_KEYS[provider_key] if config.API_KEYS and provider_key in config.API_KEYS else '' }}" placeholder="Wprowadź klucz API">
+                            </div>
+                            {% endfor %}
+                            
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i> Wypełnij tylko te klucze API, które są potrzebne dla wybranego dostawcy.
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <div class="col-lg-6 mb-4">
-                <div class="card h-100 shadow-sm rounded-4">
-                    <div class="card-header"><i class="fas fa-key"></i> Klucze API</div>
-                    <div class="card-body">
-                    <div class="card-body">
-                        <div class="mb-3 api-key-field" id="api-key-openai">
-                            <label for="API_KEYS.OPENAI_API_KEY" class="form-label">OpenAI API Key
-                                <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Klucz API dla usług OpenAI (GPT, Whisper API)."></i>
-                            </label>
-                            <input type="password" class="form-control" id="API_KEYS.OPENAI_API_KEY" name="API_KEYS.OPENAI_API_KEY" value="{{ config.API_KEYS.OPENAI_API_KEY if config.API_KEYS and 'OPENAI_API_KEY' in config.API_KEYS else '' }}" placeholder="Wprowadź klucz API dla OpenAI">
+            
+            <!-- Performance Settings Section -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingPerformance">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePerformance" aria-expanded="false" aria-controls="collapsePerformance">
+                        <i class="fas fa-tachometer-alt"></i> Wydajność i Zachowanie
+                    </button>
+                </h2>
+                <div id="collapsePerformance" class="accordion-collapse collapse" aria-labelledby="headingPerformance" data-bs-parent="#configAccordion">
+                    <div class="accordion-body">
+                        <div class="config-grid">
+                            <!-- Max History Length -->
+                            <div class="mb-3">
+                                <label for="MAX_HISTORY_LENGTH" class="form-label">
+                                    Maksymalna długość historii
+                                    <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Maksymalna liczba ostatnich wiadomości przechowywanych w krótkoterminowej pamięci konwersacji."></i>
+                                </label>
+                                <input type="number" class="form-control" id="MAX_HISTORY_LENGTH" name="MAX_HISTORY_LENGTH" value="{{ config.MAX_HISTORY_LENGTH }}">
+                            </div>
+                            
+                            <!-- Low Power Mode -->
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="LOW_POWER_MODE" name="LOW_POWER_MODE" {% if config.LOW_POWER_MODE %}checked{% endif %}>
+                                    <label class="form-check-label" for="LOW_POWER_MODE">
+                                        Tryb oszczędzania energii
+                                        <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Zmniejsza zużycie zasobów kosztem niektórych funkcji. Przydatne dla słabszych urządzeń."></i>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- AI Base Path -->
+                            <div class="mb-3">
+                                <label for="AI_BASE_PATH" class="form-label">
+                                    Ścieżka bazowa AI
+                                    <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Ścieżka do katalogu zawierającego pliki konfiguracyjne i modele AI."></i>
+                                </label>
+                                <input type="text" class="form-control" id="AI_BASE_PATH" name="AI_BASE_PATH" value="{{ config.AI_BASE_PATH }}">
+                            </div>
                         </div>
-                        <div class="mb-3 api-key-field" id="api-key-deepseek">
-                            <label for="API_KEYS.DEEPSEEK_API_KEY" class="form-label">Deepseek API Key
-                                <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Klucz API dla usług Deepseek (modele chat/coder)."></i>
-                            </label>
-                            <input type="password" class="form-control" id="API_KEYS.DEEPSEEK_API_KEY" name="API_KEYS.DEEPSEEK_API_KEY" value="{{ config.API_KEYS.DEEPSEEK_API_KEY if config.API_KEYS and 'DEEPSEEK_API_KEY' in config.API_KEYS else '' }}" placeholder="Wprowadź klucz API dla Deepseek">
-                        </div>
-                        <div class="mb-3 api-key-field" id="api-key-anthropic">
-                            <label for="API_KEYS.ANTHROPIC_API_KEY" class="form-label">Anthropic API Key
-                                <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Klucz API dla usług Anthropic (Claude)."></i>
-                            </label>
-                            <input type="password" class="form-control" id="API_KEYS.ANTHROPIC_API_KEY" name="API_KEYS.ANTHROPIC_API_KEY" value="{{ config.API_KEYS.ANTHROPIC_API_KEY if config.API_KEYS and 'ANTHROPIC_API_KEY' in config.API_KEYS else '' }}" placeholder="Wprowadź klucz API dla Anthropic">
-                        </div>
-                        <p class="form-text">Wszystkie pola kluczy API są widoczne jednocześnie. Wypełnij tylko te, które są potrzebne dla wybranego dostawcy.</p>
-                    </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Development Settings Column -->
-            <div class="col-lg-6 mb-4">
-                <div class="card h-100 shadow-sm rounded-4">
-                    <div class="card-header"><i class="fas fa-code"></i> Ustawienia Deweloperskie</div>
-                    <div class="card-body">
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="DEV_MODE" name="DEV_MODE" {% if config.DEV_MODE %}checked{% endif %}>
-                            <label class="form-check-label" for="DEV_MODE">
-                                Tryb deweloperski
-                                <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Włącza dodatkowe logowanie, zapobiega rozładowywaniu modeli przy wyjściu i może aktywować inne funkcje deweloperskie."></i>
-                            </label>
-                        </div>
-                        <!-- Add other development settings here -->
                     </div>
                 </div>
             </div>
-
-        </div> <!-- End of main row -->
-
-        <button type="submit" class="btn btn-primary mt-3 mb-4"><i class="fas fa-save"></i> Zapisz Konfigurację</button>
-        <!-- Removed old save-status div, using flash message container now -->
+            
+            <!-- Development Settings Section -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingDev">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDev" aria-expanded="false" aria-controls="collapseDev">
+                        <i class="fas fa-code"></i> Ustawienia Deweloperskie
+                    </button>
+                </h2>
+                <div id="collapseDev" class="accordion-collapse collapse" aria-labelledby="headingDev" data-bs-parent="#configAccordion">
+                    <div class="accordion-body">
+                        <div class="config-grid">
+                            <!-- Dev Mode -->
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="DEV_MODE" name="DEV_MODE" {% if config.DEV_MODE %}checked{% endif %}>
+                                    <label class="form-check-label" for="DEV_MODE">
+                                        Tryb deweloperski
+                                        <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Włącza dodatkowe logowanie, zapobiega rozładowywaniu modeli przy wyjściu i może aktywować inne funkcje deweloperskie."></i>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Profile Mode -->
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="PROFILE_MODE" name="PROFILE_MODE" {% if config.PROFILE_MODE %}checked{% endif %}>
+                                    <label class="form-check-label" for="PROFILE_MODE">
+                                        Tryb profilowania
+                                        <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Włącza zbieranie statystyk wydajności funkcji Python."></i>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mb-5">
+            <button type="submit" id="save-config-btn" class="btn btn-gaja btn-save">
+                <i class="fas fa-save me-2"></i> Zapisz konfigurację
+            </button>
+        </div>
     </form>
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <script>
-    // Placeholder for updateApiKeyFields to prevent errors
-    function updateApiKeyFields() {
-        // No dynamic show/hide logic implemented currently
-    }
-
-    // Obsługa odświeżania listy urządzeń audio
-    async function refreshAudioDevices() {
-        const selectElement = document.getElementById('mic-device-id-select');
-        const currentDeviceId = '{{ config.MIC_DEVICE_ID if config.MIC_DEVICE_ID is not none else "" }}';
-        try {
-            const response = await fetch('/api/audio/devices'); // Changed from /api/audio_devices
-            const devices = response.ok ? await response.json() : [];
-            selectElement.innerHTML = ''; // Clear existing options
-            const defaultOption = document.createElement('option');
-            defaultOption.value = '';
-            defaultOption.textContent = 'Domyślny systemowy';
-            selectElement.appendChild(defaultOption);
-            let foundCurrent = false;
-            if (Array.isArray(devices) && devices.length > 0) {
+    // Keep your existing JavaScript here, and just update the visual elements
+    document.addEventListener('DOMContentLoaded', function() {
+        const configForm = document.getElementById('config-form');
+        const saveBtn = document.getElementById('save-config-btn');
+        const provider = document.getElementById('PROVIDER');
+        const refreshMicBtn = document.getElementById('refresh-mic-devices-btn');
+        
+        // Initialize tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+        
+        // Save config on form submit
+        configForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            saveConfig();
+        });
+        
+        // Show/hide API key fields based on selected provider
+        provider.addEventListener('change', function() {
+            updateApiKeyFields();
+        });
+        
+        // Refresh mic devices
+        refreshMicBtn.addEventListener('click', function() {
+            loadMicDevices();
+        });
+        
+        // Load mic devices on page load
+        loadMicDevices();
+        
+        // Show/hide API key fields on page load
+        updateApiKeyFields();
+        
+        // Function to save config
+        async function saveConfig() {
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Zapisywanie...';
+            
+            try {
+                // Collect form data into one object
+                const formData = new FormData(configForm);
+                let config = {};
+                
+                // Process form fields
+                for (const [key, value] of formData.entries()) {
+                    // Handle nested properties (like API_KEYS.OPENAI_API_KEY)
+                    if (key.includes('.')) {
+                        const [parent, child] = key.split('.');
+                        if (!config[parent]) config[parent] = {};
+                        config[parent][child] = value;
+                    } else {
+                        // Handle boolean values from checkboxes
+                        if (document.getElementById(key)?.type === 'checkbox') {
+                            config[key] = document.getElementById(key).checked;
+                        } 
+                        // Handle numeric values
+                        else if (!isNaN(value) && document.getElementById(key)?.type === 'number') {
+                            config[key] = Number(value);
+                        } 
+                        // Handle all other values as strings
+                        else {
+                            config[key] = value;
+                        }
+                    }
+                }
+                
+                // Send config to server
+                const response = await fetch('/api/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showFlashMessage('Konfiguracja została zapisana pomyślnie!', 'success');
+                } else {
+                    showFlashMessage(`Błąd zapisywania konfiguracji: ${result.error || 'Nieznany błąd'}`, 'danger');
+                    console.error('Error saving config:', result);
+                }
+            } catch (error) {
+                console.error('Network or other error saving config:', error);
+                showFlashMessage(`Błąd sieci lub serwera podczas zapisu: ${error}`, 'danger');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<i class="fas fa-save me-2"></i> Zapisz konfigurację';
+            }
+        }
+        
+        // Function to show flash messages dynamically
+        function showFlashMessage(message, category) {
+            const container = document.getElementById('flash-message-container');
+            if (!container) {
+                console.error("Flash message container not found!");
+                return;
+            }
+            
+            // Remove existing flash messages first
+            const existingAlerts = container.querySelectorAll('.alert');
+            existingAlerts.forEach(alert => alert.remove());
+            
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${category} alert-dismissible fade show mt-3`;
+            alertDiv.role = 'alert';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            container.appendChild(alertDiv);
+        }
+        
+        // Function to load microphone devices
+        async function loadMicDevices() {
+            const select = document.getElementById('mic-device-id-select');
+            const currentValue = select.getAttribute('data-current-value');
+            
+            select.disabled = true;
+            select.innerHTML = '<option value="">Ładowanie urządzeń...</option>';
+            refreshMicBtn.disabled = true;
+            
+            try {
+                const response = await fetch('/api/audio/devices');
+                const devices = await response.json();
+                
+                select.innerHTML = '';
+                
+                // Add default option
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = 'Wybierz urządzenie';
+                defaultOption.selected = !currentValue;
+                select.appendChild(defaultOption);
+                
+                // Add device options
                 devices.forEach(device => {
                     const option = document.createElement('option');
                     option.value = device.id;
-                    option.textContent = `${device.name} (ID: ${device.id})` + (device.is_default ? ' [Systemowy Domyślny]' : '');
-                    selectElement.appendChild(option);
-                    if (String(device.id) === currentDeviceId) {
-                        option.selected = true;
-                        foundCurrent = true;
-                    }
+                    option.textContent = device.name || `Urządzenie ${device.id}`;
+                    option.selected = device.id.toString() === currentValue;
+                    select.appendChild(option);
                 });
-            } else {
-                const noOption = document.createElement('option');
-                noOption.value = '';
-                noOption.textContent = 'Brak urządzeń audio';
-                noOption.disabled = true;
-                selectElement.appendChild(noOption);
+            } catch (error) {
+                console.error('Error loading mic devices:', error);
+                select.innerHTML = '<option value="">Błąd ładowania urządzeń</option>';
+            } finally {
+                select.disabled = false;
+                refreshMicBtn.disabled = false;
             }
-            if (!foundCurrent) defaultOption.selected = true;
-        } catch (error) {
-            console.error('Error fetching audio devices:', error);
-            selectElement.innerHTML = '<option value="">Błąd ładowania urządzeń</option>';
         }
-    }
-
-
-    // Funkcja do obsługi wysyłania formularza
-    async function saveConfig(event) {
-        event.preventDefault(); // Prevent default form submission
-
-        const form = document.getElementById('config-form');
-        const formData = new FormData(form);
-        const configData = {};
-
-        // Convert FormData to a plain object, handling nested keys and types
-        formData.forEach((value, key) => {
-            const element = form.elements[key]; // Get the form element itself
-            // Handle nested keys like 'API_KEYS.OPENAI_API_KEY' or 'query_refinement.enabled'
-            if (key.startsWith('API_KEYS.')) {
-                // API key fields: ensure correct structure
-                if (!configData.API_KEYS) configData.API_KEYS = {};
-                const apiKeyName = key.substring('API_KEYS.'.length);
-                if (element && element.type === 'password' && value === '') {
-                    // Don't send empty password fields to avoid overwriting existing keys unintentionally
+        
+        // Function to update API key fields
+        function updateApiKeyFields() {
+            const selectedProvider = provider.value;
+            const apiKeyFields = document.querySelectorAll('.api-key-field');
+            
+            apiKeyFields.forEach(field => {
+                const providerId = field.id.replace('api-key-', '');
+                
+                if ((selectedProvider === 'openai' && providerId === 'openai') ||
+                    (selectedProvider === 'anthropic' && providerId === 'anthropic') ||
+                    (selectedProvider === 'together' && providerId === 'together') ||
+                    (selectedProvider === 'groq' && providerId === 'groq')) {
+                    field.style.display = 'block';
                 } else {
-                    configData.API_KEYS[apiKeyName] = value;
+                    field.style.display = 'none';
                 }
-            } else if (key.includes('.')) {
-                // Other nested keys (e.g., query_refinement.enabled)
-                const keys = key.split('.');
-                let current = configData;
-                keys.forEach((subKey, index) => {
-                    if (index === keys.length - 1) {
-                        if (element && element.type === 'checkbox') {
-                            current[subKey] = element.checked;
-                        } else if (element && element.type === 'number') {
-                            const numValue = parseFloat(value);
-                            current[subKey] = isNaN(numValue) ? value : numValue;
-                        } else {
-                            current[subKey] = value;
-                        }
-                    } else {
-                        if (!current[subKey] || typeof current[subKey] !== 'object') {
-                            current[subKey] = {};
-                        }
-                        current = current[subKey];
-                    }
-                });
-            } else {
-                 // Handle top-level elements
-                 if (element && element.type === 'checkbox') {
-                     configData[key] = element.checked;
-                 } else if (element && element.type === 'number') {
-                     const numValue = parseFloat(value);
-                     configData[key] = isNaN(numValue) ? value : numValue;
-                 } else {
-                    configData[key] = value;
-                 }
-            }
-        });
-
-        // Ensure boolean values for checkboxes that might not be submitted if unchecked
-        // Checkboxes that are direct children of the form
-        ['LOW_POWER_MODE', 'EXIT_WITH_CONSOLE', 'DEV_MODE'].forEach(key => {
-             if (!(key in configData)) {
-                 configData[key] = false; // Set to false if not present in formData (means unchecked)
-             }
-        });
-         // Ensure nested boolean for query_refinement.enabled
-        if (!configData.query_refinement) {
-            configData.query_refinement = {};
-        }
-        if (!('enabled' in configData.query_refinement)) {
-             configData.query_refinement.enabled = false; // Set nested checkbox default
-        }
-
-        // Ensure API_KEYS structure exists if needed (though nested logic above should handle it)
-        if (!configData.API_KEYS) {
-            configData.API_KEYS = {};
-        }
-        // Remove empty API keys before sending (optional, depends on backend logic)
-        for (const key in configData.API_KEYS) {
-            if (configData.API_KEYS[key] === "") {
-                delete configData.API_KEYS[key];
-            }
-        }
-
-
-        console.log("Sending config:", JSON.stringify(configData, null, 2)); // Log data being sent
-
-        try {
-            const response = await fetch('/api/config', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    // Add CSRF token header if needed (e.g., from a meta tag or cookie)
-                    // 'X-CSRFToken': getCsrfToken()
-                },
-                body: JSON.stringify(configData)
             });
-
-            const result = await response.json();
-
-            if (response.ok) {
-                showFlashMessage('Konfiguracja zapisana pomyślnie.', 'success');
-            } else {
-                showFlashMessage(`Błąd zapisu konfiguracji: ${result.error || response.statusText || 'Nieznany błąd'}`, 'danger');
-                console.error('Error saving config:', result);
-            }
-        } catch (error) {
-            console.error('Network or other error saving config:', error);
-            showFlashMessage(`Błąd sieci lub serwera podczas zapisu: ${error}`, 'danger');
         }
-    }
-
-     // Helper to show flash messages dynamically
-    function showFlashMessage(message, category) {
-        const container = document.getElementById('flash-message-container');
-        if (!container) {
-            console.error("Flash message container not found!");
-            return;
-        }
-        // Remove existing flash messages first
-        const existingAlerts = container.querySelectorAll('.alert');
-        existingAlerts.forEach(alert => alert.remove());
-
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${category} alert-dismissible fade show mt-3`;
-        alertDiv.role = 'alert';
-        alertDiv.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        `;
-        container.appendChild(alertDiv); // Append to the dedicated container
-
-         // Auto-dismiss after 5 seconds
-        setTimeout(() => {
-            const alertInstance = bootstrap.Alert.getOrCreateInstance(alertDiv);
-            if (alertInstance) {
-                alertInstance.close();
-            }
-        }, 5000);
-    }
-
-
-    // Attach event listener to the form
-    document.getElementById('config-form').addEventListener('submit', saveConfig);
-
-    // document.getElementById('PROVIDER').addEventListener('change', updateApiKeyFields); // Niepotrzebne – wszystkie pola są widoczne
-    document.getElementById('PROVIDER').addEventListener('change', updateApiKeyFields);
-
-    document.addEventListener('DOMContentLoaded', () => {
-        // Initialize Bootstrap tooltips
-        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        tooltipTriggerList.map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
-
-        // Load devices on page load and attach refresh button listener
-        refreshAudioDevices();
-        const refreshBtn = document.getElementById('refresh-mic-devices-btn');
-        if (refreshBtn) {
-            refreshBtn.addEventListener('click', refreshAudioDevices);
-        }
-        // updateApiKeyFields is placeholder for future logic
-        updateApiKeyFields();
     });
-
 </script>
 {% endblock %}

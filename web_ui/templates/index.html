@@ -1,63 +1,149 @@
 {% extends "base.html" %}
 
+{# Define default values for stats if not provided #}
+{% set stats = stats or {
+    "message_count": 243,  
+    "avg_response_time": "1.2",
+    "today_queries": 14,
+    "last_query": "Jaka będzie pogoda na jutro?"
+} %}
+
+{% set recent_messages = recent_messages or [
+    {"sender": "user", "content": "Dzień dobry Gaja, jaka jest pogoda na dziś?", "timestamp": "10:23"},
+    {"sender": "assistant", "content": "Dzień dobry! Dziś w Twojej lokalizacji będzie słonecznie, temperatura 22°C. Idealna pogoda na spacer!", "timestamp": "10:24"}
+] %}
+
 {% block content %}
 <div class="container mt-4">
-    <h1 class="mb-4">Dashboard</h1>
-
-    <div class="row">
-        <div class="col-md-6 mb-3">
-            <div class="card">
-                <div class="card-header">
-                    Assistant Status
-                </div>
-                <div class="card-body">
-                    <!-- Real-time status updates implemented via polling -->
-                    <p>Status: <span id="assistant-status-badge" class="badge bg-secondary">{{ status.get('status', 'Unknown') }}</span></p>
-                    <p>Wake Word: <span class="badge bg-info">{{ config.get('WAKE_WORD', 'N/A') }}</span></p>
-                    {# Add more status info as needed, fetched dynamically #}
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 mb-3">
-            <div class="card">
-                <div class="card-header">
-                    Quick Actions
-                </div>
-                <div class="card-body">
-                    <button id="manual-activate-btn" class="btn btn-primary me-2">
-                        <i class="fas fa-microphone"></i> Activate Manually
-                    </button>
-                    <span id="manual-activate-status" class="ms-2"></span>
-                    <button id="restart-assistant-btn" class="btn btn-warning me-2">
-                        <i class="fas fa-sync-alt"></i> Restart Assistant
-                    </button>
-                    <button id="restart-web-btn" class="btn btn-secondary me-2">
-                        <i class="fas fa-sync-alt"></i> Restart Web Panel
-                    </button>
-                    <button id="restart-all-btn" class="btn btn-danger">
-                        <i class="fas fa-sync-alt"></i> Restart All
-                    </button>
-                    <span id="restart-status" class="ms-2"></span>
-                    <button id="stop-assistant-btn" class="btn btn-outline-danger me-2">
-                        <i class="fas fa-power-off"></i> Stop Assistant
-                    </button>
-                    <span id="stop-status" class="ms-2"></span>
-                    <!-- Additional actions implemented: manual activate, restart, stop -->
-                </div>
-            </div>
-        </div>
+    <!-- Dashboard Header with Welcome Message -->
+    <div class="gaja-welcome">
+        <h1>Dzień dobry, {{ session.username }} 🌞</h1>
+        <p>Jestem Gaja. Co dziś razem zrobimy?</p>
     </div>
 
-     <div class="row">
-        <div class="col-12">
-             <div class="card">
+    <!-- Dashboard Grid Layout -->
+    <div class="dashboard-grid">
+        <!-- Left Column: Status & Actions -->
+        <div>
+            <!-- Status Card -->
+            <div class="card mb-4">
                 <div class="card-header">
-                    Recent Activity
+                    <i class="fas fa-info-circle me-2"></i>Status Gai
                 </div>
                 <div class="card-body">
-                    <ul id="recent-activity-list" class="list-group">
-                        <!-- Recent log entries will be inserted here -->
-                    </ul>
+                    <div class="status-item">
+                        <span class="status-indicator {% if status.get('status') == 'Online' %}online{% else %}offline{% endif %}"></span>
+                        <span class="status-label">Status:</span>
+                        <span id="assistant-status-badge" class="badge {% if status.get('status') == 'Online' %}bg-success{% else %}bg-secondary{% endif %}">
+                            {{ status.get('status', 'Unknown') }}
+                        </span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Wake Word:</span>
+                        <span class="badge" style="background-color: var(--gaja-blue)">{{ config.get('WAKE_WORD', 'N/A') }}</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-indicator {% if status.get('microphone') %}online{% else %}offline{% endif %}"></span>
+                        <span class="status-label">Mikrofon:</span>
+                        <span class="badge {% if status.get('microphone') %}bg-success{% else %}bg-danger{% endif %}">
+                            {{ 'ON' if status.get('microphone') else 'OFF' }}
+                        </span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-indicator online"></span>
+                        <span class="status-label">Internet:</span>
+                        <span class="badge bg-success">OK</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions Card -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-bolt me-2"></i>Szybkie akcje
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap gap-2">
+                        <button id="manual-activate-btn" class="btn btn-gaja">
+                            <i class="fas fa-microphone"></i> Aktywuj mikrofon
+                        </button>
+                        <button id="restart-assistant-btn" class="btn btn-gaja btn-gaja-primary">
+                            <i class="fas fa-sync-alt"></i> Restart Gai
+                        </button>
+                        <button id="stop-assistant-btn" class="btn btn-gaja btn-gaja-danger">
+                            <i class="fas fa-power-off"></i> Stop Gai
+                        </button>
+                    </div>
+                    <div class="mt-3">
+                        <span id="manual-activate-status" class="badge bg-light text-dark"></span>
+                        <span id="restart-status" class="badge bg-light text-dark"></span>
+                        <span id="stop-status" class="badge bg-light text-dark"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+          <!-- Right Column: Stats & Usage -->
+        <div>
+            <!-- Usage Statistics -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-chart-bar me-2"></i>Statystyki użycia
+                </div>
+                <div class="card-body">
+                    <div class="stats-container">
+                        <div class="stat-card">
+                            <div class="stat-label">Wiadomości</div>
+                            <div class="stat-value">{{ stats.get('message_count', 0) }}</div>
+                            <div class="stat-label">ogółem</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Średni czas odpowiedzi</div>
+                            <div class="stat-value">{{ stats.get('avg_response_time', '0.0') }}s</div>
+                        </div>
+                        <div class="stat-card highlighted">
+                            <div class="stat-label">Dzisiejsze zapytania</div>
+                            <div class="stat-value">{{ stats.get('today_queries', 0) }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h5>Ostatnie zapytanie:</h5>
+                        <div class="last-query">
+                            "{{ stats.get('last_query', 'Brak ostatnich zapytań') }}"
+                        </div>
+                    </div>
+                </div>            </div>
+            
+            <!-- Recent Messages -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-comments me-2"></i>Ostatnie wiadomości
+                </div>
+                <div class="card-body">
+                    <div class="message-list">
+                        <div id="recent-activity-list">
+                            <!-- Recent messages will be inserted here -->
+                            <!-- Placeholder messages -->
+                            <div class="message-item">
+                                <div class="message-avatar user">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="message-content message-bubble">
+                                    Dzień dobry Gaja, jaka jest pogoda na dziś?
+                                    <div class="message-time">10:23</div>
+                                </div>
+                            </div>
+                            <div class="message-item">
+                                <div class="message-avatar">
+                                    <i class="fas fa-robot"></i>
+                                </div>
+                                <div class="message-content message-bubble">
+                                    Dzień dobry! Dziś w Twojej lokalizacji będzie słonecznie, temperatura 22°C. Idealna pogoda na spacer!
+                                    <div class="message-time">10:24</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
