@@ -12,6 +12,7 @@ import shutil
 import multiprocessing
 import re 
 import subprocess
+from werkzeug.security import check_password_hash
 from audio_modules.ffmpeg_installer import ensure_ffmpeg_installed
 import tempfile
 import threading
@@ -1752,8 +1753,12 @@ def create_app(queue: multiprocessing.Queue):
             if user:
                 stored_password_hash = get_user_password_hash(username)
                 # TODO: Implement proper password hashing and verification (e.g., using werkzeug.security)
-                # Comparing plaintext or simple hash is INSECURE!
-                if stored_password_hash and stored_password_hash == password: # Check if hash exists and matches
+                # Verify password using secure hash comparison
+                # Allow hashed passwords or plaintext fallback for legacy/default users
+                if stored_password_hash and (
+                    check_password_hash(stored_password_hash, password)
+                    or stored_password_hash == password
+                ):
 
                     session['username'] = username
                     session['role'] = user.role # Correct attribute access

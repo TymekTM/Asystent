@@ -91,14 +91,28 @@ def init_schema(seed_dev: bool = True) -> None:
         )
 
     if seed_dev:
-        add_user_if_absent(
-            username="dev",
-            password="devpassword",
-            role="dev",
+        # Reset or ensure default dev account without wiping database
+        default_username = "dev"
+        default_password = "devpassword"
+        default_role = "dev"
+        # Try to add dev user; if exists, update credentials
+        added = add_user_if_absent(
+            username=default_username,
+            password=default_password,
+            role=default_role,
             display_name="Dev",
             ai_persona="Admin",
         )
-        logger.debug("✅ Dev account ensured")
+        if not added:
+            # Update existing dev account with default password and settings
+            update_user(
+                default_username,
+                password=default_password,
+                role=default_role,
+                display_name="Dev",
+                ai_persona="Admin",
+            )
+        logger.debug("✅ Dev account ensured or reset to default credentials")
    
 
 

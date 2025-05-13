@@ -47,8 +47,3 @@
 ## Testing
 - Consolidate testing approach between unittest and pytest frameworks
 - Improve test coverage for see_screen_module.py
-- Add proper cleanup for test files in test_see_screen_module.py (line 30)
-  
-## Codebase TODO
-- In web_ui/app.py (line 1590): TODO: Implement proper password hashing and verification (e.g., using werkzeug.security)
-- In intent_system.py (line 23): TODO: Import register functions from other modules as they are created

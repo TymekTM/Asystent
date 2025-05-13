@@ -20,7 +20,6 @@ from performance_monitor import measure_performance
 from modules.search_module import search_handler as actual_module_search_handler
 from modules.search_module import register as register_search_module_command
 
-# TODO: Import register functions from other modules as they are created
 
 from modules.api_module import register as register_api_command
 from modules.see_screen_module import register as register_screenshot_command
