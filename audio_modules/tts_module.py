@@ -4,6 +4,7 @@ from performance_monitor import measure_performance
 from .ffmpeg_installer import ensure_ffmpeg_installed
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARNING)
 
 
 import glob

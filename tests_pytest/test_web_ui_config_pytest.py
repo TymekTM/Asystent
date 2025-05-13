@@ -4,7 +4,6 @@ import json
 
 # Sample configuration data to be used in tests
 SAMPLE_CONFIG = {
-    "VOSK_MODEL_PATH": "vosk_model",
     "WAKE_WORD": "gaja",
     "MIC_DEVICE_ID": 1,
     "STT_SILENCE_THRESHOLD": 600,
@@ -12,7 +11,7 @@ SAMPLE_CONFIG = {
     "STT_MODEL": "gpt-4.1-nano",
     "MAIN_MODEL": "gpt-4.1-nano",
     "DEEP_MODEL": "openthinker",
-    "USE_WHISPER_FOR_COMMAND": True,
+    # "USE_WHISPER_FOR_COMMAND": True, # Removed
     "WHISPER_MODEL": "openai/whisper-small",
     "MAX_HISTORY_LENGTH": 20,
     "PLUGIN_MONITOR_INTERVAL": 30,
@@ -65,11 +64,19 @@ def test_config_page_saves_correctly(client, app_context):
     client.get(url_for('config')) # Load page once if needed by app logic
 
     response = client.post(url_for('config'), data={
-        **SAMPLE_CONFIG, # Spread existing config
-        "WAKE_WORD": new_wake_word,
-        "MIC_DEVICE_ID": new_mic_id,
-        # Ensure all boolean fields that might be missing from form post are included
-        "USE_WHISPER_FOR_COMMAND": "True" if SAMPLE_CONFIG["USE_WHISPER_FOR_COMMAND"] else "",
+        # "VOSK_MODEL_PATH": SAMPLE_CONFIG["VOSK_MODEL_PATH"], # Removed
+        "WAKE_WORD": SAMPLE_CONFIG["WAKE_WORD"],
+        "MIC_DEVICE_ID": str(SAMPLE_CONFIG["MIC_DEVICE_ID"]),
+        "STT_SILENCE_THRESHOLD": str(SAMPLE_CONFIG["STT_SILENCE_THRESHOLD"]),
+        "PROVIDER": SAMPLE_CONFIG["PROVIDER"],
+        "STT_MODEL": SAMPLE_CONFIG["STT_MODEL"],
+        "MAIN_MODEL": SAMPLE_CONFIG["MAIN_MODEL"],
+        "DEEP_MODEL": SAMPLE_CONFIG["DEEP_MODEL"],
+        # "USE_WHISPER_FOR_COMMAND": "True" if SAMPLE_CONFIG["USE_WHISPER_FOR_COMMAND"] else "", # Removed
+        "WHISPER_MODEL": SAMPLE_CONFIG["WHISPER_MODEL"],
+        "MAX_HISTORY_LENGTH": str(SAMPLE_CONFIG["MAX_HISTORY_LENGTH"]),
+        "PLUGIN_MONITOR_INTERVAL": str(SAMPLE_CONFIG["PLUGIN_MONITOR_INTERVAL"]),
+        "API_KEYS[ANTHROPIC_API_KEY]": SAMPLE_CONFIG["API_KEYS"]["ANTHROPIC_API_KEY"],
         "LOW_POWER_MODE": "True" if SAMPLE_CONFIG["LOW_POWER_MODE"] else "",
         "EXIT_WITH_CONSOLE": "True" if SAMPLE_CONFIG["EXIT_WITH_CONSOLE"] else "",
         "DEV_MODE": "True" if SAMPLE_CONFIG["DEV_MODE"] else "",
@@ -91,10 +98,19 @@ def test_config_page_handles_invalid_mic_id(client, app_context):
         json.dump(SAMPLE_CONFIG, f)
 
     response = client.post(url_for('config'), data={
-        **SAMPLE_CONFIG,
+        # "VOSK_MODEL_PATH": SAMPLE_CONFIG["VOSK_MODEL_PATH"], # Removed
+        "WAKE_WORD": SAMPLE_CONFIG["WAKE_WORD"],
         "MIC_DEVICE_ID": "not_an_integer", # Invalid value
-         # Ensure all boolean fields that might be missing from form post are included
-        "USE_WHISPER_FOR_COMMAND": "True" if SAMPLE_CONFIG["USE_WHISPER_FOR_COMMAND"] else "",
+        "STT_SILENCE_THRESHOLD": str(SAMPLE_CONFIG["STT_SILENCE_THRESHOLD"]),
+        "PROVIDER": SAMPLE_CONFIG["PROVIDER"],
+        "STT_MODEL": SAMPLE_CONFIG["STT_MODEL"],
+        "MAIN_MODEL": SAMPLE_CONFIG["MAIN_MODEL"],
+        "DEEP_MODEL": SAMPLE_CONFIG["DEEP_MODEL"],
+        # "USE_WHISPER_FOR_COMMAND": "True" if SAMPLE_CONFIG["USE_WHISPER_FOR_COMMAND"] else "", # Removed
+        "WHISPER_MODEL": SAMPLE_CONFIG["WHISPER_MODEL"],
+        "MAX_HISTORY_LENGTH": str(SAMPLE_CONFIG["MAX_HISTORY_LENGTH"]),
+        "PLUGIN_MONITOR_INTERVAL": str(SAMPLE_CONFIG["PLUGIN_MONITOR_INTERVAL"]),
+        "API_KEYS[ANTHROPIC_API_KEY]": SAMPLE_CONFIG["API_KEYS"]["ANTHROPIC_API_KEY"],
         "LOW_POWER_MODE": "True" if SAMPLE_CONFIG["LOW_POWER_MODE"] else "",
         "EXIT_WITH_CONSOLE": "True" if SAMPLE_CONFIG["EXIT_WITH_CONSOLE"] else "",
         "DEV_MODE": "True" if SAMPLE_CONFIG["DEV_MODE"] else "",

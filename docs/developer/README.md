@@ -21,7 +21,6 @@ Before setting up Asystent for development, ensure you have:
 - Git
 - FFmpeg (for audio processing)
 - Compatible speech-to-text models:
-  - Vosk model files (for offline recognition)
   - Whisper model setup (for higher accuracy)
 - Access to LLM providers:
   - OpenAI API key for GPT models
@@ -66,8 +65,7 @@ The main dependencies are listed in `requirements.txt` and include:
    ```
 
 4. Download required models:
-   - For Vosk: Download a model from https://alphacephei.com/vosk/models and extract it to `vosk_model/`
-   - For Whisper: The first run will automatically download the selected model
+   - For Piper TTS: Download a voice model from [Piper Voices](https://rhasspy.github.io/piper-voices/) and place it in `resources/piper/` (e.g., `resources/piper/en_US-lessac-medium.onnx`). Update `config.json` with the correct path if necessary.
 
 5. Set up configuration:
    - Copy `config.json.example` to `config.json`
@@ -118,7 +116,6 @@ asystent/
 ├── audio_modules/          # Audio processing components
 │   ├── beep_sounds.py      # Audio feedback system
 │   ├── list_audio_devices.py # Audio device management
-│   ├── speech_recognition.py # Speech input handling
 │   ├── tts_module.py       # Text-to-speech system
 │   ├── whisper_asr.py      # Whisper integration for STT
 │   └── wakeword_detector.py # Wake word detection system
@@ -136,22 +133,13 @@ asystent/
 │   ├── see_screen_module.py # Screenshot and analysis
 │   └── weather_module.py   # Weather information
 ├── resources/              # Resource files
-│   ├── Intent_AI/          # Intent classification models
-│   ├── piper/              # Voice files for TTS
-│   └── sounds/             # System sounds
+│   ├── piper/                # Piper TTS voice models
+│   └── sounds/               # Application sounds (e.g., beep.wav)
 ├── screenshots/            # Captured screenshots
 ├── tests_integration/      # Integration tests
 ├── tests_pytest/           # Pytest configurations
 ├── tests_unit/             # Unit tests
-├── vosk_model/             # Vosk model files
-├── web_ui/                 # Web interface files
-│   ├── app.py              # Flask web server
-│   ├── routes/             # API routes
-│   ├── static/             # CSS, JS, and assets
-│   └── templates/          # HTML templates
-├── CHANGELOG.md            # Version history
-├── README.md               # Project overview
-├── requirements.txt        # Dependencies
+├── requirements.txt          # Python dependencies
 └── config.json             # Configuration file
 │   ├── wakeword_detector.py # Wake word activation
 │   └── whisper_asr.py      # Whisper integration
@@ -166,7 +154,6 @@ asystent/
 │   ├── see_screen_module.py # Screen capture and analysis
 │   └── weather_module.py  # Weather information
 ├── resources/            # Static resources
-│   ├── Intent_AI/        # Intent classification models
 │   ├── piper/            # TTS voice models
 │   └── sounds/           # System sound files
 ├── web_ui/              # Web interface
@@ -238,10 +225,9 @@ Key functions:
 ### Speech Processing
 
 Speech processing is handled by specialized modules in the `audio_modules/` directory:
-- `speech_recognition.py`: Records and processes audio input using Vosk
+- `tts_module.py`: Converts text responses to spoken audio with Edge TTS
 - `wakeword_detector.py`: Listens for the activation phrase with async handling
 - `whisper_asr.py`: High-accuracy transcription with Whisper models
-- `tts_module.py`: Converts text responses to spoken audio with Edge TTS
 - `beep_sounds.py`: Provides audio feedback for system events
 - `list_audio_devices.py`: Manages audio device enumeration and selection
 

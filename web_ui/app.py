@@ -413,9 +413,11 @@ def config_page_public():
         # Update Wake Word
         if 'WAKE_WORD' in data:
             current['WAKE_WORD'] = data.get('WAKE_WORD')
-        # Update boolean fields
-        for key in ['USE_WHISPER_FOR_COMMAND', 'LOW_POWER_MODE', 'EXIT_WITH_CONSOLE', 'DEV_MODE', 'AUTO_LISTEN_AFTER_TTS']:
-            current[key] = True if data.get(key) == 'True' else False
+        # Update boolean type fields from form checkboxes
+        # for key in ['USE_WHISPER_FOR_COMMAND', 'LOW_POWER_MODE', 'EXIT_WITH_CONSOLE', 'DEV_MODE', 'AUTO_LISTEN_AFTER_TTS']:
+        for key in ['LOW_POWER_MODE', 'EXIT_WITH_CONSOLE', 'DEV_MODE', 'AUTO_LISTEN_AFTER_TTS']:
+            if key in request.form:
+                current[key] = request.form[key] == 'on' or request.form[key] == 'True'
         # Save updated config
         save_main_config(current)
         flash('Configuration saved successfully!', 'success')
@@ -695,9 +697,11 @@ def setup_api_routes(app, queue):
                      new_config_data['MIC_DEVICE_ID'] = None
 
 
-                # Convert boolean fields (ensure they exist)
-                for key in ['USE_WHISPER_FOR_COMMAND', 'LOW_POWER_MODE', 'EXIT_WITH_CONSOLE', 'DEV_MODE']:
-                    new_config_data[key] = bool(new_config_data.get(key, False)) # Default to False if missing
+                # Update boolean type fields from form checkboxes
+                # for key in ['USE_WHISPER_FOR_COMMAND', 'LOW_POWER_MODE', 'EXIT_WITH_CONSOLE', 'DEV_MODE', 'AUTO_LISTEN_AFTER_TTS']:
+                for key in ['LOW_POWER_MODE', 'EXIT_WITH_CONSOLE', 'DEV_MODE', 'AUTO_LISTEN_AFTER_TTS']:
+                    if key in new_config_data:
+                        new_config_data[key] = new_config_data[key] == 'on' or new_config_data[key] == True
 
                 # Handle nested query_refinement enabled boolean
                 if 'query_refinement' in new_config_data and isinstance(new_config_data['query_refinement'], dict):
@@ -848,8 +852,9 @@ def setup_api_routes(app, queue):
         status = {
             "status": status_str,
             "wake_word": current_config.get('WAKE_WORD', 'N/A'),
-            "stt_engine": "Whisper" if current_config.get('USE_WHISPER_FOR_COMMAND') else "Vosk",
-            "mic_id": current_config.get('MIC_DEVICE_ID', 'N/A')
+            # "stt_engine": "Whisper" if current_config.get('USE_WHISPER_FOR_COMMAND') else "Vosk", # Removed
+            "stt_engine": "Whisper", # Default to Whisper or make dynamic if other STTs are added
+            "mic_device_id": current_config.get('MIC_DEVICE_ID', 'Not Set')
         }
         return jsonify(status)
 
@@ -1636,6 +1641,7 @@ def create_app(queue: multiprocessing.Queue):
                 # TODO: Implement proper password hashing and verification (e.g., using werkzeug.security)
                 # Comparing plaintext or simple hash is INSECURE!
                 if stored_password_hash and stored_password_hash == password: # Check if hash exists and matches
+
                     session['username'] = username
                     session['role'] = user.role # Correct attribute access
                     flash(f"Welcome, {username}!", "success")
@@ -1668,10 +1674,10 @@ def create_app(queue: multiprocessing.Queue):
         else:
             status_str = "Online"
         assistant_status = {
-            "status": status_str,
-            "wake_word": current_config.get('WAKE_WORD', 'N/A'),
-            "stt_engine": "Whisper" if current_config.get('USE_WHISPER_FOR_COMMAND') else "Vosk",
-            "mic_id": current_config.get('MIC_DEVICE_ID', 'N/A')
+            "wake_word_active": _assistant_instance.wake_word_detector.is_running() if _assistant_instance and _assistant_instance.wake_word_detector else False,
+            # "stt_engine": "Whisper" if current_config.get('USE_WHISPER_FOR_COMMAND') else "Vosk", # Removed
+            "stt_engine": "Whisper", # Default to Whisper or make dynamic if other STTs are added
+            "mic_device_id": current_config.get('MIC_DEVICE_ID', 'Not Set')
         }
         return render_template('index.html', config=current_config, status=assistant_status)
 

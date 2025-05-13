@@ -25,13 +25,6 @@ Asystent listens for a specific wake word to activate. By default, this is set t
 
 Asystent supports two STT (Speech-to-Text) systems:
 
-### Vosk
-- Operates completely offline
-- Uses less system resources
-- Better for simple commands and phrases
-- Available in multiple languages
-- Faster response time
-
 ### Whisper
 - Higher accuracy for complex speech
 - Better at handling background noise

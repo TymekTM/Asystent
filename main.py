@@ -15,7 +15,7 @@ from config import load_config
 
 # --- Logging Configuration ---
 log_filename = os.path.join("user_data", "assistant.log")
-log_level = logging.INFO 
+log_level = logging.DEBUG 
 log_format = "%(asctime)s - %(processName)s - %(name)s - %(levelname)s - %(message)s"
 
 # Use RotatingFileHandler for log rotation
@@ -30,6 +30,7 @@ logging.basicConfig(
     format=log_format,
     handlers=[rotating_handler, stream_handler]
 )
+logging.getLogger().setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 # --- Process Target Functions ---

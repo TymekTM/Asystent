@@ -27,3 +27,37 @@
 2025-05-11T18:09:23.235306 | Możesz to zrobić za pomocą komendy open, jak coś. | intent=none | conf=0.38
 2025-05-11T18:09:40.044654 | Tak, poproszę. | intent=none | conf=0.37
 2025-05-11T18:30:57.606105 | Yestiştahm | intent=none | conf=0.06
+2025-05-13T14:18:30.385779 | Powiedz mi coś o sobie. | intent=about_assistant | conf=0.59
+2025-05-13T14:18:46.105891 | Jak się czujesz? | intent=none | conf=0.21
+2025-05-13T14:22:17.475470 | Powiedz mi coś o sobie. | intent=about_assistant | conf=0.59
+2025-05-13T14:52:17.031315 | Poprzedź mnie się od siebie. | intent=none | conf=0.13
+2025-05-13T14:52:38.761005 | Ostatnio zastanawiałem się, czy jest jakiś sposób, żeby mógł szybciej coś zrobić i to... | intent=none | conf=0.20
+2025-05-13T14:52:45.185852 | Zastanawianie się, jak Boże. | intent=none | conf=0.23
+2025-05-13T14:54:33.134504 | Powiedz mi też, osłabia. | intent=none | conf=0.16
+2025-05-13T15:10:48.559833 | Powiedz mi z Assabii. | intent=none | conf=0.19
+2025-05-13T15:11:13.155833 | Jak się dzisiaj czujesz? | intent=none | conf=0.15
+2025-05-13T15:11:29.907401 | Czy możesz sprawdzić mi, proszę, czy będzie padać? | intent=none | conf=0.47
+2025-05-13T15:11:45.403976 | W Sosnowcu | intent=none | conf=0.06
+2025-05-13T15:17:12.368610 | Powiedz mi coś o sobie, jak się czujesz. | intent=about_assistant | conf=0.73
+2025-05-13T15:17:42.106947 | Powiedz mi, jaka będzie jutro pogoda w Sosnowcu? | intent=weather_query | conf=0.95
+2025-05-13T15:17:57.424822 | Czy możesz mi proszę otworzyć Facebooka? | intent=none | conf=0.44
+2025-05-13T15:26:16.700095 | Powiedz mi coś o sobie. | intent=about_assistant | conf=0.59
+2025-05-13T15:26:32.269171 | Bada to dobrze. | intent=none | conf=0.07
+2025-05-13T15:26:49.561142 | Powiedz mi, proszę, jaka jest pogoda w Sosnowcu. | intent=weather_query | conf=0.88
+2025-05-13T15:31:46.063896 | Możesz mi proszę zadać pytanie? | intent=none | conf=0.28
+2025-05-13T15:32:00.496196 | Ostatnio mnie cieszyło, bo ja zjadłem sobie lody. | intent=none | conf=0.17
+2025-05-13T15:32:27.955605 | Sprawdź, jaka jest pogoda. Wyszukaj to nie teraz. | intent=weather_query | conf=0.68
+2025-05-13T15:32:44.520709 | Wyzwadź szawię, poproszę. | intent=none | conf=0.06
+2025-05-13T15:33:07.124690 | Chodziło mi o to, żeby sprawdził pogodę w Warszawie. | intent=none | conf=0.09
+2025-05-13T15:42:30.721617 | Jak się czujesz? | intent=none | conf=0.21
+2025-05-13T15:42:49.429700 | Powiem ci, chcę dokończyć już te testy ciebie i zobaczyć, co kolejnego zainplementować. | intent=none | conf=0.18
+2025-05-13T15:47:33.327853 | Powiedz mi coś o sobie. | intent=about_assistant | conf=0.59
+2025-05-13T15:47:50.222763 | Nie musisz nic odpowiadać. | intent=none | conf=0.11
+2025-05-13T15:55:15.283124 | Jaka jest pogoda w Warszawie? | intent=weather_query | conf=0.91
+2025-05-13T15:56:17.598915 | Otworzysz mi jeszcze o tym? | intent=none | conf=0.17
+2025-05-13T15:56:37.046619 | A stronę YouTube | intent=none | conf=0.10
+2025-05-13T15:57:02.237428 | Czy możesz zrozumieć, że możesz zrozumieć wszystko, i zazwyczaj się w angielskim? | intent=deep_reasoning | conf=0.68
+2025-05-13T16:02:05.634317 | Otwórz mi, patrzcie i odjub. | intent=none | conf=0.10
+2025-05-13T16:02:22.317750 | Otwórz mi proszę stronę YouTube. | intent=none | conf=0.15
+2025-05-13T16:02:53.403641 | Czy możesz zrozumieć mnie, że to wszystko, co mówiłem, i to jest w angielskim? | intent=none | conf=0.26
+2025-05-13T16:07:20.379013 | Can you please confirm to me that I am speaking to you in English right now? | intent=none | conf=0.12

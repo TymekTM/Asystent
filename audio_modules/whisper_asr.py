@@ -45,12 +45,18 @@ def _gpu_ready() -> bool:
 # 4. Lista kandydatów (CT2 → oryginał → ścieżka)
 # ────────────────────────────────────────────────────────────────
 def _candidates(size: str) -> List[str]:
-    std = {"tiny", "base", "small", "medium", "large", "large-v1", "large-v2"}
+    std = {"tiny", "base", "small", "medium", "large", "large-v1", "large-v2", "large-v3"} # Added large-v3
     out = []
+    # Prioritize the exact size string first, as it might be a specific path or a direct Hugging Face ID
+    out.append(size)
+
     if size.lower() in std:
-        out.append(f"faster-whisper/whisper-{size.lower()}-ct2")
+        # Add the faster-whisper variant if the size is a standard one
+        out.append(f"Systran/faster-whisper-{size.lower()}") # Corrected to Systran
+        # Add the OpenAI variant if the size is a standard one
         out.append(f"openai/whisper-{size.lower()}")
-    out.append(size)  # last resort
+    
+    # Remove duplicates while preserving order
     seen = set()
     return [x for x in out if not (x in seen or seen.add(x))]
 
@@ -75,7 +81,11 @@ class WhisperASR:
 
         # ── ładowanie modelu ──────────────────────────────────
         errors = []
-        for repo in _candidates(model_size):
+        # Use the model_size directly as the first candidate, then fallback to generated candidates
+        candidate_list = _candidates(model_size)
+        log.info(f"Whisper model candidates, in order of trial: {candidate_list}")
+
+        for repo in candidate_list:
             try:
                 log.info(f"→ próba: {repo}")
                 # Optimize: use multi-threading on CPU, half precision on GPU
@@ -110,7 +120,6 @@ class WhisperASR:
         self,
         audio: str | any,
         beam_size: int = 5,
-        language: str = "pl",
         sample_rate: int | None = None,
     ) -> str:
         """
@@ -118,7 +127,8 @@ class WhisperASR:
         If audio is a numpy array, provide sample_rate.
         """
         # Prepare parameters for model.transcribe
-        params: dict = {"beam_size": beam_size, "language": language}
+        # Set language to None to enable auto-detection by faster-whisper
+        params: dict = {"beam_size": beam_size}
         # Call underlying WhisperModel transcribe
         segments, _ = self.model.transcribe(audio, **params)
         return "".join(s.text for s in segments)

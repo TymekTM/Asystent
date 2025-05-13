@@ -19,10 +19,13 @@ import config # MODIFIED: Import config directly
 # Mock config for tests
 @pytest.fixture(autouse=True) # MODIFIED: Added autouse=True
 def mock_config_for_audio_tests(monkeypatch):
-    # --- Mock config values ---
+    # --- Mock config values --- 
     sample_config = {
-        "MIC_DEVICE_ID": 0, "VOSK_MODEL_PATH": "mock_vosk_model", "WAKE_WORD": "testword",
-        "USE_WHISPER_FOR_COMMAND": False, "WHISPER_MODEL": "mock_whisper_model"
+        "MIC_DEVICE_ID": 0, 
+        # "VOSK_MODEL_PATH": "mock_vosk_model", # Removed
+        "WAKE_WORD": "testword",
+        # "USE_WHISPER_FOR_COMMAND": False, # Removed
+        "WHISPER_MODEL": "mock_whisper_model"
     }
     # MODIFIED: Mock config.load_config directly
     mocked_load_config = MagicMock(return_value=sample_config.copy())
@@ -52,7 +55,7 @@ def mock_config_for_audio_tests(monkeypatch):
     # Make TTSModule() return this pre-configured mock.
     monkeypatch.setattr(tts_module, 'TTSModule', MagicMock(return_value=mock_tts_class_level_instance))
 
-    # 2. Aggressively mock the global _tts_module_instance that was created on tts_module.py import/reload.
+    # 2. Aggressively mock the global _tts_module_instance that was created on tts_module.py import.
     #    This instance is the one that starts the problematic asyncio task and is used by the module-level speak().
     #    Replacing it with a MagicMock prevents its original __init__ from running and starting tasks.
     mock_global_tts_instance = MagicMock(spec=original_tts_module_class) # Use original class for spec

@@ -2,8 +2,11 @@ import subprocess
 import os
 import logging
 from .ffmpeg_installer import ensure_ffmpeg_installed
+import sounddevice as sd
 
+# Set logger to DEBUG globally
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARNING)
 # Global mute flag to disable beeps (e.g., in chat/text mode)
 MUTE = False
 
@@ -16,6 +19,11 @@ BEEP_SOUNDS = {
     "screenshot": "resources/sounds/screenshot_beep.mp3",
     "deep": "resources/sounds/deepthink_beep.mp3",
     "alarm": "resources/sounds/alarm.wav",
+    # Added extra beep sounds for wake word detection and VAD events
+    "listening_start": "resources/sounds/beep.mp3",
+    "listening_done": "resources/sounds/beep.mp3",
+    "error": "resources/sounds/beep.mp3",
+    "timeout": "resources/sounds/beep.mp3",
 }
 
 def play_beep(sound_type: str = "keyword", loop: bool = False) -> subprocess.Popen | None:
@@ -36,7 +44,10 @@ def play_beep(sound_type: str = "keyword", loop: bool = False) -> subprocess.Pop
         return None
     # Fallback for unknown tool types to a default sound or silence?
     # For now, just use the specific sound if available.
-    beep_file = BEEP_SOUNDS.get(sound_type)
+    # Resolve relative path to absolute based on project root
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # project root
+    rel_path = BEEP_SOUNDS.get(sound_type)
+    beep_file = os.path.join(base_dir, rel_path) if rel_path else None
 
     # If a specific sound for the command doesn't exist, don't play anything
     # or optionally play a generic 'processing' sound.
@@ -49,7 +60,7 @@ def play_beep(sound_type: str = "keyword", loop: bool = False) -> subprocess.Pop
         beep_file = BEEP_SOUNDS.get("keyword", "resources/sounds/beep.mp3")
 
 
-    if os.path.exists(beep_file):
+    if beep_file and os.path.exists(beep_file):
         try:
             logger.info(f"Odtwarzam dźwięk '{sound_type}' z pliku: {beep_file} (Loop: {loop})")
             # Use -loop 0 for infinite loop, remove it for single play
@@ -87,3 +98,10 @@ def stop_beep(process: subprocess.Popen):
             logger.error(f"Błąd podczas zatrzymywania dźwięku (PID: {process.pid}): {e}")
     elif process:
         logger.debug(f"Proces dźwięku (PID: {process.pid}) już zakończony.")
+
+def play_sound(data, samplerate, blocking=True):
+    logger.debug(f"play_sound called. MUTE={MUTE}. Default devices: In='{sd.default.device[0]}', Out='{sd.default.device[1]}'. Blocking={blocking}")
+    if MUTE:
+        logger.debug("MUTE is active, skipping sound playback.")
+        return
+    # ...existing playback code...

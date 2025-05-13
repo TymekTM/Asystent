@@ -49,7 +49,6 @@ The configuration page allows you to customize various system settings.
 - **Voice Recognition Settings**:
   - Wake word customization
   - Microphone device selection
-  - STT engine selection (Vosk/Whisper)
   - Silence threshold adjustment
   
 - **AI Settings**:

@@ -45,14 +45,6 @@
                 <div class="card h-100 shadow-sm rounded-4">
                     <div class="card-header"><i class="fas fa-microphone-alt"></i> Ustawienia Audio</div>
                     <div class="card-body">
-                        <!-- ... VOSK_MODEL_PATH ... -->
-                        <div class="mb-3">
-                            <label for="VOSK_MODEL_PATH" class="form-label">
-                                Ścieżka do modelu Vosk
-                                <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Folder zawierający pliki modelu rozpoznawania mowy Vosk (offline)."></i>
-                            </label>
-                            <input type="text" class="form-control" id="VOSK_MODEL_PATH" name="VOSK_MODEL_PATH" value="{{ config.VOSK_MODEL_PATH }}">
-                        </div>
                         <!-- ... WAKE_WORD ... -->
                         <div class="mb-3">
                             <label for="WAKE_WORD" class="form-label">
@@ -75,19 +67,11 @@
                         </div>
                         <!-- ... STT_SILENCE_THRESHOLD ... -->
                         <div class="mb-3">
-                            <label for="STT_SILENCE_THRESHOLD" class="form-label">
-                                Próg ciszy STT (Vosk)
-                                <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Próg głośności (RMS) dla dynamicznego nagrywania komend Vosk. Niższa wartość = bardziej czuły na ciszę. Dostosuj, jeśli nagrywanie kończy się zbyt wcześnie/późno."></i>
+                            <label for="sttSilenceThreshold" class="form-label">
+                            Próg ciszy STT
                             </label>
-                            <input type="number" step="any" class="form-control" id="STT_SILENCE_THRESHOLD" name="STT_SILENCE_THRESHOLD" value="{{ config.STT_SILENCE_THRESHOLD }}">
-                        </div>
-                        <!-- ... USE_WHISPER_FOR_COMMAND ... -->
-                         <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="USE_WHISPER_FOR_COMMAND" name="USE_WHISPER_FOR_COMMAND" {% if config.USE_WHISPER_FOR_COMMAND %}checked{% endif %}>
-                            <label class="form-check-label" for="USE_WHISPER_FOR_COMMAND">
-                                Użyj Whisper do rozpoznawania komend
-                                <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Użyj silnika Whisper (OpenAI) do rozpoznawania komend głosowych zamiast Vosk. Może być dokładniejszy, ale wymaga połączenia z internetem lub lokalnej instalacji Whisper."></i>
-                            </label>
+                            <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Próg głośności (RMS) dla dynamicznego nagrywania komend. Niższa wartość = bardziej czuły na ciszę. Dostosuj, jeśli nagrywanie kończy się zbyt wcześnie/późno."></i>
+                            <input type="number" class="form-control" id="sttSilenceThreshold" name="STT_SILENCE_THRESHOLD" value="{{ config.STT_SILENCE_THRESHOLD }}" step="100">
                         </div>
                         <!-- ... AUTO_LISTEN_AFTER_TTS ... -->
                         <div class="form-check mb-3">
@@ -359,7 +343,7 @@
 
         // Ensure boolean values for checkboxes that might not be submitted if unchecked
         // Checkboxes that are direct children of the form
-        ['USE_WHISPER_FOR_COMMAND', 'LOW_POWER_MODE', 'EXIT_WITH_CONSOLE', 'DEV_MODE'].forEach(key => {
+        ['LOW_POWER_MODE', 'EXIT_WITH_CONSOLE', 'DEV_MODE'].forEach(key => {
              if (!(key in configData)) {
                  configData[key] = false; // Set to false if not present in formData (means unchecked)
              }
