@@ -4,6 +4,7 @@
 - Kontekst aplikacji V2 - to be tested/reimplemented
 - Behaviour fixes
 - Rebuild intention AI
+- Implement real data into main dashboard(avg response time, tooday's requests)
 
 ## Feature Enhancements
 - TTS and voice personalization (user-selectable voice, language, speed, test preview)
@@ -11,7 +12,6 @@
 
 ## Web UI and UX
 - Advanced user authentication and role management (roles, password reset, etc.)
-- Internationalization (multi-language UI, easy translation) - to be fixed
 - Fix tooltip placement and width on smaller screens
 
 ## Integration and Security
@@ -23,7 +23,9 @@
 - Zweryfikować działanie innych rzeczy w core (timer działa)
 - When AI wants to activate listening and user does the same at the same time(or similar times) it just happens twice and funny stuff happens lol 
 - Manualne zapominanie historii poprzez voice chat
-- Dodawanie użytkownika
+- Dodawanie użytkownika nie działa
+- Nie działa wiele języków
+- Przycisk aktywuj mikrofon nie wywołuje asystenta
 
 ## Optimisations
 - Entire app start speed
@@ -36,5 +38,4 @@
 - Upgrade continue speak (question detection)
 - Interakcje z przeglądarką
 - Add visual feedback for microphone and speech recognition status
-- Improve mobile UI/UX for voice interactions
 - RAG

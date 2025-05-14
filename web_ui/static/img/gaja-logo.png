@@ -1,3 +1,0 @@
-<!-- We can only create a file here, not a binary PNG. The SVG works as a fallback. -->
-<!-- The PNG would normally be generated from the SVG, but we're just creating the file structure for now. -->
-<!-- In a real implementation, you would need to convert the SVG to PNG and place it here. -->

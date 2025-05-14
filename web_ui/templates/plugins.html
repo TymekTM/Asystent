@@ -5,12 +5,16 @@
         <h1>Moduły AI</h1>
         <p>Lista modułów i pluginów dla Gai. Tutaj możesz zarządzać funkcjonalnościami swojego asystenta.</p>
     </div>
-    
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Dostępne moduły</h2>        <div class="module-filters">
-            <div class="btn-group" role="group">
-                <button type="button" class="btn btn-gaja btn-gaja-primary active text-center" id="filter-all"><i class="fas fa-list me-1"></i>Pokaż wszystkie</button>
-                <button type="button" class="btn btn-gaja text-center" id="filter-active"><i class="fas fa-check-circle me-1"></i>Tylko aktywne</button>
+      <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+        <h2 class="mb-2 mb-md-0">Dostępne moduły</h2>
+        <div class="module-filters">
+            <div class="btn-group btn-group-sm flex-wrap" role="group">
+                <button type="button" class="btn btn-gaja btn-gaja-primary active" id="filter-all">
+                    <i class="fas fa-list me-1"></i><span>Wszystkie</span>
+                </button>
+                <button type="button" class="btn btn-gaja" id="filter-active">
+                    <i class="fas fa-check-circle me-1"></i><span>Aktywne</span>
+                </button>
             </div>
         </div>
     </div>
@@ -50,8 +54,14 @@ let allPlugins = {};
 function renderPluginList(plugins, showOnlyActive = false) {
     allPlugins = plugins;
     
+    const pluginListSection = document.getElementById('plugin-list-section');
+    if (!pluginListSection) {
+        console.error("Element 'plugin-list-section' not found.");
+        return;
+    }
+
     if (!Object.keys(plugins).length) {
-        document.getElementById('plugin-list-section').innerHTML = '<div class="alert alert-warning">Brak modułów do wyświetlenia.</div>';
+        pluginListSection.innerHTML = '<div class="alert alert-warning">Brak modułów do wyświetlenia.</div>';
         return;
     }
     
@@ -60,14 +70,14 @@ function renderPluginList(plugins, showOnlyActive = false) {
         : plugins;
     
     if (showOnlyActive && Object.keys(filteredPlugins).length === 0) {
-        document.getElementById('plugin-list-section').innerHTML = '<div class="alert alert-info">Brak aktywnych modułów. Zmień filtr, aby zobaczyć wszystkie dostępne moduły.</div>';
+        pluginListSection.innerHTML = '<div class="alert alert-info">Brak aktywnych modułów. Zmień filtr, aby zobaczyć wszystkie dostępne moduły.</div>';
         return;
     }
     
     let html = '<div class="row">';
     for (const [name, info] of Object.entries(filteredPlugins)) {
         html += `
-        <div class="col-md-4 mb-4">
+        <div class="col-lg-4 col-md-6 mb-4">
             <div class="card module-card h-100 ${info.enabled ? 'active' : ''}" data-bs-toggle="tooltip" title="Moduł: ${name}">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span><i class="fas fa-${getModuleIcon(name)} me-2"></i>${name}</span>
@@ -93,7 +103,7 @@ function renderPluginList(plugins, showOnlyActive = false) {
             </div>
         </div>`;}
     html += '</div>';
-    document.getElementById('plugin-list-section').innerHTML = html;
+    pluginListSection.innerHTML = html;
 }
 function getModuleIcon(name) {
     // Map module names to appropriate Font Awesome icons

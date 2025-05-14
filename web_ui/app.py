@@ -522,182 +522,111 @@ def save_ltm(data):
 # ... (get_conversation_history and clear_conversation_history remain the same) ...
 def get_conversation_history(limit=50, buffer_multiplier=5):
     """
-    Reads conversation history from the log file efficiently.
-    Reads roughly the last N lines needed, where N is limit * buffer_multiplier.
-    Improved parsing and error handling.
+    Reads conversation history from the database.
+    Returns up to 'limit' entries in chronological order.
+    """
+    logger.debug(f"Reading conversation history from database, limit: {limit}")
+    try:
+        # Use the new database function for retrieving history
+        from database_models import get_chat_history
+        history = get_chat_history(limit=limit)
+        
+        # Reverse to get chronological order (oldest first)
+        history.reverse() 
+        
+        logger.info(f"Retrieved {len(history)} history entries from database.")
+        
+        if not history:
+            # If database is empty, try fallback to log file
+            logger.warning("No history in database, attempting fallback to log file...")
+            return _read_history_from_logfile(limit)
+        
+        return history
+    
+    except Exception as e:
+        logger.error(f"Error reading history from database: {e}", exc_info=True)
+        # Fallback to log file if database fails
+        return _read_history_from_logfile(limit)
+
+def _read_history_from_logfile(limit=50):
+    """
+    Fallback function to read history from log file if database retrieval fails.
     """
     history = []
-    logger.debug(f"Attempting to read history from: {HISTORY_FILE}")
+    logger.warning("Reading conversation history from log file as fallback")
     try:
-        if not os.path.exists(HISTORY_FILE):
-            logger.warning(f"History file not found at {HISTORY_FILE}. Returning empty list.")
-            return []
-
-        # Estimate buffer size needed (average line length * lines_to_read)
-        # This is a heuristic, adjust avg_line_len if needed
-        avg_line_len = 150
-        lines_to_read = limit * buffer_multiplier
-        buffer_size = avg_line_len * lines_to_read
-
-        with open(HISTORY_FILE, 'rb') as f: # Open in binary mode for seek
-            # Seek towards the end of the file, but not necessarily exactly
-            f.seek(0, os.SEEK_END)
-            file_size = f.tell()
-            seek_pos = max(0, file_size - buffer_size)
-            f.seek(seek_pos, os.SEEK_SET)
-
-            # Read the end chunk and decode, handling potential partial lines
-            # Use deque for efficient limited line storage
-            try:
-                # Read remaining data and decode, ignoring errors
-                lines_bytes = f.read()
-                lines_str = lines_bytes.decode('utf-8', errors='ignore')
-                # Use deque to keep only the last lines_to_read (approx)
-                last_lines = collections.deque(lines_str.splitlines(), maxlen=lines_to_read)
-            except Exception as read_err:
-                 logger.error(f"Error reading/decoding end of history file: {read_err}")
-                 return [] # Return empty on read error
-
-            # Parse lines from the deque in reverse (most recent first)
-            last_user_content = None
-            for line in reversed(last_lines):
-                line = line.strip()
-                if not line:
-                    continue
-
-                # --- Keep the existing parsing logic ---
-                # Basic parsing logic (adjust based on actual log format)
-                # Look for specific log messages indicating user input or assistant speech
+        if os.path.exists(HISTORY_FILE):
+            # Simplified log parsing as fallback
+            with open(HISTORY_FILE, 'r', encoding='utf-8', errors='ignore') as f:
+                lines = f.readlines()[-1000:]  # Read last 1000 lines max
+            
+            for line in lines:
                 if "INFO - Refined query:" in line:
                     timestamp = line.split(" - ", 1)[0]
                     content = line.split("Refined query:", 1)[1].strip()
-                    if content and (not history or history[-1].get("content") != content or history[-1].get("role") != "user"):
+                    if content:
                         history.append({"role": "user", "content": content, "timestamp": timestamp})
-                    last_user_content = content
-                elif "INFO - Command:" in line:
-                    # Only add if there was no refined query after this command
-                    timestamp = line.split(" - ", 1)[0]
-                    content = line.split("Command:", 1)[1].strip()
-                    if last_user_content != content:
-                        if content and (not history or history[-1].get("content") != content or history[-1].get("role") != "user"):
-                            history.append({"role": "user", "content": content, "timestamp": timestamp})
-                    last_user_content = None
                 elif "INFO - TTS:" in line:
+                    timestamp = line.split(" - ", 1)[0]
                     content = line.split("TTS:", 1)[1].strip()
-                    # Avoid adding internal TTS messages like errors or irrelevant info
-                    # Filter more specifically based on expected assistant responses
-                    if content and not content.startswith("Przepraszam,") and not content.startswith("Error executing command"):
-                         timestamp = line.split(" - ", 1)[0]
-                         # Avoid adding if the last message was the same assistant message
-                         if not history or history[-1].get("content") != content or history[-1].get("role") != "assistant":
-                            history.append({"role": "assistant", "content": content, "timestamp": timestamp})
-                elif "INFO - AI response:" in line: # Capture AI text before potential tool use
-                     content_part = line.split("AI response:", 1)[1].strip()
-                     # Try to extract just the spoken part if structure is known (e.g., from parse_response)
-                     try:
-                         # This assumes a simple structure or requires regex if complex
-                         # Example: Extract text before potential <tool_call> or similar marker if used
-                         # Let's try parsing the structured output if possible (might be fragile)
-                         parsed = None
-                         content = content_part # Default to full line part
-                         if "{" in content_part and "}" in content_part:
-                             try:
-                                 # Attempt to find and parse JSON-like structure within the log
-                                 match = re.search(r'({.*})', content_part)
-                                 if match:
-                                     parsed_json = json.loads(match.group(1))
-                                     # Prioritize 'text' field if available
-                                     if 'text' in parsed_json and parsed_json['text']:
-                                         content = parsed_json['text']
-                                     # Maybe fallback to command if no text? (optional)
-                                     # elif 'command' in parsed_json:
-                                     #     content = f"(Executing: {parsed_json['command']})" # Or similar
-                             except json.JSONDecodeError:
-                                 pass # Keep content as content_part if JSON parsing fails
-
-                         # Check content validity and avoid duplicates/similarity with last TTS
-                         if content and (not history or history[-1].get("content") != content or history[-1].get("role") != "assistant"):
-                              timestamp = line.split(" - ", 1)[0]
-                              # Avoid adding if TTS log likely added the same content just before/after
-                              is_likely_duplicate = False
-                              if history:
-                                  last_msg = history[-1]
-                                  if last_msg.get("role") == "assistant" and last_msg.get("content") == content:
-                                      is_likely_duplicate = True
-                              if not is_likely_duplicate:
-                                   history.append({"role": "assistant", "content": content, "timestamp": timestamp})
-                     except Exception as parse_err:
-                         logger.error(f"Error parsing AI response log line: {parse_err} - Line: {line}")
-                         # Fallback if parsing the log line fails, add raw content if valid
-                         if content_part and (not history or history[-1].get("content") != content_part or history[-1].get("role") != "assistant"):
-                             if not any(h.get("role") == "assistant" and h.get("content") == content_part for h in history[-2:]):
-                                 history.append({"role": "assistant", "content": content_part})
-                # --- End of existing parsing logic ---
-
-
-                if len(history) >= limit:
-                    break # Stop once the limit is reached
-
-            history.reverse() # Put back in chronological order
-            logger.info(f"Retrieved {len(history)} history entries (from buffer).")
-
-    except FileNotFoundError: # Should be caught by the check above, but keep for safety
-        logger.warning(f"History file not found at {HISTORY_FILE}.")
-    except Exception as e:
-        logger.error(f"Error reading or parsing history file {HISTORY_FILE}: {e}", exc_info=True) # Add traceback
-
+                    if content:
+                        history.append({"role": "assistant", "content": content, "timestamp": timestamp})
+            
+            # Limit and sort
+            history = sorted(history, key=lambda x: x.get('timestamp', ''))[-limit:]
+            logger.info(f"Fallback: Retrieved {len(history)} history entries from log file.")
+            
+            # Try to add these entries to the database for future use
+            try:
+                from database_models import add_chat_message
+                for entry in history:
+                    add_chat_message(entry["role"], entry["content"])
+                logger.info(f"Added {len(history)} log entries to history database")
+            except Exception as db_err:
+                logger.error(f"Could not migrate log entries to database: {db_err}")
+    except Exception as fallback_error:
+        logger.error(f"Fallback history retrieval failed: {fallback_error}", exc_info=True)
+    
     # Filter out empty messages just before returning
-    history = [entry for entry in history if entry.get("content")]
+    return [entry for entry in history if entry.get("content")]
 
     return history # Return whatever was successfully parsed, even if empty
 
 def clear_conversation_history():
-     """
-     Clears the history by archiving the current log file and creating a new empty one.
-     """
-     logger.warning(f"Clear history requested for: {HISTORY_FILE}")
-     try:
-         if not os.path.exists(HISTORY_FILE):
-             logger.info("History file does not exist, nothing to clear.")
-             return True # No action needed, considered success
+    """
+    Clears the history from the database and archives the current log file.
+    """
+    logger.warning("Clear conversation history requested")
+    
+    try:
+        # Clear history from database
+        from database_models import clear_chat_history
+        db_success = clear_chat_history()
+        
+        if not db_success:
+            logger.error("Failed to clear history from database")
+            return False
+            
+        logger.info("Cleared conversation history from database")
+        
+        # Also archive the log file for backup
+        if os.path.exists(HISTORY_FILE):
+            # Create archive directory if it doesn't exist
+            os.makedirs(HISTORY_ARCHIVE_DIR, exist_ok=True)
 
-         # Create archive directory if it doesn't exist
-         os.makedirs(HISTORY_ARCHIVE_DIR, exist_ok=True)
+            # Archive the current log file
+            timestamp = time.strftime("%Y%m%d_%H%M%S")
+            archive_path = os.path.join(HISTORY_ARCHIVE_DIR, f"assistant_{timestamp}.log")
+            
+            # Move the file
+            shutil.move(HISTORY_FILE, archive_path) 
+            logger.info(f"Archived current history log file to: {archive_path}")
+        
+        return True
+    except Exception as e:
+        logger.error(f"Error clearing conversation history: {e}", exc_info=True)
+        return False
 
-         # Archive the current log file
-         timestamp = time.strftime("%Y%m%d_%H%M%S")
-         archive_path = os.path.join(HISTORY_ARCHIVE_DIR, f"assistant_{timestamp}.log")
-         # Ensure the source file exists before moving
-         if os.path.exists(HISTORY_FILE):
-             shutil.move(HISTORY_FILE, archive_path) # Move the file
-             logger.info(f"Archived current history file to: {archive_path}")
-         else:
-             logger.warning(f"History file {HISTORY_FILE} disappeared before archiving.")
-             return False # Indicate potential issue
-
-         # Create a new empty log file (optional, depends if the logger handles file creation)
-         # The main assistant's logger should handle recreation if configured correctly.
-         # If issues arise where the log file isn't recreated, uncomment the next lines.
-         # try:
-         #     with open(HISTORY_FILE, 'w', encoding='utf-8') as f:
-         #         pass # Create empty file
-         #     logger.info(f"Created new empty history file: {HISTORY_FILE}")
-         # except IOError as create_err:
-         #     logger.error(f"Failed to create new empty history file {HISTORY_FILE}: {create_err}")
-         #     # Even if creation fails, archiving might have succeeded. Decide on return value.
-         #     return False # Indicate failure to create new file
-
-         # Notify assistant? Maybe not necessary for just clearing logs unless it reads history internally.
-
-         return True
-     except IOError as e:
-         logger.error(f"IOError clearing/archiving history file {HISTORY_FILE}: {e}")
-         if hasattr(e, 'winerror') and e.winerror == 32: # Specifically for WinError 32
-             raise LogFileLockedError(f"Log file {HISTORY_FILE} is locked by another process and cannot be archived.") from e
-         return False # For other IOErrors
-     except Exception as e:
-         logger.error(f"Unexpected error clearing history: {e}")
-         return False
 
 # --- Authentication ---
 def login_required(_func=None, *, role="user"):
@@ -1047,20 +976,68 @@ def setup_api_routes(app, queue):
         page = int(request.args.get('page', 1))
         page_size = int(request.args.get('page_size', 100))
         log_path = os.path.join(os.path.dirname(__file__), '..', 'user_data', 'assistant.log')
+        
         try:
-            with open(log_path, 'r', encoding='utf-8') as f:
-                lines = f.readlines()
+            # Check if log file exists
+            if not os.path.exists(log_path):
+                logger.warning(f"Log file not found at {log_path}")
+                return jsonify({
+                    'logs': ["Log file not found. A new log file will be created when new events occur."],
+                    'page': 1, 
+                    'total_pages': 1, 
+                    'total_lines': 1
+                })
+                
+            # Open with proper error handling
+            try:
+                with open(log_path, 'r', encoding='utf-8', errors='ignore') as f:
+                    lines = f.readlines()
+            except UnicodeDecodeError:
+                # Try with a different encoding if UTF-8 fails
+                with open(log_path, 'r', encoding='latin-1', errors='ignore') as f:
+                    lines = f.readlines()
+            
+            # Filter by log level if needed
             if level != 'ALL':
                 lines = [l for l in lines if f'- {level} -' in l]
+            
+            # Calculate pagination
             total_lines = len(lines)
             total_pages = max(1, (total_lines + page_size - 1) // page_size)
             page = max(1, min(page, total_pages))
             start = (page - 1) * page_size
-            end = start + page_size
-            logs = lines[start:end]
-            return jsonify({'logs': logs, 'page': page, 'total_pages': total_pages, 'total_lines': total_lines})
+            end = min(start + page_size, total_lines)
+            
+            # Get the actual logs for this page
+            logs = lines[start:end] if start < total_lines else []
+            
+            # Clean logs - ensure they're proper strings and remove control characters
+            cleaned_logs = []
+            for line in logs:
+                if isinstance(line, bytes):
+                    try:
+                        line = line.decode('utf-8', errors='ignore')
+                    except:
+                        line = str(line)
+                # Remove non-printable characters that might cause issues in JSON
+                line = ''.join(c if c.isprintable() or c in '\n\r\t' else ' ' for c in line)
+                cleaned_logs.append(line)
+                
+            return jsonify({
+                'logs': cleaned_logs, 
+                'page': page, 
+                'total_pages': total_pages, 
+                'total_lines': total_lines
+            })
+            
         except Exception as e:
-            return jsonify({'logs': [f'Błąd odczytu logów: {e}'], 'page': 1, 'total_pages': 1, 'total_lines': 0}), 500
+            logger.error(f"Error reading logs: {e}", exc_info=True)
+            return jsonify({
+                'logs': [f"Error reading logs: {str(e)}"], 
+                'page': 1, 
+                'total_pages': 1, 
+                'total_lines': 1
+            }), 500
 
     @app.route('/api/analytics', methods=['GET'])
     @login_required()
@@ -1852,10 +1829,8 @@ def create_app(queue: multiprocessing.Queue):
         }
         
         # Placeholder for recent messages - would be fetched from your database in practice
-        recent_messages = [
-            {"sender": "user", "content": "Dzień dobry Gaja, jaka jest pogoda na dziś?", "timestamp": "10:23"},
-            {"sender": "assistant", "content": "Dzień dobry! Dziś w Twojej lokalizacji będzie słonecznie, temperatura 22°C. Idealna pogoda na spacer!", "timestamp": "10:24"}
-        ]
+        # Fetch actual recent messages from the database, limiting to 3
+        recent_messages = get_conversation_history(limit=3) # Fetch last 3 messages
         
         return render_template('index.html', config=current_config, status=assistant_status, stats=usage_stats, recent_messages=recent_messages)
 
@@ -1892,7 +1867,9 @@ def create_app(queue: multiprocessing.Queue):
     @local_app.route('/logs')
     @login_required()
     def logs_page():
-        return render_template('logs.html')    @local_app.route('/dev')
+        return render_template('logs.html')
+
+    @local_app.route('/dev')
     @login_required(role="dev") # Changed role to dev for consistency
     @measure_performance # Apply decorator here
     def dev_dashboard_page():

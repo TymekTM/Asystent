@@ -69,22 +69,13 @@ def init_schema(seed_dev: bool = True) -> None:
                 user_id INTEGER PRIMARY KEY,
                 config  TEXT,
                 FOREIGN KEY(user_id) REFERENCES users(id)
-            );
-            -- Table to store transient chat history separate from long-term memories
+            );            -- Table to store chat history separate from long-term memories
             CREATE TABLE IF NOT EXISTS chat_history (
-                id        INTEGER PRIMARY KEY AUTOINCREMENT,
-                message   TEXT NOT NULL,
-                user_id   INTEGER,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY(user_id) REFERENCES users(id)
-            );
-
-            -- Table for chat history separate from long-term memories
-            CREATE TABLE IF NOT EXISTS chat_history (
-                id        INTEGER PRIMARY KEY AUTOINCREMENT,
-                message   TEXT NOT NULL,
-                user_id   INTEGER,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                role        TEXT NOT NULL,  -- 'user' or 'assistant'
+                content     TEXT NOT NULL,
+                user_id     INTEGER,
+                timestamp   DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY(user_id) REFERENCES users(id)
             );
             """
@@ -265,6 +256,80 @@ def get_user_config(user_id: int) -> Optional[dict]:
             "SELECT config FROM user_configs WHERE user_id = ?", (user_id,)
         ).fetchone()
     return json.loads(row["config"]) if row else None
+
+
+# -----------------------------------------------------------------------------
+# Chat History Functions
+# -----------------------------------------------------------------------------
+
+def add_chat_message(role: str, content: str, user_id: Optional[int] = None) -> bool:
+    """
+    Add a new message to the chat history.
+    
+    Args:
+        role: Either 'user' or 'assistant'
+        content: The message content
+        user_id: Optional user ID to associate with message
+        
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    try:
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO chat_history (role, content, user_id, timestamp) VALUES (?, ?, ?, datetime('now'))",
+                (role, content, user_id)
+            )
+            return True
+    except Exception as e:
+        logger.error(f"Error adding chat message to history: {e}")
+        return False
+
+def get_chat_history(limit: int = 50) -> List[dict]:
+    """
+    Get recent chat history entries.
+    
+    Args:
+        limit: Maximum number of entries to return
+        
+    Returns:
+        List of chat history entries as dictionaries with role, content, timestamp
+    """
+    try:
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT role, content, timestamp FROM chat_history ORDER BY timestamp DESC LIMIT ?", 
+                (limit,)
+            )
+            results = []
+            for row in cursor.fetchall():
+                results.append({
+                    "role": row[0],
+                    "content": row[1],
+                    "timestamp": row[2]
+                })
+            return results
+    except Exception as e:
+        logger.error(f"Error retrieving chat history: {e}")
+        return []
+
+def clear_chat_history() -> bool:
+    """
+    Clear all chat history entries.
+    
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    try:
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM chat_history")
+            return True
+    except Exception as e:
+        logger.error(f"Error clearing chat history: {e}")
+        return False
 
 
 # -----------------------------------------------------------------------------

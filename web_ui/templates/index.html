@@ -2,16 +2,13 @@
 
 {# Define default values for stats if not provided #}
 {% set stats = stats or {
-    "message_count": 243,  
-    "avg_response_time": "1.2",
-    "today_queries": 14,
-    "last_query": "Jaka będzie pogoda na jutro?"
+    "message_count": 0,  
+    "avg_response_time": "0.0",
+    "today_queries": 0,
+    "last_query": "Brak"
 } %}
 
-{% set recent_messages = recent_messages or [
-    {"sender": "user", "content": "Dzień dobry Gaja, jaka jest pogoda na dziś?", "timestamp": "10:23"},
-    {"sender": "assistant", "content": "Dzień dobry! Dziś w Twojej lokalizacji będzie słonecznie, temperatura 22°C. Idealna pogoda na spacer!", "timestamp": "10:24"}
-] %}
+{% set recent_messages = recent_messages or [] %}
 
 {% block content %}
 <div class="container mt-4">
@@ -93,22 +90,22 @@
                     <div class="stats-container">
                         <div class="stat-card">
                             <div class="stat-label">Wiadomości</div>
-                            <div class="stat-value">{{ stats.get('message_count', 0) }}</div>
+                            <div class="stat-value" id="stat-message-count">{{ stats.get('message_count', 0) }}</div>
                             <div class="stat-label">ogółem</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-label">Średni czas odpowiedzi</div>
-                            <div class="stat-value">{{ stats.get('avg_response_time', '0.0') }}s</div>
+                            <div class="stat-value" id="stat-avg-response-time">{{ stats.get('avg_response_time', '0.0') }}s</div>
                         </div>
                         <div class="stat-card highlighted">
                             <div class="stat-label">Dzisiejsze zapytania</div>
-                            <div class="stat-value">{{ stats.get('today_queries', 0) }}</div>
+                            <div class="stat-value" id="stat-today-queries">{{ stats.get('today_queries', 0) }}</div>
                         </div>
                     </div>
                     
                     <div class="mt-4">
                         <h5>Ostatnie zapytanie:</h5>
-                        <div class="last-query">
+                        <div class="last-query" id="stat-last-query">
                             "{{ stats.get('last_query', 'Brak ostatnich zapytań') }}"
                         </div>
                     </div>
@@ -120,29 +117,22 @@
                     <i class="fas fa-comments me-2"></i>Ostatnie wiadomości
                 </div>
                 <div class="card-body">
-                    <div class="message-list">
-                        <div id="recent-activity-list">
-                            <!-- Recent messages will be inserted here -->
-                            <!-- Placeholder messages -->
-                            <div class="message-item">
-                                <div class="message-avatar user">
-                                    <i class="fas fa-user"></i>
-                                </div>
-                                <div class="message-content message-bubble">
-                                    Dzień dobry Gaja, jaka jest pogoda na dziś?
-                                    <div class="message-time">10:23</div>
-                                </div>
+                    <div class="message-list" id="recent-activity-list">
+                        <!-- Messages will be dynamically inserted here by JavaScript -->
+                        {% if not recent_messages %}
+                            <p class="text-muted">Brak ostatnich wiadomości.</p>
+                        {% endif %}
+                        {# {% for message in recent_messages %}
+                        <div class="message-item">
+                            <div class="message-avatar {{ message.role }}">
+                                <i class="fas fa-{{ 'user' if message.role == 'user' else 'robot' }}"></i>
                             </div>
-                            <div class="message-item">
-                                <div class="message-avatar">
-                                    <i class="fas fa-robot"></i>
-                                </div>
-                                <div class="message-content message-bubble">
-                                    Dzień dobry! Dziś w Twojej lokalizacji będzie słonecznie, temperatura 22°C. Idealna pogoda na spacer!
-                                    <div class="message-time">10:24</div>
-                                </div>
+                            <div class="message-content message-bubble">
+                                {{ message.content }}
+                                <div class="message-time">{{ message.timestamp.strftime('%H:%M') if message.timestamp else '' }}</div>
                             </div>
                         </div>
+                        {% endfor %} #}
                     </div>
                 </div>
             </div>
@@ -152,7 +142,7 @@
     <div class="row mt-4">
         <div class="col-12">
             <div class="card">
-                <div class="card-header">Statystyki Użytkowania</div>
+                <div class="card-header">Statystyki Użytkowania (API)</div>
                 <div class="card-body" id="analytics-section">
                     <div class="alert alert-info">Ładowanie statystyk...</div>
                 </div>
@@ -207,8 +197,8 @@
 
     // Restart buttons logic
     const restartAssistantBtn = document.getElementById('restart-assistant-btn');
-    const restartWebBtn = document.getElementById('restart-web-btn');
-    const restartAllBtn = document.getElementById('restart-all-btn');
+    const restartWebBtn = document.getElementById('restart-web-btn'); // Assuming you might add this
+    const restartAllBtn = document.getElementById('restart-all-btn'); // Assuming you might add this
     const restartStatus = document.getElementById('restart-status');
 
     function handleRestart(url, label) {
@@ -233,10 +223,36 @@
             });
     }
     if (restartAssistantBtn) restartAssistantBtn.onclick = () => handleRestart('/api/restart/assistant', 'Restart Assistant');
-    if (restartWebBtn) restartWebBtn.onclick = () => handleRestart('/api/restart/web', 'Restart Web Panel');
-    if (restartAllBtn) restartAllBtn.onclick = () => handleRestart('/api/restart/all', 'Restart All');
+    // if (restartWebBtn) restartWebBtn.onclick = () => handleRestart('/api/restart/web', 'Restart Web Panel');
+    // if (restartAllBtn) restartAllBtn.onclick = () => handleRestart('/api/restart/all', 'Restart All');
 
-    // Update status badge for Restarting
+    // Stop Assistant logic
+    const stopAssistantBtn = document.getElementById('stop-assistant-btn');
+    const stopStatus = document.getElementById('stop-status');
+    if (stopAssistantBtn) stopAssistantBtn.onclick = () => {
+        if (stopStatus) {
+            stopStatus.textContent = 'Wysyłanie żądania zatrzymania...';
+            stopStatus.className = 'ms-2 text-info';
+        }
+        fetch('/api/stop/assistant', { method: 'POST' })
+            .then(response => response.json().then(data => ({ status: response.status, body: data })))
+            .then(({ status, body }) => {
+                if (status === 202 || status === 200) {
+                    stopStatus.textContent = body.message || 'Asystent zatrzymany!';
+                    stopStatus.className = 'ms-2 text-success';
+                } else {
+                    stopStatus.textContent = `Błąd: ${body.error || 'Nie udało się zatrzymać asystenta.'}`;
+                    stopStatus.className = 'ms-2 text-danger';
+                }
+            })
+            .catch(() => {
+                stopStatus.textContent = 'Błąd wysyłania żądania zatrzymania.';
+                stopStatus.className = 'ms-2 text-danger';
+            });
+    };
+
+
+    // DASHBOARD: Polling for assistant status
     function fetchAssistantStatus() {
         fetch('/api/status')
             .then(response => response.json())
@@ -266,53 +282,78 @@
                 }
             });
     }
-    setInterval(fetchAssistantStatus, 5000);
-    fetchAssistantStatus();
-
-    // DASHBOARD: Polling for assistant status
-    function fetchAssistantStatus() {
-        fetch('/api/status')
-            .then(response => response.json())
-            .then(data => {
-                const badge = document.getElementById('assistant-status-badge');
-                if (badge) {
-                    badge.textContent = data.status || 'Unknown';
-                    badge.className = 'badge ' + (data.status === 'Online' ? 'bg-success' : 'bg-secondary');
-                }
-                // Optionally update other status fields
-            })
-            .catch(err => {
-                const badge = document.getElementById('assistant-status-badge');
-                if (badge) {
-                    badge.textContent = 'Offline';
-                    badge.className = 'badge bg-danger';
-                }
-            });
-    }
     setInterval(fetchAssistantStatus, 5000); // Poll every 5 seconds
     fetchAssistantStatus(); // Initial fetch
 
-    // DASHBOARD: Fetch and display recent activity
+    // DASHBOARD: Fetch and display recent activity (max 3 messages)
     function fetchRecentActivity() {
-        fetch('/api/history?limit=5')
+        fetch('/api/history?limit=3') // Fetch only 3 messages
             .then(response => response.json())
             .then(data => {
-                const list = document.getElementById('recent-activity-list');
-                if (list) {
-                    list.innerHTML = '';
-                    (data || []).slice(-5).forEach(entry => {
-                        const li = document.createElement('li');
-                        li.className = 'list-group-item';
-                        li.textContent = `[${entry.role}] ${entry.content}`;
-                        list.appendChild(li);
-                    });
+                const listElement = document.getElementById('recent-activity-list');
+                if (listElement) {
+                    listElement.innerHTML = ''; // Clear existing messages
+                    if (data && data.length > 0) {
+                        // Take the last 3 messages from the fetched data (which should be already limited by API)
+                        const messagesToDisplay = data.slice(-3);
+                        messagesToDisplay.forEach(entry => {
+                            const messageItem = document.createElement('div');
+                            messageItem.className = 'message-item';
+
+                            const avatarDiv = document.createElement('div');
+                            avatarDiv.className = `message-avatar ${entry.role}`;
+                            if (entry.role === 'user') {
+                                const icon = document.createElement('i');
+                                icon.className = `fas fa-user`;
+                                avatarDiv.appendChild(icon);
+                            } else {
+                                const img = document.createElement('img');
+                                img.src = '/static/img/gaja.svg';
+                                img.alt = 'Gaja';
+                                img.style.width = '24px'; // Adjust size as needed
+                                img.style.height = '24px'; // Adjust size as needed
+                                avatarDiv.appendChild(img);
+                            }
+
+                            const contentDiv = document.createElement('div');
+                            contentDiv.className = 'message-content message-bubble';
+                            contentDiv.textContent = entry.content;
+                            
+                            const timeDiv = document.createElement('div');
+                            timeDiv.className = 'message-time';
+                            // Format timestamp if available
+                            if (entry.timestamp) {
+                                try {
+                                    timeDiv.textContent = new Date(entry.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                } catch (e) {
+                                    timeDiv.textContent = entry.timestamp.split(' ')[1].substring(0,5); // Fallback for simple time string
+                                }
+                            } else {
+                                timeDiv.textContent = "--:--";
+                            }
+                            contentDiv.appendChild(timeDiv);
+
+                            messageItem.appendChild(avatarDiv);
+                            messageItem.appendChild(contentDiv);
+                            listElement.appendChild(messageItem);
+                        });
+                    } else {
+                        listElement.innerHTML = '<p class="text-muted">Brak ostatnich wiadomości.</p>';
+                    }
                 }
+            })
+            .catch(error => {
+                const listElement = document.getElementById('recent-activity-list');
+                if (listElement) {
+                    listElement.innerHTML = '<p class="text-danger">Błąd ładowania wiadomości.</p>';
+                }
+                console.error('Error fetching recent activity:', error);
             });
     }
-    setInterval(fetchRecentActivity, 5000);
-    fetchRecentActivity();
+    setInterval(fetchRecentActivity, 5000); // Poll every 5 seconds
+    fetchRecentActivity(); // Initial fetch
 
-    // DASHBOARD: Fetch and display analytics
+    // DASHBOARD: Fetch and display analytics from API
     function fetchAnalytics() {
         fetch('/api/analytics')
             .then(response => {
@@ -322,48 +363,33 @@
             .then(data => {
                 const section = document.getElementById('analytics-section');
                 if (!section) return;
+                // Update main dashboard stats too
+                document.getElementById('stat-message-count').textContent = data.msg_count ?? '0';
+                document.getElementById('stat-avg-response-time').textContent = (data.avg_response_time || 0).toFixed(1) + 's';
+                document.getElementById('stat-today-queries').textContent = data.today_queries ?? '0'; // Assuming API provides this
+                document.getElementById('stat-last-query').textContent = `"${data.last_query || 'Brak'}"`; // Assuming API provides this
+
+                // Update detailed analytics section
                 let html = '<ul class="list-group">';
-                html += `<li class="list-group-item">Liczba wiadomości: <b>${data.msg_count ?? '-'}</b></li>`;
-                html += `<li class="list-group-item">Unikalni użytkownicy: <b>${data.unique_users ? data.unique_users.length : 0}</b> (${data.unique_users ? data.unique_users.join(', ') : ''})</li>`;
-                html += `<li class="list-group-item">Średni czas odpowiedzi: <b>${(data.avg_response_time || 0).toFixed(2)}s</b></li>`;
-                html += `<li class="list-group-item">Ostatnie zapytanie: <b>${data.last_query_time ? new Date(data.last_query_time * 1000).toLocaleString() : '-'}</b></li>`;
+                html += `<li class="list-group-item">Liczba wiadomości (z DB): <b>${data.msg_count ?? '-'}</b></li>`;
+                html += `<li class="list-group-item">Unikalni użytkownicy (z DB): <b>${data.unique_users ? data.unique_users.length : 0}</b> (${data.unique_users ? data.unique_users.join(', ') : ''})</li>`;
+                html += `<li class="list-group-item">Średni czas odpowiedzi (z DB): <b>${(data.avg_response_time || 0).toFixed(2)}s</b></li>`;
+                html += `<li class="list-group-item">Ostatnie zapytanie (z DB): <b>${data.last_query_time ? new Date(data.last_query_time).toLocaleString() : '-'}</b></li>`;
                 html += '</ul>';
                 section.innerHTML = html;
             })
             .catch(err => {
                 const section = document.getElementById('analytics-section');
                 if (section) section.innerHTML = `<div class='alert alert-danger'>Błąd ładowania statystyk: ${err.message}</div>`;
+                 // Clear main dashboard stats on error
+                document.getElementById('stat-message-count').textContent = '0';
+                document.getElementById('stat-avg-response-time').textContent = '0.0s';
+                document.getElementById('stat-today-queries').textContent = '0';
+                document.getElementById('stat-last-query').textContent = `"Brak"`;
             });
     }
-    setInterval(fetchAnalytics, 5000);
-    fetchAnalytics();
+    setInterval(fetchAnalytics, 5000); // Poll every 5 seconds
+    fetchAnalytics(); // Initial fetch
 
-    // Stop Assistant logic
-    const stopAssistantBtn = document.getElementById('stop-assistant-btn');
-    const stopStatus = document.getElementById('stop-status');
-    if (stopAssistantBtn) stopAssistantBtn.onclick = () => {
-        if (stopStatus) {
-            stopStatus.textContent = 'Wysyłanie żądania zatrzymania...';
-            stopStatus.className = 'ms-2 text-info';
-        }
-        fetch('/api/stop/assistant', { method: 'POST' })
-            .then(response => response.json().then(data => ({ status: response.status, body: data })))
-            .then(({ status, body }) => {
-                if (status === 202 || status === 200) {
-                    stopStatus.textContent = body.message || 'Asystent zatrzymany!';
-                    stopStatus.className = 'ms-2 text-success';
-                } else {
-                    stopStatus.textContent = `Błąd: ${body.error || 'Nie udało się zatrzymać asystenta.'}`;
-                    stopStatus.className = 'ms-2 text-danger';
-                }
-            })
-            .catch(() => {
-                stopStatus.textContent = 'Błąd wysyłania żądania zatrzymania.';
-                stopStatus.className = 'ms-2 text-danger';
-            });
-    };
-
-    // e.g., connect to a WebSocket endpoint provided by the Flask app
-    // and update #assistant-status-badge and other elements based on received messages.
 </script>
 {% endblock %}
