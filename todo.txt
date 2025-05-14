@@ -1,10 +1,8 @@
 # Asystent TODO (2025-2026)
 
 ## Priority Tasks
-- Rozbudować weather na więcej opcji
 - Kontekst aplikacji V2 - to be tested/reimplemented
 - Behaviour fixes
-- Whisper streaming
 - Rebuild intention AI
 
 ## Feature Enhancements

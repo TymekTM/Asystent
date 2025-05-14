@@ -21,9 +21,9 @@ DEFAULT_CONFIG = {
     "DEEPSEEK_API_KEY": "YOUR_DEEPSEEK_API_KEY"
   },
   "STT_MODEL": "whisper-1", # Speech-to-Text model
-  "MAIN_MODEL": "gpt-4o",   # Main interaction LLM
+  "MAIN_MODEL": "gpt-4.1-nano",   # Main interaction LLM
   "PROVIDER": "openai", # Default provider for MAIN_MODEL if not specified in model string
-  "DEEP_MODEL": "gpt-4o", # Model for deeper analysis if needed
+  "DEEP_MODEL": "gpt-4.1-nano", # Model for deeper analysis if needed
   "MIC_DEVICE_ID": None,
   "STT_SILENCE_THRESHOLD": 500, # Milliseconds of silence to end STT
   "WHISPER_MODEL": "openai/whisper-base", # Local whisper model
@@ -33,7 +33,7 @@ DEFAULT_CONFIG = {
   "EXIT_WITH_CONSOLE": False, # If true, console stays open after assistant exits
   "DEV_MODE": False, # Enables more verbose logging and potentially other dev features
   "query_refinement": {
-    "model": "gpt-3.5-turbo", # Model for query refinement
+    "model": "gpt-4.1-nano", # Model for query refinement
     "enabled": True
   },
   "version": "1.1.0", # Current assistant version
@@ -91,21 +91,13 @@ def load_config(path=CONFIG_FILE_PATH):
         with open(path, 'r', encoding='utf-8') as f:
             loaded_file_data = json.load(f)
     except FileNotFoundError:
-        logger.warning(f"Config file '{path}' not found. Creating default config file.")
+        logger.warning(f"Config file '{path}' not found. Using default config in-memory.")
         loaded_file_data = DEFAULT_CONFIG.copy()
-        try:
-            with open(path, 'w', encoding='utf-8') as f:
-                json.dump(loaded_file_data, f, indent=2, ensure_ascii=False)
-        except IOError as e:
-            logger.error(f"Could not write default config to '{path}': {e}. Using in-memory defaults.")
+        # Do not write default config to file to avoid unintended overwrites
     except json.JSONDecodeError as e:
-        logger.error(f"Error decoding JSON from '{path}': {e}. Using default config and attempting to overwrite.")
+        logger.error(f"Error decoding JSON from '{path}': {e}. Using default config in-memory.")
         loaded_file_data = DEFAULT_CONFIG.copy()
-        try:
-            with open(path, 'w', encoding='utf-8') as f:
-                json.dump(loaded_file_data, f, indent=2, ensure_ascii=False)
-        except IOError as e_write:
-            logger.error(f"Could not write default config to '{path}' after JSON error: {e_write}. Using in-memory defaults.")
+        # Do not overwrite config file on JSON error to avoid unintended overwrites
     
     _config.clear()
     _config.update(loaded_file_data)
@@ -157,13 +149,8 @@ def save_config(data_to_save=None, path=CONFIG_FILE_PATH):
         with open(path, 'w', encoding='utf-8') as f:
             json.dump(data_to_save, f, indent=2, ensure_ascii=False)
         logger.info(f"Configuration saved successfully to '{path}'.")
-        # Optionally, reload the global _config and accessor variables if the saved data was different
-        # For now, assume the caller manages the global state if they pass specific data_to_save.
-        # If data_to_save was _config, it's already up-to-date in memory.
-    except IOError as e:
-        logger.error(f"Could not write configuration to '{path}': {e}")
-    except TypeError as e:
-        logger.error(f"Error serializing configuration data to JSON: {e}")
+    except Exception as e:
+        logger.error(f"Could not save configuration to '{path}': {e}")
 
 # Initial load of configuration when the module is imported.
 # Other modules can then import _config or the individual accessor variables.
