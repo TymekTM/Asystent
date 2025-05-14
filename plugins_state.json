@@ -16,12 +16,15 @@
       "enabled": true
     },
     "core_module": {
-      "enabled": true
+      "enabled": false
     },
     "memory_module": {
       "enabled": true
     },
     "weather_module": {
+      "enabled": true
+    },
+    "active_window_module": {
       "enabled": true
     }
   }

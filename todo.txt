@@ -28,6 +28,7 @@
 - Zweryfikować działanie innych rzeczy w core (timer działa)
 - When AI wants to activate listening and user does the same at the same time(or similar times) it just happens twice and funny stuff happens lol 
 - Manualne zapominanie historii poprzez voice chat
+- Dodawanie użytkownika
 
 ## Optimisations
 - Entire app start speed
