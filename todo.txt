@@ -6,6 +6,8 @@
 - Behaviour fixes
 - Fix cuda Whisper
 - Whisper streaming
+- Poprawić prompt + usunąć prompt refinement
+- Rebuild intention AI
 
 ## Feature Enhancements
 - TTS and voice personalization (user-selectable voice, language, speed, test preview)

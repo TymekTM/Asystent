@@ -41,6 +41,35 @@ init_schema()
 from database_models import (get_user_by_username, get_user_password_hash, list_users, add_user, delete_user, update_user, 
                            get_memories, add_memory, delete_memory) 
 
+# --- API endpoints for configuration ---
+@app.route('/api/config', methods=['GET', 'POST'])
+def api_config():
+    """Get or update assistant configuration."""
+    # GET: return current configuration
+    if request.method == 'GET':
+        # Reload from file to ensure latest
+        config_data = load_main_config(MAIN_CONFIG_FILE)
+        return jsonify(success=True, config=config_data)
+    # POST: update config with provided values
+    try:
+        new_values = request.get_json() or {}
+        # Merge new values into existing config
+        merged = load_main_config(MAIN_CONFIG_FILE).copy()
+        def deep_merge(dest: dict, src: dict):
+            for key, val in src.items():
+                if isinstance(val, dict) and isinstance(dest.get(key), dict):
+                    deep_merge(dest[key], val)
+                else:
+                    dest[key] = val
+        deep_merge(merged, new_values)
+        # Save updated config
+        save_main_config(merged, MAIN_CONFIG_FILE)
+        # Update in-memory config
+        _config.clear(); _config.update(merged)
+        return jsonify(success=True, message="Konfiguracja zapisana.")
+    except Exception as e:
+        return jsonify(success=False, error=str(e)), 500
+
 # --- Configuration ---
 SECRET_KEY = os.environ.get('SECRET_KEY')
 if not SECRET_KEY:

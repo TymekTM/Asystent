@@ -144,6 +144,10 @@ async def _search_duckduckgo(query: str) -> list[str]:
 
 @measure_performance
 async def search_handler(params: str = "", conversation_history: list | None = None, user_lang: str | None = None) -> str:
+    # Ensure params is a string (handle cases where params might be passed as a dict)
+    if isinstance(params, dict):
+        # Use 'query' key if present, else convert dict to string
+        params = params.get("query", "") if "query" in params else str(params)
     if not params:
         return "Podaj zapytanie wyszukiwania po komendzie !search"
 

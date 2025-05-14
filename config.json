@@ -1,1 +1,38 @@
-{"WAKE_WORD": "gaja", "MIC_DEVICE_ID": 1, "STT_SILENCE_THRESHOLD": 600, "PROVIDER": "openai", "STT_MODEL": "gpt-4.1-nano", "MAIN_MODEL": "gpt-4.1-nano", "DEEP_MODEL": "openthinker", "WHISPER_MODEL": "openai/whisper-small", "MAX_HISTORY_LENGTH": 20, "PLUGIN_MONITOR_INTERVAL": 30, "API_KEYS": {"ANTHROPIC_API_KEY": "None"}, "LOW_POWER_MODE": false, "EXIT_WITH_CONSOLE": true, "DEV_MODE": false, "query_refinement": {"model": "gpt-4.1-nano"}, "version": "1.1.0", "AUTO_LISTEN_AFTER_TTS": false}
+{
+  "WAKE_WORD": "gaja",
+  "MIC_DEVICE_ID": 14,
+  "STT_SILENCE_THRESHOLD": 600,
+  "PROVIDER": "openai",
+  "STT_MODEL": "gpt-4.1-nano",
+  "MAIN_MODEL": "gpt-4.1-nano",
+  "DEEP_MODEL": "openthinker",
+  "WHISPER_MODEL": "openai/whisper-small",
+  "MAX_HISTORY_LENGTH": 20,
+  "PLUGIN_MONITOR_INTERVAL": 30,
+  "API_KEYS": {
+    "ANTHROPIC_API_KEY": "None",
+    "OPENAI_API_KEY": "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",
+    "TOGETHER_API_KEY": "",
+    "GROQ_API_KEY": "",
+    "AZURE_SPEECH_KEY": "YOUR_AZURE_SPEECH_KEY",
+    "AZURE_SPEECH_REGION": "YOUR_AZURE_REGION",
+    "DEEPSEEK_API_KEY": "YOUR_DEEPSEEK_API_KEY"
+  },
+  "LOW_POWER_MODE": false,
+  "EXIT_WITH_CONSOLE": true,
+  "DEV_MODE": false,
+  "query_refinement": {
+    "model": "gpt-4.1-nano",
+    "enabled": true
+  },
+  "version": "1.1.0",
+  "AUTO_LISTEN_AFTER_TTS": false,
+  "MODEL_NAME": "",
+  "AI_BASE_PATH": "",
+  "ASSISTANT_NAME": "Gaja",
+  "WAKE_WORD_SENSITIVITY_THRESHOLD": 0.35,
+  "LANGUAGE": "pl-PL",
+  "SPEECH_RECOGNITION_PROVIDER": "google",
+  "TRACK_ACTIVE_WINDOW": false,
+  "ACTIVE_WINDOW_POLL_INTERVAL": 5
+}

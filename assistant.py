@@ -39,7 +39,7 @@ from config import (
     AUTO_LISTEN_AFTER_TTS # Ensure AUTO_LISTEN_AFTER_TTS is imported if used as a global default
 )
 from config import _config
-QUERY_REFINEMENT_ENABLED = _config.get("query_refinement", {}).get("enabled", True)
+QUERY_REFINEMENT_ENABLED = False  # prompt refinement disabled for new testing approach
 
 
 # Set logger to DEBUG globally
@@ -326,7 +326,7 @@ class Assistant:
         self.auto_listen_after_tts = _config.get('AUTO_LISTEN_AFTER_TTS', AUTO_LISTEN_AFTER_TTS)
         
         global QUERY_REFINEMENT_ENABLED
-        QUERY_REFINEMENT_ENABLED = _config.get("query_refinement", {}).get("enabled", True)
+        QUERY_REFINEMENT_ENABLED = False  # prompt refinement remains disabled for testing
 
         logger.info("Configuration values reloaded.")
         # Consider if wakeword_detector needs to be explicitly updated with new sensitivity or wake word.
@@ -448,7 +448,8 @@ class Assistant:
         beep_sounds.MUTE = bool(TextMode)
         self.tts.mute = bool(TextMode)
         listen_after_tts = False
-        query_refinement_enabled = not TextMode # Refinement on for voice, off for text
+        # Use global flag to control prompt refinement (disabled by default for new testing approach)
+        query_refinement_enabled = QUERY_REFINEMENT_ENABLED
 
         # 1. Language detection and query refinement
         lang_code, lang_conf = await detect_language_async(text_input)

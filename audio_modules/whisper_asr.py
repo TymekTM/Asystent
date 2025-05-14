@@ -1,9 +1,9 @@
 """
 audio_modules/whisper_asr.py
 ────────────────────────────
-• auto‑download lub auto‑konwersja modelu Whisper (faster‑whisper)
+• auto-download lub auto-konwersja modelu Whisper (faster-whisper)
 • bez symlinków → działa na Windowsie
-• próba GPU ↔ automatyczny fallback na CPU, jeśli brakuje cuBLAS
+• próba GPU ↔ automatyczny fallback na CPU, jeśli brakuje cuBLAS
 """
 
 from __future__ import annotations
@@ -50,11 +50,15 @@ def _candidates(size: str) -> List[str]:
     # Prioritize the exact size string first, as it might be a specific path or a direct Hugging Face ID
     out.append(size)
 
-    if size.lower() in std:
-        # Add the faster-whisper variant if the size is a standard one
-        out.append(f"Systran/faster-whisper-{size.lower()}") # Corrected to Systran
-        # Add the OpenAI variant if the size is a standard one
-        out.append(f"openai/whisper-{size.lower()}")
+    # Determine base model size (suffix) if repo or path provided
+    raw = size.lower().split('/')[-1]
+    # Strip 'whisper-' prefix if present to match standard sizes
+    base = raw.split('whisper-', 1)[1] if raw.startswith('whisper-') else raw
+    if base in std:
+        # Add the faster-whisper variant if the base size is a standard one
+        out.append(f"Systran/faster-whisper-{base}")
+        # Add the OpenAI variant if the base size is a standard one
+        out.append(f"openai/whisper-{base}")
     
     # Remove duplicates while preserving order
     seen = set()
