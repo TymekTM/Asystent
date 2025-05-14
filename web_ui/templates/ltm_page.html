@@ -108,6 +108,12 @@
         </div>
     </div>
     
+    <!-- Search Memories -->
+    <div class="mb-4 d-flex">
+        <input type="text" id="search-memory-input" class="form-control me-2" placeholder="Szukaj wspomnień..." value="{{ search_query }}">
+        <button id="search-memory-button" class="btn btn-gaja me-2">🔍 Szukaj</button>
+        <button id="clear-search-button" class="btn btn-secondary">✖ Wyczyść</button>
+    </div>
     <!-- Memories List -->
     <h5 class="mb-3">🕰️ Ostatnie wspomnienia</h5>
     <div id="memory-list">
@@ -161,7 +167,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         statusContainer.innerHTML = '<div class="spinner-border spinner-border-sm text-primary" role="status"><span class="visually-hidden">Loading...</span></div> Dodawanie...';
         
-        fetch('/api/memory', {
+        fetch('/api/ltm/add', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({content, user})
@@ -190,7 +196,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (confirm('Czy na pewno chcesz usunąć to wspomnienie?')) {
                 statusContainer.innerHTML = '<div class="spinner-border spinner-border-sm text-primary" role="status"><span class="visually-hidden">Loading...</span></div> Usuwanie...';
                 
-                fetch(`/api/memory/${memoryId}`, {
+                fetch(`/api/ltm/delete/${memoryId}`, {
                     method: 'DELETE'
                 })
                 .then(response => response.json())

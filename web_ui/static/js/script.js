@@ -66,6 +66,14 @@ function populateAudioDevices(devices) {
     });
 }
 async function loadAudioDevices(useCache = true) {
+    // Show loading state on refresh button when not using cache
+    const refreshBtn = document.getElementById('refresh-mic-devices-btn');
+    let originalBtnHTML;
+    if (!useCache && refreshBtn) {
+        refreshBtn.disabled = true;
+        originalBtnHTML = refreshBtn.innerHTML;
+        refreshBtn.innerHTML = '<span class="spinner-border spinner-border-sm text-secondary" role="status" aria-hidden="true"></span>';
+    }
     if (useCache && cachedAudioDevices) {
         populateAudioDevices(cachedAudioDevices);
         return;
@@ -86,6 +94,11 @@ async function loadAudioDevices(useCache = true) {
 
 // Load devices on page load and set up refresh button
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Bootstrap tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+        new bootstrap.Tooltip(tooltipTriggerEl);
+    });
     // Audio device selection
     if (document.getElementById('mic-device-id-select')) {
         // Load cached devices first; will fetch on first call

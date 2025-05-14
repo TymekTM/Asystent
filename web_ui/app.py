@@ -1257,7 +1257,8 @@ def setup_api_routes(app, queue):
     @app.route('/api/ltm/get', methods=['GET'])
     @login_required()
     def get_memories_api():
-        query = request.args.get('q', '')
+        # Support both 'query' (frontend) and 'q' parameter
+        query = request.args.get('query', request.args.get('q', ''))
         limit = request.args.get('limit', default=50, type=int)
         try:
             memories = get_memories(query=query, limit=limit) # Corrected function name
