@@ -898,9 +898,5 @@ if __name__ == '__main__':
 #   If tts.warm_up is async, it should be `await self.tts.warm_up()` in an async context or run via asyncio.run().
 #   If called from initialize_components (sync), and it's async, it needs careful handling.
 #   Current direct call `self.tts.warm_up()` assumes it's sync or handles its own async execution.
-# - Whisper Model Loading: Investigate Hugging Face cache issues, 401 errors, and symlink warnings.
-#   - Verify model names in config.json (e.g., "openai/whisper-base" vs "base").
-#   - Check HF cache directory permissions and configuration.
-#   - Consider `pip install huggingface_hub[hf_xet]` or enabling Developer Mode for symlinks if persistent.
 # - VAD in wakeword_detector.py: Review and potentially tune or replace the basic VAD implementation.
 # - Thorough testing: Wake word, command transcription, manual trigger, overall functionality.

@@ -1,11 +1,3 @@
-"""
-audio_modules/whisper_asr.py
-────────────────────────────
-• auto-download lub auto-konwersja modelu Whisper (faster-whisper)
-• bez symlinków → działa na Windowsie
-• próba GPU ↔ automatyczny fallback na CPU, jeśli brakuje cuBLAS
-"""
-
 from __future__ import annotations
 import os, pathlib, logging, ctypes
 from typing import List
@@ -14,40 +6,33 @@ from faster_whisper import WhisperModel
 from performance_monitor import measure_performance
 
 # ────────────────────────────────────────────────────────────────
-# 1. Cache Hugging Face (lokalny dla projektu)
+# auto-download / konwersja modelu Whisper (faster-whisper)
+# bez symlinków → działa na Windowsie
+# próba GPU ↔ automatyczny fallback na CPU, jeśli brakuje cuBLAS
 # ────────────────────────────────────────────────────────────────
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 CACHE_DIR = ROOT / ".hf_cache"
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 os.environ["HF_HOME"] = str(CACHE_DIR)
-os.environ["HF_HUB_DISABLE_SYMLINKS"] = "1"       # kopiuj, nie linkuj
+os.environ["HF_HUB_DISABLE_SYMLINKS"] = "1"
 
 # ────────────────────────────────────────────────────────────────
-# 2. Logger
+# Logger – tylko warning i error, żeby nie blokować
 # ────────────────────────────────────────────────────────────────
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
-# ────────────────────────────────────────────────────────────────
-# 3. Detekcja i instalacja cuBLAS DLL (auto-pobieranie)
-# ────────────────────────────────────────────────────────────────
 def _ensure_cublas() -> bool:
-    """
-    Ensure cuBLAS DLL is available. Try loading it, and if missing,
-    install the cuda-python package and add its DLL directory to PATH.
-    """
     try:
         ctypes.CDLL("cublas64_12.dll")
         return True
     except OSError:
         log.warning("cublas64_12.dll not found. Installing cuda-python package...")
         try:
-            import subprocess, sys, importlib.util, pathlib
-            # Install cuda-python to get CUDA DLLs
+            import subprocess, sys, importlib.util, pathlib, site, sysconfig, shutil
             subprocess.check_call([sys.executable, "-m", "pip", "install", "cuda-python"])
-            # Find the installed cuda package spec
-            # Try finding cublas DLL in cuda-python package locations
             spec = importlib.util.find_spec('cuda')
             search_dirs: list[pathlib.Path] = []
             if spec:
@@ -55,46 +40,27 @@ def _ensure_cublas() -> bool:
                     search_dirs.append(pathlib.Path(spec.origin).parent)
                 if spec.submodule_search_locations:
                     search_dirs.extend(pathlib.Path(p) for p in spec.submodule_search_locations)
-            # Fallback: include all site-packages and purelib dirs
-            try:
-                import site, sysconfig
-                for sp in site.getsitepackages():
-                    search_dirs.append(pathlib.Path(sp))
-                purelib = pathlib.Path(sysconfig.get_path('purelib'))
-                search_dirs.append(purelib)
-            except Exception:
-                pass
-            # Search recursively for any cublas DLL in all candidate dirs
+            for sp in site.getsitepackages():
+                search_dirs.append(pathlib.Path(sp))
+            search_dirs.append(pathlib.Path(sysconfig.get_path('purelib')))
             for base_dir in search_dirs:
-                try:
-                    for dll_path in base_dir.rglob('cublas*.dll'):
-                        name = dll_path.name.lower()
-                        # If exact 12 version found, load directly
-                        if name == 'cublas64_12.dll':
-                            os.environ["PATH"] = str(dll_path.parent) + os.pathsep + os.environ.get("PATH", "")
-                            ctypes.CDLL(str(dll_path))
-                            log.info(f"Loaded cuBLAS v12 from {dll_path}")
-                            return True
-                        # If other version (e.g., cublas64_11.dll), alias as v12
-                        if name.startswith('cublas64_'):
-                            # create temp alias directory
-                            alias_dir = ROOT / '.cuda_alias'
-                            alias_dir.mkdir(exist_ok=True)
-                            alias_file = alias_dir / 'cublas64_12.dll'
-                            # copy original DLL to alias name if needed
-                            try:
-                                import shutil
-                                if not alias_file.exists():
-                                    shutil.copy2(str(dll_path), str(alias_file))
-                            except Exception as e:
-                                log.error(f"Failed to create cuBLAS alias: {e}")
-                                continue
-                            os.environ["PATH"] = str(alias_dir) + os.pathsep + os.environ.get("PATH", "")
-                            ctypes.CDLL(str(alias_file))
-                            log.info(f"Aliased cuBLAS {dll_path.name} as cublas64_12.dll -> {alias_file}")
-                            return True
-                except Exception:
-                    continue
+                for dll_path in base_dir.rglob('cublas*.dll'):
+                    name = dll_path.name.lower()
+                    if name == 'cublas64_12.dll':
+                        os.environ["PATH"] = str(dll_path.parent) + os.pathsep + os.environ.get("PATH", "")
+                        ctypes.CDLL(str(dll_path))
+                        log.info(f"Loaded cuBLAS v12 from {dll_path}")
+                        return True
+                    if name.startswith('cublas64_'):
+                        alias_dir = ROOT / '.cuda_alias'
+                        alias_dir.mkdir(exist_ok=True)
+                        alias_file = alias_dir / 'cublas64_12.dll'
+                        if not alias_file.exists():
+                            shutil.copy2(str(dll_path), str(alias_file))
+                        os.environ["PATH"] = str(alias_dir) + os.pathsep + os.environ.get("PATH", "")
+                        ctypes.CDLL(str(alias_file))
+                        log.info(f"Aliased cuBLAS {dll_path.name} as cublas64_12.dll -> {alias_file}")
+                        return True
         except Exception as e:
             log.error(f"Failed to install or load cuda-python cublas: {e}")
     return False
@@ -104,70 +70,49 @@ def _gpu_ready() -> bool:
         return False
     return _ensure_cublas()
 
-# ────────────────────────────────────────────────────────────────
-# 4. Lista kandydatów (CT2 → oryginał → ścieżka)
-# ────────────────────────────────────────────────────────────────
 def _candidates(size: str) -> List[str]:
-    std = {"tiny", "base", "small", "medium", "large", "large-v1", "large-v2", "large-v3"} # Added large-v3
-    out = []
-    # Prioritize the exact size string first, as it might be a specific path or a direct Hugging Face ID
-    out.append(size)
-
-    # Determine base model size (suffix) if repo or path provided
+    std = {"tiny", "base", "small", "medium", "large", "large-v1", "large-v2", "large-v3"}
+    out = [size]
     raw = size.lower().split('/')[-1]
-    # Strip 'whisper-' prefix if present to match standard sizes
     base = raw.split('whisper-', 1)[1] if raw.startswith('whisper-') else raw
     if base in std:
-        # Add the faster-whisper variant if the base size is a standard one
         out.append(f"Systran/faster-whisper-{base}")
-        # Add the OpenAI variant if the base size is a standard one
         out.append(f"openai/whisper-{base}")
-    
-    # Remove duplicates while preserving order
     seen = set()
     return [x for x in out if not (x in seen or seen.add(x))]
 
-# ────────────────────────────────────────────────────────────────
-# 5. Klasa ASR
-# ────────────────────────────────────────────────────────────────
 class WhisperASR:
     def __init__(self, model_size: str = "base", compute_type: str = "int8"):
-        # ── wybór urządzenia ───────────────────────────────────
+        # wybór urządzenia
         if _gpu_ready():
             self.device = "cuda"
-            os.environ.pop("CT2_FORCE_CPU", None)     # pozwól na GPU
+            os.environ.pop("CT2_FORCE_CPU", None)
             log.info("GPU wykryte - używam CUDA.")
         else:
             self.device = "cpu"
-            os.environ["CT2_FORCE_CPU"] = "1"         # zablokuj CUDA w CT2
+            os.environ["CT2_FORCE_CPU"] = "1"
             log.warning("GPU niedostępne (brak cuBLAS) - przechodzę na CPU.")
 
-        self.compute_type = compute_type
+        # wymusz float16 na GPU, ograniczenie wątków na CPU
+        if self.device == "cuda":
+            self.compute_type = "float16"
+        else:
+            self.compute_type = compute_type
+            torch.set_num_threads(4)
+
         self.model_id = None
         self.model = None
 
-        # ── ładowanie modelu ──────────────────────────────────
         errors = []
-        # Use the model_size directly as the first candidate, then fallback to generated candidates
         candidate_list = _candidates(model_size)
-        log.info(f"Whisper model candidates, in order of trial: {candidate_list}")
+        log.info(f"Whisper model candidates: {candidate_list}")
 
         for repo in candidate_list:
             try:
                 log.info(f"→ próba: {repo}")
-                # Optimize: use multi-threading on CPU, half precision on GPU
                 threads = os.cpu_count() if self.device == 'cpu' else None
-                # switch to float16 for GPU if using int compute
-                compute_type = self.compute_type
-                if self.device == 'cuda' and compute_type.startswith('int'):
-                    compute_type = 'float16'
-                # Instantiate WhisperModel (newer API omits threads, local_files_only, download_root)
-                # Using device and compute_type only; HF cache controlled via HF_HOME
-                self.model = WhisperModel(
-                    repo,
-                    device=self.device,
-                    compute_type=compute_type,
-                )
+                ct = self.compute_type
+                self.model = WhisperModel(repo, device=self.device, compute_type=ct)
                 self.model_id = repo
                 log.info(f"✓ załadowano: {repo}")
                 break
@@ -177,30 +122,21 @@ class WhisperASR:
                 errors.append(f"{repo} -> {msg}")
 
         if self.model is None:
-            raise RuntimeError(
-                "Nie udało się załadować modelu Whisper:\n" + "\n".join(errors)
-            )
+            raise RuntimeError("Nie udało się załadować modelu Whisper:\n" + "\n".join(errors))
 
-    # ────────────────────────────────────────────────────────────
     @measure_performance
     def transcribe(
         self,
         audio: str | any,
-        beam_size: int = 5,
+        beam_size: int = 1,
         sample_rate: int | None = None,
     ) -> str:
         """
-        Transcribe audio from a file path or numpy array.
-        If audio is a numpy array, provide sample_rate.
+        Transcribe audio; greedy decoding (beam_size=1) dla szybkości.
         """
-        # Prepare parameters for model.transcribe
-        # Set language to None to enable auto-detection by faster-whisper
-        params: dict = {"beam_size": beam_size}
-        # Call underlying WhisperModel transcribe
-        segments, _ = self.model.transcribe(audio, **params)
+        segments, _ = self.model.transcribe(audio, beam_size=beam_size)
         return "".join(s.text for s in segments)
 
-    # ────────────────────────────────────────────────────────────
     def unload(self) -> None:
         if hasattr(self, "model"):
             log.info(f"Unloading WhisperModel ({self.model_id}) …")
