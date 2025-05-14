@@ -34,6 +34,11 @@ class LogFileLockedError(IOError):
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from config import load_config as load_main_config, save_config as save_main_config, CONFIG_FILE_PATH as MAIN_CONFIG_FILE, DEFAULT_CONFIG, _config
+from flask import Flask  # ensure Flask is available for module-level app
+
+# --- Module-level Flask app for global routes ---
+app = Flask(__name__, template_folder='templates', static_folder='static')
+assistant_queue = None
 from database_manager import get_db_connection
 from database_models import init_schema
 # Ensure chat_history table exists

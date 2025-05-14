@@ -6,7 +6,7 @@
   "STT_MODEL": "gpt-4.1-nano",
   "MAIN_MODEL": "gpt-4.1-nano",
   "DEEP_MODEL": "openthinker",
-  "WHISPER_MODEL": "openai/whisper-small",
+  "WHISPER_MODEL": "Systran/faster-whisper-small",
   "MAX_HISTORY_LENGTH": 20,
   "PLUGIN_MONITOR_INTERVAL": 30,
   "API_KEYS": {

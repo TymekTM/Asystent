@@ -4,9 +4,7 @@
 - Rozbudować weather na więcej opcji
 - Kontekst aplikacji V2 - to be tested/reimplemented
 - Behaviour fixes
-- Fix cuda Whisper
 - Whisper streaming
-- Poprawić prompt + usunąć prompt refinement
 - Rebuild intention AI
 
 ## Feature Enhancements

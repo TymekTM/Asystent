@@ -62,7 +62,7 @@ class TTSModule:
                 logger.error("Error stopping TTS: %s", e)
             self.current_process = None
 
-    
+    @measure_performance
     async def speak(self, text: str):
         # Skip speaking if muted (e.g., in text/chat mode)
         if getattr(self, 'mute', False):
@@ -97,7 +97,6 @@ class TTSModule:
 _tts_module_instance = TTSModule()
 
 # Define a module-level async speak function
-@measure_performance
 async def speak(text: str):
     """Module-level function to handle text-to-speech."""
     await _tts_module_instance.speak(text)

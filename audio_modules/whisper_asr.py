@@ -30,16 +30,79 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 # ────────────────────────────────────────────────────────────────
-# 3. Detekcja „prawdziwego” GPU (czy jest cuBLAS DLL)
+# 3. Detekcja i instalacja cuBLAS DLL (auto-pobieranie)
 # ────────────────────────────────────────────────────────────────
+def _ensure_cublas() -> bool:
+    """
+    Ensure cuBLAS DLL is available. Try loading it, and if missing,
+    install the cuda-python package and add its DLL directory to PATH.
+    """
+    try:
+        ctypes.CDLL("cublas64_12.dll")
+        return True
+    except OSError:
+        log.warning("cublas64_12.dll not found. Installing cuda-python package...")
+        try:
+            import subprocess, sys, importlib.util, pathlib
+            # Install cuda-python to get CUDA DLLs
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "cuda-python"])
+            # Find the installed cuda package spec
+            # Try finding cublas DLL in cuda-python package locations
+            spec = importlib.util.find_spec('cuda')
+            search_dirs: list[pathlib.Path] = []
+            if spec:
+                if spec.origin:
+                    search_dirs.append(pathlib.Path(spec.origin).parent)
+                if spec.submodule_search_locations:
+                    search_dirs.extend(pathlib.Path(p) for p in spec.submodule_search_locations)
+            # Fallback: include all site-packages and purelib dirs
+            try:
+                import site, sysconfig
+                for sp in site.getsitepackages():
+                    search_dirs.append(pathlib.Path(sp))
+                purelib = pathlib.Path(sysconfig.get_path('purelib'))
+                search_dirs.append(purelib)
+            except Exception:
+                pass
+            # Search recursively for any cublas DLL in all candidate dirs
+            for base_dir in search_dirs:
+                try:
+                    for dll_path in base_dir.rglob('cublas*.dll'):
+                        name = dll_path.name.lower()
+                        # If exact 12 version found, load directly
+                        if name == 'cublas64_12.dll':
+                            os.environ["PATH"] = str(dll_path.parent) + os.pathsep + os.environ.get("PATH", "")
+                            ctypes.CDLL(str(dll_path))
+                            log.info(f"Loaded cuBLAS v12 from {dll_path}")
+                            return True
+                        # If other version (e.g., cublas64_11.dll), alias as v12
+                        if name.startswith('cublas64_'):
+                            # create temp alias directory
+                            alias_dir = ROOT / '.cuda_alias'
+                            alias_dir.mkdir(exist_ok=True)
+                            alias_file = alias_dir / 'cublas64_12.dll'
+                            # copy original DLL to alias name if needed
+                            try:
+                                import shutil
+                                if not alias_file.exists():
+                                    shutil.copy2(str(dll_path), str(alias_file))
+                            except Exception as e:
+                                log.error(f"Failed to create cuBLAS alias: {e}")
+                                continue
+                            os.environ["PATH"] = str(alias_dir) + os.pathsep + os.environ.get("PATH", "")
+                            ctypes.CDLL(str(alias_file))
+                            log.info(f"Aliased cuBLAS {dll_path.name} as cublas64_12.dll -> {alias_file}")
+                            return True
+                except Exception:
+                    continue
+        except Exception as e:
+            log.error(f"Failed to install or load cuda-python cublas: {e}")
+    return False
+
 def _gpu_ready() -> bool:
     if not torch.cuda.is_available():
         return False
-    try:
-        ctypes.CDLL("cublas64_12.dll")  # CUDA 12; spróbuj też 11, 10 …
-        return True
-    except OSError:
-        return False
+    return _ensure_cublas()
 
 # ────────────────────────────────────────────────────────────────
 # 4. Lista kandydatów (CT2 → oryginał → ścieżka)
