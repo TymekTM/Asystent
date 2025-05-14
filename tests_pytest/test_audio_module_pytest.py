@@ -9,7 +9,6 @@ import importlib # ADDED: For reloading modules
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from audio_modules import list_audio_devices
-from audio_modules import speech_recognition
 from audio_modules import tts_module
 from audio_modules import wakeword_detector
 from audio_modules import whisper_asr
@@ -34,7 +33,6 @@ def mock_config_for_audio_tests(monkeypatch):
 
     # ADDED: Reload modules that might have loaded config at import time
     importlib.reload(list_audio_devices)
-    importlib.reload(speech_recognition)
     importlib.reload(wakeword_detector) # MODIFIED: Uncommented to reload wakeword_detector
     importlib.reload(tts_module) # ADDED: Reload tts_module
 

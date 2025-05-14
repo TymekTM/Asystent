@@ -30,6 +30,7 @@
 ## Optimisations
 - Entire app start speed
 - Add loading indicators for long-running operations in web UI
+- RAM usage
 
 ## Upgrades
 - Wykrywanie rozmówcy za pomocą speech brain
@@ -39,7 +40,3 @@
 - Add visual feedback for microphone and speech recognition status
 - Improve mobile UI/UX for voice interactions
 - RAG
-
-## Testing
-- Consolidate testing approach between unittest and pytest frameworks
-- Improve test coverage for see_screen_module.py
