@@ -78,7 +78,12 @@ class Assistant:
         if not text:
             return
         self.conversation_history.append({"role": "assistant", "content": text})
-        # DB write suppressed here; handled by web UI API to avoid duplicates
+        # Persist assistant response to DB
+        try:
+            from database_models import add_chat_message
+            add_chat_message('assistant', text)
+        except Exception:
+            logger.warning("Failed to save assistant message to history database.")
         if listen_after_tts:
             logger.info(f"[TTS+Listen] Speaking and will listen again: '{text[:100]}...'")
             await self.tts.speak(text)
@@ -468,13 +473,18 @@ class Assistant:
                 f.write(f"{datetime.datetime.now().isoformat()} | {refined_query} | intent={intent} | conf={confidence:.2f}\\n")
         except Exception as log_exc:
             logger.warning(f"[UserInputLog] Failed to log user input: {log_exc}")
+        # Append user message to in-memory history and persist to DB
         self.conversation_history.append({
             "role": "user",
             "content": refined_query,
             "intent": intent,
             "confidence": confidence
         })
-        # DB write suppressed here; handled by web UI API to avoid duplicates
+        try:
+            from database_models import add_chat_message
+            add_chat_message('user', refined_query)
+        except Exception:
+            logger.warning("Failed to save user message to history database.")
 
         # 3. Tool suggestion for LLM
         functions_info = ", ".join([f"{cmd} - {info['description']}" for cmd, info in self.modules.items()])

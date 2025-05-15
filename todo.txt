@@ -4,11 +4,9 @@
 - Kontekst aplikacji V2 - to be tested/reimplemented
 - Behaviour fixes
 - Rebuild intention AI
-- Implement real data into main dashboard(avg response time, tooday's requests)
 
 ## Feature Enhancements
 - TTS and voice personalization (user-selectable voice, language, speed, test preview)
-- Multi-modal input support (text, voice, image analysis in web UI)
 
 ## Web UI and UX
 - Advanced user authentication and role management (roles, password reset, etc.)
@@ -38,3 +36,11 @@
 - Add visual feedback for microphone and speech recognition status
 - RAG
 - Routines learner
+
+
+## Goals:
+- Plug and play instalation
+- Home assistant (music, weather, notes)
+- Onboarding
+- Find real use case
+- Desktop/mobile version

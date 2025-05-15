@@ -350,6 +350,42 @@
                 console.error('Error fetching recent activity:', error);
             });
     }
+    // Initial recent activity and periodic refresh
+    fetchRecentActivity();
+    setInterval(fetchRecentActivity, 5000);
+
+    // DASHBOARD: Fetch and display analytics for summary cards
+    function fetchAnalytics() {
+        fetch('/api/analytics')
+            .then(response => response.json())
+            .then(data => {
+                const msgCountEl = document.getElementById('stat-message-count');
+                const avgTimeEl = document.getElementById('stat-avg-response-time');
+                const todayEl = document.getElementById('stat-today-queries');
+                const lastQueryEl = document.getElementById('stat-last-query');
+                if (msgCountEl) msgCountEl.textContent = data.msg_count;
+                if (avgTimeEl) avgTimeEl.textContent = (data.avg_response_time || 0).toFixed(2) + 's';
+                if (todayEl) todayEl.textContent = data.today_queries;
+                if (lastQueryEl) lastQueryEl.textContent = '"' + (data.last_query || 'Brak') + '"';
+                // Also render details in analytics section
+                const section = document.getElementById('analytics-section');
+                if (section) {
+                    section.innerHTML = `
+                        <div class="row">
+                            <div class="col-sm-4"><strong>Unikalni użytkownicy:</strong> ${data.unique_users.length}</div>
+                            <div class="col-sm-4"><strong>Ostatnie zapytanie:</strong> ${data.last_query || 'Brak'}</div>
+                            <div class="col-sm-4"><strong>Liczba logów:</strong> ${data.msg_count}</div>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching analytics:', error);
+            });
+    }
+    // Initial analytics and periodic refresh
+    fetchAnalytics();
+    setInterval(fetchAnalytics, 10000);
     setInterval(fetchRecentActivity, 5000); // Poll every 5 seconds
     fetchRecentActivity(); // Initial fetch
 

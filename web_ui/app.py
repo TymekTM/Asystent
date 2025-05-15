@@ -1050,15 +1050,33 @@ def setup_api_routes(app, queue):
             unique_users = list({entry.get('user', 'unknown') for entry in history})
             avg_response_time = sum(entry.get('response_time', 0) for entry in history if entry.get('response_time')) / msg_count if msg_count else 0
             last_query_time = max((entry.get('timestamp', 0) for entry in history), default=None)
+            # Compute today's queries and last user query content
+            from datetime import datetime, date
+            today = date.today()
+            today_queries = sum(1 for entry in history
+                                if entry.get('timestamp')
+                                and datetime.fromisoformat(str(entry['timestamp'])).date() == today)
+            last_query = next((entry.get('content') for entry in reversed(history)
+                                if entry.get('role') == 'user'), None)
             return jsonify({
                 'msg_count': msg_count,
                 'unique_users': unique_users,
                 'avg_response_time': avg_response_time,
-                'last_query_time': last_query_time
+                'last_query_time': last_query_time,
+                'today_queries': today_queries,
+                'last_query': last_query
             })
         except Exception as e:
             logger.error(f"Failed to calculate analytics: {e}", exc_info=True)
-            return jsonify({'msg_count': 0, 'unique_users': [], 'avg_response_time': 0, 'last_query_time': None})
+            # Return default stats on error
+            return jsonify({
+                'msg_count': 0,
+                'unique_users': [],
+                'avg_response_time': 0,
+                'last_query_time': None,
+                'today_queries': 0,
+                'last_query': None
+            })
 
     @app.route('/api/plugins', methods=['GET'])
     @login_required(role="dev")
@@ -1353,6 +1371,7 @@ def setup_api_routes(app, queue):
         from database_manager import get_db_connection
         # Ensure chat_history schema exists
         from database_models import init_schema
+        from datetime import datetime
         init_schema()
         message = request.args.get('message', '').strip()
         if not message:
@@ -1821,11 +1840,43 @@ def create_app(queue: multiprocessing.Queue):
         }
         
         # Stats data for the new dashboard design
+        # Compute real usage stats
+        try:
+            # Fetch history directly from database for accurate stats
+            from database_models import get_chat_history
+            history = get_chat_history(limit=1000)
+            # Count only user messages as 'requests'
+            msg_count = sum(1 for entry in history if entry.get('role') == 'user')
+            from datetime import datetime, date
+            timediffs = []
+            last_user_ts = None
+            for entry in history:
+                ts = entry.get('timestamp')
+                if isinstance(ts, str):
+                    try:
+                        ts = datetime.fromisoformat(ts)
+                    except Exception:
+                        continue
+                if entry.get('role') == 'user':
+                    last_user_ts = ts
+                elif entry.get('role') == 'assistant' and last_user_ts:
+                    diff = (ts - last_user_ts).total_seconds()
+                    timediffs.append(diff)
+                    last_user_ts = None
+            avg_response_time = round(sum(timediffs) / len(timediffs), 2) if timediffs else 0
+            today = date.today()
+            today_queries = sum(1 for entry in history
+                                if entry.get('timestamp') and datetime.fromisoformat(str(entry['timestamp'])).date() == today
+                                and entry.get('role') == 'user')
+            last_query = next((entry.get('content') for entry in reversed(history)
+                                if entry.get('role') == 'user'), None)
+        except Exception:
+            msg_count, avg_response_time, today_queries, last_query = 0, 0, 0, None
         usage_stats = {
-            "message_count": 243,  # Placeholder values - ideally this would come from actual data
-            "avg_response_time": "1.2",
-            "today_queries": 14,
-            "last_query": "Jaka będzie pogoda na jutro?"
+            "message_count": msg_count,
+            "avg_response_time": avg_response_time,
+            "today_queries": today_queries,
+            "last_query": last_query or "Brak"
         }
         
         # Placeholder for recent messages - would be fetched from your database in practice
