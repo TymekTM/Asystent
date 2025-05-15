@@ -862,23 +862,21 @@ def setup_api_routes(app, queue):
 
     @app.route('/api/activate', methods=['POST'])
     @login_required()
-    def api_activate(): # Moved inside create_app
+    def api_activate():  # Manual trigger for assistant listening
         """API endpoint to manually trigger voice listening (bypass wake word)."""
-        global assistant_queue # Access the global queue
-        username = session.get('username', 'Unknown')
-        logger.info(f"Manual activation requested via Web UI by user '{username}'.")
-
+        global assistant_queue
+        logger.info(f"Manual activation requested via Web UI.")
         if assistant_queue:
             try:
-                assistant_queue.put({"action": "activate"})
-                logger.info("Sent 'activate' command to assistant process.")
+                # Use command type matching Assistant.run_async
+                assistant_queue.put({"type": "trigger_listen"})
+                logger.info("Sent 'trigger_listen' command to assistant process.")
                 return jsonify({"message": "Activation request sent to assistant."}), 202
             except Exception as e:
-                logger.error(f"Error sending 'activate' command via queue: {e}")
+                logger.error(f"Error sending 'trigger_listen' command via queue: {e}")
                 return jsonify({"error": f"Failed to send activation command: {e}"}), 500
-        else:
-             logger.warning("Cannot trigger manual listen: Assistant queue not available.")
-             return jsonify({"error": "Assistant connection not available."}), 503
+        logger.warning("Cannot trigger manual listen: Assistant queue not available.")
+        return jsonify({"error": "Assistant connection not available."}), 503
 
     @app.route('/api/long_term_memory', methods=['GET', 'POST', 'DELETE'])
     @login_required(role="dev")
@@ -1939,6 +1937,24 @@ def create_app(queue: multiprocessing.Queue):
 
     # --- API Routes --- (Registered within create_app)
     setup_api_routes(local_app, queue)
+
+    # Manual Activation endpoint: manually trigger assistant to listen
+    @local_app.route('/api/activate', methods=['POST'])
+    @login_required()
+    def api_activate_local():
+        """API endpoint to manually trigger voice listening (bypass wake word)."""
+        if assistant_queue:
+            try:
+                # Send trigger_listen command matching Assistant.run_async expectations
+                assistant_queue.put({"type": "trigger_listen"})
+                logger.info("Sent 'trigger_listen' command to assistant process.")
+                return jsonify({"message": "Activation request sent to assistant."}), 202
+            except Exception as e:
+                logger.error(f"Error sending 'trigger_listen' command via queue: {e}")
+                return jsonify({"error": f"Failed to send activation command: {e}"}), 500
+        else:
+            logger.warning("Cannot trigger manual listen: Assistant queue not available.")
+            return jsonify({"error": "Assistant connection not available."}), 503
 
     # Ensure the app instance is returned
     return local_app
