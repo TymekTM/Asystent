@@ -22,10 +22,8 @@
 ## Fixes
 - Zweryfikować działanie innych rzeczy w core (timer działa)
 - When AI wants to activate listening and user does the same at the same time(or similar times) it just happens twice and funny stuff happens lol 
-- Manualne zapominanie historii poprzez voice chat
 - Dodawanie użytkownika nie działa
 - Nie działa wiele języków
-- Chat błąd bazy danych 
 
 ## Optimisations
 - Entire app start speed
@@ -39,3 +37,4 @@
 - Interakcje z przeglądarką
 - Add visual feedback for microphone and speech recognition status
 - RAG
+- Routines learner

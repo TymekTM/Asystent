@@ -141,6 +141,8 @@ def get_assistant_instance():
     if _assistant_instance is None:
         _assistant_instance = Assistant()
     return _assistant_instance
+# Pre-load assistant on startup to avoid delay on first message
+_assistant_instance = get_assistant_instance()
 
 def transcribe_audio(wav_path: str) -> str:
     """Transcribe WAV file via assistant instance if available."""
@@ -1362,8 +1364,8 @@ def setup_api_routes(app, queue):
         with get_db_connection() as conn:
             if user_id:
                 conn.execute(
-                    "INSERT INTO chat_history (message, user_id, timestamp) VALUES (?, ?, ?)",
-                    (message, user_id, datetime.utcnow())
+                    "INSERT INTO chat_history (role, content, user_id, timestamp) VALUES (?, ?, ?, ?)",
+                    ('user', message, user_id, datetime.utcnow())
                 )
         assistant = get_assistant_instance()
         async def run_and_stream():
@@ -1379,8 +1381,8 @@ def setup_api_routes(app, queue):
                 # Zapisz odpowiedź asystenta do chat_history z user_id jako NULL
                 with get_db_connection() as conn:
                     conn.execute(
-                        "INSERT INTO chat_history (message, user_id, timestamp) VALUES (?, ?, ?)",
-                        (last, None, datetime.utcnow())
+                        "INSERT INTO chat_history (role, content, user_id, timestamp) VALUES (?, ?, ?, ?)",
+                        ('assistant', last, None, datetime.utcnow())
                     )
                 # Strumieniuj odpowiedź po fragmentach
                 for chunk in [last[i:i+100] for i in range(0, len(last), 100)]:
@@ -1422,7 +1424,7 @@ def setup_api_routes(app, queue):
         # Pobierz tylko wiadomości tego usera i AI, posortowane rosnąco
         with get_db_connection() as conn:
             rows = conn.execute(
-                "SELECT ch.message, ch.timestamp, ch.user_id, u.username"
+                "SELECT ch.content, ch.timestamp, ch.user_id, u.username"
                 " FROM chat_history ch"
                 " LEFT JOIN users u ON ch.user_id = u.id"
                 " WHERE ch.user_id = ? OR ch.user_id IS NULL"
@@ -1432,9 +1434,9 @@ def setup_api_routes(app, queue):
         history = []
         for row in rows:
             if row['user_id'] == user_id:
-                history.append({'role': 'user', 'content': row['message'], 'timestamp': row['timestamp']})
+                history.append({'role': 'user', 'content': row['content'], 'timestamp': row['timestamp']})
             else:
-                history.append({'role': 'assistant', 'content': row['message'], 'timestamp': row['timestamp']})
+                history.append({'role': 'assistant', 'content': row['content'], 'timestamp': row['timestamp']})
         return jsonify({'history': history})
 
     @app.route('/api/chat/send', methods=['POST'])
@@ -1457,13 +1459,13 @@ def setup_api_routes(app, queue):
         # Zapisz wiadomość usera do oddzielnej tabeli chat_history
         with get_db_connection() as conn:
             conn.execute(
-                "INSERT INTO chat_history (message, user_id, timestamp) VALUES (?, ?, ?) ",
-                (message, user_id, datetime.utcnow())
+                "INSERT INTO chat_history (role, content, user_id, timestamp) VALUES (?, ?, ?, ?) ",
+                ('user', message, user_id, datetime.utcnow())
             )
         # Pobierz całą historię tego chatu z chat_history
         with get_db_connection() as conn:
             rows = conn.execute(
-                "SELECT ch.message, ch.timestamp, ch.user_id, u.username"
+                "SELECT ch.content, ch.timestamp, ch.user_id, u.username"
                 " FROM chat_history ch"
                 " LEFT JOIN users u ON ch.user_id = u.id"
                 " WHERE ch.user_id = ? OR ch.user_id IS NULL"
@@ -1557,11 +1559,11 @@ def setup_api_routes(app, queue):
                 reply = f"(Błąd AI: {e})"
         else:
             reply = "(Brak odpowiedzi AI)"
-        # Zapisz odpowiedź AI do chat_history z user_id użytkownika (nie NULL)
+        # Zapisz odpowiedź AI do chat_history z user_id jako NULL (wiadomość asystenta)
         with get_db_connection() as conn:
             conn.execute(
-                "INSERT INTO chat_history (message, user_id, timestamp) VALUES (?, ?, ?)",
-                (reply, user_id, datetime.utcnow())
+                "INSERT INTO chat_history (role, content, user_id, timestamp) VALUES (?, ?, ?, ?)",
+                ('assistant', reply, None, datetime.utcnow())
             )
         return jsonify({'reply': reply})
 

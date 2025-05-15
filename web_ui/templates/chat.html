@@ -22,6 +22,8 @@
     <div id="chat-status" class="mt-2 text-info text-center" style="min-height:24px;"></div>
 </div>
 <script>
+// Custom assistant icon (replace leaf), scaled to match text size
+const assistantIcon = `<img src="{{ url_for('static', filename='img/gaja.svg') }}" class="bubble-icon" style="width:1.5em; height:1.5em; vertical-align:middle;" /> `;
 // Insert assistant spinner bubble
 function appendSpinner(role) {
     const chatHistory = document.getElementById('chat-history');
@@ -38,14 +40,38 @@ function appendSpinner(role) {
 }
 let recognizing = false;
 let recognition;
+// Track last appended message to avoid duplicates
+let lastMessageKey = '';
 
 function appendMessage(role, content, timestamp) {
+    // Dedupe consecutive duplicates by key
+    const key = role + '|' + content;
+    if (key === lastMessageKey) return;
+    lastMessageKey = key;
     const chatHistory = document.getElementById('chat-history');
     const msgDiv = document.createElement('div');
     
-    // Check if we need to add a date separator
-    const today = new Date().toLocaleDateString();
-    const msgDate = timestamp ? new Date(timestamp).toLocaleDateString() : today;
+    // Parse timestamp: handle full datetime and simple HH:MM
+    let dateObj;
+    if (timestamp) {
+        if (/^\d{4}-\d{2}-\d{2}/.test(timestamp)) {
+            // server timestamp "YYYY-MM-DD HH:MM:SS"
+            dateObj = new Date(timestamp.replace(' ', 'T'));
+        } else if (/^\d{1,2}:\d{2}/.test(timestamp)) {
+            // simple time "HH:MM"
+            dateObj = new Date();
+            const parts = timestamp.split(':');
+            dateObj.setHours(parseInt(parts[0], 10));
+            dateObj.setMinutes(parseInt(parts[1], 10));
+            dateObj.setSeconds(0);
+        } else {
+            dateObj = new Date(timestamp);
+            if (isNaN(dateObj)) dateObj = new Date();
+        }
+    } else {
+        dateObj = new Date();
+    }
+    const msgDate = dateObj.toLocaleDateString();
     
     // Add date separator if this is the first message of the day
     const lastDateSep = chatHistory.querySelector('.date-separator:last-child');
@@ -62,10 +88,11 @@ function appendMessage(role, content, timestamp) {
     // Create message bubble with new styling
     msgDiv.className = role === 'user' ? 'bubble bubble-user' : 'bubble bubble-ai';
     
-    let timeHtml = timestamp ? `<div class='timestamp'>${new Date(timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>` : '';
+    // Always show formatted time based on parsed dateObj
+    const timeHtml = `<div class='timestamp'>${dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>`;
     
-    // Add leaf icon to AI messages
-    const leafIcon = role === 'assistant' ? '<i class="fas fa-leaf bubble-icon"></i> ' : '';
+    // Add custom icon to AI messages
+    const leafIcon = role === 'assistant' ? assistantIcon : '';
     
     msgDiv.innerHTML = `
         <div class="bubble-content">
@@ -128,7 +155,7 @@ function sendMessage(text) {
             spinner.className = 'bubble bubble-ai';
             spinner.innerHTML = `
                 <div class="bubble-content">
-                    <i class="fas fa-leaf bubble-icon"></i>
+                    ${assistantIcon}
                     <span>${fullReply}</span>
                     ${timeHtml}
                 </div>

@@ -21,7 +21,7 @@ from audio_modules.whisper_asr import WhisperASR # Ensure WhisperASR is imported
 # Import funkcji AI z nowego modułu
 from ai_module import refine_query, generate_response, parse_response, remove_chain_of_thought, detect_language, detect_language_async
 from intent_system import classify_intent, handle_intent
-from database_models import add_chat_message # Added import
+"""Removed database persistence here to avoid duplicate writes; persistence handled by web UI routes."""
 
 # Import performance monitor
 from performance_monitor import measure_performance
@@ -78,7 +78,7 @@ class Assistant:
         if not text:
             return
         self.conversation_history.append({"role": "assistant", "content": text})
-        add_chat_message(role="assistant", content=text, user_id=None) # Save assistant response to DB
+        # DB write suppressed here; handled by web UI API to avoid duplicates
         if listen_after_tts:
             logger.info(f"[TTS+Listen] Speaking and will listen again: '{text[:100]}...'")
             await self.tts.speak(text)
@@ -474,7 +474,7 @@ class Assistant:
             "intent": intent,
             "confidence": confidence
         })
-        add_chat_message(role="user", content=refined_query, user_id=None) # Save user query to DB
+        # DB write suppressed here; handled by web UI API to avoid duplicates
 
         # 3. Tool suggestion for LLM
         functions_info = ", ".join([f"{cmd} - {info['description']}" for cmd, info in self.modules.items()])
