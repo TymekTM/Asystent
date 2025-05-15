@@ -101,7 +101,6 @@ def main():
       # Check if this is the first run and open onboarding if needed
     if config.get('FIRST_RUN', True):
         logger.info("First run detected, preparing to launch onboarding...")
-        import time
         import webbrowser
         import requests
         from requests.exceptions import RequestException

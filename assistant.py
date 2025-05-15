@@ -72,7 +72,7 @@ def save_plugins_state(plugins):
         logger.error(f"Failed to save plugins state: {e}")
 
 
-class Assistant:
+class Assistant:    
     async def speak_and_maybe_listen(self, text, listen_after_tts: bool, TextMode: bool = False):
         """Helper: Speak text, and if listen_after_tts, trigger manual listen after TTS."""
         if not text:
@@ -84,6 +84,16 @@ class Assistant:
             add_chat_message('assistant', text)
         except Exception:
             logger.warning("Failed to save assistant message to history database.")
+            
+        # Log the final TTS output with a special marker
+        try:
+            import datetime
+            import json
+            with open("user_data/prompts_log.txt", "a", encoding="utf-8") as f:
+                tts_message = {"role": "assistant_tts", "content": text}
+                f.write(f"{datetime.datetime.now().isoformat()} | {json.dumps(tts_message, ensure_ascii=False)}\n")
+        except Exception as log_exc:
+            logger.warning(f"[TTS Log] Failed to log TTS output: {log_exc}")
         if listen_after_tts:
             logger.info(f"[TTS+Listen] Speaking and will listen again: '{text[:100]}...'")
             await self.tts.speak(text)
@@ -467,10 +477,10 @@ class Assistant:
         # 2. Intent detection and logging
         import datetime
         intent, confidence = classify_intent(refined_query)
-        logger.info(f"[INTENT] Interpreted intent: {intent} (confidence: {confidence:.2f}) for: '{refined_query}'")
+        logger.info(f"[INTENT] Interpreted intent: {intent} (confidence: {confidence:.2f}) for: '{refined_query}'")        
         try:
             with open("user_data/user_inputs_log.txt", "a", encoding="utf-8") as f:
-                f.write(f"{datetime.datetime.now().isoformat()} | {refined_query} | intent={intent} | conf={confidence:.2f}\\n")
+                f.write(f"{datetime.datetime.now().isoformat()} | {refined_query} | intent={intent} | conf={confidence:.2f}\n")
         except Exception as log_exc:
             logger.warning(f"[UserInputLog] Failed to log user input: {log_exc}")
         # Append user message to in-memory history and persist to DB
@@ -502,22 +512,13 @@ class Assistant:
                 mod = self.modules[module_key]
                 tool_suggestion = f"{module_key} - {mod.get('description','')}"
 
-        # 4. LLM response
-        import prompt_builder
-        system_prompt = prompt_builder.build_full_system_prompt(
-            system_prompt_override=None,
-            detected_language=lang_code,
-            language_confidence=lang_conf,
-            tools_description=functions_info,
-            active_window_title=self.current_active_window if self.track_active_window else None,
-            track_active_window_setting=self.track_active_window,
-            tool_suggestion=tool_suggestion
-        )
-        # generate_response returns a JSON string
+        # 4. LLM response        # We no longer build the system prompt here
+        # The generate_response function will build it internally
+        # This avoids duplication in the logs# generate_response returns a JSON string
         response_json_str = generate_response(
             list(self.conversation_history), # Pass a list copy
             tools_info=functions_info,
-            system_prompt_override=system_prompt,
+            system_prompt_override=None,  # We're already building the system_prompt above
             detected_language=lang_code,
             language_confidence=lang_conf,
             active_window_title=self.current_active_window if self.track_active_window else None,
@@ -525,6 +526,16 @@ class Assistant:
             tool_suggestion=tool_suggestion
         )
         logger.info("AI response (raw JSON string): %s", response_json_str)
+        
+        # Log the raw API response 
+        try:
+            import datetime
+            import json
+            with open("user_data/prompts_log.txt", "a", encoding="utf-8") as f:
+                api_response_msg = {"role": "assistant_api", "content": response_json_str}
+                f.write(f"{datetime.datetime.now().isoformat()} | {json.dumps(api_response_msg, ensure_ascii=False)}\n")
+        except Exception as log_exc:
+            logger.warning(f"[API Log] Failed to log API response: {log_exc}")
         
         # parse_response handles json.loads and error cases
         structured_output = parse_response(response_json_str) 

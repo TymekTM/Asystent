@@ -498,8 +498,6 @@ def generate_response(
         if not api_key:
             logger.error("OpenAI API key not found in configuration.")
             return '{"text": "Błąd: Klucz API OpenAI nie został skonfigurowany.", "command": "", "params": {}}'
-
-
         system_prompt = build_full_system_prompt(
             system_prompt_override=system_prompt_override,
             detected_language=detected_language,
@@ -509,17 +507,23 @@ def generate_response(
             track_active_window_setting=track_active_window_setting, # Pass through
             tool_suggestion=tool_suggestion
         )
-
+        
         # --- PROMPT LOGGING ---
-        # Log ONLY user/assistant messages, NOT the system prompt
+        # Log ALL messages, including the system prompt
         try:
-            # Log only non-system messages (skip system prompt)
-            for msg in list(conversation_history):
-                if msg.get("role") != "system":
-                    with open("user_data/prompts_log.txt", "a", encoding="utf-8") as f:
-                        # If message is dict, log as JSON, else as string
-                        import json
-                        f.write(f"{datetime.datetime.now().isoformat()} | {json.dumps(msg, ensure_ascii=False)}\n")
+            # Open the file once and write all messages
+            import json
+            timestamp = datetime.datetime.now().isoformat()
+            
+            with open("user_data/prompts_log.txt", "a", encoding="utf-8") as f:
+                # First log the complete system prompt we've built
+                system_prompt_msg = {"role": "system", "content": system_prompt}
+                f.write(f"{timestamp} | {json.dumps(system_prompt_msg, ensure_ascii=False)}\n")
+                
+                # Then log all existing conversation messages
+                for msg in list(conversation_history):
+                    if msg.get("role") != "system":  # Skip any existing system messages to avoid duplication
+                        f.write(f"{timestamp} | {json.dumps(msg, ensure_ascii=False)}\n")
         except Exception as log_exc:
             logger.warning(f"[PromptLog] Failed to log prompt: {log_exc}")
 
