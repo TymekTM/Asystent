@@ -32,6 +32,7 @@ DEFAULT_CONFIG = {
   "LOW_POWER_MODE": False,
   "EXIT_WITH_CONSOLE": False, # If true, console stays open after assistant exits
   "DEV_MODE": False, # Enables more verbose logging and potentially other dev features
+  "FIRST_RUN": True, # Flag to indicate if this is the first run of the application
   "query_refinement": {
     "model": "gpt-4.1-nano", # Model for query refinement
     "enabled": True
@@ -68,6 +69,7 @@ PLUGIN_MONITOR_INTERVAL = DEFAULT_CONFIG["PLUGIN_MONITOR_INTERVAL"]
 LOW_POWER_MODE = DEFAULT_CONFIG["LOW_POWER_MODE"]
 EXIT_WITH_CONSOLE = DEFAULT_CONFIG["EXIT_WITH_CONSOLE"]
 DEV_MODE = DEFAULT_CONFIG["DEV_MODE"]
+FIRST_RUN = DEFAULT_CONFIG["FIRST_RUN"]
 query_refinement = DEFAULT_CONFIG["query_refinement"].copy() # Ensure it's a copy
 version = DEFAULT_CONFIG["version"]
 AUTO_LISTEN_AFTER_TTS = DEFAULT_CONFIG["AUTO_LISTEN_AFTER_TTS"]
@@ -84,7 +86,7 @@ def load_config(path=CONFIG_FILE_PATH):
            AUTO_LISTEN_AFTER_TTS, TRACK_ACTIVE_WINDOW, ACTIVE_WINDOW_POLL_INTERVAL, \
            ANTHROPIC_API_KEY, DEEPSEEK_API_KEY, \
            MIC_DEVICE_ID, STT_SILENCE_THRESHOLD, API_KEYS, query_refinement, version, \
-           PLUGIN_MONITOR_INTERVAL
+           PLUGIN_MONITOR_INTERVAL, FIRST_RUN
 
     loaded_file_data = {}
     try:
@@ -134,6 +136,7 @@ def load_config(path=CONFIG_FILE_PATH):
     AUTO_LISTEN_AFTER_TTS = _config.get("AUTO_LISTEN_AFTER_TTS", DEFAULT_CONFIG["AUTO_LISTEN_AFTER_TTS"])
     TRACK_ACTIVE_WINDOW = _config.get("TRACK_ACTIVE_WINDOW", DEFAULT_CONFIG["TRACK_ACTIVE_WINDOW"])
     ACTIVE_WINDOW_POLL_INTERVAL = _config.get("ACTIVE_WINDOW_POLL_INTERVAL", DEFAULT_CONFIG["ACTIVE_WINDOW_POLL_INTERVAL"])
+    FIRST_RUN = _config.get("FIRST_RUN", DEFAULT_CONFIG["FIRST_RUN"])
 
     return _config # Return the global _config dict itself
 

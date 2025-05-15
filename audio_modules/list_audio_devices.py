@@ -1,4 +1,5 @@
 import sounddevice as sd
+import logging
 
 def list_input_audio_devices():
     """Returns a list of available audio input device descriptions."""
@@ -12,6 +13,41 @@ def list_input_audio_devices():
     except Exception as e:
         # Return error indicator
         return [f"Could not retrieve audio devices: {e}"]
+
+def get_microphone_devices():
+    """Returns a list of available audio input devices in a format suitable for API responses.
+    
+    Returns:
+        list: A list of dictionaries with device information
+              Each dictionary contains: id, name, is_default
+    """
+    try:
+        devices = sd.query_devices()
+        result = []
+        default_input_device = sd.default.device[0]
+        
+        for i, device in enumerate(devices):
+            if device.get('max_input_channels', 0) > 0:  # It's an input device (microphone)
+                is_default = (i == default_input_device)
+                result.append({
+                    "id": str(i),
+                    "name": device.get('name', f"Device {i}"),
+                    "is_default": is_default
+                })
+        
+        # If no devices were found, add a placeholder
+        if not result:
+            result.append({
+                "id": "-1",
+                "name": "No microphone devices found",
+                "is_default": False
+            })
+            
+        return result
+    except Exception as e:
+        logging.error(f"Error getting microphone devices: {str(e)}")
+        # Return error indicator
+        return [{"id": "-1", "name": f"Error retrieving devices: {str(e)}", "is_default": False}]
 
 if __name__ == '__main__':
     # CLI behavior for listing devices

@@ -41,6 +41,5 @@
 ## Goals:
 - Plug and play instalation
 - Home assistant (music, weather, notes)
-- Onboarding
 - Find real use case
 - Desktop/mobile version

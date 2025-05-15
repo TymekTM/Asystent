@@ -1,7 +1,7 @@
 import os
 import json
 import asyncio
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash, send_file
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash, send_file, current_app
 from datetime import datetime  # Added for timestamping chat history
 from flask import Response, stream_with_context
 from datetime import datetime
@@ -142,7 +142,7 @@ def get_assistant_instance():
         _assistant_instance = Assistant()
     return _assistant_instance
 # Pre-load assistant on startup to avoid delay on first message
-_assistant_instance = get_assistant_instance()
+_assistant_instance = None  # defer Assistant instantiation to avoid ASR load errors on startup
 
 def transcribe_audio(wav_path: str) -> str:
     """Transcribe WAV file via assistant instance if available."""
@@ -1747,13 +1747,59 @@ def create_app(queue: multiprocessing.Queue):
     # --- Global error handlers ---
     @local_app.errorhandler(404)
     def handle_404(e):
-        return jsonify({'error': 'Not Found'}),   404
-    @local_app.errorhandler(500)
+        return jsonify({'error': 'Not Found'}),   404    @local_app.errorhandler(500)
     def handle_500(e):
         # Log the actual error
         logger.error(f"Internal Server Error: {e}", exc_info=True)
         return jsonify({'error': 'Internal Server Error'}), 500
 
+    # --- Onboarding Routes ---
+    @local_app.route('/onboarding')
+    def onboarding():
+        """Render the onboarding page."""
+        from config import _config, FIRST_RUN
+        # Check if we're in first run mode
+        if not _config.get('FIRST_RUN', True):
+            # Onboarding already completed, redirect to main page
+            return redirect(url_for('index'))
+        return render_template('onboarding.html', first_run=True)
+
+    @local_app.route('/api/complete-onboarding', methods=['POST'])
+    def complete_onboarding():
+        """Mark onboarding as complete in configuration."""
+        try:
+            config = load_main_config()
+            
+            # Save any config values that were passed in the request
+            if request.is_json:
+                request_data = request.get_json()
+                if isinstance(request_data, dict):
+                    # Update only specific fields from the request, not replacing entire config
+                    for key, value in request_data.items():
+                        if key in config:
+                            config[key] = value
+            
+            # Mark onboarding as complete
+            config['FIRST_RUN'] = False
+            save_main_config(config)
+            
+            logging.getLogger(__name__).info("Onboarding completed successfully")
+            return jsonify({"success": True, "message": "Onboarding marked as complete"})
+        except Exception as e:
+            logging.getLogger(__name__).error(f"Error completing onboarding: {e}", exc_info=True)
+            return jsonify({"success": False, "message": str(e)}), 500
+
+    # --- Audio devices API ---
+    @local_app.route('/api/audio/microphones', methods=['GET'])
+    def api_microphones():
+        """Return list of available microphone devices."""
+        try:
+            from audio_modules.list_audio_devices import get_microphone_devices
+            devices = get_microphone_devices()
+            return jsonify(devices)
+        except Exception as e:
+            logging.getLogger(__name__).error(f"Error fetching microphones: {e}", exc_info=True)
+            return jsonify([{"id": "-1", "name": f"Error retrieving devices: {e}", "is_default": False}]), 500
 
     # Configure Flask logging
     # Use a basic config, can be enhanced (e.g., rotating file handler)
@@ -2017,3 +2063,35 @@ def create_app(queue: multiprocessing.Queue):
 def api_new_module():
     """Page for adding a new module."""
     return render_template('module_create.html')
+
+@app.route('/api/config', methods=['GET', 'POST'])
+def api_config_local():
+    """API endpoint for configuration access/modifications."""
+    if request.method == 'GET':
+        # Return the current configuration
+        return jsonify({
+            'success': True,
+            'config': _config
+        })
+    elif request.method == 'POST':
+        try:
+            # Update the configuration with the provided data
+            data = request.json
+            
+            # Update the configuration with new values
+            for key, value in data.items():
+                _config[key] = value
+            
+            # Save the updated configuration
+            save_main_config(_config)
+            
+            return jsonify({
+                'success': True,
+                'message': 'Configuration updated successfully'
+            })
+        except Exception as e:
+            current_app.logger.error(f"Error updating configuration: {str(e)}")
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 500

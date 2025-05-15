@@ -73,9 +73,14 @@ def _gpu_ready() -> bool:
 def _candidates(size: str) -> List[str]:
     std = {"tiny", "base", "small", "medium", "large", "large-v1", "large-v2", "large-v3"}
     out = [size]
+    # also try base shorthand (e.g., 'small') and faster-whisper/HF repos
     raw = size.lower().split('/')[-1]
+    # determine base model name, strip 'whisper-' prefix if present
     base = raw.split('whisper-', 1)[1] if raw.startswith('whisper-') else raw
     if base in std:
+        # raw base model (will fetch openai/whisper-base by default)
+        out.append(base)
+        # Systran and explicit HF path
         out.append(f"Systran/faster-whisper-{base}")
         out.append(f"openai/whisper-{base}")
     seen = set()

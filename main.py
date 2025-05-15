@@ -98,6 +98,39 @@ def main():
     # --- Flask Process ---
     flask_process = multiprocessing.Process(target=run_flask_process, args=(command_queue,))
     flask_process.start()
+      # Check if this is the first run and open onboarding if needed
+    if config.get('FIRST_RUN', True):
+        logger.info("First run detected, preparing to launch onboarding...")
+        import time
+        import webbrowser
+        import requests
+        from requests.exceptions import RequestException
+
+        def open_onboarding_with_retry(max_retries: int = 30, retry_delay: float = 1.0) -> bool:
+            """Open onboarding page with retry mechanism to ensure Flask is ready"""
+            for attempt in range(max_retries):
+                try:
+                    # Test if Flask server is ready by checking the onboarding endpoint
+                    response = requests.get("http://localhost:5000/onboarding", timeout=2)
+                    if response.status_code == 200:
+                        # Server is ready, open the onboarding page
+                        webbrowser.open("http://localhost:5000/onboarding")
+                        logger.info(f"Opened onboarding page in browser after {attempt+1} attempts")
+                        return True
+                    else:
+                        logger.warning(f"Onboarding endpoint returned status code {response.status_code}")
+                except RequestException:
+                    logger.debug(f"Server not ready yet (attempt {attempt+1})")
+
+                logger.info(f"Flask server not ready yet, retrying in {retry_delay}s (attempt {attempt+1}/{max_retries})")
+                time.sleep(retry_delay)
+
+            logger.error(f"Failed to open onboarding page after {max_retries} attempts")
+            return False
+
+        # Start a separate thread to handle the retries without blocking main execution
+        import threading
+        threading.Thread(target=open_onboarding_with_retry, daemon=True).start()
 
     try:
         while True:
