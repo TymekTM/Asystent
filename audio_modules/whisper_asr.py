@@ -22,7 +22,7 @@ os.environ["HF_HUB_DISABLE_SYMLINKS"] = "1"
 # Logger – tylko warning i error, żeby nie blokować
 # ────────────────────────────────────────────────────────────────
 log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
+log.setLevel(logging.WARNING)
 
 def _ensure_cublas() -> bool:
     # if we've already created an alias, load it directly and skip rediscovery

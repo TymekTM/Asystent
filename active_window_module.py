@@ -5,19 +5,19 @@ import abc
 import psutil
 from typing import Dict, Optional, Any, List
 
-"""Active‑window helper.
+"""Active-window helper.
 
 *The original public API (`get_active_window_title`) is **preserved**.*  A new
-`get_active_window_context` function adds rich (but non‑invasive!) metadata that
-helps an LLM understand what the user is doing – e.g. *“site = YouTube”* or
-*“match_state = searching”* – **without** OCR, packet sniffing, or any other
-technique that might conflict with anti‑cheats.
+`get_active_window_context` function adds rich (but non-invasive!) metadata that
+helps an LLM understand what the user is doing – e.g. *“site = YouTube”* or
+*“match_state = searching”* – **without** OCR, packet sniffing, or any other
+technique that might conflict with anti-cheats.
 
 Only two information sources are used:
 1. **Process name / PID** (via `psutil`).
-2. **Window title** (Win32 API or X11 `_NET_WM_NAME`).
+2. **Window title** (Win32 API or X11 `_NET_WM_NAME`).
 
-Those are low‑impact, universally allowed, and identical to what the original
+Those are low-impact, universally allowed, and identical to what the original
 implementation relied on.
 """
 
@@ -34,8 +34,8 @@ class ActiveWindowContext:
     Attributes
     ----------
     app_name      Process name (e.g. ``chrome.exe``)
-    window_title  Localised title string shown in the OS title‑bar
-    extra         Provider‑specific key/value pairs with deeper context
+    window_title  Localised title string shown in the OS title-bar
+    extra         Provider-specific key/value pairs with deeper context
     """
 
     app_name: Optional[str]
@@ -46,15 +46,15 @@ class ActiveWindowContext:
         return self.app_name is not None or self.window_title is not None
 
 ###############################################################################
-# Provider plug‑in system (safe – no memory hacks, OCR, etc.)               ###
+# Provider plug-in system (safe – no memory hacks, OCR, etc.)               ###
 ###############################################################################
 
 class ContextProvider(abc.ABC):
-    """Base‑class for per‑application inspectors.
+    """Base-class for per-application inspectors.
 
     Each subclass declares which *process names* it understands and may return
     a dict with extra insight based only on *window title* heuristics (zero
-    intrusion, no anti‑cheat issues).
+    intrusion, no anti-cheat issues).
     """
 
     HANDLED_PROCESSES: set[str] = set()
@@ -106,10 +106,10 @@ def _foreground_info() -> Optional[tuple[psutil.Process, str]]:
                 d.intern_atom('_NET_WM_NAME'), d.intern_atom('UTF8_STRING')
             )
             if net_wm_name and net_wm_name.value:
-                title = net_wm_name.value.decode('utf‑8', 'ignore')
+                title = net_wm_name.value.decode('utf-8', 'ignore')
             else:
                 raw = aw.get_wm_name() or ""
-                title = raw.decode('latin‑1', 'ignore') if isinstance(raw, bytes) else raw
+                title = raw.decode('latin-1', 'ignore') if isinstance(raw, bytes) else raw
 
             pid_prop = aw.get_full_property(d.intern_atom('_NET_WM_PID'), X.AnyPropertyType)
             if not pid_prop:
@@ -121,7 +121,7 @@ def _foreground_info() -> Optional[tuple[psutil.Process, str]]:
     return None
 
 ###############################################################################
-# Concrete non‑invasive providers                                           ###
+# Concrete non-invasive providers                                           ###
 ###############################################################################
 
 class YouTubeTitleProvider(ContextProvider, metaclass=_ProviderMeta):
@@ -156,7 +156,7 @@ class ValorantQueueProvider(ContextProvider, metaclass=_ProviderMeta):
 ###############################################################################
 
 def get_active_window_context() -> Optional[ActiveWindowContext]:
-    """Return rich context without breaking anti‑cheats or privacy."""
+    """Return rich context without breaking anti-cheats or privacy."""
 
     info = _foreground_info()
     if not info:
@@ -180,7 +180,7 @@ def get_active_window_context() -> Optional[ActiveWindowContext]:
 # ------------------------------------------------------------------------- #
 
 def get_active_window_title() -> Optional[str]:
-    """Backward‑compatible helper.
+    """Backward-compatible helper.
 
     Returns exactly what the original function promised: **a string window
     title** or ``None``.  Internally we delegate to the richer context helper

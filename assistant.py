@@ -28,7 +28,7 @@ from performance_monitor import measure_performance
 
 # Import active window module if tracking is enabled
 # from config import Config # REMOVED
-from modules.active_window_module import get_active_window_title # CORRECTED IMPORT
+from active_window_module import get_active_window_title
 
 # Import specific config variables needed
 from config import (

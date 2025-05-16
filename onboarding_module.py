@@ -11,17 +11,17 @@ def mark_onboarding_complete():
     """Mark onboarding as complete in configuration."""
     try:
         # Load current config
-        config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config.json')
+        config_path = os.path.join(os.path.dirname(__file__), 'config.json')
         with open(config_path, 'r', encoding='utf-8') as f:
             config = json.load(f)
-        
+
         # Update first run flag
         config['FIRST_RUN'] = False
-        
+
         # Save updated config
         with open(config_path, 'w', encoding='utf-8') as f:
             json.dump(config, f, indent=2, ensure_ascii=False)
-            
+
         logger.info("Onboarding marked as complete in configuration")
         return True
     except Exception as e:
