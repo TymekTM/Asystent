@@ -25,6 +25,16 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 def _ensure_cublas() -> bool:
+    # if we've already created an alias, load it directly and skip rediscovery
+    alias_file = ROOT / '.cuda_alias' / 'cublas64_12.dll'
+    if alias_file.exists():
+        os.environ["PATH"] = str(alias_file.parent) + os.pathsep + os.environ.get("PATH", "")
+        try:
+            ctypes.CDLL(str(alias_file))
+            log.info(f"Found existing cuBLAS alias at {alias_file}")
+            return True
+        except OSError:
+            log.warning(f"Failed to load existing alias {alias_file}, will retry discovery.")
     try:
         ctypes.CDLL("cublas64_12.dll")
         return True
@@ -66,25 +76,30 @@ def _ensure_cublas() -> bool:
     return False
 
 def _gpu_ready() -> bool:
+    # Check for CUDA-capable GPU, but skip if it's AMD (CUDA unsupported)
     if not torch.cuda.is_available():
         return False
+    try:
+        # detect device name and skip AMD GPUs
+        device_name = torch.cuda.get_device_name(0)
+        if any(keyword in device_name.lower() for keyword in ("amd", "radeon")):
+            log.warning(f"GPU detected ({device_name}) is AMD – CUDA not supported, switching to CPU.")
+            return False
+    except Exception:
+        # if unable to get name, proceed to attempt CUDA
+        pass
     return _ensure_cublas()
 
 def _candidates(size: str) -> List[str]:
-    std = {"tiny", "base", "small", "medium", "large", "large-v1", "large-v2", "large-v3"}
-    out = [size]
-    # also try base shorthand (e.g., 'small') and faster-whisper/HF repos
+    """
+    Always use the faster-whisper model for the given base size.
+    Only the Systran faster-whisper variant is attempted.
+    """
+    # extract base model name (e.g., 'base' from 'openai/whisper-base')
     raw = size.lower().split('/')[-1]
-    # determine base model name, strip 'whisper-' prefix if present
     base = raw.split('whisper-', 1)[1] if raw.startswith('whisper-') else raw
-    if base in std:
-        # raw base model (will fetch openai/whisper-base by default)
-        out.append(base)
-        # Systran and explicit HF path
-        out.append(f"Systran/faster-whisper-{base}")
-        out.append(f"openai/whisper-{base}")
-    seen = set()
-    return [x for x in out if not (x in seen or seen.add(x))]
+    # default to faster-whisper
+    return [f"Systran/faster-whisper-{base}"]
 
 class WhisperASR:
     def __init__(self, model_size: str = "base", compute_type: str = "int8"):
