@@ -35,7 +35,6 @@ def test_capture_screen_fallback(tmp_path, monkeypatch, device, expected):
 def test_capture_with_conversation(monkeypatch, tmp_path):
     # Change cwd so screenshots written to tmp_path/screenshots
     monkeypatch.chdir(tmp_path)
-    # Ensure screenshots folder is created
     # monkeypatch dxcam_device to return dummy image array
     class DummyArr: pass
     class DummyDev:

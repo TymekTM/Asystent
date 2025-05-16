@@ -20,6 +20,7 @@ body {
     font-size: 1.1em;
     line-height: 1.5;
     word-break: break-word;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 .bubble.user {
     background: #2e8bff;
@@ -60,4 +61,64 @@ body {
 #chat-status {
     color: #fff;
     margin-top: 8px;
+}
+/* Mobile responsiveness */
+@media (max-width: 576px) {
+    .container {
+        max-width: 100% !important;
+        padding: 0 10px;
+    }
+    #chat-history {
+        max-height: 65vh;
+    }
+    .bubble {
+        max-width: 100%;
+    }
+    #chat-form {
+        flex-direction: column !important;
+    }
+    #chat-form .col-12 {
+        width: 100%;
+        margin-bottom: 8px;
+    }
+}
+/* Spinner icon in status */
+.spinner {
+    margin-right: 6px;
+}
+/* Enhanced mobile controls */
+@media (max-width: 576px) {
+    /* Ensure voice and mobile record buttons full width */
+    #voice-btn, #mobile-record-btn, #manual-activate-btn {
+        width: 100% !important;
+        margin-bottom: 8px;
+    }
+    /* Hide manual activation on mobile for simplicity */
+    #manual-activate-btn {
+        display: none !important;
+    }
+    /* Show mobile record button prominently */
+    #mobile-record-btn {
+        display: block !important;
+        background: #28a745;
+        color: #fff;
+        border: none;
+    }
+    /* Adjust chat input width */
+    #chat-input {
+        width: 100%;
+        margin-bottom: 8px;
+    }
+}
+/* Tool invocation bubble style */
+.bubble.tool {
+    background: #ffe680;
+    color: #333;
+    border: 2px dashed #ffcc00;
+    animation: pulse 1s infinite;
+}
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(255,204,0,0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(255,204,0,0); }
+    100% { box-shadow: 0 0 0 0 rgba(255,204,0,0); }
 }

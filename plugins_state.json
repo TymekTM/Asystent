@@ -1,7 +1,7 @@
 {
   "plugins": {
     "api_module": {
-      "enabled": true
+      "enabled": false
     },
     "deepseek_module": {
       "enabled": false
@@ -10,6 +10,21 @@
       "enabled": true
     },
     "see_screen_module": {
+      "enabled": true
+    },
+    "open_web_module": {
+      "enabled": true
+    },
+    "core_module": {
+      "enabled": false
+    },
+    "memory_module": {
+      "enabled": true
+    },
+    "weather_module": {
+      "enabled": true
+    },
+    "active_window_module": {
       "enabled": true
     }
   }

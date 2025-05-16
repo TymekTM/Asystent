@@ -1,10 +1,9 @@
 *.log
-/screenshots
-assistant.log
-*.pyc
-*.pyc
-/__pycache__
-/__pycache__
-/.VSCodeCounter
-/__pycache__
+/screenshots/
+/user_data/
 assistant_memory.db
+*.pyc
+__pycache__/
+.VSCodeCounter
+/.hf_cache
+/.cuda_alias

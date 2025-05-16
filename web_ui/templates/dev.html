@@ -1,324 +1,761 @@
+<!-- filepath: f:\Asystent\web_ui\templates\dev.html.new -->
 {% extends "base.html" %}
+
+{% block head_extra %}
+<style>
+/* Chip buttons */
+.chip-button {
+  border-radius: 50px;
+  padding: 0.5rem 1.25rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.chip-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.chip-button i {
+  font-size: 0.9rem;
+}
+
+/* Section styling */
+.dev-section {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dev-section h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dev-section h2 i {
+  color: var(--gaja-primary);
+}
+
+/* Test status indicators */
+.status-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.status-indicator.passed { background: #4caf50; }
+.status-indicator.failed { background: #f44336; }
+.status-indicator.running { background: #ffc107; }
+.status-indicator.idle { background: #888; }
+
+/* Test list */
+.test-item {
+  border-left: 6px solid #e9ecef;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 0.25rem;
+}
+
+.test-item.test-ok { border-left-color: #4caf50; }
+.test-item.test-fail { border-left-color: #f44336; }
+.test-item.test-error { border-left-color: #ffc107; }
+
+/* Test and bench log styling */
+.log-container {
+  white-space: pre-wrap;
+  background: #222;
+  color: #eee;
+  padding: 1em;
+  border-radius: 0.5rem;
+  max-height: 300px;
+  overflow-y: auto;
+  font-family: monospace;
+  font-size: 0.85rem;
+}
+
+/* Responsive tables */
+@media (max-width: 768px) {
+  .table-responsive-custom {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+  }
+  
+  .table-responsive-custom td, 
+  .table-responsive-custom th {
+    white-space: nowrap;
+  }
+}
+
+/* User management form */
+.user-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.5rem;
+  align-items: start;
+}
+
+.user-form-grid .btn {
+  align-self: end;
+}
+</style>
+{% endblock %}
+
 {% block content %}
-    <h1>Zakładka Dev – Testy jednostkowe</h1>
-    <button id="run-tests-btn" class="btn btn-primary mb-3">Uruchom testy</button>
-    <span id="test-status-dot" class="idle"></span>
-    <span id="test-status-label">Status: Idle</span>
-    <div id="test-summary" class="mt-2"></div>
-    <div id="ai-summary" class="mb-3"></div>
-    <div id="test-list"></div>
-    <details class="mt-3">
-        <summary>Pokaż pełny log testów</summary>
-        <div id="test-log"></div>
-    </details>
+<div class="container mt-4">
+    <h1 class="mb-4">👨‍🔬 Zakładka Dev</h1>
 
-    <hr>
-    <h1>Benchmarki systemu</h1>
-    <button id="run-bench-btn" class="btn btn-secondary mb-3">Uruchom benchmarki</button>
-    <span id="bench-status-dot" class="idle"></span>
-    <span id="bench-status-label">Status: Idle</span>
-    <div id="bench-summary" class="mt-2"></div>
-    <details class="mt-3">
-        <summary>Pokaż pełny log benchmarku</summary>
-        <div id="bench-log" style="white-space: pre-wrap; background: #f5f5f5; padding: 1em; border-radius: 6px; max-height: 300px; overflow-y: auto;"></div>
-    </details>
-
-    <hr>
-    <h2>Zarządzanie użytkownikami</h2>
-    <div class="mb-3">
-        <form id="add-user-form" class="row g-2">
-            <div class="col-md-2"><input type="text" class="form-control" name="username" placeholder="Nazwa użytkownika" required></div>
-            <div class="col-md-2"><input type="password" class="form-control" name="password" placeholder="Hasło" required></div>
-            <div class="col-md-2"><input type="text" class="form-control" name="display_name" placeholder="Wyświetlana nazwa"></div>
-            <div class="col-md-2"><input type="text" class="form-control" name="ai_persona" placeholder="Persona AI"></div>
-            <div class="col-md-2"><input type="text" class="form-control" name="personalization" placeholder="Personalizacja"></div>
-            <div class="col-md-1">
-                <select class="form-select" name="role">
-                    <option value="user">user</option>
-                    <option value="dev">dev</option>
-                </select>
+    <!-- Unit Tests Section -->
+    <div class="dev-section">
+        <h2><i class="fas fa-vial"></i> ✅ Testy jednostkowe</h2>
+        <div class="d-flex align-items-center mb-3">
+            <button id="run-tests-btn" class="chip-button me-3">
+                <i class="fas fa-play"></i> Uruchom testy
+            </button>
+            <div class="status-display">
+                <span id="test-status-dot" class="status-indicator idle"></span>
+                <span id="test-status-label">Status: Idle</span>
             </div>
-            <div class="col-md-1"><button type="submit" class="btn btn-success">Dodaj</button></div>
-        </form>
-        <div id="add-user-status" class="mt-2"></div>
+        </div>
+        
+        <div id="test-summary" class="alert alert-light"></div>
+        <div id="ai-summary" class="alert alert-info" style="display: none;"></div>
+        
+        <div id="test-list" class="mb-3"></div>
+        
+        <details>
+            <summary class="mb-2">Pokaż pełny log testów</summary>
+            <div id="test-log" class="log-container"></div>
+        </details>
     </div>
-    <table class="table table-bordered" id="users-table">
-        <thead><tr><th>Nazwa użytkownika</th><th>Rola</th><th>Wyświetlana nazwa</th><th>Persona AI</th><th>Personalizacja</th><th>Akcje</th></tr></thead>
-        <tbody>
-        {% for user in users %}
-            <tr>
-                <td>{{ user['username'] }}</td>
-                <td>{{ user['role'] }}</td>
-                <td>{{ user['display_name'] or '' }}</td>
-                <td>{{ user['ai_persona'] or '' }}</td>
-                <td>{{ user['personalization'] or '' }}</td>
-                <td>
-                    {% if user['username'] != 'dev' %}
-                    <button class="btn btn-danger btn-sm delete-user-btn" data-username="{{ user['username'] }}">Usuń</button>
-                    {% endif %}
-                </td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-    <hr>
-    <h2>Historia testów</h2>
-    <table class="table table-sm" id="test-history-table">
-        <thead><tr><th>Czas</th><th>Wynik</th><th>Podsumowanie</th></tr></thead>
-        <tbody></tbody>
-    </table>
 
-    <h2>Planowanie testów</h2>
-    <form id="schedule-tests-form" class="row g-2 mb-4">
-        <div class="col-auto">
-            <input type="number" id="schedule-interval" class="form-control" placeholder="Interwał (minuty)" min="1" required>
+    <!-- Benchmark Section -->
+    <div class="dev-section">
+        <h2><i class="fas fa-tachometer-alt"></i> 📊 Benchmark systemu</h2>
+        <div class="d-flex align-items-center mb-3">
+            <button id="run-bench-btn" class="chip-button me-3">
+                <i class="fas fa-play"></i> Uruchom benchmark
+            </button>
+            <div class="status-display">
+                <span id="bench-status-dot" class="status-indicator idle"></span>
+                <span id="bench-status-label">Status: Idle</span>
+            </div>
         </div>
-        <div class="col-auto">
-            <button type="submit" class="btn btn-warning">Zaplanuj</button>
+        
+        <div id="bench-summary" class="alert alert-light"></div>
+        
+        <details>
+            <summary class="mb-2">Pokaż pełny log benchmarku</summary>
+            <div id="bench-log" class="log-container"></div>
+        </details>
+    </div>
+
+    <!-- Performance Stats Section -->
+    <div class="dev-section">
+        <h2><i class="fas fa-chart-line"></i> 📈 Statystyki AI</h2>
+        <button id="clear-perf-stats-btn" class="chip-button mb-3">
+            <i class="fas fa-eraser"></i> Wyczyść statystyki
+        </button>
+          <div id="perf-stats-table-container" class="table-responsive-custom">
+            <table class="table table-striped table-sm" id="perf-stats-table">
+                <thead>
+                    <tr>
+                        <th>Funkcja</th>
+                        <th>Średni czas (ms)</th>
+                        <th>Liczba wywołań</th>
+                        <th>Całkowity czas (s)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Data loaded dynamically -->
+                </tbody>
+            </table>
         </div>
-        <div class="col-auto">
-            <span id="schedule-status-label">Brak harmonogramu</span>
+    </div>
+    
+    <!-- User Management Section -->
+    <div class="dev-section">
+        <h2><i class="fas fa-users-cog"></i> 👤 Zarządzanie użytkownikami</h2>
+        <div class="mb-3">
+            <form id="add-user-form">
+                <div class="user-form-grid">
+                    <input type="text" class="form-control" name="username" placeholder="Nazwa użytkownika" required>
+                    <input type="password" class="form-control" name="password" placeholder="Hasło" required>
+                    <input type="text" class="form-control" name="display_name" placeholder="Wyświetlana nazwa">
+                    <input type="text" class="form-control" name="ai_persona" placeholder="Persona AI">
+                    <input type="text" class="form-control" name="personalization" placeholder="Personalizacja">
+                    <select class="form-select" name="role">
+                        <option value="user">user</option>
+                        <option value="dev">dev</option>
+                    </select>
+                    <button type="submit" class="btn btn-gaja">Dodaj</button>
+                </div>
+            </form>
+            <div id="add-user-status" class="mt-2"></div>
         </div>
-    </form>
-    <script>
-    const runBtn = document.getElementById('run-tests-btn');
+        
+        <div class="table-responsive-custom">
+            <table class="table table-sm" id="users-table">
+                <thead>
+                    <tr>
+                        <th>Nazwa użytkownika</th>
+                        <th>Rola</th>
+                        <th>Wyświetlana nazwa</th>
+                        <th>Persona AI</th>
+                        <th>Personalizacja</th>
+                        <th>Akcje</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for user in users %}
+                    <tr>
+                        <td>{{ user['username'] }}</td>
+                        <td>{{ user['role'] }}</td>
+                        <td>{{ user['display_name'] or '' }}</td>
+                        <td>{{ user['ai_persona'] or '' }}</td>
+                        <td>{{ user['personalization'] or '' }}</td>
+                        <td>
+                            {% if user['username'] != 'dev' %}
+                            <button class="btn btn-sm btn-outline-danger delete-user-btn" data-username="{{ user['username'] }}">Usuń</button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Testing History Section -->
+    <div class="dev-section">
+        <h2><i class="fas fa-history"></i> 📅 Historia i planowanie testów</h2>
+        <form id="schedule-tests-form" class="d-flex gap-2 mb-4 align-items-center">
+            <input type="number" id="schedule-interval" class="form-control" placeholder="Interwał (minuty)" min="1" required style="max-width: 200px;">
+            <button type="submit" class="chip-button">
+                <i class="fas fa-calendar"></i> Zaplanuj
+            </button>
+            <span id="schedule-status-label" class="ms-2">Brak harmonogramu</span>
+        </form>
+        
+        <div class="table-responsive-custom">
+            <table class="table table-sm" id="test-history-table">
+                <thead>
+                    <tr>
+                        <th>Czas</th>
+                        <th>Wynik</th>
+                        <th>Podsumowanie</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Data loaded dynamically -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Test execution and monitoring
+document.getElementById('run-tests-btn').addEventListener('click', function() {
+    this.disabled = true;
     const statusDot = document.getElementById('test-status-dot');
     const statusLabel = document.getElementById('test-status-label');
-    const summaryDiv = document.getElementById('test-summary');
-    const aiSummaryDiv = document.getElementById('ai-summary');
-    const logDiv = document.getElementById('test-log');
-    const testListDiv = document.getElementById('test-list');
-    let polling = false;
-
-    function setStatus(status) {
-        statusDot.className = '';
-        if (status === 'passed') {
-            statusDot.classList.add('passed');
-            statusLabel.textContent = 'Status: Zaliczone';
-        } else if (status === 'failed') {
-            statusDot.classList.add('failed');
-            statusLabel.textContent = 'Status: Błędy';
-        } else if (status === 'running') {
-            statusDot.classList.add('running');
-            statusLabel.textContent = 'Status: W trakcie...';
-        } else {
-            statusDot.classList.add('idle');
-            statusLabel.textContent = 'Status: Idle';
-        }
-    }
-
-    function renderTestList(tests) {
-        if (!tests || !tests.length) {
-            testListDiv.innerHTML = '<div class="alert alert-info">Brak wyników testów.</div>';
-            return;
-        }
-        let html = '<div class="list-group">';
-        for (const t of tests) {
-            let statusIcon = '';
-            let itemClass = 'list-group-item d-flex justify-content-between align-items-center';
-            if (t.status === 'ok') {
-                statusIcon = '<span class="badge bg-success rounded-pill">✔</span>';
-                itemClass += ' test-ok';
-            } else if (t.status === 'FAIL') {
-                statusIcon = '<span class="badge bg-danger rounded-pill">✖</span>';
-                itemClass += ' test-fail';
-            } else if (t.status === 'ERROR') {
-                statusIcon = '<span class="badge bg-warning text-dark rounded-pill">!</span>';
-                itemClass += ' test-error';
+    const testList = document.getElementById('test-list');
+    const testLog = document.getElementById('test-log');
+    const testSummary = document.getElementById('test-summary');
+    const aiSummary = document.getElementById('ai-summary');
+    
+    // Reset UI
+    statusDot.className = 'status-indicator running';
+    statusLabel.textContent = 'Status: Uruchomiono...';
+    testList.innerHTML = '';
+    testLog.textContent = 'Uruchamianie testów...';
+    testSummary.textContent = '';
+    testSummary.className = 'alert alert-light';
+    aiSummary.style.display = 'none';
+    
+    // Start tests
+    fetch('/api/run_tests', { method: 'POST' })
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'started') {
+                // Start polling for status
+                pollTestStatus();
             } else {
-                statusIcon = '<span class="badge bg-secondary rounded-pill">?</span>';
+                throw new Error('Nie udało się rozpocząć testów');
             }
-            html += `<div class="${itemClass}">
-                <div>
-                    <span class="fw-bold">${t.name}</span>
-                    ${t.class ? `<span class="text-muted ms-2">(${t.class})</span>` : ''}
-                    <span class="ms-2">${statusIcon}</span>
-                </div>
-                <div>
-                    <span class="fw-bold">${t.status}</span>
-                    ${t.details ? `<button class="btn btn-link btn-sm ms-2" type="button" onclick="this.nextElementSibling.classList.toggle('d-none')">Szczegóły</button>
-                    <div class='alert alert-danger mt-2 mb-0 d-none' style='white-space:pre-wrap;font-size:0.95em;'>${t.details}</div>` : ''}
-                </div>
-            </div>`;
-        }
-        html += '</div>';
-        testListDiv.innerHTML = html;
-    }
+        })
+        .catch(error => {
+            statusDot.className = 'status-indicator failed';
+            statusLabel.textContent = 'Status: Błąd';
+            testSummary.textContent = `Błąd: ${error.message}`;
+            testSummary.className = 'alert alert-danger';
+            this.disabled = false;
+        });
+});
 
-    function pollStatus() {
-        fetch('/api/test_status').then(r => r.json()).then(data => {
-            setStatus(data.running ? 'running' : (data.result || 'idle'));
-            summaryDiv.textContent = data.summary || '';
-            aiSummaryDiv.textContent = data.ai_summary ? 'AI: ' + data.ai_summary : '';
-            logDiv.textContent = data.log || '';
-            renderTestList(data.tests);
+function pollTestStatus() {
+    const statusDot = document.getElementById('test-status-dot');
+    const statusLabel = document.getElementById('test-status-label');
+    const testList = document.getElementById('test-list');
+    const testLog = document.getElementById('test-log');
+    const testSummary = document.getElementById('test-summary');
+    const aiSummary = document.getElementById('ai-summary');
+    const runButton = document.getElementById('run-tests-btn');
+    
+    fetch('/api/test_status')
+        .then(response => response.json())
+        .then(data => {
+            // Update log
+            testLog.textContent = data.log || 'Brak logów';
+            
+            // Update test list
+            updateTestList(testList, data.tests || []);
+            
+            // Update status
             if (data.running) {
-                setTimeout(pollStatus, 1000);
+                statusDot.className = 'status-indicator running';
+                statusLabel.textContent = 'Status: Uruchomiono...';
+                setTimeout(pollTestStatus, 1000); // Continue polling
             } else {
-                polling = false;
+                // Tests completed
+                if (data.result === 'passed') {
+                    statusDot.className = 'status-indicator passed';
+                    statusLabel.textContent = 'Status: Sukces';
+                    testSummary.textContent = data.summary || 'Wszystkie testy przeszły pomyślnie';
+                    testSummary.className = 'alert alert-success';
+                } else {
+                    statusDot.className = 'status-indicator failed';
+                    statusLabel.textContent = 'Status: Błąd';
+                    testSummary.textContent = data.summary || 'Niektóre testy nie przeszły';
+                    testSummary.className = 'alert alert-danger';
+                }
+                
+                // Show AI summary if available
+                if (data.ai_summary) {
+                    aiSummary.textContent = data.ai_summary;
+                    aiSummary.style.display = 'block';
+                }
+                
+                runButton.disabled = false;
+                fetchTestHistory(); // Update history
             }
+        })
+        .catch(error => {
+            console.error('Error polling test status:', error);
+            setTimeout(pollTestStatus, 2000); // Retry after a delay
         });
-    }
+}
 
-    runBtn.addEventListener('click', () => {
-        fetch('/api/run_tests', {method: 'POST'}).then(r => {
-            if (r.ok) {
-                polling = true;
-                pollStatus();
-            } else {
-                r.json().then(data => alert('Testy już trwają!'));
-            }
-        });
-        setStatus('running');
-        summaryDiv.textContent = '';
-        aiSummaryDiv.textContent = '';
-        logDiv.textContent = '';
-        testListDiv.innerHTML = '';
+function updateTestList(container, tests) {
+    if (!tests.length) return;
+    
+    let html = '';
+    tests.forEach(test => {
+        const statusClass = test.status === 'ok' ? 'test-ok' : 
+                           (test.status === 'FAIL' ? 'test-fail' : 'test-error');
+        
+        html += `<div class="test-item ${statusClass}">
+                    <div><b>${test.name}</b> ${test.class ? `(${test.class})` : ''}</div>
+                    ${test.details ? `<div class="test-details mt-2">${test.details}</div>` : ''}
+                </div>`;
     });
+    
+    container.innerHTML = html;
+}
 
-    pollStatus();
+// Benchmark functions
+document.getElementById('run-bench-btn').addEventListener('click', function() {
+    this.disabled = true;
+    const statusDot = document.getElementById('bench-status-dot');
+    const statusLabel = document.getElementById('bench-status-label');
+    const benchLog = document.getElementById('bench-log');
+    const benchSummary = document.getElementById('bench-summary');
+    
+    // Reset UI
+    statusDot.className = 'status-indicator running';
+    statusLabel.textContent = 'Status: Uruchomiono...';
+    benchLog.textContent = 'Uruchamianie benchmarku...';
+    benchSummary.textContent = '';
+    benchSummary.className = 'alert alert-light';
+    
+    // Start benchmark
+    fetch('/api/run_benchmarks', { method: 'POST' })
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'started') {
+                // Start polling for status
+                pollBenchStatus();
+            } else {
+                throw new Error('Nie udało się rozpocząć benchmarku');
+            }
+        })
+        .catch(error => {
+            statusDot.className = 'status-indicator failed';
+            statusLabel.textContent = 'Status: Błąd';
+            benchSummary.textContent = `Błąd: ${error.message}`;
+            benchSummary.className = 'alert alert-danger';
+            this.disabled = false;
+        });
+});
 
-    // Benchmark controls
-    const benchBtn = document.getElementById('run-bench-btn');
-    const benchDot = document.getElementById('bench-status-dot');
-    const benchLabel = document.getElementById('bench-status-label');
-    const benchSummaryDiv = document.getElementById('bench-summary');
-    const benchLogDiv = document.getElementById('bench-log');
-    let benchPolling = false;
-
-    function setBenchStatus(status) {
-        benchDot.className = '';
-        if (status === 'running') {
-            benchDot.classList.add('running'); benchLabel.textContent = 'Status: W trakcie...';
-        } else if (status === 'completed') {
-            benchDot.classList.add('passed'); benchLabel.textContent = 'Status: Zakończone';
-        } else if (status === 'error') {
-            benchDot.classList.add('failed'); benchLabel.textContent = 'Status: Błąd';
-        } else {
-            benchDot.classList.add('idle'); benchLabel.textContent = 'Status: Idle';
-        }
-    }
-
-    function pollBench() {
-        fetch('/api/bench_status').then(r => r.json()).then(data => {
-            setBenchStatus(data.running ? 'running' : (data.summary && !data.running ? 'completed' : 'idle'));
-            benchSummaryDiv.textContent = data.summary || '';
-            benchLogDiv.textContent = data.log || '';
+function pollBenchStatus() {
+    const statusDot = document.getElementById('bench-status-dot');
+    const statusLabel = document.getElementById('bench-status-label');
+    const benchLog = document.getElementById('bench-log');
+    const benchSummary = document.getElementById('bench-summary');
+    const runButton = document.getElementById('run-bench-btn');
+    
+    fetch('/api/bench_status')
+        .then(response => response.json())
+        .then(data => {
+            // Update log
+            benchLog.textContent = data.log || 'Brak logów';
+            
+            // Update status
             if (data.running) {
-                setTimeout(pollBench, 1000);
+                statusDot.className = 'status-indicator running';
+                statusLabel.textContent = 'Status: Uruchomiono...';
+                setTimeout(pollBenchStatus, 1000); // Continue polling
             } else {
-                benchPolling = false;
+                // Benchmark completed
+                statusDot.className = 'status-indicator passed';
+                statusLabel.textContent = 'Status: Zakończono';
+                benchSummary.textContent = data.summary || 'Benchmark zakończony';
+                benchSummary.className = 'alert alert-info';
+                runButton.disabled = false;
+                
+                updateBenchmarkResults(data.result || {});
             }
+        })
+        .catch(error => {
+            console.error('Error polling benchmark status:', error);
+            setTimeout(pollBenchStatus, 2000); // Retry after a delay
         });
-    }
+}
 
-    benchBtn.addEventListener('click', () => {
-        fetch('/api/run_benchmarks', {method: 'POST'}).then(r => {
-            if (r.ok) {
-                benchPolling = true;
-                pollBench();
+function updateBenchmarkResults(results) {
+    // Additional visualization could be added here in the future
+}
+
+// Performance stats
+document.getElementById('clear-perf-stats-btn').addEventListener('click', function() {
+    if (confirm('Na pewno wyczyścić wszystkie statystyki wydajności?')) {
+        fetch('/api/performance_stats', { method: 'DELETE' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    fetchPerfStats(); // Refresh display
+                    alert('Statystyki wydajności zostały wyczyszczone');
+                }
+            })
+            .catch(error => console.error('Error clearing perf stats:', error));
+        }
+});
+
+function fetchPerfStats() {
+    fetch('/api/performance_stats')
+        .then(response => response.json())
+        .then(data => {
+            const tableBody = document.querySelector('#perf-stats-table tbody');
+            if (!tableBody) {
+                console.error('Performance stats table body not found');
+                return;
+            }
+            tableBody.innerHTML = '';
+            
+            console.log('Performance stats data:', data);
+            
+            // Check if we have data
+            if (data && Object.keys(data).length > 0) {
+                // Convert the object format to an array for display
+                Object.entries(data).forEach(([functionName, statInfo]) => {
+                    const row = document.createElement('tr');
+                    
+                    const nameCell = document.createElement('td');
+                    nameCell.textContent = functionName;
+                    
+                    const avgTimeCell = document.createElement('td');
+                    const avgTime = parseFloat(statInfo.average_ms || 0);
+                    avgTimeCell.textContent = avgTime.toFixed(2);
+                    
+                    const countCell = document.createElement('td');
+                    countCell.textContent = statInfo.count || 0;
+                    
+                    const totalTimeCell = document.createElement('td');
+                    // Calculate total time in seconds
+                    const totalTime = (avgTime * (statInfo.count || 0)) / 1000;
+                    totalTimeCell.textContent = totalTime.toFixed(3);
+                    
+                    row.appendChild(nameCell);
+                    row.appendChild(avgTimeCell);
+                    row.appendChild(countCell);
+                    row.appendChild(totalTimeCell);
+                    tableBody.appendChild(row);
+                });
             } else {
-                alert('Benchmark już trwa!');
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
+                cell.colSpan = 4;
+                cell.textContent = 'Brak danych';
+                cell.className = 'text-center';
+                row.appendChild(cell);
+                tableBody.appendChild(row);
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching performance stats:', error);
+            // Add fallback error display in the table
+            const tableBody = document.querySelector('#perf-stats-table tbody');
+            if (tableBody) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center text-danger">
+                            Błąd podczas ładowania statystyk: ${error.message || 'Nieznany błąd'}
+                        </td>
+                    </tr>
+                `;
             }
         });
-        setBenchStatus('running'); benchSummaryDiv.textContent = ''; benchLogDiv.textContent = '';
+}
+
+// User management
+document.getElementById('add-user-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const statusContainer = document.getElementById('add-user-status');
+    statusContainer.innerHTML = '<div class="spinner-border spinner-border-sm text-light me-2" role="status"></div> Dodawanie użytkownika...';
+    
+    const formData = new FormData(this);
+    const userData = {};
+    formData.forEach((value, key) => {
+        userData[key] = value;
     });
-    // Initial status fetch
-    pollBench();
-    // Test history
-    async function loadTestHistory() {
-        const res = await fetch('/api/test_history');
-        const history = await res.json();
-        const tbody = document.querySelector('#test-history-table tbody');
-        tbody.innerHTML = '';
-        history.slice().reverse().forEach(entry => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${new Date(entry.timestamp).toLocaleString()}</td>
-                <td>${entry.result}</td>
-                <td>${entry.summary}</td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
-    loadTestHistory();
-    setInterval(loadTestHistory, 30000); // odśwież co 30s
+    
+    fetch('/api/users', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(userData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            statusContainer.innerHTML = '<div class="alert alert-success">Użytkownik został dodany pomyślnie.</div>';
+            this.reset();
+            fetchUsers(); // Refresh user list
+        } else {
+            statusContainer.innerHTML = `<div class="alert alert-danger">Błąd: ${data.error || 'Nie udało się dodać użytkownika'}</div>`;
+        }
+    })
+    .catch(error => {
+        statusContainer.innerHTML = `<div class="alert alert-danger">Błąd: ${error.message || 'Wystąpił nieoczekiwany błąd'}</div>`;
+    });
+});
 
-    // Scheduling tests
-    async function loadScheduleStatus() {
-        const res = await fetch('/api/schedule_status');
-        const data = await res.json();
-        const label = document.getElementById('schedule-status-label');
-        if (data.scheduled_interval) {
-            label.textContent = `Zaplanowano co ${data.scheduled_interval} min.`;
-        } else {
-            label.textContent = 'Brak harmonogramu';
-        }
-    }
-    document.getElementById('schedule-tests-form').onsubmit = async function(e) {
-        e.preventDefault();
-        const mins = document.getElementById('schedule-interval').value;
-        const res = await fetch('/api/schedule_tests', {
-            method: 'POST', headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({interval: mins})
+function setupDeleteUserButtons() {
+    document.querySelectorAll('.delete-user-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const username = this.getAttribute('data-username');
+            
+            if (confirm(`Czy na pewno chcesz usunąć użytkownika "${username}"?`)) {
+                fetch(`/api/users/${username}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        fetchUsers(); // Refresh user list
+                        document.getElementById('add-user-status').innerHTML = 
+                            `<div class="alert alert-success">Użytkownik "${username}" został usunięty.</div>`;
+                    } else {
+                        document.getElementById('add-user-status').innerHTML = 
+                            `<div class="alert alert-danger">Błąd: ${data.error || 'Nie udało się usunąć użytkownika'}</div>`;
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('add-user-status').innerHTML = 
+                        `<div class="alert alert-danger">Błąd: ${error.message || 'Wystąpił nieoczekiwany błąd'}</div>`;
+                });
+            }
         });
-        if (res.ok) {
-            loadScheduleStatus();
-        } else {
-            const err = await res.json(); alert(err.error || 'Błąd planowania');
-        }
-    };
-    loadScheduleStatus();
+    });
+}
 
-    // User management JS
-    document.getElementById('add-user-form').onsubmit = async function(e) {
-        e.preventDefault();
-        const form = e.target;
-        const data = Object.fromEntries(new FormData(form));
-        const statusDiv = document.getElementById('add-user-status');
-        statusDiv.textContent = '';
-        const resp = await fetch('/dev/users/add', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        const result = await resp.json();
-        if (result.success) {
-            statusDiv.textContent = 'Dodano użytkownika!';
-            window.location.reload();
-        } else {
-            statusDiv.textContent = result.error || 'Błąd dodawania użytkownika.';
-        }
-    };
-    document.querySelectorAll('.delete-user-btn').forEach(btn => {
-        btn.onclick = async function() {
-            if (!confirm('Na pewno usunąć użytkownika?')) return;
-            const username = btn.getAttribute('data-username');
-            const resp = await fetch('/dev/users/delete', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username })
+function fetchUsers() {
+    fetch('/api/users')
+        .then(response => response.json())
+        .then(data => {
+            const tableBody = document.querySelector('#users-table tbody');
+            tableBody.innerHTML = '';
+            
+            data.forEach(user => {
+                const row = document.createElement('tr');
+                
+                const usernameCell = document.createElement('td');
+                usernameCell.textContent = user.username;
+                
+                const roleCell = document.createElement('td');
+                roleCell.textContent = user.role;
+                
+                const displayNameCell = document.createElement('td');
+                displayNameCell.textContent = user.display_name || '';
+                
+                const aiPersonaCell = document.createElement('td');
+                aiPersonaCell.textContent = user.ai_persona || '';
+                
+                const personalizationCell = document.createElement('td');
+                personalizationCell.textContent = user.personalization || '';
+                
+                const actionsCell = document.createElement('td');
+                if (user.username !== 'dev') {
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'btn btn-sm btn-outline-danger delete-user-btn';
+                    deleteBtn.textContent = 'Usuń';
+                    deleteBtn.setAttribute('data-username', user.username);
+                    actionsCell.appendChild(deleteBtn);
+                }
+                
+                row.appendChild(usernameCell);
+                row.appendChild(roleCell);
+                row.appendChild(displayNameCell);
+                row.appendChild(aiPersonaCell);
+                row.appendChild(personalizationCell);
+                row.appendChild(actionsCell);
+                tableBody.appendChild(row);
             });
-            const result = await resp.json();
-            if (result.success) {
-                window.location.reload();
-            } else {
-                alert(result.error || 'Błąd usuwania użytkownika.');
-            }
-        };
+            
+            setupDeleteUserButtons();
+        })
+        .catch(error => console.error('Error fetching users:', error));
+}
+
+// Test history and scheduling
+document.getElementById('schedule-tests-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const interval = document.getElementById('schedule-interval').value;
+    const statusLabel = document.getElementById('schedule-status-label');
+    
+    statusLabel.textContent = 'Ustawianie harmonogramu...';
+    
+    fetch('/api/schedule_tests', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ interval: parseInt(interval) })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            statusLabel.textContent = `Harmonogram: co ${interval} min`;
+            this.reset();
+        } else {
+            statusLabel.textContent = `Błąd: ${data.error || 'Nie udało się ustawić harmonogramu'}`;
+        }
+    })
+    .catch(error => {
+        statusLabel.textContent = `Błąd: ${error.message || 'Wystąpił nieoczekiwany błąd'}`;
     });
-    </script>
-    <style>
-        #test-log { white-space: pre-wrap; background: #222; color: #eee; padding: 1em; border-radius: 6px; max-height: 300px; overflow-y: auto; }
-        #test-summary, #ai-summary { margin-top: 1em; font-weight: bold; }
-        #test-status-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 8px; }
-        #test-status-dot.passed { background: #4caf50; }
-        #test-status-dot.failed { background: #f44336; }
-        #test-status-dot.running { background: #ffc107; }
-        #test-status-dot.idle { background: #888; }
-        .list-group-item.test-ok { border-left: 6px solid #4caf50; }
-        .list-group-item.test-fail { border-left: 6px solid #f44336; }
-        .list-group-item.test-error { border-left: 6px solid #ffc107; }
-        .list-group-item { margin-bottom: 0.5em; }
-    </style>
+});
+
+function fetchScheduleStatus() {
+    fetch('/api/schedule_status')
+        .then(response => response.json())
+        .then(data => {
+            const statusLabel = document.getElementById('schedule-status-label');
+            if (data.active && data.interval) {
+                statusLabel.textContent = `Harmonogram: co ${data.interval} min`;
+            } else {
+                statusLabel.textContent = 'Brak harmonogramu';
+            }
+        })
+        .catch(error => console.error('Error fetching schedule status:', error));
+}
+
+function fetchTestHistory() {
+    fetch('/api/test_history')
+        .then(response => response.json())
+        .then(data => {
+            const tableBody = document.querySelector('#test-history-table tbody');
+            tableBody.innerHTML = '';
+            
+            if (data && data.length > 0) {
+                data.forEach(entry => {
+                    const row = document.createElement('tr');
+                    
+                    const timeCell = document.createElement('td');
+                    const date = new Date(entry.timestamp);
+                    timeCell.textContent = date.toLocaleString();
+                    
+                    const resultCell = document.createElement('td');
+                    resultCell.textContent = entry.result === 'passed' ? 'Sukces' : 'Błąd';
+                    resultCell.className = entry.result === 'passed' ? 'text-success' : 'text-danger';
+                    
+                    const summaryCell = document.createElement('td');
+                    summaryCell.textContent = entry.summary || '';
+                    
+                    row.appendChild(timeCell);
+                    row.appendChild(resultCell);
+                    row.appendChild(summaryCell);
+                    tableBody.appendChild(row);
+                });
+            } else {
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
+                cell.colSpan = 3;
+                cell.textContent = 'Brak danych historycznych';
+                cell.className = 'text-center';
+                row.appendChild(cell);
+                tableBody.appendChild(row);
+            }
+        })
+        .catch(error => console.error('Error fetching test history:', error));
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM content loaded - initializing components');
+    
+    // First, ensure all tables have proper structure
+    const perfTableBody = document.querySelector('#perf-stats-table tbody');
+    if (!perfTableBody) {
+        console.error('Performance stats table body not found on page load');
+    }
+    
+    fetchPerfStats();
+    fetchUsers();
+    fetchTestHistory();
+    fetchScheduleStatus();
+    
+    setupDeleteUserButtons();
+    
+    // Set up polling for test stats
+    setInterval(fetchPerfStats, 30000);
+});
+</script>
 {% endblock %}

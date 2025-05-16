@@ -1,19 +1,45 @@
 # Asystent TODO (2025-2026)
 
 ## Priority Tasks
-- Full mobile version with chat and voice chat options
+- Kontekst aplikacji V2 - to be tested/reimplemented
+- Behaviour fixes
+- Rebuild intention AI
 
 ## Feature Enhancements
 - TTS and voice personalization (user-selectable voice, language, speed, test preview)
-- Multi-modal input support (text, voice, image analysis in web UI)
-- Improved long-term memory (search, tagging, context linking, memory management)
-- Advanced plugin system with simple API for third-party extensions
 
 ## Web UI and UX
 - Advanced user authentication and role management (roles, password reset, etc.)
-- Internationalizationok, (multi-language UI, easy translation)
+- Fix tooltip placement and width on smaller screens
 
 ## Integration and Security
-- API integrations: add more external services (weather, calendar, IoT, etc.)
+- API integrations: add more external services (weather, calendar, IoT, etc.) - MCP
 - Security review and improvements (rate limiting, audit logs, config secrets)
-- Cloud synchronization of memories and preferences
+- Spotify integration
+
+## Fixes
+- Zweryfikować działanie innych rzeczy w core (timer działa)
+- When AI wants to activate listening and user does the same at the same time(or similar times) it just happens twice and funny stuff happens lol 
+- Dodawanie użytkownika nie działa
+- Nie działa wiele języków
+
+## Optimisations
+- Entire app start speed
+- Add loading indicators for long-running operations in web UI
+- RAM usage
+
+## Upgrades
+- Wykrywanie rozmówcy za pomocą speech brain
+- Wheel decide do robienia czego
+- Upgrade continue speak (question detection)
+- Interakcje z przeglądarką
+- Add visual feedback for microphone and speech recognition status
+- RAG
+- Routines learner
+
+
+## Goals:
+- Plug and play instalation
+- Home assistant (music, weather, notes)
+- Find real use case
+- Desktop/mobile version

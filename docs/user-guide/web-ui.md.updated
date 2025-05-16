@@ -1,0 +1,123 @@
+# Web UI Guide
+
+This guide provides detailed information about using the Asystent Web User Interface.
+
+## General Navigation
+
+The web interface is structured with a navigation bar at the top containing links to all major sections. The currently active section is highlighted.
+
+### Theme Switching
+
+You can toggle between light and dark themes using the theme button in the top-right corner of the navigation bar.
+
+## Dashboard
+
+The Dashboard provides an overview of system status and quick access to common actions.
+
+### Key Elements
+
+- **Assistant Status**: Shows if the assistant is online, offline, or restarting
+- **Wake Word**: Displays the current wake word configuration
+- **STT Engine**: Shows which speech recognition engine is being used
+- **Quick Actions**: 
+  - **Activate Manually**: Triggers the assistant to listen without wake word
+  - **Restart Assistant**: Restarts the assistant process
+  - **Restart Web Panel**: Restarts the web interface
+  - **Restart All**: Restarts both components
+  - **Stop Assistant**: Shuts down the assistant process
+
+## Chat Interface
+
+The chat page allows direct text interaction with the assistant.
+
+### Features
+
+- **Message Input**: Type your message in the input field at the bottom
+- **Send Button**: Click to send your message
+- **Microphone Button**: Click to activate voice input
+- **Conversation Display**: Shows the conversation history with user and assistant messages
+- **Clear Chat**: Button to clear the current conversation history
+
+## Configuration Page
+
+The configuration page allows you to customize various system settings.
+
+### Configuration Sections
+
+- **Voice Recognition Settings**:
+  - Wake word customization
+  - Microphone device selection
+  - STT engine selection (Vosk/Whisper)
+  - Silence threshold adjustment
+- **LLM & Provider Settings**:
+  - Provider selection (OpenAI, Ollama, DeepSeek, Anthropic)
+  - Model selection for various functions
+  - System prompts and personality settings
+- **API Keys**:
+  - Securely input API keys for selected providers
+- **Development Settings**:
+  - Various technical options for developers
+
+## Long-Term Memory Page
+
+The Long-Term Memory page allows you to manage what the assistant remembers.
+
+### Features
+
+- **Add Memory**:
+  - Input field for memory content
+  - Optional user attribution field
+  - Add button to save to memory
+- **View Memories**:
+  - List of all stored memories
+  - Shows ID, user, timestamp, and content
+- **Search Memories**:
+  - Search box for filtering memories
+  - Clear search button to show all memories
+- **Delete Memories**:
+  - Delete button for each memory
+  - Immediate removal from database
+
+## Plugins Page
+
+The Plugins page allows you to manage the assistant's plugins.
+
+### Features
+
+- **Plugin List**: Shows all available plugins
+- **Status Indicators**: Shows whether each plugin is enabled or disabled
+- **Toggle Buttons**: Enable or disable individual plugins
+- **Reload Button**: Refresh plugins after changes without restarting
+
+## Logs Page
+
+The Logs page provides access to system logs for monitoring and troubleshooting.
+
+### Features
+
+- **Log Level Selection**: Filter logs by severity (INFO, WARNING, ERROR)
+- **Log Display**: Shows timestamped log entries
+- **Auto-Refresh**: Periodically updates to show latest logs
+- **Clear Button**: Clears the current log display
+
+## History Page
+
+The History page shows past conversations with the assistant.
+
+### Features
+
+- **Conversation Timeline**: Chronological list of interactions
+- **User/Assistant Labels**: Clearly identifies who said what
+- **Timestamps**: Shows when each message was sent
+- **Archive Button**: Archives current conversation history
+
+## Dev Tools (Admin Only)
+
+The development tools section is available to administrators for system testing and diagnostics.
+
+### Features
+
+- **Unit Tests**: Run and view results of system unit tests
+- **Performance Metrics**: View system performance data
+- **Configuration Debugging**: Advanced configuration options
+- **System Information**: Detailed information about the running system

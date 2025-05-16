@@ -1,0 +1,292 @@
+2025-05-09T20:19:09.442466 | {"role": "user", "content": "Powiedz mi, czy jutro będzie padać w Sosnowcu.", "intent": "weather_query", "confidence": 0.6877893748868639}
+2025-05-09T20:19:21.807756 | {"role": "user", "content": "Powiedz mi, czy jutro będzie padać w Sosnowcu.", "intent": "weather_query", "confidence": 0.6877893748868639}
+2025-05-09T20:19:21.808073 | {"role": "assistant", "content": "Chętnie sprawdzę pogodę dla Sosnowca na jutro, ale potrzebuję chwili..."}
+2025-05-09T20:19:21.808311 | {"role": "user", "content": "To, to zrób teraz, proszę.", "intent": "none", "confidence": 0.47538475458679974}
+2025-05-09T20:19:59.077403 | {"role": "user", "content": "Powiedz mi, czy jutro będzie padać w Sosnowcu.", "intent": "weather_query", "confidence": 0.6877893748868639}
+2025-05-09T20:19:59.077651 | {"role": "assistant", "content": "Chętnie sprawdzę pogodę dla Sosnowca na jutro, ale potrzebuję chwili..."}
+2025-05-09T20:19:59.077902 | {"role": "user", "content": "To, to zrób teraz, proszę.", "intent": "none", "confidence": 0.47538475458679974}
+2025-05-09T20:19:59.078120 | {"role": "assistant", "content": "Prognoza dla Sosnowiec na najbliższe 3 dni:\n2025-05-09: Partly Cloudy , od 3°C do 12°C\n2025-05-10: Light drizzle, od 7°C do 9°C\n2025-05-11: Patchy rain nearby, od 5°C do 13°C"}
+2025-05-09T20:19:59.078356 | {"role": "user", "content": "Wystarczy, nie musieć już się zabić.", "intent": "none", "confidence": 0.32677086375112957}
+2025-05-09T20:29:29.036679 | {"role": "user", "content": "Czy jutro w Warszawie będzie padać?", "intent": "weather_query", "confidence": 0.7877641434586609}
+2025-05-09T20:29:40.759518 | {"role": "user", "content": "Czy jutro w Warszawie będzie padać?", "intent": "weather_query", "confidence": 0.7877641434586609}
+2025-05-09T20:29:40.759972 | {"role": "assistant", "content": "Chcę sprawdzić prognozę dla Warszawy, zaraz to zrobię."}
+2025-05-09T20:29:40.760441 | {"role": "user", "content": "Please do it then.", "intent": "none", "confidence": 0.06222817713571313}
+2025-05-09T20:30:31.143531 | {"role": "user", "content": "Czy jutro w Warszawie będzie padać?", "intent": "weather_query", "confidence": 0.7877641434586609}
+2025-05-09T20:30:31.143815 | {"role": "assistant", "content": "Chcę sprawdzić prognozę dla Warszawy, zaraz to zrobię."}
+2025-05-09T20:30:31.144148 | {"role": "user", "content": "Please do it then.", "intent": "none", "confidence": 0.06222817713571313}
+2025-05-09T20:30:31.144498 | {"role": "assistant", "content": "Prognoza dla Warszawa na najbliższe 3 dni:\n2025-05-09: Cloudy , od 3°C do 11°C\n2025-05-10: Patchy rain nearby, od 5°C do 9°C\n2025-05-11: Patchy rain nearby, od 3°C do 14°C"}
+2025-05-09T20:30:31.144828 | {"role": "user", "content": "Can you open Facebook for me, please?", "intent": "none", "confidence": 0.21893509353416363}
+2025-05-09T20:30:50.509593 | {"role": "user", "content": "Czy jutro w Warszawie będzie padać?", "intent": "weather_query", "confidence": 0.7877641434586609}
+2025-05-09T20:30:50.509846 | {"role": "assistant", "content": "Chcę sprawdzić prognozę dla Warszawy, zaraz to zrobię."}
+2025-05-09T20:30:50.510086 | {"role": "user", "content": "Please do it then.", "intent": "none", "confidence": 0.06222817713571313}
+2025-05-09T20:30:50.510340 | {"role": "assistant", "content": "Prognoza dla Warszawa na najbliższe 3 dni:\n2025-05-09: Cloudy , od 3°C do 11°C\n2025-05-10: Patchy rain nearby, od 5°C do 9°C\n2025-05-11: Patchy rain nearby, od 3°C do 14°C"}
+2025-05-09T20:30:50.510577 | {"role": "user", "content": "Can you open Facebook for me, please?", "intent": "none", "confidence": 0.21893509353416363}
+2025-05-09T20:30:50.510914 | {"role": "assistant", "content": "Otwieram stronę: https://www.facebook.com"}
+2025-05-09T20:30:50.511210 | {"role": "user", "content": "Do czego służy ta aplikacja?", "intent": "none", "confidence": 0.15801478023255297}
+2025-05-09T20:31:10.754351 | {"role": "user", "content": "Czy jutro w Warszawie będzie padać?", "intent": "weather_query", "confidence": 0.7877641434586609}
+2025-05-09T20:31:10.754649 | {"role": "assistant", "content": "Chcę sprawdzić prognozę dla Warszawy, zaraz to zrobię."}
+2025-05-09T20:31:10.754876 | {"role": "user", "content": "Please do it then.", "intent": "none", "confidence": 0.06222817713571313}
+2025-05-09T20:31:10.755092 | {"role": "assistant", "content": "Prognoza dla Warszawa na najbliższe 3 dni:\n2025-05-09: Cloudy , od 3°C do 11°C\n2025-05-10: Patchy rain nearby, od 5°C do 9°C\n2025-05-11: Patchy rain nearby, od 3°C do 14°C"}
+2025-05-09T20:31:10.755319 | {"role": "user", "content": "Can you open Facebook for me, please?", "intent": "none", "confidence": 0.21893509353416363}
+2025-05-09T20:31:10.755530 | {"role": "assistant", "content": "Otwieram stronę: https://www.facebook.com"}
+2025-05-09T20:31:10.755741 | {"role": "user", "content": "Do czego służy ta aplikacja?", "intent": "none", "confidence": 0.15801478023255297}
+2025-05-09T20:31:10.755953 | {"role": "assistant", "content": "Ta aplikacja służy do rozmawiania i pomagania ci w różnych sprawach, od przypomnień, przez szukanie informacji, aż po wsparcie emocjonalne."}
+2025-05-09T20:31:10.756169 | {"role": "user", "content": "Attack to the Mammutatus at Fadaton.", "intent": "none", "confidence": 0.41945084666896104}
+2025-05-09T20:31:19.844015 | {"role": "user", "content": "Czy jutro w Warszawie będzie padać?", "intent": "weather_query", "confidence": 0.7877641434586609}
+2025-05-09T20:31:19.844288 | {"role": "assistant", "content": "Chcę sprawdzić prognozę dla Warszawy, zaraz to zrobię."}
+2025-05-09T20:31:19.844524 | {"role": "user", "content": "Please do it then.", "intent": "none", "confidence": 0.06222817713571313}
+2025-05-09T20:31:19.844752 | {"role": "assistant", "content": "Prognoza dla Warszawa na najbliższe 3 dni:\n2025-05-09: Cloudy , od 3°C do 11°C\n2025-05-10: Patchy rain nearby, od 5°C do 9°C\n2025-05-11: Patchy rain nearby, od 3°C do 14°C"}
+2025-05-09T20:31:19.845008 | {"role": "user", "content": "Can you open Facebook for me, please?", "intent": "none", "confidence": 0.21893509353416363}
+2025-05-09T20:31:19.845329 | {"role": "assistant", "content": "Otwieram stronę: https://www.facebook.com"}
+2025-05-09T20:31:19.845714 | {"role": "user", "content": "Do czego służy ta aplikacja?", "intent": "none", "confidence": 0.15801478023255297}
+2025-05-09T20:31:19.845952 | {"role": "assistant", "content": "Ta aplikacja służy do rozmawiania i pomagania ci w różnych sprawach, od przypomnień, przez szukanie informacji, aż po wsparcie emocjonalne."}
+2025-05-09T20:31:19.846200 | {"role": "user", "content": "Attack to the Mammutatus at Fadaton.", "intent": "none", "confidence": 0.41945084666896104}
+2025-05-09T20:31:19.846495 | {"role": "assistant", "content": "Brzmi jak coś z fantastycznego świata! Chcesz, żebym pomogła wymyślić, jak to wyglądałoby w opowieści?"}
+2025-05-09T20:31:19.846751 | {"role": "user", "content": "Attack to the Mamededas of Fadetom.", "intent": "none", "confidence": 0.33562165403908034}
+2025-05-09T20:31:37.578278 | {"role": "user", "content": "Czy jutro w Warszawie będzie padać?", "intent": "weather_query", "confidence": 0.7877641434586609}
+2025-05-09T20:31:37.578528 | {"role": "assistant", "content": "Chcę sprawdzić prognozę dla Warszawy, zaraz to zrobię."}
+2025-05-09T20:31:37.578757 | {"role": "user", "content": "Please do it then.", "intent": "none", "confidence": 0.06222817713571313}
+2025-05-09T20:31:37.578981 | {"role": "assistant", "content": "Prognoza dla Warszawa na najbliższe 3 dni:\n2025-05-09: Cloudy , od 3°C do 11°C\n2025-05-10: Patchy rain nearby, od 5°C do 9°C\n2025-05-11: Patchy rain nearby, od 3°C do 14°C"}
+2025-05-09T20:31:37.579214 | {"role": "user", "content": "Can you open Facebook for me, please?", "intent": "none", "confidence": 0.21893509353416363}
+2025-05-09T20:31:37.579431 | {"role": "assistant", "content": "Otwieram stronę: https://www.facebook.com"}
+2025-05-09T20:31:37.579644 | {"role": "user", "content": "Do czego służy ta aplikacja?", "intent": "none", "confidence": 0.15801478023255297}
+2025-05-09T20:31:37.579885 | {"role": "assistant", "content": "Ta aplikacja służy do rozmawiania i pomagania ci w różnych sprawach, od przypomnień, przez szukanie informacji, aż po wsparcie emocjonalne."}
+2025-05-09T20:31:37.580101 | {"role": "user", "content": "Attack to the Mammutatus at Fadaton.", "intent": "none", "confidence": 0.41945084666896104}
+2025-05-09T20:31:37.580310 | {"role": "assistant", "content": "Brzmi jak coś z fantastycznego świata! Chcesz, żebym pomogła wymyślić, jak to wyglądałoby w opowieści?"}
+2025-05-09T20:31:37.580519 | {"role": "user", "content": "Attack to the Mamededas of Fadetom.", "intent": "none", "confidence": 0.33562165403908034}
+2025-05-09T20:31:37.580728 | {"role": "assistant", "content": "To brzmi jak epicka przygoda! Chcesz, żebym pomogła rozwinąć tę historię albo wymyślić, co się dalej wydarzy?"}
+2025-05-09T20:31:37.580978 | {"role": "user", "content": "Jakiej aplikacji teraz używam?", "intent": "none", "confidence": 0.0737388918000885}
+2025-05-10T14:09:56.355167 | {"role": "user", "content": "Co aktualnie odłączam?", "intent": "none", "confidence": 0.13534976134473406}
+2025-05-10T14:10:09.983145 | {"role": "user", "content": "Co aktualnie odłączam?", "intent": "none", "confidence": 0.13534976134473406}
+2025-05-10T14:10:09.983608 | {"role": "assistant", "content": "Zapamiętałem: user asks about disconnecting something"}
+2025-05-10T14:10:09.983996 | {"role": "user", "content": "Co aktualnie odladam w Przylądku?", "intent": "none", "confidence": 0.13534976134473406}
+2025-05-10T14:10:23.359013 | {"role": "user", "content": "Co aktualnie odłączam?", "intent": "none", "confidence": 0.13534976134473406}
+2025-05-10T14:10:23.359253 | {"role": "assistant", "content": "Zapamiętałem: user asks about disconnecting something"}
+2025-05-10T14:10:23.359476 | {"role": "user", "content": "Co aktualnie odladam w Przylądku?", "intent": "none", "confidence": 0.13534976134473406}
+2025-05-10T14:10:23.359696 | {"role": "assistant", "content": "Nie jestem pewna, co dokładnie odladzasz w Przylądku, ale chcesz może, żebym pomogła Ci to sprawdzić?"}
+2025-05-10T14:10:23.359914 | {"role": "user", "content": "Nie, nie musisz.", "intent": "none", "confidence": 0.22049655356550538}
+2025-05-10T14:11:03.915023 | {"role": "user", "content": "Co aktualnie odłączam?", "intent": "none", "confidence": 0.13534976134473406}
+2025-05-10T14:11:03.915366 | {"role": "assistant", "content": "Zapamiętałem: user asks about disconnecting something"}
+2025-05-10T14:11:03.915620 | {"role": "user", "content": "Co aktualnie odladam w Przylądku?", "intent": "none", "confidence": 0.13534976134473406}
+2025-05-10T14:11:03.915995 | {"role": "assistant", "content": "Nie jestem pewna, co dokładnie odladzasz w Przylądku, ale chcesz może, żebym pomogła Ci to sprawdzić?"}
+2025-05-10T14:11:03.916239 | {"role": "user", "content": "Nie, nie musisz.", "intent": "none", "confidence": 0.22049655356550538}
+2025-05-10T14:11:03.916477 | {"role": "assistant", "content": "Rozumiem, jeśli będziesz potrzebował czegoś, po prostu daj znać."}
+2025-05-10T14:11:03.916712 | {"role": "user", "content": "Co mam aktualnie odfajkowane?", "intent": "none", "confidence": 0.3781906209225039}
+2025-05-10T14:12:11.446638 | {"role": "user", "content": "Co aktualnie odłączam?", "intent": "none", "confidence": 0.13534976134473406}
+2025-05-10T14:12:11.447262 | {"role": "assistant", "content": "Zapamiętałem: user asks about disconnecting something"}
+2025-05-10T14:12:11.447536 | {"role": "user", "content": "Co aktualnie odladam w Przylądku?", "intent": "none", "confidence": 0.13534976134473406}
+2025-05-10T14:12:11.447789 | {"role": "assistant", "content": "Nie jestem pewna, co dokładnie odladzasz w Przylądku, ale chcesz może, żebym pomogła Ci to sprawdzić?"}
+2025-05-10T14:12:11.448019 | {"role": "user", "content": "Nie, nie musisz.", "intent": "none", "confidence": 0.22049655356550538}
+2025-05-10T14:12:11.448243 | {"role": "assistant", "content": "Rozumiem, jeśli będziesz potrzebował czegoś, po prostu daj znać."}
+2025-05-10T14:12:11.448505 | {"role": "user", "content": "Co mam aktualnie odfajkowane?", "intent": "none", "confidence": 0.3781906209225039}
+2025-05-10T14:12:11.448752 | {"role": "assistant", "content": "Nie mam dostępu do Twoich aktualnych odfajkowanych rzeczy, ale chętnie pomogę Ci to odtworzyć, jeśli mi powiesz, co to było."}
+2025-05-10T14:12:11.448977 | {"role": "user", "content": "Co to jest ta aplikacja?", "intent": "none", "confidence": 0.3852668841666627}
+2025-05-10T14:12:25.141203 | {"role": "user", "content": "Co aktualnie odłączam?", "intent": "none", "confidence": 0.13534976134473406}
+2025-05-10T14:12:25.141454 | {"role": "assistant", "content": "Zapamiętałem: user asks about disconnecting something"}
+2025-05-10T14:12:25.141681 | {"role": "user", "content": "Co aktualnie odladam w Przylądku?", "intent": "none", "confidence": 0.13534976134473406}
+2025-05-10T14:12:25.141935 | {"role": "assistant", "content": "Nie jestem pewna, co dokładnie odladzasz w Przylądku, ale chcesz może, żebym pomogła Ci to sprawdzić?"}
+2025-05-10T14:12:25.142175 | {"role": "user", "content": "Nie, nie musisz.", "intent": "none", "confidence": 0.22049655356550538}
+2025-05-10T14:12:25.142405 | {"role": "assistant", "content": "Rozumiem, jeśli będziesz potrzebował czegoś, po prostu daj znać."}
+2025-05-10T14:12:25.142632 | {"role": "user", "content": "Co mam aktualnie odfajkowane?", "intent": "none", "confidence": 0.3781906209225039}
+2025-05-10T14:12:25.142858 | {"role": "assistant", "content": "Nie mam dostępu do Twoich aktualnych odfajkowanych rzeczy, ale chętnie pomogę Ci to odtworzyć, jeśli mi powiesz, co to było."}
+2025-05-10T14:12:25.143116 | {"role": "user", "content": "Co to jest ta aplikacja?", "intent": "none", "confidence": 0.3852668841666627}
+2025-05-10T14:12:25.143344 | {"role": "assistant", "content": "To jest asystent głosowy, który pomaga Ci w różnych zadaniach i rozmowach, tak jakby był Twoją ciepłą, troskliwą starszą siostrą, zawsze gotową wysłuchać i wspierać."}
+2025-05-10T14:12:25.143574 | {"role": "user", "content": "Attack to the Mamede das Otvathatom", "intent": "none", "confidence": 0.32256620234360467}
+2025-05-10T14:12:47.389540 | {"role": "user", "content": "Co aktualnie odłączam?", "intent": "none", "confidence": 0.13534976134473406}
+2025-05-10T14:12:47.389796 | {"role": "assistant", "content": "Zapamiętałem: user asks about disconnecting something"}
+2025-05-10T14:12:47.390023 | {"role": "user", "content": "Co aktualnie odladam w Przylądku?", "intent": "none", "confidence": 0.13534976134473406}
+2025-05-10T14:12:47.390244 | {"role": "assistant", "content": "Nie jestem pewna, co dokładnie odladzasz w Przylądku, ale chcesz może, żebym pomogła Ci to sprawdzić?"}
+2025-05-10T14:12:47.390457 | {"role": "user", "content": "Nie, nie musisz.", "intent": "none", "confidence": 0.22049655356550538}
+2025-05-10T14:12:47.390671 | {"role": "assistant", "content": "Rozumiem, jeśli będziesz potrzebował czegoś, po prostu daj znać."}
+2025-05-10T14:12:47.390905 | {"role": "user", "content": "Co mam aktualnie odfajkowane?", "intent": "none", "confidence": 0.3781906209225039}
+2025-05-10T14:12:47.391115 | {"role": "assistant", "content": "Nie mam dostępu do Twoich aktualnych odfajkowanych rzeczy, ale chętnie pomogę Ci to odtworzyć, jeśli mi powiesz, co to było."}
+2025-05-10T14:12:47.391387 | {"role": "user", "content": "Co to jest ta aplikacja?", "intent": "none", "confidence": 0.3852668841666627}
+2025-05-10T14:12:47.391742 | {"role": "assistant", "content": "To jest asystent głosowy, który pomaga Ci w różnych zadaniach i rozmowach, tak jakby był Twoją ciepłą, troskliwą starszą siostrą, zawsze gotową wysłuchać i wspierać."}
+2025-05-10T14:12:47.391992 | {"role": "user", "content": "Attack to the Mamede das Otvathatom", "intent": "none", "confidence": 0.32256620234360467}
+2025-05-10T14:12:47.392216 | {"role": "assistant", "content": "It seems like there might be a typo or a language mix-up. Could you clarify what you mean by \"Attack to the Mamede das Otvathatom\"?"}
+2025-05-10T14:12:47.392541 | {"role": "user", "content": "Chodziło mi o aplikację, którą mam teraz otwartą, co ona robi.", "intent": "none", "confidence": 0.1531495991174193}
+2025-05-10T14:13:29.837795 | {"role": "user", "content": "Co aktualnie odłączam?", "intent": "none", "confidence": 0.13534976134473406}
+2025-05-10T14:13:29.838033 | {"role": "assistant", "content": "Zapamiętałem: user asks about disconnecting something"}
+2025-05-10T14:13:29.838261 | {"role": "user", "content": "Co aktualnie odladam w Przylądku?", "intent": "none", "confidence": 0.13534976134473406}
+2025-05-10T14:13:29.838471 | {"role": "assistant", "content": "Nie jestem pewna, co dokładnie odladzasz w Przylądku, ale chcesz może, żebym pomogła Ci to sprawdzić?"}
+2025-05-10T14:13:29.838682 | {"role": "user", "content": "Nie, nie musisz.", "intent": "none", "confidence": 0.22049655356550538}
+2025-05-10T14:13:29.838887 | {"role": "assistant", "content": "Rozumiem, jeśli będziesz potrzebował czegoś, po prostu daj znać."}
+2025-05-10T14:13:29.839095 | {"role": "user", "content": "Co mam aktualnie odfajkowane?", "intent": "none", "confidence": 0.3781906209225039}
+2025-05-10T14:13:29.839296 | {"role": "assistant", "content": "Nie mam dostępu do Twoich aktualnych odfajkowanych rzeczy, ale chętnie pomogę Ci to odtworzyć, jeśli mi powiesz, co to było."}
+2025-05-10T14:13:29.839500 | {"role": "user", "content": "Co to jest ta aplikacja?", "intent": "none", "confidence": 0.3852668841666627}
+2025-05-10T14:13:29.839702 | {"role": "assistant", "content": "To jest asystent głosowy, który pomaga Ci w różnych zadaniach i rozmowach, tak jakby był Twoją ciepłą, troskliwą starszą siostrą, zawsze gotową wysłuchać i wspierać."}
+2025-05-10T14:13:29.839942 | {"role": "user", "content": "Attack to the Mamede das Otvathatom", "intent": "none", "confidence": 0.32256620234360467}
+2025-05-10T14:13:29.840150 | {"role": "assistant", "content": "It seems like there might be a typo or a language mix-up. Could you clarify what you mean by \"Attack to the Mamede das Otvathatom\"?"}
+2025-05-10T14:13:29.840352 | {"role": "user", "content": "Chodziło mi o aplikację, którą mam teraz otwartą, co ona robi.", "intent": "none", "confidence": 0.1531495991174193}
+2025-05-10T14:13:29.840571 | {"role": "assistant", "content": "Aplikacja, którą masz teraz otwartą, prawdopodobnie jest tym, co pozwala mi z Tobą rozmawiać i pomagać Ci w różnych sprawach, jakby była Twoim cyfrowym asystentem."}
+2025-05-10T14:13:29.840782 | {"role": "user", "content": "Czy dzisiaj w Sosnowcu będzie padać?", "intent": "weather_query", "confidence": 0.9112391003929184}
+2025-05-10T14:13:47.642060 | {"role": "user", "content": "Co aktualnie odłączam?", "intent": "none", "confidence": 0.13534976134473406}
+2025-05-10T14:13:47.642354 | {"role": "assistant", "content": "Zapamiętałem: user asks about disconnecting something"}
+2025-05-10T14:13:47.642618 | {"role": "user", "content": "Co aktualnie odladam w Przylądku?", "intent": "none", "confidence": 0.13534976134473406}
+2025-05-10T14:13:47.642881 | {"role": "assistant", "content": "Nie jestem pewna, co dokładnie odladzasz w Przylądku, ale chcesz może, żebym pomogła Ci to sprawdzić?"}
+2025-05-10T14:13:47.643117 | {"role": "user", "content": "Nie, nie musisz.", "intent": "none", "confidence": 0.22049655356550538}
+2025-05-10T14:13:47.644421 | {"role": "assistant", "content": "Rozumiem, jeśli będziesz potrzebował czegoś, po prostu daj znać."}
+2025-05-10T14:13:47.644808 | {"role": "user", "content": "Co mam aktualnie odfajkowane?", "intent": "none", "confidence": 0.3781906209225039}
+2025-05-10T14:13:47.645127 | {"role": "assistant", "content": "Nie mam dostępu do Twoich aktualnych odfajkowanych rzeczy, ale chętnie pomogę Ci to odtworzyć, jeśli mi powiesz, co to było."}
+2025-05-10T14:13:47.645385 | {"role": "user", "content": "Co to jest ta aplikacja?", "intent": "none", "confidence": 0.3852668841666627}
+2025-05-10T14:13:47.645646 | {"role": "assistant", "content": "To jest asystent głosowy, który pomaga Ci w różnych zadaniach i rozmowach, tak jakby był Twoją ciepłą, troskliwą starszą siostrą, zawsze gotową wysłuchać i wspierać."}
+2025-05-10T14:13:47.645877 | {"role": "user", "content": "Attack to the Mamede das Otvathatom", "intent": "none", "confidence": 0.32256620234360467}
+2025-05-10T14:13:47.646102 | {"role": "assistant", "content": "It seems like there might be a typo or a language mix-up. Could you clarify what you mean by \"Attack to the Mamede das Otvathatom\"?"}
+2025-05-10T14:13:47.646333 | {"role": "user", "content": "Chodziło mi o aplikację, którą mam teraz otwartą, co ona robi.", "intent": "none", "confidence": 0.1531495991174193}
+2025-05-10T14:13:47.646572 | {"role": "assistant", "content": "Aplikacja, którą masz teraz otwartą, prawdopodobnie jest tym, co pozwala mi z Tobą rozmawiać i pomagać Ci w różnych sprawach, jakby była Twoim cyfrowym asystentem."}
+2025-05-10T14:13:47.646816 | {"role": "user", "content": "Czy dzisiaj w Sosnowcu będzie padać?", "intent": "weather_query", "confidence": 0.9112391003929184}
+2025-05-10T14:13:47.647043 | {"role": "assistant", "content": "Chętnie sprawdzę dla Ciebie prognozę pogody w Sosnowcu, ale muszę to zrobić. Chcesz, żebym to zrobiła?"}
+2025-05-10T14:13:47.647268 | {"role": "user", "content": "Tak, poproszę.", "intent": "none", "confidence": 0.3706418437461333}
+2025-05-10T14:14:23.147176 | {"role": "user", "content": "Co aktualnie odłączam?", "intent": "none", "confidence": 0.13534976134473406}
+2025-05-10T14:14:23.147511 | {"role": "assistant", "content": "Zapamiętałem: user asks about disconnecting something"}
+2025-05-10T14:14:23.147842 | {"role": "user", "content": "Co aktualnie odladam w Przylądku?", "intent": "none", "confidence": 0.13534976134473406}
+2025-05-10T14:14:23.148113 | {"role": "assistant", "content": "Nie jestem pewna, co dokładnie odladzasz w Przylądku, ale chcesz może, żebym pomogła Ci to sprawdzić?"}
+2025-05-10T14:14:23.148381 | {"role": "user", "content": "Nie, nie musisz.", "intent": "none", "confidence": 0.22049655356550538}
+2025-05-10T14:14:23.148626 | {"role": "assistant", "content": "Rozumiem, jeśli będziesz potrzebował czegoś, po prostu daj znać."}
+2025-05-10T14:14:23.148889 | {"role": "user", "content": "Co mam aktualnie odfajkowane?", "intent": "none", "confidence": 0.3781906209225039}
+2025-05-10T14:14:23.149123 | {"role": "assistant", "content": "Nie mam dostępu do Twoich aktualnych odfajkowanych rzeczy, ale chętnie pomogę Ci to odtworzyć, jeśli mi powiesz, co to było."}
+2025-05-10T14:14:23.149351 | {"role": "user", "content": "Co to jest ta aplikacja?", "intent": "none", "confidence": 0.3852668841666627}
+2025-05-10T14:14:23.149620 | {"role": "assistant", "content": "To jest asystent głosowy, który pomaga Ci w różnych zadaniach i rozmowach, tak jakby był Twoją ciepłą, troskliwą starszą siostrą, zawsze gotową wysłuchać i wspierać."}
+2025-05-10T14:14:23.149850 | {"role": "user", "content": "Attack to the Mamede das Otvathatom", "intent": "none", "confidence": 0.32256620234360467}
+2025-05-10T14:14:23.150079 | {"role": "assistant", "content": "It seems like there might be a typo or a language mix-up. Could you clarify what you mean by \"Attack to the Mamede das Otvathatom\"?"}
+2025-05-10T14:14:23.150315 | {"role": "user", "content": "Chodziło mi o aplikację, którą mam teraz otwartą, co ona robi.", "intent": "none", "confidence": 0.1531495991174193}
+2025-05-10T14:14:23.150574 | {"role": "assistant", "content": "Aplikacja, którą masz teraz otwartą, prawdopodobnie jest tym, co pozwala mi z Tobą rozmawiać i pomagać Ci w różnych sprawach, jakby była Twoim cyfrowym asystentem."}
+2025-05-10T14:14:23.150836 | {"role": "user", "content": "Czy dzisiaj w Sosnowcu będzie padać?", "intent": "weather_query", "confidence": 0.9112391003929184}
+2025-05-10T14:14:23.151388 | {"role": "assistant", "content": "Chętnie sprawdzę dla Ciebie prognozę pogody w Sosnowcu, ale muszę to zrobić. Chcesz, żebym to zrobiła?"}
+2025-05-10T14:14:23.151850 | {"role": "user", "content": "Tak, poproszę.", "intent": "none", "confidence": 0.3706418437461333}
+2025-05-10T14:14:23.152113 | {"role": "assistant", "content": "Ok, sprawdzam prognozę pogody dla Sosnowca."}
+2025-05-10T14:14:23.152349 | {"role": "user", "content": "Czy dzisiaj w Krakowie będzie padać?", "intent": "weather_query", "confidence": 0.9035433741353356}
+2025-05-11T18:08:05.425465 | {"role": "user", "content": "Powiedz mi coś o sobie.", "intent": "about_assistant", "confidence": 0.5929396495943361}
+2025-05-11T18:08:30.750499 | {"role": "user", "content": "Powiedz mi coś o sobie.", "intent": "about_assistant", "confidence": 0.5929396495943361}
+2025-05-11T18:08:30.750817 | {"role": "assistant", "content": "Jestem tutaj, żeby słuchać i wspierać cię, tak jak starsza siostra, która zawsze ma czas na rozmowę i troskę. Chociaż nie jestem człowiekiem, staram się być ciepła i obecna dla ciebie."}
+2025-05-11T18:08:30.751096 | {"role": "user", "content": "Dobrze, a sprawdzisz mi, jaka będzie pogoda na YouTube w Ładzie Sławowie?", "intent": "weather_query", "confidence": 0.8120151453243404}
+2025-05-11T18:09:06.425749 | {"role": "user", "content": "Powiedz mi coś o sobie.", "intent": "about_assistant", "confidence": 0.5929396495943361}
+2025-05-11T18:09:06.426074 | {"role": "assistant", "content": "Jestem tutaj, żeby słuchać i wspierać cię, tak jak starsza siostra, która zawsze ma czas na rozmowę i troskę. Chociaż nie jestem człowiekiem, staram się być ciepła i obecna dla ciebie."}
+2025-05-11T18:09:06.426350 | {"role": "user", "content": "Dobrze, a sprawdzisz mi, jaka będzie pogoda na YouTube w Ładzie Sławowie?", "intent": "weather_query", "confidence": 0.8120151453243404}
+2025-05-11T18:09:06.426634 | {"role": "assistant", "content": "Chętnie, ale niestety nie mogę sprawdzić pogody na YouTube, bo to nie jest miejsce na prognozy. Mogę za to sprawdzić dla Ciebie pogodę w Ładzie Sławowie — chcesz?"}
+2025-05-11T18:09:06.426903 | {"role": "user", "content": "Odtworzysz mi YouTube?", "intent": "none", "confidence": 0.3244854679741484}
+2025-05-11T18:09:23.236308 | {"role": "user", "content": "Powiedz mi coś o sobie.", "intent": "about_assistant", "confidence": 0.5929396495943361}
+2025-05-11T18:09:23.236611 | {"role": "assistant", "content": "Jestem tutaj, żeby słuchać i wspierać cię, tak jak starsza siostra, która zawsze ma czas na rozmowę i troskę. Chociaż nie jestem człowiekiem, staram się być ciepła i obecna dla ciebie."}
+2025-05-11T18:09:23.236917 | {"role": "user", "content": "Dobrze, a sprawdzisz mi, jaka będzie pogoda na YouTube w Ładzie Sławowie?", "intent": "weather_query", "confidence": 0.8120151453243404}
+2025-05-11T18:09:23.237205 | {"role": "assistant", "content": "Chętnie, ale niestety nie mogę sprawdzić pogody na YouTube, bo to nie jest miejsce na prognozy. Mogę za to sprawdzić dla Ciebie pogodę w Ładzie Sławowie — chcesz?"}
+2025-05-11T18:09:23.237462 | {"role": "user", "content": "Odtworzysz mi YouTube?", "intent": "none", "confidence": 0.3244854679741484}
+2025-05-11T18:09:23.237715 | {"role": "assistant", "content": "Niestety, nie mogę odtworzyć YouTube bezpośrednio, ale mogę pomóc Ci znaleźć coś ciekawego do obejrzenia albo podpowiedzieć, jak szybko uruchomić YouTube na Twoim urządzeniu."}
+2025-05-11T18:09:23.237992 | {"role": "user", "content": "Możesz to zrobić za pomocą komendy open, jak coś.", "intent": "none", "confidence": 0.38004450249412236}
+2025-05-11T18:09:40.045372 | {"role": "user", "content": "Powiedz mi coś o sobie.", "intent": "about_assistant", "confidence": 0.5929396495943361}
+2025-05-11T18:09:40.045618 | {"role": "assistant", "content": "Jestem tutaj, żeby słuchać i wspierać cię, tak jak starsza siostra, która zawsze ma czas na rozmowę i troskę. Chociaż nie jestem człowiekiem, staram się być ciepła i obecna dla ciebie."}
+2025-05-11T18:09:40.045946 | {"role": "user", "content": "Dobrze, a sprawdzisz mi, jaka będzie pogoda na YouTube w Ładzie Sławowie?", "intent": "weather_query", "confidence": 0.8120151453243404}
+2025-05-11T18:09:40.046207 | {"role": "assistant", "content": "Chętnie, ale niestety nie mogę sprawdzić pogody na YouTube, bo to nie jest miejsce na prognozy. Mogę za to sprawdzić dla Ciebie pogodę w Ładzie Sławowie — chcesz?"}
+2025-05-11T18:09:40.046477 | {"role": "user", "content": "Odtworzysz mi YouTube?", "intent": "none", "confidence": 0.3244854679741484}
+2025-05-11T18:09:40.048130 | {"role": "assistant", "content": "Niestety, nie mogę odtworzyć YouTube bezpośrednio, ale mogę pomóc Ci znaleźć coś ciekawego do obejrzenia albo podpowiedzieć, jak szybko uruchomić YouTube na Twoim urządzeniu."}
+2025-05-11T18:09:40.048457 | {"role": "user", "content": "Możesz to zrobić za pomocą komendy open, jak coś.", "intent": "none", "confidence": 0.38004450249412236}
+2025-05-11T18:09:40.049300 | {"role": "assistant", "content": "Rozumiem, spróbuję to zrobić. Chcesz, żebym otworzyła główną stronę YouTube?"}
+2025-05-11T18:09:40.049782 | {"role": "user", "content": "Tak, poproszę.", "intent": "none", "confidence": 0.3706418437461333}
+2025-05-11T18:30:57.610022 | {"role": "user", "content": "Yestiştahm", "intent": "none", "confidence": 0.05730402324002544}
+2025-05-13T14:18:30.387049 | {"role": "user", "content": "Powiedz mi coś o sobie.", "intent": "about_assistant", "confidence": 0.5929396495943361}
+2025-05-13T14:18:46.106435 | {"role": "user", "content": "Powiedz mi coś o sobie.", "intent": "about_assistant", "confidence": 0.5929396495943361}
+2025-05-13T14:18:46.106780 | {"role": "assistant", "content": "Użyj sub-komend: set_timer, view_timers, add_event, view_calendar, set_reminder, view_reminders, add_item, view_list, remove_item, add_task, view_tasks, complete_task, remove_task"}
+2025-05-13T14:18:46.107167 | {"role": "user", "content": "Jak się czujesz?", "intent": "none", "confidence": 0.20793930710419242}
+2025-05-13T14:22:17.476038 | {"role": "user", "content": "Powiedz mi coś o sobie.", "intent": "about_assistant", "confidence": 0.5929396495943361}
+2025-05-13T14:52:17.032333 | {"role": "user", "content": "Poprzedź mnie się od siebie.", "intent": "none", "confidence": 0.127545667122694}
+2025-05-13T14:52:38.761693 | {"role": "user", "content": "Poprzedź mnie się od siebie.", "intent": "none", "confidence": 0.127545667122694}
+2025-05-13T14:52:38.763120 | {"role": "assistant", "content": "Użyj sub-komend: set_timer, view_timers, add_event, view_calendar, set_reminder, view_reminders, add_item, view_list, remove_item, add_task, view_tasks, complete_task, remove_task"}
+2025-05-13T14:52:38.763492 | {"role": "user", "content": "Ostatnio zastanawiałem się, czy jest jakiś sposób, żeby mógł szybciej coś zrobić i to...", "intent": "none", "confidence": 0.19625095084570543}
+2025-05-13T14:52:45.186413 | {"role": "user", "content": "Poprzedź mnie się od siebie.", "intent": "none", "confidence": 0.127545667122694}
+2025-05-13T14:52:45.186651 | {"role": "assistant", "content": "Użyj sub-komend: set_timer, view_timers, add_event, view_calendar, set_reminder, view_reminders, add_item, view_list, remove_item, add_task, view_tasks, complete_task, remove_task"}
+2025-05-13T14:52:45.186894 | {"role": "user", "content": "Ostatnio zastanawiałem się, czy jest jakiś sposób, żeby mógł szybciej coś zrobić i to...", "intent": "none", "confidence": 0.19625095084570543}
+2025-05-13T14:52:45.187294 | {"role": "assistant", "content": "Użyj sub-komend: set_timer, view_timers, add_event, view_calendar, set_reminder, view_reminders, add_item, view_list, remove_item, add_task, view_tasks, complete_task, remove_task"}
+2025-05-13T14:52:45.188240 | {"role": "user", "content": "Zastanawianie się, jak Boże.", "intent": "none", "confidence": 0.23421791707325182}
+2025-05-13T14:54:33.135686 | {"role": "user", "content": "Powiedz mi też, osłabia.", "intent": "none", "confidence": 0.15691738489140594}
+2025-05-13T15:10:48.560552 | {"role": "user", "content": "Powiedz mi z Assabii.", "intent": "none", "confidence": 0.19149008395026237}
+2025-05-13T15:11:13.156719 | {"role": "user", "content": "Powiedz mi z Assabii.", "intent": "none", "confidence": 0.19149008395026237}
+2025-05-13T15:11:13.157173 | {"role": "assistant", "content": "Assabii to miasto w Erytrei, ważny port nad Morzem Czerwonym, z bogatą historią i strategicznym znaczeniem."}
+2025-05-13T15:11:13.157572 | {"role": "user", "content": "Jak się dzisiaj czujesz?", "intent": "none", "confidence": 0.15002539448557}
+2025-05-13T15:11:29.907947 | {"role": "user", "content": "Powiedz mi z Assabii.", "intent": "none", "confidence": 0.19149008395026237}
+2025-05-13T15:11:29.908255 | {"role": "assistant", "content": "Assabii to miasto w Erytrei, ważny port nad Morzem Czerwonym, z bogatą historią i strategicznym znaczeniem."}
+2025-05-13T15:11:29.908560 | {"role": "user", "content": "Jak się dzisiaj czujesz?", "intent": "none", "confidence": 0.15002539448557}
+2025-05-13T15:11:29.908889 | {"role": "assistant", "content": "Czuję się spokojnie i gotowa, żeby cię wysłuchać, jak się dziś czujesz?"}
+2025-05-13T15:11:29.909188 | {"role": "user", "content": "Czy możesz sprawdzić mi, proszę, czy będzie padać?", "intent": "none", "confidence": 0.4718721150495659}
+2025-05-13T15:11:45.404515 | {"role": "user", "content": "Powiedz mi z Assabii.", "intent": "none", "confidence": 0.19149008395026237}
+2025-05-13T15:11:45.404759 | {"role": "assistant", "content": "Assabii to miasto w Erytrei, ważny port nad Morzem Czerwonym, z bogatą historią i strategicznym znaczeniem."}
+2025-05-13T15:11:45.405001 | {"role": "user", "content": "Jak się dzisiaj czujesz?", "intent": "none", "confidence": 0.15002539448557}
+2025-05-13T15:11:45.405225 | {"role": "assistant", "content": "Czuję się spokojnie i gotowa, żeby cię wysłuchać, jak się dziś czujesz?"}
+2025-05-13T15:11:45.405445 | {"role": "user", "content": "Czy możesz sprawdzić mi, proszę, czy będzie padać?", "intent": "none", "confidence": 0.4718721150495659}
+2025-05-13T15:11:45.405674 | {"role": "assistant", "content": "Oczywiście, w jakim mieście chcesz sprawdzić prognozę?"}
+2025-05-13T15:11:45.405887 | {"role": "user", "content": "W Sosnowcu", "intent": "none", "confidence": 0.05730402324002544}
+2025-05-13T15:17:12.370597 | {"role": "user", "content": "Powiedz mi coś o sobie, jak się czujesz.", "intent": "about_assistant", "confidence": 0.7334900372569146}
+2025-05-13T15:17:42.107539 | {"role": "user", "content": "Powiedz mi coś o sobie, jak się czujesz.", "intent": "about_assistant", "confidence": 0.7334900372569146}
+2025-05-13T15:17:42.107790 | {"role": "assistant", "content": "Czuję się dobrze i cieszę się, że mogę z tobą rozmawiać, słuchając i wspierając cię jak starsza siostra."}
+2025-05-13T15:17:42.108027 | {"role": "user", "content": "Powiedz mi, jaka będzie jutro pogoda w Sosnowcu?", "intent": "weather_query", "confidence": 0.9455790369933985}
+2025-05-13T15:17:57.425410 | {"role": "user", "content": "Powiedz mi coś o sobie, jak się czujesz.", "intent": "about_assistant", "confidence": 0.7334900372569146}
+2025-05-13T15:17:57.425665 | {"role": "assistant", "content": "Czuję się dobrze i cieszę się, że mogę z tobą rozmawiać, słuchając i wspierając cię jak starsza siostra."}
+2025-05-13T15:17:57.425906 | {"role": "user", "content": "Powiedz mi, jaka będzie jutro pogoda w Sosnowcu?", "intent": "weather_query", "confidence": 0.9455790369933985}
+2025-05-13T15:17:57.426146 | {"role": "assistant", "content": "Chętnie sprawdzę dla ciebie prognozę na jutro w Sosnowcu."}
+2025-05-13T15:17:57.427085 | {"role": "user", "content": "Czy możesz mi proszę otworzyć Facebooka?", "intent": "none", "confidence": 0.4449794410027227}
+2025-05-13T15:26:16.700844 | {"role": "user", "content": "Powiedz mi coś o sobie.", "intent": "about_assistant", "confidence": 0.5929396495943361}
+2025-05-13T15:26:32.269813 | {"role": "user", "content": "Powiedz mi coś o sobie.", "intent": "about_assistant", "confidence": 0.5929396495943361}
+2025-05-13T15:26:32.270143 | {"role": "assistant", "content": "Jestem tu, żeby cię wspierać i słuchać, zawsze gotowa do rozmowy i dzielenia się ciepłem. Jak się dziś czujesz?"}
+2025-05-13T15:26:32.270461 | {"role": "user", "content": "Bada to dobrze.", "intent": "none", "confidence": 0.07472436036011178}
+2025-05-13T15:26:49.561717 | {"role": "user", "content": "Powiedz mi coś o sobie.", "intent": "about_assistant", "confidence": 0.5929396495943361}
+2025-05-13T15:26:49.561952 | {"role": "assistant", "content": "Jestem tu, żeby cię wspierać i słuchać, zawsze gotowa do rozmowy i dzielenia się ciepłem. Jak się dziś czujesz?"}
+2025-05-13T15:26:49.562226 | {"role": "user", "content": "Bada to dobrze.", "intent": "none", "confidence": 0.07472436036011178}
+2025-05-13T15:26:49.562593 | {"role": "assistant", "content": "Cieszę się, że chcesz, żebym była uważna, naprawdę zależy mi na tym, żeby cię dobrze zrozumieć."}
+2025-05-13T15:26:49.562846 | {"role": "user", "content": "Powiedz mi, proszę, jaka jest pogoda w Sosnowcu.", "intent": "weather_query", "confidence": 0.8817018764727872}
+2025-05-13T15:31:46.064572 | {"role": "user", "content": "Możesz mi proszę zadać pytanie?", "intent": "none", "confidence": 0.2840360633358091}
+2025-05-13T15:32:00.496742 | {"role": "user", "content": "Możesz mi proszę zadać pytanie?", "intent": "none", "confidence": 0.2840360633358091}
+2025-05-13T15:32:00.496983 | {"role": "assistant", "content": "Oczywiście, co ostatnio najbardziej Cię cieszyło?"}
+2025-05-13T15:32:00.497226 | {"role": "user", "content": "Ostatnio mnie cieszyło, bo ja zjadłem sobie lody.", "intent": "none", "confidence": 0.16947858818396372}
+2025-05-13T15:32:27.956268 | {"role": "user", "content": "Możesz mi proszę zadać pytanie?", "intent": "none", "confidence": 0.2840360633358091}
+2025-05-13T15:32:27.956544 | {"role": "assistant", "content": "Oczywiście, co ostatnio najbardziej Cię cieszyło?"}
+2025-05-13T15:32:27.956870 | {"role": "user", "content": "Ostatnio mnie cieszyło, bo ja zjadłem sobie lody.", "intent": "none", "confidence": 0.16947858818396372}
+2025-05-13T15:32:27.957193 | {"role": "assistant", "content": "To brzmi jak mały, słodki kawałek szczęścia, lubię to słyszeć. Co najbardziej lubisz w lodach?"}
+2025-05-13T15:32:27.957488 | {"role": "user", "content": "Sprawdź, jaka jest pogoda. Wyszukaj to nie teraz.", "intent": "weather_query", "confidence": 0.6752539819272992}
+2025-05-13T15:32:44.521288 | {"role": "user", "content": "Możesz mi proszę zadać pytanie?", "intent": "none", "confidence": 0.2840360633358091}
+2025-05-13T15:32:44.521606 | {"role": "assistant", "content": "Oczywiście, co ostatnio najbardziej Cię cieszyło?"}
+2025-05-13T15:32:44.521867 | {"role": "user", "content": "Ostatnio mnie cieszyło, bo ja zjadłem sobie lody.", "intent": "none", "confidence": 0.16947858818396372}
+2025-05-13T15:32:44.522267 | {"role": "assistant", "content": "To brzmi jak mały, słodki kawałek szczęścia, lubię to słyszeć. Co najbardziej lubisz w lodach?"}
+2025-05-13T15:32:44.522580 | {"role": "user", "content": "Sprawdź, jaka jest pogoda. Wyszukaj to nie teraz.", "intent": "weather_query", "confidence": 0.6752539819272992}
+2025-05-13T15:32:44.522849 | {"role": "assistant", "content": "Rozumiem, kiedy będziesz gotowy, daj mi znać, w jakim mieście chcesz sprawdzić pogodę, a ja to zrobię."}
+2025-05-13T15:32:44.523150 | {"role": "user", "content": "Wyzwadź szawię, poproszę.", "intent": "none", "confidence": 0.05730402324002544}
+2025-05-13T15:33:07.125335 | {"role": "user", "content": "Możesz mi proszę zadać pytanie?", "intent": "none", "confidence": 0.2840360633358091}
+2025-05-13T15:33:07.125650 | {"role": "assistant", "content": "Oczywiście, co ostatnio najbardziej Cię cieszyło?"}
+2025-05-13T15:33:07.125922 | {"role": "user", "content": "Ostatnio mnie cieszyło, bo ja zjadłem sobie lody.", "intent": "none", "confidence": 0.16947858818396372}
+2025-05-13T15:33:07.126160 | {"role": "assistant", "content": "To brzmi jak mały, słodki kawałek szczęścia, lubię to słyszeć. Co najbardziej lubisz w lodach?"}
+2025-05-13T15:33:07.126574 | {"role": "user", "content": "Sprawdź, jaka jest pogoda. Wyszukaj to nie teraz.", "intent": "weather_query", "confidence": 0.6752539819272992}
+2025-05-13T15:33:07.126871 | {"role": "assistant", "content": "Rozumiem, kiedy będziesz gotowy, daj mi znać, w jakim mieście chcesz sprawdzić pogodę, a ja to zrobię."}
+2025-05-13T15:33:07.127134 | {"role": "user", "content": "Wyzwadź szawię, poproszę.", "intent": "none", "confidence": 0.05730402324002544}
+2025-05-13T15:33:07.127376 | {"role": "assistant", "content": "Chętnie, ale czy możesz wyjaśnić, co masz na myśli przez \"wyzwadź szawię\"? Chcę się upewnić, że dobrze cię rozumiem."}
+2025-05-13T15:33:07.127840 | {"role": "user", "content": "Chodziło mi o to, żeby sprawdził pogodę w Warszawie.", "intent": "none", "confidence": 0.09126445843262093}
+2025-05-13T15:42:30.722194 | {"role": "user", "content": "Jak się czujesz?", "intent": "none", "confidence": 0.20793930710419242}
+2025-05-13T15:42:49.430286 | {"role": "user", "content": "Jak się czujesz?", "intent": "none", "confidence": 0.20793930710419242}
+2025-05-13T15:42:49.430557 | {"role": "assistant", "content": "Czuję się dobrze, dziękuję za pytanie. A ty, jak się dzisiaj czujesz?"}
+2025-05-13T15:42:49.430792 | {"role": "user", "content": "Powiem ci, chcę dokończyć już te testy ciebie i zobaczyć, co kolejnego zainplementować.", "intent": "none", "confidence": 0.1760475718086374}
+2025-05-13T15:47:33.328870 | {"role": "user", "content": "Powiedz mi coś o sobie.", "intent": "about_assistant", "confidence": 0.5929396495943361}
+2025-05-13T15:47:50.223326 | {"role": "user", "content": "Powiedz mi coś o sobie.", "intent": "about_assistant", "confidence": 0.5929396495943361}
+2025-05-13T15:47:50.223583 | {"role": "assistant", "content": "Jestem tu, żeby słuchać i wspierać, zawsze gotowa na rozmowę i dzielenie się tym, co ważne dla ciebie."}
+2025-05-13T15:47:50.223968 | {"role": "user", "content": "Nie musisz nic odpowiadać.", "intent": "none", "confidence": 0.11455295120396068}
+2025-05-13T15:55:15.283702 | {"role": "user", "content": "Jaka jest pogoda w Warszawie?", "intent": "weather_query", "confidence": 0.9122122825686151}
+2025-05-13T15:56:17.599471 | {"role": "user", "content": "Jaka jest pogoda w Warszawie?", "intent": "weather_query", "confidence": 0.9122122825686151}
+2025-05-13T15:56:17.599778 | {"role": "assistant", "content": "Prognoza dla Warszawa na najbliższe 3 dni:\n2025-05-13: Partly Cloudy , od 6°C do 16°C\n2025-05-14: Patchy rain nearby, od 7°C do 18°C\n2025-05-15: Light rain shower, od 3°C do 12°C"}
+2025-05-13T15:56:17.600048 | {"role": "user", "content": "Otworzysz mi jeszcze o tym?", "intent": "none", "confidence": 0.1746923147655205}
+2025-05-13T15:56:37.047372 | {"role": "user", "content": "Jaka jest pogoda w Warszawie?", "intent": "weather_query", "confidence": 0.9122122825686151}
+2025-05-13T15:56:37.047649 | {"role": "assistant", "content": "Prognoza dla Warszawa na najbliższe 3 dni:\n2025-05-13: Partly Cloudy , od 6°C do 16°C\n2025-05-14: Patchy rain nearby, od 7°C do 18°C\n2025-05-15: Light rain shower, od 3°C do 12°C"}
+2025-05-13T15:56:37.047900 | {"role": "user", "content": "Otworzysz mi jeszcze o tym?", "intent": "none", "confidence": 0.1746923147655205}
+2025-05-13T15:56:37.048239 | {"role": "assistant", "content": "Otwieram stronę: https://wttr.in/Warszawa"}
+2025-05-13T15:56:37.048465 | {"role": "user", "content": "A stronę YouTube", "intent": "none", "confidence": 0.0973219331555616}
+2025-05-13T15:57:02.238235 | {"role": "user", "content": "Jaka jest pogoda w Warszawie?", "intent": "weather_query", "confidence": 0.9122122825686151}
+2025-05-13T15:57:02.238487 | {"role": "assistant", "content": "Prognoza dla Warszawa na najbliższe 3 dni:\n2025-05-13: Partly Cloudy , od 6°C do 16°C\n2025-05-14: Patchy rain nearby, od 7°C do 18°C\n2025-05-15: Light rain shower, od 3°C do 12°C"}
+2025-05-13T15:57:02.238775 | {"role": "user", "content": "Otworzysz mi jeszcze o tym?", "intent": "none", "confidence": 0.1746923147655205}
+2025-05-13T15:57:02.239041 | {"role": "assistant", "content": "Otwieram stronę: https://wttr.in/Warszawa"}
+2025-05-13T15:57:02.239395 | {"role": "user", "content": "A stronę YouTube", "intent": "none", "confidence": 0.0973219331555616}
+2025-05-13T15:57:02.239650 | {"role": "assistant", "content": "Otwieram stronę: https://youtube.com"}
+2025-05-13T15:57:02.239885 | {"role": "user", "content": "Czy możesz zrozumieć, że możesz zrozumieć wszystko, i zazwyczaj się w angielskim?", "intent": "deep_reasoning", "confidence": 0.6834747864324164}
+2025-05-13T16:02:05.634977 | {"role": "user", "content": "Otwórz mi, patrzcie i odjub.", "intent": "none", "confidence": 0.10463011004888136}
+2025-05-13T16:02:22.318703 | {"role": "user", "content": "Otwórz mi, patrzcie i odjub.", "intent": "none", "confidence": 0.10463011004888136}
+2025-05-13T16:02:22.319152 | {"role": "assistant", "content": "Chętnie pomogę, ale nie do końca rozumiem, co masz na myśli. Czy możesz mi to trochę bardziej wyjaśnić?"}
+2025-05-13T16:02:22.319444 | {"role": "user", "content": "Otwórz mi proszę stronę YouTube.", "intent": "none", "confidence": 0.1450383709854814}
+2025-05-13T16:02:53.404217 | {"role": "user", "content": "Otwórz mi, patrzcie i odjub.", "intent": "none", "confidence": 0.10463011004888136}
+2025-05-13T16:02:53.404476 | {"role": "assistant", "content": "Chętnie pomogę, ale nie do końca rozumiem, co masz na myśli. Czy możesz mi to trochę bardziej wyjaśnić?"}
+2025-05-13T16:02:53.404695 | {"role": "user", "content": "Otwórz mi proszę stronę YouTube.", "intent": "none", "confidence": 0.1450383709854814}
+2025-05-13T16:02:53.404915 | {"role": "assistant", "content": "Otwieram stronę: https://www.youtube.com"}
+2025-05-13T16:02:53.405126 | {"role": "user", "content": "Czy możesz zrozumieć mnie, że to wszystko, co mówiłem, i to jest w angielskim?", "intent": "none", "confidence": 0.261637448883132}
+2025-05-13T16:07:20.379584 | {"role": "user", "content": "Can you please confirm to me that I am speaking to you in English right now?", "intent": "none", "confidence": 0.12391828400997029}

@@ -18,7 +18,7 @@
                             {% if entry.role == 'user' %}
                                 <i class="fas fa-user text-primary me-2"></i>User
                             {% else %}
-                                <i class="fas fa-robot text-success me-2"></i>Assistant
+                                <img src="{{ url_for('static', filename='img/gaja.svg') }}" alt="Gaja" style="width: 24px; height: 24px;" class="me-2">Assistant
                             {% endif %}
                         </h5>
                         {% if entry.timestamp %}

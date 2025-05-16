@@ -1,105 +1,160 @@
 # config.py
 import json
-import os
 import logging
-import psutil  # for environment detection
+import os
 
 logger = logging.getLogger(__name__)
 
-CONFIG_FILE = "config.json"
+CONFIG_FILE_PATH = 'config.json'
+
 DEFAULT_CONFIG = {
-  "VOSK_MODEL_PATH": "vosk_model",
-  "MIC_DEVICE_ID": 14,
-  "WAKE_WORD": "asystencie",
-  "STT_SILENCE_THRESHOLD": 600,
-  "STT_MODEL": "gemma3:4b-it-q4_K_M",
-  "MAIN_MODEL": "gemma3:4b-it-q4_K_M",
-  "DEEP_MODEL": "openthinker",
-  "PROVIDER": "lmstudio",
-  "USE_WHISPER_FOR_COMMAND": False,
-  "WHISPER_MODEL": "openai/whisper-small",
-  "MAX_HISTORY_LENGTH": 20,
-  "PLUGIN_MONITOR_INTERVAL": 30,
-  "EXIT_WITH_CONSOLE": True,  # Jeśli true, bot wyłącza się razem z konsolą/rodzicem
+  "ASSISTANT_NAME": "Gaja",
+  "WAKE_WORD": "gaja",
+  "WAKE_WORD_SENSITIVITY_THRESHOLD": 0.35,
+  "LANGUAGE": "pl-PL",
+  "SPEECH_RECOGNITION_PROVIDER": "google", # google, azure, openai
   "API_KEYS": {
-    "OPENAI_API_KEY": None,
-    "DEEPSEEK_API_KEY": None,
-    "ANTHROPIC_API_KEY": None
+    "OPENAI_API_KEY": "YOUR_OPENAI_API_KEY",
+    "AZURE_SPEECH_KEY": "YOUR_AZURE_SPEECH_KEY",
+    "AZURE_SPEECH_REGION": "YOUR_AZURE_REGION",
+    "ANTHROPIC_API_KEY": "YOUR_ANTHROPIC_API_KEY",
+    "DEEPSEEK_API_KEY": "YOUR_DEEPSEEK_API_KEY"
   },
+  "STT_MODEL": "whisper-1", # Speech-to-Text model
+  "MAIN_MODEL": "gpt-4.1-nano",   # Main interaction LLM
+  "PROVIDER": "openai", # Default provider for MAIN_MODEL if not specified in model string
+  "DEEP_MODEL": "gpt-4.1-nano", # Model for deeper analysis if needed
+  "MIC_DEVICE_ID": None,
+  "STT_SILENCE_THRESHOLD": 500, # Milliseconds of silence to end STT
+  "WHISPER_MODEL": "openai/whisper-base", # Local whisper model
+  "MAX_HISTORY_LENGTH": 10,
+  "PLUGIN_MONITOR_INTERVAL": 30, # Seconds
   "LOW_POWER_MODE": False,
-  "LOW_POWER_THRESHOLDS": {"memory_gb": 1, "cpu_count": 2}
+  "EXIT_WITH_CONSOLE": False, # If true, console stays open after assistant exits
+  "DEV_MODE": False, # Enables more verbose logging and potentially other dev features
+  "FIRST_RUN": True, # Flag to indicate if this is the first run of the application
+  "query_refinement": {
+    "model": "gpt-4.1-nano", # Model for query refinement
+    "enabled": True
+  },
+  "version": "1.1.0", # Current assistant version
+  "AUTO_LISTEN_AFTER_TTS": False, # Should assistant listen automatically after speaking?
+  "TRACK_ACTIVE_WINDOW": False, # Track active window title for context
+  "ACTIVE_WINDOW_POLL_INTERVAL": 5 # Seconds
 }
 
-def load_config():
-    if os.path.exists(CONFIG_FILE):
-        try:
-            with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
-                config = json.load(f)
-                # Ensure all default keys exist
-                for key, value in DEFAULT_CONFIG.items():
-                    if key not in config:
-                        config[key] = value
-                    elif isinstance(value, dict): # Handle nested dicts like API_KEYS
-                         for sub_key, sub_value in value.items():
-                              if sub_key not in config[key]:
-                                   config[key][sub_key] = sub_value
-                return config
-        except (json.JSONDecodeError, IOError) as e:
-            logger.error(f"Error loading {CONFIG_FILE}: {e}. Using default config.")
-            return DEFAULT_CONFIG
-    else:
-        logger.warning(f"{CONFIG_FILE} not found. Creating with default values.")
-        save_config(DEFAULT_CONFIG)
-        return DEFAULT_CONFIG
+# Global dictionary to hold the current configuration
+_config = {}
 
-def save_config(config_data):
+# Global accessor variables, initialized with defaults or None
+ASSISTANT_NAME = DEFAULT_CONFIG["ASSISTANT_NAME"]
+WAKE_WORD = DEFAULT_CONFIG["WAKE_WORD"]
+WAKE_WORD_SENSITIVITY_THRESHOLD = DEFAULT_CONFIG["WAKE_WORD_SENSITIVITY_THRESHOLD"]
+LANGUAGE = DEFAULT_CONFIG["LANGUAGE"]
+SPEECH_RECOGNITION_PROVIDER = DEFAULT_CONFIG["SPEECH_RECOGNITION_PROVIDER"]
+OPENAI_API_KEY = DEFAULT_CONFIG["API_KEYS"]["OPENAI_API_KEY"]
+AZURE_SPEECH_KEY = DEFAULT_CONFIG["API_KEYS"]["AZURE_SPEECH_KEY"]
+AZURE_SPEECH_REGION = DEFAULT_CONFIG["API_KEYS"]["AZURE_SPEECH_REGION"]
+ANTHROPIC_API_KEY = DEFAULT_CONFIG["API_KEYS"]["ANTHROPIC_API_KEY"]
+DEEPSEEK_API_KEY = DEFAULT_CONFIG["API_KEYS"]["DEEPSEEK_API_KEY"]
+STT_MODEL = DEFAULT_CONFIG["STT_MODEL"]
+MAIN_MODEL = DEFAULT_CONFIG["MAIN_MODEL"]
+PROVIDER = DEFAULT_CONFIG["PROVIDER"]
+DEEP_MODEL = DEFAULT_CONFIG["DEEP_MODEL"]
+MIC_DEVICE_ID = DEFAULT_CONFIG["MIC_DEVICE_ID"]
+STT_SILENCE_THRESHOLD = DEFAULT_CONFIG["STT_SILENCE_THRESHOLD"]
+WHISPER_MODEL = DEFAULT_CONFIG["WHISPER_MODEL"]
+MAX_HISTORY_LENGTH = DEFAULT_CONFIG["MAX_HISTORY_LENGTH"]
+PLUGIN_MONITOR_INTERVAL = DEFAULT_CONFIG["PLUGIN_MONITOR_INTERVAL"]
+LOW_POWER_MODE = DEFAULT_CONFIG["LOW_POWER_MODE"]
+EXIT_WITH_CONSOLE = DEFAULT_CONFIG["EXIT_WITH_CONSOLE"]
+DEV_MODE = DEFAULT_CONFIG["DEV_MODE"]
+FIRST_RUN = DEFAULT_CONFIG["FIRST_RUN"]
+query_refinement = DEFAULT_CONFIG["query_refinement"].copy() # Ensure it's a copy
+version = DEFAULT_CONFIG["version"]
+AUTO_LISTEN_AFTER_TTS = DEFAULT_CONFIG["AUTO_LISTEN_AFTER_TTS"]
+TRACK_ACTIVE_WINDOW = DEFAULT_CONFIG["TRACK_ACTIVE_WINDOW"]
+ACTIVE_WINDOW_POLL_INTERVAL = DEFAULT_CONFIG["ACTIVE_WINDOW_POLL_INTERVAL"]
+API_KEYS = DEFAULT_CONFIG["API_KEYS"].copy()
+
+
+def load_config(path=CONFIG_FILE_PATH):
+    global _config, ASSISTANT_NAME, WAKE_WORD, WAKE_WORD_SENSITIVITY_THRESHOLD, LANGUAGE, \
+           SPEECH_RECOGNITION_PROVIDER, OPENAI_API_KEY, AZURE_SPEECH_KEY, AZURE_SPEECH_REGION, \
+           STT_MODEL, MAIN_MODEL, PROVIDER, DEEP_MODEL, WHISPER_MODEL, \
+           MAX_HISTORY_LENGTH, LOW_POWER_MODE, EXIT_WITH_CONSOLE, DEV_MODE, \
+           AUTO_LISTEN_AFTER_TTS, TRACK_ACTIVE_WINDOW, ACTIVE_WINDOW_POLL_INTERVAL, \
+           ANTHROPIC_API_KEY, DEEPSEEK_API_KEY, \
+           MIC_DEVICE_ID, STT_SILENCE_THRESHOLD, API_KEYS, query_refinement, version, \
+           PLUGIN_MONITOR_INTERVAL, FIRST_RUN
+
+    loaded_file_data = {}
     try:
-        with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
-            json.dump(config_data, f, indent=2, ensure_ascii=False)
-    except IOError as e:
-        logger.error(f"Error saving {CONFIG_FILE}: {e}")
+        with open(path, 'r', encoding='utf-8') as f:
+            loaded_file_data = json.load(f)
+    except FileNotFoundError:
+        logger.warning(f"Config file '{path}' not found. Using default config in-memory.")
+        loaded_file_data = DEFAULT_CONFIG.copy()
+        # Do not write default config to file to avoid unintended overwrites
+    except json.JSONDecodeError as e:
+        logger.error(f"Error decoding JSON from '{path}': {e}. Using default config in-memory.")
+        loaded_file_data = DEFAULT_CONFIG.copy()
+        # Do not overwrite config file on JSON error to avoid unintended overwrites
+    
+    _config.clear()
+    _config.update(loaded_file_data)
 
-# Load configuration once at startup
-_config = load_config()
+    ASSISTANT_NAME = _config.get("ASSISTANT_NAME", DEFAULT_CONFIG["ASSISTANT_NAME"])
+    WAKE_WORD = _config.get("WAKE_WORD", DEFAULT_CONFIG["WAKE_WORD"])
+    WAKE_WORD_SENSITIVITY_THRESHOLD = _config.get("WAKE_WORD_SENSITIVITY_THRESHOLD", DEFAULT_CONFIG["WAKE_WORD_SENSITIVITY_THRESHOLD"])
+    LANGUAGE = _config.get("LANGUAGE", DEFAULT_CONFIG["LANGUAGE"])
+    SPEECH_RECOGNITION_PROVIDER = _config.get("SPEECH_RECOGNITION_PROVIDER", DEFAULT_CONFIG["SPEECH_RECOGNITION_PROVIDER"])
+    
+    API_KEYS = _config.get("API_KEYS", DEFAULT_CONFIG["API_KEYS"].copy())
+    OPENAI_API_KEY = API_KEYS.get("OPENAI_API_KEY", DEFAULT_CONFIG["API_KEYS"]["OPENAI_API_KEY"])
+    AZURE_SPEECH_KEY = API_KEYS.get("AZURE_SPEECH_KEY", DEFAULT_CONFIG["API_KEYS"]["AZURE_SPEECH_KEY"])
+    AZURE_SPEECH_REGION = API_KEYS.get("AZURE_SPEECH_REGION", DEFAULT_CONFIG["API_KEYS"]["AZURE_SPEECH_REGION"])
+    ANTHROPIC_API_KEY = API_KEYS.get("ANTHROPIC_API_KEY", DEFAULT_CONFIG["API_KEYS"]["ANTHROPIC_API_KEY"])
+    DEEPSEEK_API_KEY = API_KEYS.get("DEEPSEEK_API_KEY", DEFAULT_CONFIG["API_KEYS"]["DEEPSEEK_API_KEY"])
 
-# Auto-enable low power mode based on system resources if not explicitly set
-try:
-    if not _config.get('LOW_POWER_MODE', False):
-        total_gb = psutil.virtual_memory().total / (1024 ** 3)
-        cpus = psutil.cpu_count(logical=False) or psutil.cpu_count()
-        thresholds = _config.get('LOW_POWER_THRESHOLDS', {})
-        if total_gb < thresholds.get('memory_gb', 1) or cpus < thresholds.get('cpu_count', 2):
-            _config['LOW_POWER_MODE'] = True
-            logger.info("Low power environment detected (mem: %.1fGB, cpus: %d). Enabling LOW_POWER_MODE.", total_gb, cpus)
-except Exception as e:
-    logger.warning("Failed to auto-detect low power mode: %s", e)
+    STT_MODEL = _config.get("STT_MODEL", DEFAULT_CONFIG["STT_MODEL"])
+    MAIN_MODEL = _config.get("MAIN_MODEL", DEFAULT_CONFIG["MAIN_MODEL"])
+    PROVIDER = _config.get("PROVIDER", DEFAULT_CONFIG["PROVIDER"])
+    DEEP_MODEL = _config.get("DEEP_MODEL", DEFAULT_CONFIG["DEEP_MODEL"])
+    MIC_DEVICE_ID = _config.get("MIC_DEVICE_ID", DEFAULT_CONFIG["MIC_DEVICE_ID"])
+    STT_SILENCE_THRESHOLD = _config.get("STT_SILENCE_THRESHOLD", DEFAULT_CONFIG["STT_SILENCE_THRESHOLD"])
+    WHISPER_MODEL = _config.get("WHISPER_MODEL", DEFAULT_CONFIG["WHISPER_MODEL"])
+    MAX_HISTORY_LENGTH = _config.get("MAX_HISTORY_LENGTH", DEFAULT_CONFIG["MAX_HISTORY_LENGTH"])
+    PLUGIN_MONITOR_INTERVAL = _config.get("PLUGIN_MONITOR_INTERVAL", DEFAULT_CONFIG["PLUGIN_MONITOR_INTERVAL"])
+    LOW_POWER_MODE = _config.get("LOW_POWER_MODE", DEFAULT_CONFIG["LOW_POWER_MODE"])
+    EXIT_WITH_CONSOLE = _config.get("EXIT_WITH_CONSOLE", DEFAULT_CONFIG["EXIT_WITH_CONSOLE"])
+    DEV_MODE = _config.get("DEV_MODE", DEFAULT_CONFIG["DEV_MODE"])
+    
+    query_refinement = _config.get("query_refinement", DEFAULT_CONFIG["query_refinement"].copy())
+    
+    version = _config.get("version", DEFAULT_CONFIG["version"])
+    AUTO_LISTEN_AFTER_TTS = _config.get("AUTO_LISTEN_AFTER_TTS", DEFAULT_CONFIG["AUTO_LISTEN_AFTER_TTS"])
+    TRACK_ACTIVE_WINDOW = _config.get("TRACK_ACTIVE_WINDOW", DEFAULT_CONFIG["TRACK_ACTIVE_WINDOW"])
+    ACTIVE_WINDOW_POLL_INTERVAL = _config.get("ACTIVE_WINDOW_POLL_INTERVAL", DEFAULT_CONFIG["ACTIVE_WINDOW_POLL_INTERVAL"])
+    FIRST_RUN = _config.get("FIRST_RUN", DEFAULT_CONFIG["FIRST_RUN"])
 
-# --- Accessor variables ---
-VOSK_MODEL_PATH = _config.get("VOSK_MODEL_PATH")
-MIC_DEVICE_ID = _config.get("MIC_DEVICE_ID")
-WAKE_WORD = _config.get("WAKE_WORD")
-STT_SILENCE_THRESHOLD = _config.get("STT_SILENCE_THRESHOLD")
-STT_MODEL = _config.get("STT_MODEL")
-MAIN_MODEL = _config.get("MAIN_MODEL")
-DEEP_MODEL = _config.get("DEEP_MODEL")
-PROVIDER = _config.get("PROVIDER")
-USE_WHISPER_FOR_COMMAND = _config.get("USE_WHISPER_FOR_COMMAND")
-WHISPER_MODEL = _config.get("WHISPER_MODEL")
-MAX_HISTORY_LENGTH = _config.get("MAX_HISTORY_LENGTH")
-PLUGIN_MONITOR_INTERVAL = _config.get("PLUGIN_MONITOR_INTERVAL")
+    return _config # Return the global _config dict itself
 
-# Load API keys into environment variables if they exist in the config and are not None
-# This maintains compatibility with how ai_module checks for keys
-API_KEYS = _config.get("API_KEYS", {})
-if isinstance(API_KEYS, str):
+def save_config(data_to_save=None, path=CONFIG_FILE_PATH):
+    """Saves the provided configuration data to the specified path.
+    If no data is provided, it saves the current global _config.
+    """
+    global _config
+    if data_to_save is None:
+        data_to_save = _config
+    
     try:
-        import ast
-        API_KEYS = ast.literal_eval(API_KEYS)
-    except Exception:
-        API_KEYS = {}
-for key, value in API_KEYS.items():
-    if value and value != f"YOUR_{key}_HERE": # Don't set if it's None or the placeholder
-        os.environ[key] = value
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump(data_to_save, f, indent=2, ensure_ascii=False)
+        logger.info(f"Configuration saved successfully to '{path}'.")
+    except Exception as e:
+        logger.error(f"Could not save configuration to '{path}': {e}")
 
-# expose low power flag
-LOW_POWER_MODE = _config.get('LOW_POWER_MODE', False)
+# Initial load of configuration when the module is imported.
+# Other modules can then import _config or the individual accessor variables.
+load_config()

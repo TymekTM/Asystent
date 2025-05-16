@@ -10,13 +10,16 @@ import httpx
 from bs4 import BeautifulSoup
 from charset_normalizer import from_bytes
 from duckduckgo_search import DDGS
+from duckduckgo_search.exceptions import DuckDuckGoSearchException
 
 from ai_module import chat_with_providers, remove_chain_of_thought
-from audio_modules.beep_sounds import play_beep
+from audio_modules.beep_sounds import play_beep, stop_beep
 from config import MAIN_MODEL
 from prompts import SEARCH_SUMMARY_PROMPT
+from performance_monitor import measure_performance # Add this import
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARNING)
 
 # ──────────────────────────────────────────
 #  Constants
@@ -28,6 +31,8 @@ FETCH_CONCURRENCY = 5             # simultaneous downloads
 PAGE_CHAR_LIMIT = 4500            # text fed to LLM
 CACHE_TTL = 3600                  # seconds
 TIMEOUT = httpx.Timeout(20.0, connect=7.0, read=7.0)
+MAX_RETRY_ATTEMPTS = 3            # Maximum retry attempts for rate limited requests
+RETRY_BACKOFF_BASE = 2            # Exponential backoff base factor
 
 USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
@@ -109,13 +114,27 @@ class SearchCache(OrderedDict):
 
 _search_cache = SearchCache(CACHE_MAX_SIZE)
 
-# single DDGS instance – it is thread‑safe and a bit faster when reused
+# DDGS instances and management
 _ddgs = DDGS()
+_last_ddgs_error_time = 0.0  # Track when last error occurred
+
+def get_ddgs_instance():
+    """Get a DDGS instance, recreating it if there was a recent error."""
+    global _ddgs, _last_ddgs_error_time
+    
+    # If there was an error recently (within the last 30 seconds), create a new instance
+    if time.time() - _last_ddgs_error_time < 30:
+        logger.info("Creating new DDGS instance after recent error")
+        _ddgs = DDGS()
+        _last_ddgs_error_time = 0.0
+        
+    return _ddgs
 
 # ──────────────────────────────────────────
 #  Networking helpers
 # ──────────────────────────────────────────
 
+@measure_performance
 async def _fetch_page(client: httpx.AsyncClient, url: str) -> str:
     for attempt in range(3):
         try:
@@ -130,15 +149,79 @@ async def _fetch_page(client: httpx.AsyncClient, url: str) -> str:
     return ""
 
 
+@measure_performance
 async def _search_duckduckgo(query: str) -> list[str]:
+    """Search DuckDuckGo with retry mechanism and rate limit handling."""
+    global _last_ddgs_error_time
     loop = asyncio.get_running_loop()
-    return await loop.run_in_executor(None, lambda: [r["href"] for r in _ddgs.text(query, max_results=DUCK_MAX_RESULTS) if r.get("href")])
+    
+    for attempt in range(MAX_RETRY_ATTEMPTS):
+        try:
+            # Get a fresh DDGS instance if there was a recent error
+            ddgs_instance = get_ddgs_instance()
+            
+            return await loop.run_in_executor(
+                None, 
+                lambda: [r["href"] for r in ddgs_instance.text(query, max_results=DUCK_MAX_RESULTS) if r.get("href")]
+            )
+        except DuckDuckGoSearchException as e:
+            _last_ddgs_error_time = time.time()  # Mark when error occurred
+            
+            if "Ratelimit" in str(e) and attempt < MAX_RETRY_ATTEMPTS - 1:
+                # Apply exponential backoff with jitter
+                backoff_time = RETRY_BACKOFF_BASE ** attempt + random.uniform(0.5, 1.5)
+                logger.warning(f"DuckDuckGo rate limit hit. Retrying in {backoff_time:.2f}s (attempt {attempt+1}/{MAX_RETRY_ATTEMPTS})")
+                await asyncio.sleep(backoff_time)
+            else:
+                # If we've exhausted retries or it's another error, try fallback search
+                logger.warning(f"DuckDuckGo search failed after {attempt+1} attempts: {e}")
+                return await _fallback_search(query)
+    
+    # This shouldn't be reached due to the exception handling, but just in case
+    return []
+
+@measure_performance
+async def _fallback_search(query: str) -> list[str]:
+    """Fallback search method when DuckDuckGo fails."""
+    try:
+        # Simple direct search using Bing
+        search_url = f"https://www.bing.com/search?q={query.replace(' ', '+')}"
+        async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+            response = await client.get(search_url, headers=random_headers(), follow_redirects=True)
+            
+            if response.status_code != 200:
+                logger.warning(f"Fallback search failed with status code {response.status_code}")
+                return []
+                
+            # Parse response to extract URLs
+            soup = BeautifulSoup(response.text, "lxml")
+            results = []
+            
+            # Extract URLs from Bing search results
+            for link in soup.select("a[href^='http']:not([href^='https://www.bing.com'])"):
+                url = link.get("href")
+                if url and "bing" not in url and "microsoft" not in url and url not in results:
+                    results.append(url)
+                    if len(results) >= DUCK_MAX_RESULTS:
+                        break
+                        
+            logger.info(f"Fallback search found {len(results)} results")
+            return results
+            
+    except Exception as e:
+        logger.error(f"Fallback search error: {e}")
+        return []
 
 # ──────────────────────────────────────────
 #  Public entrypoint
 # ──────────────────────────────────────────
 
+@measure_performance
 async def search_handler(params: str = "", conversation_history: list | None = None, user_lang: str | None = None) -> str:
+    # Ensure params is a string (handle cases where params might be passed as a dict)
+    if isinstance(params, dict):
+        # Use 'query' key if present, else convert dict to string
+        params = params.get("query", "") if "query" in params else str(params)
     if not params:
         return "Podaj zapytanie wyszukiwania po komendzie !search"
 
@@ -149,13 +232,16 @@ async def search_handler(params: str = "", conversation_history: list | None = N
         logger.info("Returning cached result for %s", params)
         return cached_response
 
-    await asyncio.to_thread(play_beep, "search")
+    # Start search beep in loop until search completes
+    beep_process = await asyncio.to_thread(play_beep, "search", True)
 
     try:
+        # Attempt to get search results with built-in retry mechanism
         urls = await _search_duckduckgo(params)
         if not urls:
-            return "Nie znaleziono wyników."
+            return "Nie znaleziono wyników wyszukiwania."
 
+        # Fetch page contents concurrently with rate limiting
         async with httpx.AsyncClient(timeout=TIMEOUT, http2=True) as client:
             sem = asyncio.Semaphore(FETCH_CONCURRENCY)
 
@@ -166,7 +252,7 @@ async def search_handler(params: str = "", conversation_history: list | None = N
             texts = [t for t in await asyncio.gather(*[sem_fetch(u) for u in urls[:FETCH_CONCURRENCY]]) if t]
 
         if not texts:
-            return "Nie udało się pobrać treści stron."
+            return "Nie udało się pobrać treści stron. Spróbuj ponownie za chwilę."
 
         combined = "\n\n".join(texts)[:PAGE_CHAR_LIMIT]
 
@@ -186,12 +272,22 @@ async def search_handler(params: str = "", conversation_history: list | None = N
         _search_cache.put(normalized, (now, params, summary))
         return summary
 
+    except DuckDuckGoSearchException as e:
+        logger.error("DuckDuckGo search error: %s", e)
+        return "Przepraszam, wystąpił problem z wyszukiwarką (ograniczenie liczby zapytań). Spróbuj ponownie za kilka minut."
+    
+    except httpx.HTTPError as e:
+        logger.error("HTTP error during search: %s", e)
+        return "Przepraszam, wystąpił problem z połączeniem internetowym. Spróbuj ponownie za chwilę."
+        
     except Exception as e:
         logger.error("Search handler error: %s", e, exc_info=True)
-        return "Błąd podczas przetwarzania wyszukiwania."
+        return "Błąd podczas przetwarzania wyszukiwania. Spróbuj ponownie lub zmień zapytanie."
     finally:
-        await asyncio.to_thread(play_beep, "stop")
-
+        # Stop the search beep when action completes
+        if beep_process:
+            await asyncio.to_thread(stop_beep, beep_process)
+    
 # ──────────────────────────────────────────
 #  Command registration – same interface
 # ──────────────────────────────────────────

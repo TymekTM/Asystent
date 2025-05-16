@@ -1,21 +1,15 @@
 import base64, os, datetime, logging, subprocess, ollama
 import numpy as np
-from pyexpat.errors import messages
 
 from ai_module import chat_with_providers, remove_chain_of_thought
 from audio_modules.beep_sounds import play_beep
 # Import prompt and ensure cv2 is a module attribute for use in capture_screen (can be monkeypatched)
 # Import screen prompt
 from prompts import SEE_SCREEN_PROMPT
-# Ensure cv2 attribute exists for monkeypatching in tests
-cv2 = None
+# Optional OpenCV for writing images; tests may monkeypatch module cv2
 try:
-    import cv2
-except ImportError:
-    cv2 = None
-# Optional OpenCV import for image saving (can be monkeypatched in tests)
-try:
-    import cv2
+    import cv2 as _cv2
+    cv2 = _cv2
 except ImportError:
     cv2 = None
 
@@ -33,14 +27,9 @@ except ImportError:
         except ImportError:
             ImageGrab = None
 
+# config import
 from config import MAIN_MODEL
 
-# Optional OpenCV for writing images; tests may monkeypatch module cv2
-try:
-    import cv2 as _cv2
-    cv2 = _cv2
-except ImportError:
-    cv2 = None
 
 # Inicjalizacja kamery DXcam jako zmiennej globalnej dla lepszej wydajności
 dxcam_device = None
@@ -90,8 +79,12 @@ def capture_screen(params: str = "", conversation_history: list = None) -> str:
 
         abs_path = os.path.abspath(filepath)
         image_base64 = encode_image_to_base64(abs_path)
-        # If no conversation history, return just the base64 (fallback/test mode)
+        # Clean up the saved screenshot file if no conversation history (fallback/test mode)
         if conversation_history is None:
+            try:
+                os.remove(abs_path)
+            except Exception:
+                pass
             return image_base64
 
         prompt_text = f"Na podstawie tego zrzutu ekranu odpowiedz na pytanie: {params}" if params.strip() else "Co znajduje się na tym zrzucie ekranu?"

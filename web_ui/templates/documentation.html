@@ -2,37 +2,174 @@
 
 {% block title %}Documentation{% endblock %}
 
+{% block head_extra %}
+<style>
+.card {
+  background-color: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(8px);
+  padding: 1.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.card:hover {
+  transform: scale(1.05);
+}
+
+.doc-section-card {
+  text-align: center;
+  padding: 2rem 1rem;
+  height: 100%;
+}
+
+.doc-section-card i {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: var(--gaja-primary);
+}
+
+.doc-section-card h3 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.doc-section-card p {
+  color: #555;
+  font-size: 1rem;
+}
+
+.quick-links {
+  font-size: 1.1rem;
+}
+
+.quick-links ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.quick-links li {
+  margin-bottom: 0.8rem;
+  display: flex;
+  align-items: center;
+}
+
+.quick-links li:before {
+  content: "•";
+  color: var(--gaja-primary);
+  font-weight: bold;
+  font-size: 1.4rem;
+  margin-right: 0.5rem;
+}
+
+.markdown-content {
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <div class="row">
-        <!-- Sidebar with links -->
-        <div class="col-md-3 mb-4">
-            <div class="card">
-                <div class="card-header">
-                    Documentation
+<div class="container mt-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4 mb-3">📘 Dokumentacja</h1>
+        <p class="lead">Witaj w dokumentacji Gai. Wybierz interesującą sekcję poniżej.</p>
+    </div>
+    
+    {% if section == 'main' or not section %}
+    <!-- Main documentation landing page with cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-lg-4">
+            <a href="{{ url_for('documentation_section', section='user-guide', path='README') }}" class="text-decoration-none">
+                <div class="card doc-section-card">
+                    <i class="fas fa-user"></i>
+                    <h3>🧑‍💻 User Guide</h3>
+                    <p>Poznaj interfejs</p>
                 </div>
-                <div class="list-group list-group-flush">
-                    <a href="{{ url_for('documentation_main') }}" class="list-group-item list-group-item-action {% if section == 'main' %}active{% endif %}">Introduction</a>
+            </a>
+        </div>
+        
+        <div class="col-lg-4">
+            <a href="{{ url_for('documentation_section', section='developer', path='README') }}" class="text-decoration-none">
+                <div class="card doc-section-card">
+                    <i class="fas fa-code"></i>
+                    <h3>🛠️ Dev Guide</h3>
+                    <p>Kontrybuuj do AI</p>
+                </div>
+            </a>
+        </div>
+        
+        <div class="col-lg-4">
+            <a href="{{ url_for('documentation_section', section='api', path='README') }}" class="text-decoration-none">
+                <div class="card doc-section-card">
+                    <i class="fas fa-plug"></i>
+                    <h3>📡 API Docs</h3>
+                    <p>Integruj RESTem</p>
+                </div>
+            </a>
+        </div>
+    </div>
+    
+    <div class="card mb-5">
+        <h4 class="mb-3">🔗 Szybkie linki:</h4>
+        <div class="row quick-links">
+            <div class="col-lg-6">
+                <ul>
+                    <li><a href="{{ url_for('documentation_section', section='user-guide', path='web-ui') }}">Web UI Guide</a></li>
+                    <li><a href="{{ url_for('documentation_section', section='user-guide', path='voice-interaction') }}">Voice Interaction</a></li>
+                </ul>
+            </div>
+            <div class="col-lg-6">
+                <ul>
+                    <li><a href="{{ url_for('documentation_section', section='developer', path='ai-architecture') }}">AI Architecture</a></li>
+                    <li><a href="{{ url_for('documentation_section', section='developer', path='plugin-development') }}">Pluginy</a></li>
+                    <li><a href="{{ url_for('documentation_section', section='api', path='rest-endpoints') }}">REST API</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="mb-3"><i class="fas fa-book me-2"></i>Navigation</h5>
+                    <a href="{{ url_for('documentation_main') }}" class="btn btn-outline-secondary btn-sm mb-3 w-100">← Back to Main</a>
                     
-                    <div class="list-group-item list-group-item-secondary">User Guide</div>
-                    <a href="{{ url_for('documentation_section', section='user-guide', path='README') }}" class="list-group-item list-group-item-action {% if section == 'user-guide' and path == 'README' %}active{% endif %}">Overview</a>
-                    <a href="{{ url_for('documentation_section', section='user-guide', path='web-ui') }}" class="list-group-item list-group-item-action {% if section == 'user-guide' and path == 'web-ui' %}active{% endif %}">Web Interface</a>
-                    <a href="{{ url_for('documentation_section', section='user-guide', path='voice-interaction') }}" class="list-group-item list-group-item-action {% if section == 'user-guide' and path == 'voice-interaction' %}active{% endif %}">Voice Interaction</a>
+                    <h6 class="text-muted mt-3 mb-2">User Guide</h6>
+                    <div class="list-group mb-3">
+                        <a href="{{ url_for('documentation_section', section='user-guide', path='README') }}" 
+                           class="list-group-item list-group-item-action {% if section == 'user-guide' and path == 'README' %}active{% endif %}">Overview</a>
+                        <a href="{{ url_for('documentation_section', section='user-guide', path='web-ui') }}" 
+                           class="list-group-item list-group-item-action {% if section == 'user-guide' and path == 'web-ui' %}active{% endif %}">Web Interface</a>
+                        <a href="{{ url_for('documentation_section', section='user-guide', path='voice-interaction') }}" 
+                           class="list-group-item list-group-item-action {% if section == 'user-guide' and path == 'voice-interaction' %}active{% endif %}">Voice Interaction</a>
+                    </div>
                     
-                    <div class="list-group-item list-group-item-secondary">Developer Guide</div>
-                    <a href="{{ url_for('documentation_section', section='developer', path='README') }}" class="list-group-item list-group-item-action {% if section == 'developer' and path == 'README' %}active{% endif %}">Setup</a>
-                    <a href="{{ url_for('documentation_section', section='developer', path='ai-architecture') }}" class="list-group-item list-group-item-action {% if section == 'developer' and path == 'ai-architecture' %}active{% endif %}">AI Architecture</a>
-                    <a href="{{ url_for('documentation_section', section='developer', path='plugin-development') }}" class="list-group-item list-group-item-action {% if section == 'developer' and path == 'plugin-development' %}active{% endif %}">Plugin Development</a>
-                    <a href="{{ url_for('documentation_section', section='developer', path='integrating-docs') }}" class="list-group-item list-group-item-action {% if section == 'developer' and path == 'integrating-docs' %}active{% endif %}">Integrating Docs</a>
+                    <h6 class="text-muted mt-3 mb-2">Developer Guide</h6>
+                    <div class="list-group mb-3">
+                        <a href="{{ url_for('documentation_section', section='developer', path='README') }}" 
+                           class="list-group-item list-group-item-action {% if section == 'developer' and path == 'README' %}active{% endif %}">Setup</a>
+                        <a href="{{ url_for('documentation_section', section='developer', path='ai-architecture') }}" 
+                           class="list-group-item list-group-item-action {% if section == 'developer' and path == 'ai-architecture' %}active{% endif %}">AI Architecture</a>
+                        <a href="{{ url_for('documentation_section', section='developer', path='plugin-development') }}" 
+                           class="list-group-item list-group-item-action {% if section == 'developer' and path == 'plugin-development' %}active{% endif %}">Plugin Development</a>
+                        <a href="{{ url_for('documentation_section', section='developer', path='integrating-docs') }}" 
+                           class="list-group-item list-group-item-action {% if section == 'developer' and path == 'integrating-docs' %}active{% endif %}">Integrating Docs</a>
+                    </div>
                     
-                    <div class="list-group-item list-group-item-secondary">API Reference</div>
-                    <a href="{{ url_for('documentation_section', section='api', path='README') }}" class="list-group-item list-group-item-action {% if section == 'api' and path == 'README' %}active{% endif %}">Overview</a>
-                    <a href="{{ url_for('documentation_section', section='api', path='rest-endpoints') }}" class="list-group-item list-group-item-action {% if section == 'api' and path == 'rest-endpoints' %}active{% endif %}">REST Endpoints</a>
+                    <h6 class="text-muted mt-3 mb-2">API Reference</h6>
+                    <div class="list-group">
+                        <a href="{{ url_for('documentation_section', section='api', path='README') }}" 
+                           class="list-group-item list-group-item-action {% if section == 'api' and path == 'README' %}active{% endif %}">Overview</a>
+                        <a href="{{ url_for('documentation_section', section='api', path='rest-endpoints') }}" 
+                           class="list-group-item list-group-item-action {% if section == 'api' and path == 'rest-endpoints' %}active{% endif %}">REST Endpoints</a>
+                    </div>
                 </div>
             </div>
         </div>
         
-        <!-- Main content -->
         <div class="col-md-9">
             <div class="card">
                 <div class="card-body">
@@ -43,6 +180,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
 {% endblock %}
 
