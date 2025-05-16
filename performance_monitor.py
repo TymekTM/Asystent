@@ -6,6 +6,10 @@ import logging
 from functools import wraps
 from collections import defaultdict
 import threading
+import psutil
+import torch
+import tracemalloc
+import subprocess
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
@@ -16,6 +20,23 @@ if not os.path.exists('user_data'):
     os.makedirs('user_data', exist_ok=True)
 stats_lock = threading.Lock()
 
+# Start tracing Python memory allocations for per-function measurements
+tracemalloc.start()
+
+def _get_gpu_util_percent():
+    """Return current GPU utilization percent via nvidia-smi, or None if unavailable."""
+    try:
+        # Query GPU utilization in percent
+        output = subprocess.check_output(
+            ["nvidia-smi", "--query-gpu=utilization.gpu", "--format=csv,noheader,nounits"],
+            encoding='utf-8', stderr=subprocess.DEVNULL
+        )
+        # Multiple GPUs return multiple lines; take first GPU
+        line = output.strip().splitlines()[0]
+        return int(line.strip())
+    except Exception:
+        return None
+
 # In-memory aggregation for averages to avoid reading the file constantly
 aggregated_stats = defaultdict(lambda: {'total_time': 0.0, 'count': 0})
 aggregation_lock = threading.Lock()
@@ -24,23 +45,97 @@ def measure_performance(func):
     """Decorator to measure execution time of a function and log it."""
     @wraps(func)
     def wrapper(*args, **kwargs):
+        # Start measuring time and system resources
+        # Wall-clock start time
         start_time = time.perf_counter()
+        # CPU time start (process and thread)
+        start_cpu_process = time.process_time()
+        start_cpu_thread = time.thread_time()
+        # Python memory allocations start
+        start_traced_mem, _ = tracemalloc.get_traced_memory()
+        # GPU utilization start
+        start_gpu_util = _get_gpu_util_percent()
+        try:
+            proc = psutil.Process()
+            start_mem = proc.memory_info().rss
+            cpu_times = proc.cpu_times()
+            start_cpu = cpu_times.user + cpu_times.system
+        except Exception:
+            start_mem = start_cpu = None
+        try:
+            start_gpu = torch.cuda.memory_allocated() if torch.cuda.is_available() else None
+        except Exception:
+            start_gpu = None
         try:
             result = func(*args, **kwargs)
             return result
         finally:
+            # Record end times
             end_time = time.perf_counter()
             duration = end_time - start_time
+            end_cpu_process = time.process_time()
+            end_cpu_thread = time.thread_time()
+            end_traced_mem, end_traced_peak = tracemalloc.get_traced_memory()
             func_name = func.__name__
             module_name = func.__module__
             full_name = f"{module_name}.{func_name}"
 
-            # Log to file
+            # Post-call resource measurements
+            try:
+                proc = psutil.Process()
+                end_mem = proc.memory_info().rss
+                cpu_times_end = proc.cpu_times()
+                end_cpu = cpu_times_end.user + cpu_times_end.system
+            except Exception:
+                end_mem = end_cpu = None
+            # Post-call GPU stats
+            try:
+                end_gpu = torch.cuda.memory_allocated() if torch.cuda.is_available() else None
+            except Exception:
+                end_gpu = None
+            end_gpu_util = _get_gpu_util_percent()
+
+            # Build log entry with performance and resource stats
             log_entry = {
                 'timestamp': time.time(),
                 'function': full_name,
-                'duration_ms': duration * 1000, # Store in milliseconds
+                'duration_ms': duration * 1000,  # Store in milliseconds
             }
+            # Memory usage
+            if start_mem is not None and end_mem is not None:
+                log_entry['memory_rss_bytes'] = end_mem
+                log_entry['memory_delta_bytes'] = end_mem - start_mem
+            # CPU time and utilization
+            if start_cpu is not None and end_cpu is not None:
+                cpu_delta = end_cpu - start_cpu
+                log_entry['cpu_time_ms'] = cpu_delta * 1000
+                if duration > 0:
+                    log_entry['cpu_percent'] = (cpu_delta / duration) * 100
+            # GPU memory usage
+            if start_gpu is not None and end_gpu is not None:
+                log_entry['gpu_memory_bytes'] = end_gpu
+                log_entry['gpu_memory_delta_bytes'] = end_gpu - start_gpu
+            # GPU utilization
+            if start_gpu_util is not None:
+                log_entry['gpu_util_start_percent'] = start_gpu_util
+            if end_gpu_util is not None:
+                log_entry['gpu_util_end_percent'] = end_gpu_util
+            # Python memory allocations via tracemalloc
+            log_entry['memory_traced_bytes'] = end_traced_mem
+            log_entry['memory_traced_delta_bytes'] = end_traced_mem - start_traced_mem
+            log_entry['memory_traced_peak_bytes'] = end_traced_peak
+            # CPU time usage per function
+            proc_cpu_delta = None
+            try:
+                proc_cpu_delta = (end_cpu_process - start_cpu_process)
+                log_entry['cpu_process_time_ms'] = proc_cpu_delta * 1000
+            except Exception:
+                pass
+            try:
+                thread_cpu_delta = (end_cpu_thread - start_cpu_thread)
+                log_entry['cpu_thread_time_ms'] = thread_cpu_delta * 1000
+            except Exception:
+                pass
             try:
                 with stats_lock:
                     with open(STATS_FILE, 'a', encoding='utf-8') as f:
