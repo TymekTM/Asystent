@@ -536,6 +536,17 @@ def generate_response(
 
         # Assuming chat_with_providers expects a list
         resp = chat_with_providers(MAIN_MODEL, messages)
+        # --- RAW API RESPONSE LOGGING ---
+        try:
+            # Log the raw content received from the AI provider
+            raw_content = resp.get("message", {}).get("content", "").strip() if resp else ""
+            import json
+            import datetime
+            with open("user_data/prompts_log.txt", "a", encoding="utf-8") as f:
+                raw_api_msg = {"role": "assistant_api_raw", "content": raw_content}
+                f.write(f"{datetime.datetime.now().isoformat()} | {json.dumps(raw_api_msg, ensure_ascii=False)}\n")
+        except Exception as log_exc:
+            logger.warning(f"[RawAPI Log] Failed to log raw API response: {log_exc}")
         content = resp["message"]["content"].strip() if resp else ""
         if not content:
             raise ValueError("Empty response.")

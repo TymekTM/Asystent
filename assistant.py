@@ -87,13 +87,12 @@ class Assistant:
             
         # Log the final TTS output with a special marker
         try:
-            import datetime
-            import json
+            import datetime, json
+            tts_message = {"role": "assistant_tts", "content": text}
             with open("user_data/prompts_log.txt", "a", encoding="utf-8") as f:
-                tts_message = {"role": "assistant_tts", "content": text}
                 f.write(f"{datetime.datetime.now().isoformat()} | {json.dumps(tts_message, ensure_ascii=False)}\n")
         except Exception as log_exc:
-            logger.warning(f"[TTS Log] Failed to log TTS output: {log_exc}")
+            logger.warning(f"[PromptLog] Failed to log TTS output: {log_exc}")
         if listen_after_tts:
             logger.info(f"[TTS+Listen] Speaking and will listen again: '{text[:100]}...'")
             await self.tts.speak(text)
@@ -118,6 +117,15 @@ class Assistant:
         self.low_power_mode = _config.get('LOW_POWER_MODE', LOW_POWER_MODE)
         self.dev_mode = _config.get('DEV_MODE', DEV_MODE)
         self.track_active_window = _config.get('TRACK_ACTIVE_WINDOW', TRACK_ACTIVE_WINDOW)
+        # Ensure prompts_log.txt exists and is ready for logging
+        import os
+        os.makedirs(os.path.dirname("user_data/prompts_log.txt"), exist_ok=True)
+        if not os.path.exists("user_data/prompts_log.txt"):
+            open("user_data/prompts_log.txt", "w", encoding="utf-8").close()
+        # Ensure user input log exists
+        os.makedirs(os.path.dirname("user_data/user_inputs_log.txt"), exist_ok=True)
+        if not os.path.exists("user_data/user_inputs_log.txt"):
+            open("user_data/user_inputs_log.txt", "w", encoding="utf-8").close()
         self.active_window_poll_interval = _config.get('ACTIVE_WINDOW_POLL_INTERVAL', ACTIVE_WINDOW_POLL_INTERVAL)
         self.wake_word_sensitivity_threshold = _config.get('WAKE_WORD_SENSITIVITY_THRESHOLD', WAKE_WORD_SENSITIVITY_THRESHOLD)
 
