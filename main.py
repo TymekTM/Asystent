@@ -152,6 +152,27 @@ def main():
                 flask_process.start()
                 logger.info("Flask process restarted.")
             
+            # Check for restart signal
+            if os.path.exists(restart_lock_path):
+                logger.info("Restart signal detected. Restarting processes...")
+                # Terminate existing processes
+                if assistant_process.is_alive():
+                    assistant_process.terminate()
+                    assistant_process.join(timeout=5)
+                if flask_process.is_alive():
+                    flask_process.terminate()
+                    flask_process.join(timeout=5)
+                
+                # Remove restart lock
+                os.remove(restart_lock_path)
+                
+                # Start new processes
+                assistant_process = multiprocessing.Process(target=run_assistant_process, args=(command_queue,))
+                assistant_process.start()
+                flask_process = multiprocessing.Process(target=run_flask_process, args=(command_queue,))
+                flask_process.start()
+                logger.info("Processes restarted successfully.")
+                
             time.sleep(5)  # Check every 5 seconds
 
     except KeyboardInterrupt:

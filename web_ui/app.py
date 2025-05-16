@@ -2003,12 +2003,15 @@ def create_app(queue: multiprocessing.Queue):
         role = data.get('role', 'user')
         display_name = data.get('display_name')
         ai_persona = data.get('ai_persona')
-        personalization = data.get('personalization')
+        personalization = data.get('personalization')        
         if not username or not password:
             return jsonify({'success': False, 'error': 'Username and password required.'}), 400
         if get_user_by_username(username):
             return jsonify({'success': False, 'error': 'User already exists.'}), 400
-        add_user(username, password, role, display_name, ai_persona, personalization)
+        # Fix: Use the correct function call signature
+        from werkzeug.security import generate_password_hash
+        password_hash = generate_password_hash(password)
+        add_user(username=username, password=password_hash, role=role, display_name=display_name, ai_persona=ai_persona, personalization=personalization)
         return jsonify({'success': True})
 
     @local_app.route('/dev/users/delete', methods=['POST']) # Fixed syntax error here
