@@ -1,6 +1,7 @@
 import logging
 import json
 import os
+import sys  # Added import for sys
 import threading
 from datetime import datetime, timedelta
 
@@ -9,21 +10,68 @@ from audio_modules.beep_sounds import play_beep
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
-# storage paths
-BASE_DIR = os.path.dirname(__file__)
-STORAGE_FILE = os.path.join(BASE_DIR, 'core_storage.json')
+# Determine the appropriate directory for persistent application data
+APP_NAME = "Asystent"
+user_data_dir = ""
+
+# Try to establish a user-specific data directory
+try:
+    if os.name == 'nt':  # Windows
+        # Use APPDATA, fallback to user's home directory
+        base_dir = os.getenv('APPDATA')
+        if not base_dir:
+            base_dir = os.path.expanduser("~")
+        user_data_dir = os.path.join(base_dir, APP_NAME)
+    else:  # macOS, Linux
+        user_data_dir = os.path.join(os.path.expanduser("~"), f".{APP_NAME.lower()}")
+
+    # Create the directory if it doesn't exist
+    os.makedirs(user_data_dir, exist_ok=True)
+    logger.info(f"Application data will be stored in: {user_data_dir}")
+
+except Exception as e:
+    logger.error(f"Could not create/access user-specific data directory: {e}. Falling back.")
+    # Fallback: try to create a data directory in the current working directory
+    # This is not ideal, especially for bundled apps, but better than failing outright.
+    fallback_dir_name = f"{APP_NAME}_data_fallback"
+    try:
+        # Try to use the directory where the script/executable is located if possible
+        if getattr(sys, 'frozen', False):  # If application is frozen (e.g. PyInstaller bundle)
+            # sys.executable is the path to the frozen executable
+            app_run_dir = os.path.dirname(sys.executable) # Use executable's directory
+        else:  # If running as a script
+            # __file__ is the path to the script
+            app_run_dir = os.path.dirname(os.path.abspath(__file__)) # Use script's directory
+
+        user_data_dir = os.path.join(app_run_dir, fallback_dir_name)
+        os.makedirs(user_data_dir, exist_ok=True)
+        logger.warning(f"Using fallback data directory: {user_data_dir}")
+    except Exception as e2:
+        logger.critical(f"Failed to create even fallback data directory {user_data_dir}: {e2}. Data storage will likely fail.")
+        # If even this fails, set user_data_dir to something to prevent crash on join, though writes will fail
+        user_data_dir = "."
+
+STORAGE_FILE = os.path.join(user_data_dir, 'core_storage.json')
+logger.info(f"Using storage file: {STORAGE_FILE}")
+
 
 # initialize storage
 def _init_storage():
     if not os.path.exists(STORAGE_FILE):
-        with open(STORAGE_FILE, 'w') as f:
-            json.dump({
-                'timers': [],
-                'events': [],
-                'reminders': [],
-                'shopping_list': [],
-                'tasks': []
-            }, f)
+        try:
+            with open(STORAGE_FILE, 'w') as f:
+                json.dump({
+                    'timers': [],
+                    'events': [],
+                    'reminders': [],
+                    'shopping_list': [],
+                    'tasks': []
+                }, f)
+            logger.info(f"Initialized new storage file at: {STORAGE_FILE}")
+        except Exception as e:
+            logger.error(f"Failed to create or write initial storage file at {STORAGE_FILE}: {e}")
+            # This is a critical error; the application might not function correctly.
+            # Consider raising an exception or implementing more specific error handling.
 
 
 _init_storage()
@@ -56,6 +104,7 @@ def _timer_polling_loop():
             logger.error(f"Timer polling error: {e}")
         time.sleep(1)
 
+
 # Start polling thread once on import (after all functions are defined)
 def _start_timer_polling_thread():
     t = threading.Thread(target=_timer_polling_loop, daemon=True)
@@ -71,6 +120,7 @@ def _save_storage(data):
     with open(STORAGE_FILE, 'w') as f:
         json.dump(data, f, indent=2)
 
+
 # --- Timer callback ---
 def _timer_finished(label: str):
     logger.info(f"Timer finished: {label}")
@@ -78,6 +128,7 @@ def _timer_finished(label: str):
         play_beep("beep")
     except Exception as e:
         logger.error(f"play_beep failed in _timer_finished: {e}")
+
 
 # --- Timers ---
 def set_timer(params) -> str:
@@ -147,6 +198,7 @@ def view_timers(params) -> str:
             active.append(f"{t['label']}: {rem}s pozostało")
     return '\n'.join(active) if active else 'Brak aktywnych timerów.'
 
+
 # --- Calendar Events ---
 def add_event(params: str) -> str:
     try:
@@ -170,6 +222,7 @@ def view_calendar(params) -> str:
         dt = datetime.fromisoformat(e['time'])
         lines.append(f"{dt.strftime('%Y-%m-%d %H:%M')}: {e['desc']}")
     return '\n'.join(lines)
+
 
 # --- Reminders ---
 def set_reminder(params: str, conversation_history=None) -> str:
@@ -196,6 +249,7 @@ def view_reminders(params) -> str:
         dt = datetime.fromisoformat(r['time'])
         lines.append(f"{dt.strftime('%Y-%m-%d %H:%M')}: {r['note']}")
     return '\n'.join(lines)
+
 
 # --- Shopping List ---
 def add_item(params: str) -> str:
@@ -247,6 +301,7 @@ def remove_item(params: str) -> str:
         _save_storage(data)
         return f'Usunięto "{item}" z listy zakupów.'
     return f'Nie ma "{item}" na liście.'
+
 
 # --- To-Do Tasks ---
 def add_task(params: str) -> str:

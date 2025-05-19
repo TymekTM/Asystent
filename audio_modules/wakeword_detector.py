@@ -8,6 +8,7 @@ import numpy as np
 import sounddevice as sd
 from openwakeword.model import Model # Directly import Model
 from .beep_sounds import play_beep
+import sys # Added for PyInstaller path correction
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
@@ -112,28 +113,62 @@ def run_wakeword_detection(
         try:
             default_devices = sd.query_devices()
             default_input_device_index = None
-            for i, device in enumerate(default_devices):
-                if device['max_input_channels'] > 0 and device['name'] == sd.query_hostapis()[device['hostapi']]['default_input_device_name']: # Heuristic
-                    default_input_device_index = i
-                    break
-            if default_input_device_index is None: # Fallback to first input device if specific default not found
+            # Try to find the host API's default input device first
+            for i, device_info in enumerate(default_devices):
+                if device_info['max_input_channels'] > 0:
+                    try:
+                        host_api_info = sd.query_hostapis()[device_info['hostapi']]
+                        if 'default_input_device_name' in host_api_info and device_info['name'] == host_api_info['default_input_device_name']:
+                            default_input_device_index = i
+                            logger.info(f"Found host API default input device: ID {i} ({device_info['name']})")
+                            break
+                    except KeyError:
+                        # 'default_input_device_name' might not exist, or other keys might be missing
+                        pass # Continue to next heuristic
+            
+            if default_input_device_index is None: # Fallback to sounddevice's default if host API default not found or error
+                try:
+                    default_sd_device = sd.default.device
+                    if isinstance(default_sd_device, (list, tuple)) and len(default_sd_device) > 0:
+                        # default_sd_device can be [input_idx, output_idx] or just input_idx
+                        potential_default_idx = default_sd_device[0] if isinstance(default_sd_device, (list, tuple)) else default_sd_device
+                        if default_devices[potential_default_idx]['max_input_channels'] > 0:
+                            default_input_device_index = potential_default_idx
+                            logger.info(f"Using sounddevice default input device: ID {default_input_device_index} ({default_devices[default_input_device_index]['name']})")
+                except Exception as e_sd_default:
+                    logger.warning(f"Could not determine sounddevice default input: {e_sd_default}. Will try first available.")
+
+            if default_input_device_index is None: # Fallback to first available input device
                  for i, device in enumerate(default_devices):
                      if device['max_input_channels'] > 0:
                          default_input_device_index = i
+                         logger.info(f"Using first available input device: ID {i} ({device['name']})")
                          break
+            
             if default_input_device_index is not None:
                 mic_device_id = default_input_device_index
-                logger.info(f"No microphone device ID specified, using default input device: ID {mic_device_id} ({sd.query_devices(mic_device_id)['name']})")
+                logger.info(f"No microphone device ID specified, using determined default input device: ID {mic_device_id} ({sd.query_devices(mic_device_id)['name']})")
             else:
                 logger.error("Could not find any input audio device. Microphone device ID is required.")
+                play_beep("error", loop=False)
                 return
         except Exception as e:
             logger.error(f"Could not get default input device: {e}. Microphone device ID is required.", exc_info=True)
+            play_beep("error", loop=False)
             return
+    
+    logger.info(f"Wake word detector will use microphone ID: {mic_device_id} ({sd.query_devices(mic_device_id)['name']})")
 
     # --- openWakeWord Model Initialization ---
-    # Construct path to 'resources/openWakeWord' relative to this file's parent directory (audio_modules -> Asystent)
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) # Should be Asystent/
+    # Construct path to 'resources/openWakeWord'
+    if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+        # Running in a PyInstaller bundle
+        # Assume 'resources' directory is at the same level as the executable
+        base_dir = os.path.dirname(sys.executable) # Corrected: resources are next to the EXE
+    else:
+        # Running in a normal Python environment
+        # Path relative to this script (audio_modules/wakeword_detector.py) -> up to Asystent/ then resources/
+        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) # Resolves to Asystent/
     model_dir = os.path.join(base_dir, 'resources', 'openWakeWord')
     
     if not os.path.isdir(model_dir):
@@ -173,8 +208,14 @@ def run_wakeword_detection(
         logger.error("openwakeword library is required. Install via `pip install openwakeword`.")
         return
     except Exception as e:
-        logger.error(f"Error initializing openWakeWord Model: {e}", exc_info=True)
-        return
+        logger.error(f"Error initializing custom openWakeWord Model: {e}", exc_info=True)
+        logger.warning("Falling back to default openWakeWord Model configuration.")
+        try:
+            # Try initializing default Model without custom args
+            wakeword_model_instance = Model()
+        except Exception as e2:
+            logger.error(f"Failed to initialize default openWakeWord Model: {e2}", exc_info=True)
+            return
 
     logger.info(f"Starting wake word detection for '{wake_word_config_name}' using openWakeWord.")
     logger.info("Asystent jest załadowany i nasłuchuje.") # <--- DODANO KOMUNIKAT

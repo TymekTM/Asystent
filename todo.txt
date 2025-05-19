@@ -36,7 +36,9 @@
 - Add visual feedback for microphone and speech recognition status
 - RAG
 - Routines learner
-
+- Train gaia
+- Fałszywe wspomnienia, by zrobić ją bardziej ludzką
+- Intencja daje jej tylko i wyłącznie narzędzia które pasują, a nie te, które może użyć
 
 ## Goals:
 - Plug and play instalation

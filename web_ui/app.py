@@ -539,16 +539,16 @@ def get_conversation_history(limit=50, buffer_multiplier=5):
         logger.info(f"Retrieved {len(history)} history entries from database.")
         
         if not history:
-            # If database is empty, try fallback to log file
-            logger.warning("No history in database, attempting fallback to log file...")
-            return _read_history_from_logfile(limit)
+            # No history in database, return empty list
+            logger.info("No conversation history found in database.")
+            return []
         
         return history
     
     except Exception as e:
         logger.error(f"Error reading history from database: {e}", exc_info=True)
-        # Fallback to log file if database fails
-        return _read_history_from_logfile(limit)
+        # On error, return empty history
+        return []
 
 def _read_history_from_logfile(limit=50):
     """
@@ -660,9 +660,56 @@ def setup_api_routes(app, queue):
     global assistant_queue
     assistant_queue = queue
 
-    @app.route('/api/config', methods=['GET', 'POST'])
-    @login_required # Protect config access
-    def api_config():
+    # Create a new Flask app instance for this process
+    local_app = Flask(__name__, template_folder='templates', static_folder='static')
+    local_app.secret_key = SECRET_KEY
+
+    # --- Global error handlers ---
+    @local_app.errorhandler(404)
+    def handle_404(e):
+        return jsonify({'error': 'Not Found'}), 404
+
+    @local_app.errorhandler(500)
+    def handle_500(e):
+        # Log the actual error
+        logger.error(f"Internal Server Error: {e}", exc_info=True)
+        return jsonify({'error': 'Internal Server Error'}), 500
+
+    # --- Health check endpoint (should be early) ---
+    @local_app.route('/health')
+    def health():
+        uptime = time.time() - _startup_time
+        qsize = assistant_queue.qsize() if assistant_queue else None
+        return jsonify({'version': DEFAULT_CONFIG.get('version'), 'uptime_sec': uptime, 'queue_size': qsize})
+    # --- Global error handlers ---
+    @local_app.errorhandler(404)
+    def handle_404(e):
+        return jsonify({'error': 'Not Found'}), 404
+    @local_app.errorhandler(500)
+    def handle_500(e):
+        return jsonify({'error': 'Internal Server Error'}), 500
+
+
+    # Configure Flask logging
+    # Use a basic config, can be enhanced (e.g., rotating file handler)
+    # Avoid basicConfig here if the main process already configured it.
+    # Rely on the logger obtained at the module level.
+    # logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levellevel)s - %(message)s')
+    log_level = logging.WARNING # Or get from config/env
+    logging.getLogger(__name__).setLevel(log_level)
+    logging.getLogger('werkzeug').setLevel(logging.WARNING)  # Ogranicz logi Werkzeug do WARNING i wyżej
+    # Add specific handlers if needed (e.g., file handler for web_ui.log)
+    # handler = logging.FileHandler('web_ui.log')
+    # handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levellevel)s - %(message)s'))
+    # logging.getLogger(__name__).addHandler(handler)
+
+    logger.info("Flask app created and configured.")
+
+
+    # --- Register Blueprints or Routes --- Add routes to the app object
+
+    @local_app.route('/login', methods=['GET', 'POST'])
+    def login():
         if request.method == 'POST':
             try:
                 new_config_data = request.get_json()
@@ -1747,7 +1794,9 @@ def create_app(queue: multiprocessing.Queue):
     # --- Global error handlers ---
     @local_app.errorhandler(404)
     def handle_404(e):
-        return jsonify({'error': 'Not Found'}),   404    @local_app.errorhandler(500)
+        return jsonify({'error': 'Not Found'}), 404
+
+    @local_app.errorhandler(500)
     def handle_500(e):
         # Log the actual error
         logger.error(f"Internal Server Error: {e}", exc_info=True)
@@ -1767,23 +1816,28 @@ def create_app(queue: multiprocessing.Queue):
     @local_app.route('/api/complete-onboarding', methods=['POST'])
     def complete_onboarding():
         """Mark onboarding as complete in configuration."""
+        # Merge and save configuration via onboarding module
         try:
-            config = load_main_config()
-            
-            # Save any config values that were passed in the request
-            if request.is_json:
-                request_data = request.get_json()
-                if isinstance(request_data, dict):
-                    # Update only specific fields from the request, not replacing entire config
-                    for key, value in request_data.items():
-                        if key in config:
-                            config[key] = value
-            
-            # Mark onboarding as complete
-            config['FIRST_RUN'] = False
-            save_main_config(config)
-            
-            logging.getLogger(__name__).info("Onboarding completed successfully")
+            new_values = request.get_json() or {}
+            # Load current config
+            current = load_main_config(MAIN_CONFIG_FILE)
+            # Merge provided values
+            def deep_merge(dest: dict, src: dict):
+                for k, v in src.items():
+                    if isinstance(v, dict) and isinstance(dest.get(k), dict):
+                        deep_merge(dest[k], v)
+                    else:
+                        dest[k] = v
+            if new_values:
+                deep_merge(current, new_values)
+            # Mark onboarding complete (sets FIRST_RUN=false and saves)
+            current['FIRST_RUN'] = False
+            save_main_config(current, MAIN_CONFIG_FILE)
+            _config.clear(); _config.update(current)
+            # Persist FIRST_RUN via onboarding helper
+            from onboarding_module import mark_onboarding_complete
+            mark_onboarding_complete()
+            logging.getLogger(__name__).info("Onboarding completed and configuration saved successfully")
             return jsonify({"success": True, "message": "Onboarding marked as complete"})
         except Exception as e:
             logging.getLogger(__name__).error(f"Error completing onboarding: {e}", exc_info=True)
@@ -2058,6 +2112,14 @@ def create_app(queue: multiprocessing.Queue):
             logger.warning("Cannot trigger manual listen: Assistant queue not available.")
             return jsonify({"error": "Assistant connection not available."}), 503
 
+    # Register module-level configuration API endpoint
+    # This ensures /api/config works on the created Flask app
+    local_app.add_url_rule(
+        '/api/config',
+        endpoint='api_config_local',
+        view_func=api_config_local,
+        methods=['GET', 'POST']
+    )
     # Ensure the app instance is returned
     return local_app
 
@@ -2069,6 +2131,9 @@ def api_new_module():
 
 @app.route('/api/config', methods=['GET', 'POST'])
 def api_config_local():
+    logger = logging.getLogger(__name__)
+    if request.method == 'POST':
+        logger.info(f"api_config_local called with JSON: {request.get_json()}")
     """API endpoint for configuration access/modifications."""
     if request.method == 'GET':
         # Return the current configuration
@@ -2078,23 +2143,24 @@ def api_config_local():
         })
     elif request.method == 'POST':
         try:
-            # Update the configuration with the provided data
-            data = request.json
-            
-            # Update the configuration with new values
-            for key, value in data.items():
-                _config[key] = value
-            
-            # Save the updated configuration
-            save_main_config(_config)
-            
-            return jsonify({
-                'success': True,
-                'message': 'Configuration updated successfully'
-            })
+            # Merge new values into existing config on disk
+            new_values = request.get_json() or {}
+            # Load current config from file
+            merged = load_main_config(MAIN_CONFIG_FILE).copy()
+            # Deep merge helper
+            def deep_merge(dest: dict, src: dict):
+                for k, v in src.items():
+                    if isinstance(v, dict) and isinstance(dest.get(k), dict):
+                        deep_merge(dest[k], v)
+                    else:
+                        dest[k] = v
+            deep_merge(merged, new_values)
+            # Save updated config to file
+            save_main_config(merged, MAIN_CONFIG_FILE)
+            # Update in-memory config
+            _config.clear()
+            _config.update(merged)
+            return jsonify(success=True, message='Configuration updated and saved successfully')
         except Exception as e:
-            current_app.logger.error(f"Error updating configuration: {str(e)}")
-            return jsonify({
-                'success': False,
-                'error': str(e)
-            }), 500
+            current_app.logger.error(f"Error updating config in onboarding: {e}", exc_info=True)
+            return jsonify(success=False, error=str(e)), 500

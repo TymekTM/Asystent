@@ -7,3 +7,4 @@ __pycache__/
 .VSCodeCounter
 /.hf_cache
 /.cuda_alias
+/__pycache__

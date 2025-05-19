@@ -2,7 +2,7 @@ import webbrowser
 import logging
 import os
 import json
-from config import save_config
+from config import save_config, load_config, CONFIG_FILE_PATH
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -10,17 +10,18 @@ logger.setLevel(logging.INFO)
 def mark_onboarding_complete():
     """Mark onboarding as complete in configuration."""
     try:
-        # Load current config
-        config_path = os.path.join(os.path.dirname(__file__), 'config.json')
-        with open(config_path, 'r', encoding='utf-8') as f:
-            config = json.load(f)
+        # It's better to use the existing config loading and saving mechanism
+        # to ensure consistency and handle potential complexities already managed there.
+        current_config = load_config(CONFIG_FILE_PATH) # Load the most recent config
+        if current_config is None:
+            logger.error("Failed to load configuration for marking onboarding complete.")
+            return False
 
         # Update first run flag
-        config['FIRST_RUN'] = False
+        current_config['FIRST_RUN'] = False
 
-        # Save updated config
-        with open(config_path, 'w', encoding='utf-8') as f:
-            json.dump(config, f, indent=2, ensure_ascii=False)
+        # Save updated config using the global save_config function
+        save_config(current_config, CONFIG_FILE_PATH)
 
         logger.info("Onboarding marked as complete in configuration")
         return True

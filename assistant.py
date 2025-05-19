@@ -45,7 +45,7 @@ QUERY_REFINEMENT_ENABLED = False  # prompt refinement disabled for new testing a
 
 # Set logger to DEBUG globally
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.WARNING)
+logger.setLevel(logging.INFO)
 # Configuration should be handled in main.py, not here.
 
 PLUGINS_STATE_FILE = os.path.join(os.path.dirname(__file__), 'plugins_state.json')

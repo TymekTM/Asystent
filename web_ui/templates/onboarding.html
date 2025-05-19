@@ -597,14 +597,22 @@
 
             // Save settings and complete onboarding
             $('#finishBtn').click(function() {
+                // Retrieve any saved intermediary form data
+                const saved = JSON.parse(localStorage.getItem('onboardingFormData') || '{}');
                 const config = {
-                    ASSISTANT_NAME: $('#assistantName').val() || 'Gaja',
+                    ASSISTANT_NAME: $('#assistantName').val() || saved.ASSISTANT_NAME || 'Gaja',
                     WAKE_WORD: $('#wakeWord').val() || 'gaja',
-                    LANGUAGE: $('#language').val() || 'pl-PL',
+                    LANGUAGE: $('#language').val() || saved.LANGUAGE || 'pl-PL',
+                    MIC_DEVICE_ID: parseInt($('#mic-device-id-select').val(), 10) || (saved.MIC_DEVICE_ID ? parseInt(saved.MIC_DEVICE_ID, 10) : null),
+                    PROVIDER: $('#providerSelect').val() || saved.PROVIDER || 'openai',
+                    MODEL: saved.MODEL || '',
                     API_KEYS: {
-                        OPENAI_API_KEY: $('#openaiApiKey').val() || 'YOUR_OPENAI_API_KEY',
-                        AZURE_SPEECH_KEY: $('#azureSpeechKey').val() || 'YOUR_AZURE_SPEECH_KEY',
-                        AZURE_SPEECH_REGION: $('#azureRegion').val() || 'YOUR_AZURE_REGION'
+                        OPENAI_API_KEY: $('#openaiKeyInput').val() || (saved.API_KEYS && saved.API_KEYS.OPENAI_API_KEY) || '',
+                        AZURE_SPEECH_KEY: $('#azureKeyInput').val() || (saved.API_KEYS && saved.API_KEYS.AZURE_SPEECH_KEY) || '',
+                        AZURE_SPEECH_REGION: $('#azureRegion').val() || (saved.API_KEYS && saved.API_KEYS.AZURE_SPEECH_REGION) || '',
+                        ANTHROPIC_API_KEY: (saved.API_KEYS && saved.API_KEYS.ANTHROPIC_API_KEY) || '',
+                        DEEPSEEK_API_KEY: (saved.API_KEYS && saved.API_KEYS.DEEPSEEK_API_KEY) || '',
+                        LOCAL_ENDPOINT: (saved.API_KEYS && saved.API_KEYS.LOCAL_ENDPOINT) || ''
                     }
                 };
 
