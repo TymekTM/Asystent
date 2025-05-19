@@ -176,10 +176,19 @@ def run_wakeword_detection(
         return
 
     try:
-        # openwakeword.utils.download_models() # Avoid automatic downloads in production/controlled environments. Ensure models are pre-deployed.
-        
-        # List custom .onnx or .tflite models for the wake words themselves.
-        # Exclude common preprocessor/embedding model names.
+        # Attempt to download required openWakeWord models into model_dir
+        try:
+            from openwakeword.utils import download_models
+            # Determine available model base names (.onnx/.tflite files) in model_dir
+            existing_files = [f for f in os.listdir(model_dir) if f.endswith(('.onnx', '.tflite'))]
+            model_names = list({os.path.splitext(f)[0] for f in existing_files})
+            # Call download_models with model_names first, then destination directory
+            download_models(model_names, model_dir)
+            logger.info(f"Downloaded openWakeWord models into {model_dir}")
+        except Exception as dl_err:
+            logger.warning(f"Could not download openWakeWord models automatically: {dl_err}")
+        # List custom .onnx or .tflite keyword models for wake words
+        # Exclude preprocessor/embedding model files
         keyword_model_files = [
             os.path.join(model_dir, f)
             for f in os.listdir(model_dir)

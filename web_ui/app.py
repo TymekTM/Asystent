@@ -71,6 +71,14 @@ def api_config():
         save_main_config(merged, MAIN_CONFIG_FILE)
         # Update in-memory config
         _config.clear(); _config.update(merged)
+        # Notify assistant to reload config and restart wakeword thread
+        if assistant_queue:
+            try:
+                assistant_queue.put_nowait({'command': 'reload_config'})
+                assistant_queue.put_nowait({'command': 'shutdown'})  # restart assistant process for full reload
+                logger.info("Sent reload_config and shutdown commands to assistant process.")
+            except Exception as reload_err:
+                logger.error(f"Failed to send reload commands: {reload_err}")
         return jsonify(success=True, message="Konfiguracja zapisana.")
     except Exception as e:
         return jsonify(success=False, error=str(e)), 500
@@ -1834,6 +1842,13 @@ def create_app(queue: multiprocessing.Queue):
             current['FIRST_RUN'] = False
             save_main_config(current, MAIN_CONFIG_FILE)
             _config.clear(); _config.update(current)
+            # Notify assistant process to reload updated config
+            try:
+                if assistant_queue:
+                    assistant_queue.put_nowait({'command': 'reload_config'})
+                    logger.info("Sent reload_config command after onboarding complete.")
+            except Exception as queue_err:
+                logger.error(f"Failed to signal config reload to assistant: {queue_err}")
             # Persist FIRST_RUN via onboarding helper
             from onboarding_module import mark_onboarding_complete
             mark_onboarding_complete()

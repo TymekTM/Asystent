@@ -2,10 +2,20 @@
 import json
 import logging
 import os
+import sys
 
 logger = logging.getLogger(__name__)
 
-CONFIG_FILE_PATH = 'config.json'
+"""
+Configuration file path: use executable directory when frozen (PyInstaller), otherwise module directory.
+"""
+if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+    # Running in a PyInstaller bundle
+    BASE_DIR = os.path.dirname(sys.executable)
+else:
+    # Running in normal Python environment
+    BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+CONFIG_FILE_PATH = os.path.join(BASE_DIR, 'config.json')
 
 DEFAULT_CONFIG = {
   "ASSISTANT_NAME": "Gaja",
@@ -93,14 +103,39 @@ def load_config(path=CONFIG_FILE_PATH):
         with open(path, 'r', encoding='utf-8') as f:
             loaded_file_data = json.load(f)
     except FileNotFoundError:
-        logger.warning(f"Config file '{path}' not found. Using default config in-memory.")
+        logger.warning(f"Config file '{path}' not found. Creating default config file with default settings.")
+        # Load defaults and create the config file
         loaded_file_data = DEFAULT_CONFIG.copy()
-        # Do not write default config to file to avoid unintended overwrites
+        try:
+            with open(path, 'w', encoding='utf-8') as f:
+                json.dump(loaded_file_data, f, indent=2, ensure_ascii=False)
+            logger.info(f"Created default config file at '{path}'.")
+        except Exception as e_write:
+            logger.error(f"Failed to create default config file at '{path}': {e_write}")
     except json.JSONDecodeError as e:
         logger.error(f"Error decoding JSON from '{path}': {e}. Using default config in-memory.")
         loaded_file_data = DEFAULT_CONFIG.copy()
         # Do not overwrite config file on JSON error to avoid unintended overwrites
     
+    # Normalize certain fields to proper types
+    # MIC_DEVICE_ID and STT_SILENCE_THRESHOLD should be ints
+    if 'MIC_DEVICE_ID' in loaded_file_data:
+        try:
+            loaded_file_data['MIC_DEVICE_ID'] = int(loaded_file_data['MIC_DEVICE_ID'])
+        except Exception:
+            pass
+    if 'STT_SILENCE_THRESHOLD' in loaded_file_data:
+        try:
+            loaded_file_data['STT_SILENCE_THRESHOLD'] = int(loaded_file_data['STT_SILENCE_THRESHOLD'])
+        except Exception:
+            pass
+    # WAKE_WORD_SENSITIVITY_THRESHOLD should be float
+    if 'WAKE_WORD_SENSITIVITY_THRESHOLD' in loaded_file_data:
+        try:
+            loaded_file_data['WAKE_WORD_SENSITIVITY_THRESHOLD'] = float(loaded_file_data['WAKE_WORD_SENSITIVITY_THRESHOLD'])
+        except Exception:
+            pass
+    # Update in-memory config
     _config.clear()
     _config.update(loaded_file_data)
 
