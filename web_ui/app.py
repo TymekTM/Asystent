@@ -1138,8 +1138,10 @@ def setup_api_routes(app, queue):
     def api_plugins():
         """API endpoint for plugin list and status."""
         import os, json
-        plugins_file = os.path.join(os.path.dirname(__file__), '..', 'plugins_state.json')
-        modules_dir = os.path.join(os.path.dirname(__file__), '..', 'modules')
+        # Use BASE_DIR from config for dynamic loading when frozen
+        from config import BASE_DIR
+        plugins_file = os.path.join(BASE_DIR, 'plugins_state.json')
+        modules_dir = os.path.join(BASE_DIR, 'modules')
         plugins = {}
         try:
             # Load plugin states from file if exists

@@ -7,11 +7,23 @@ import os
 import time 
 from threading import Thread
 
-sys.path.append(os.path.join(os.path.dirname(__file__), 'web_ui'))
+# Add current directory to Python path for PyInstaller
+if getattr(sys, 'frozen', False):
+    # Running in PyInstaller bundle
+    application_path = os.path.dirname(sys.executable)
+    script_dir = sys._MEIPASS
+else:
+    # Running in normal Python environment
+    application_path = os.path.dirname(os.path.abspath(__file__))
+    script_dir = os.path.dirname(os.path.abspath(__file__))
 
+sys.path.insert(0, script_dir)
+sys.path.insert(0, os.path.join(script_dir, 'web_ui'))
+
+# Import main modules
 from assistant import Assistant
 from web_ui.app import create_app 
-from config import load_config 
+from config import load_config
 
 # --- Logging Configuration ---
 log_filename = os.path.join("user_data", "assistant.log")

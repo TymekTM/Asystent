@@ -22,11 +22,13 @@
 - When AI wants to activate listening and user does the same at the same time(or similar times) it just happens twice and funny stuff happens lol 
 - Dodawanie użytkownika nie działa
 - Nie działa wiele języków
+- Po skończeniu onboarding restart asystenta by załadować zmiany
 
 ## Optimisations
 - Entire app start speed
 - Add loading indicators for long-running operations in web UI
 - RAM usage
+- Reduce number of heavy dependencies
 
 ## Upgrades
 - Wykrywanie rozmówcy za pomocą speech brain

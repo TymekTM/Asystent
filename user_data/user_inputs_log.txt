@@ -61,3 +61,13 @@
 2025-05-13T16:02:22.317750 | Otwórz mi proszę stronę YouTube. | intent=none | conf=0.15
 2025-05-13T16:02:53.403641 | Czy możesz zrozumieć mnie, że to wszystko, co mówiłem, i to jest w angielskim? | intent=none | conf=0.26
 2025-05-13T16:07:20.379013 | Can you please confirm to me that I am speaking to you in English right now? | intent=none | conf=0.12
+2025-05-16T22:13:20.492127 | Powiedz mi, czy się sobie? | intent=none | conf=0.16
+2025-05-20T16:35:20.857339 | Jaka jest podlada w sosnowcu? | intent=weather_query | conf=0.77
+2025-05-20T16:35:44.418873 | Dobra, a powiedz mi coś o sobie. | intent=none | conf=0.50
+2025-05-20T16:36:02.498668 | Nie wywołuj już kolejne raskomendy, nie musisz nic zrobić. | intent=none | conf=0.13
+2025-05-20T16:36:53.283317 | Jaka jest podroda? | intent=weather_query | conf=0.77
+2025-05-20T16:37:16.677179 | Vilken är pågående? | intent=none | conf=0.06
+2025-05-20T17:07:01.171779 | Powiedz mi coś o sobie. | intent=about_assistant | conf=0.59
+2025-05-20T17:07:20.965060 | A aktualnie testuję czy dobrze działasz. | intent=none | conf=0.11
+2025-05-24T21:52:08.696471 | Powiedz mi coś o sałbie. | intent=none | conf=0.39
+2025-05-24T21:52:32.130932 | Dobra, a powiedz mi coś o sobie. | intent=none | conf=0.50

@@ -9,9 +9,16 @@ logger = logging.getLogger(__name__)
 """
 Configuration file path: use executable directory when frozen (PyInstaller), otherwise module directory.
 """
-if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
-    # Running in a PyInstaller bundle
-    BASE_DIR = os.path.dirname(sys.executable)
+if getattr(sys, 'frozen', False):
+    # Running in a PyInstaller bundle: prefer real install dir (where exe resides)
+    exe_path = os.path.abspath(sys.argv[0])
+    exe_dir = os.path.dirname(exe_path)
+    # If a 'resources' folder exists next to the exe, use that as base
+    if os.path.isdir(os.path.join(exe_dir, 'resources')):
+        BASE_DIR = exe_dir
+    else:
+        # Fallback to bundled temp dir (_MEIPASS) for onefile builds
+        BASE_DIR = getattr(sys, '_MEIPASS', exe_dir)
 else:
     # Running in normal Python environment
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))

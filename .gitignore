@@ -8,3 +8,9 @@ __pycache__/
 /.hf_cache
 /.cuda_alias
 /__pycache__
+transcribe_audio.py
+/build
+/dist
+user_data.zip
+modules.zip
+resources.zip

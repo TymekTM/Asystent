@@ -1,12 +1,24 @@
 import subprocess
 import os
 import logging
+import sys  # Added sys import
+from config import BASE_DIR
 from .ffmpeg_installer import ensure_ffmpeg_installed
 import sounddevice as sd
 
 # Set logger to DEBUG globally
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
+
+# Helper function to determine the base path for resources (same as in wakeword_detector.py)
+# Determine the base directory for resources: use executable dir when frozen, otherwise project root
+def get_base_path():
+    """Returns the base path for resources, whether running normally or bundled."""
+    if getattr(sys, 'frozen', False):  # PyInstaller bundle
+        return BASE_DIR
+    # Development: 2 levels up from this file
+    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 # Global mute flag to disable beeps (e.g., in chat/text mode)
 MUTE = False
 
@@ -42,25 +54,28 @@ def play_beep(sound_type: str = "keyword", loop: bool = False) -> subprocess.Pop
     # If muted, skip playing sounds
     if MUTE:
         return None
-    # Fallback for unknown tool types to a default sound or silence?
-    # For now, just use the specific sound if available.
-    # Resolve relative path to absolute based on project root
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # project root
+    
+    base_dir = get_base_path()  # Use the helper function
+    logger.info(f"[Debug] base_dir for beeps: {base_dir}")
     rel_path = BEEP_SOUNDS.get(sound_type)
-    beep_file = os.path.join(base_dir, rel_path) if rel_path else None
+    
+    if not rel_path:  # If sound_type is not in BEEP_SOUNDS
+        logger.debug(f"No specific beep sound found for type: {sound_type}. Attempting default.")
+        rel_path = BEEP_SOUNDS.get("keyword")  # Fallback to default keyword beep
 
-    # If a specific sound for the command doesn't exist, don't play anything
-    # or optionally play a generic 'processing' sound.
-    # Let's choose not to play if specific sound is missing, except for 'keyword'.
-    if not beep_file and sound_type != "keyword":
-        logger.debug(f"No specific beep sound found for type: {sound_type}. Skipping beep.")
+    if not rel_path:  # If still no rel_path (e.g. "keyword" also missing)
+        logger.error(f"Default beep sound ('keyword') not found in BEEP_SOUNDS. Cannot play sound for type: {sound_type}")
         return None
-    elif not beep_file and sound_type == "keyword":
-        # Fallback for keyword if its specific file is missing for some reason
-        beep_file = BEEP_SOUNDS.get("keyword", "resources/sounds/beep.mp3")
 
-
-    if beep_file and os.path.exists(beep_file):
+    # Build list of roots to search for the sound file
+    # Determine absolute path to the sound file under resources
+    beep_file = os.path.join(get_base_path(), rel_path)
+    logger.info(f"[Debug] Using beep_file: {beep_file}")
+    if not os.path.isfile(beep_file):
+        logger.warning(f"Beep file not found: {beep_file}")
+        return None
+    
+    if os.path.exists(beep_file):
         try:
             logger.info(f"Odtwarzam dźwięk '{sound_type}' z pliku: {beep_file} (Loop: {loop})")
             # Use -loop 0 for infinite loop, remove it for single play
@@ -70,7 +85,7 @@ def play_beep(sound_type: str = "keyword", loop: bool = False) -> subprocess.Pop
             cmd.append(beep_file)
 
             process = subprocess.Popen(cmd,
-                                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) # Suppress ffplay output
+                                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)  # Suppress ffplay output
             return process
         except FileNotFoundError:
              logger.error(f"Błąd przy odtwarzaniu dźwięku '{sound_type}': Polecenie 'ffplay' nie znalezione. Upewnij się, że FFmpeg jest zainstalowany i w PATH.")
@@ -84,15 +99,15 @@ def play_beep(sound_type: str = "keyword", loop: bool = False) -> subprocess.Pop
 
 def stop_beep(process: subprocess.Popen):
     """Terminuje proces odtwarzania dźwięku."""
-    if process and process.poll() is None: # Check if process is still running
+    if process and process.poll() is None:  # Check if process is still running
         try:
             logger.info(f"Zatrzymuję dźwięk (PID: {process.pid})")
             process.terminate()
-            process.wait(timeout=1) # Give it a moment to terminate gracefully
+            process.wait(timeout=1)  # Give it a moment to terminate gracefully
         except subprocess.TimeoutExpired:
             logger.warning(f"Proces dźwięku (PID: {process.pid}) nie zakończył się na czas, wymuszam zamknięcie.")
             process.kill()
-            process.wait(timeout=1) # Wait after kill
+            process.wait(timeout=1)  # Wait after kill
         except Exception as e:
             # Catch potential errors if the process already terminated between poll() and terminate()
             logger.error(f"Błąd podczas zatrzymywania dźwięku (PID: {process.pid}): {e}")

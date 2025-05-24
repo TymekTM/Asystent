@@ -361,104 +361,118 @@ class Assistant:
     @measure_performance # Add decorator
     def load_plugins(self):
         """Load all plugin modules from the modules folder."""
+        # Load plugins differently when frozen (bundled) vs normal filesystem
+        import sys, importlib
+        plugins_state = load_plugins_state()
+        new_modules = {}
+        # Bundled: import plugin modules from package via pkgutil
+        if getattr(sys, 'frozen', False):
+            try:
+                import pkgutil, modules as _plugin_pkg
+                for _, name, ispkg in pkgutil.iter_modules(_plugin_pkg.__path__):
+                    if not name.endswith('_module'):
+                        continue
+                    # Skip disabled plugins
+                    state = plugins_state.get(name, {})
+                    if state.get('enabled') is False:
+                        continue
+                    module_full_name = f"modules.{name}"
+                    try:
+                        if module_full_name in sys.modules:
+                            module = importlib.reload(sys.modules[module_full_name])
+                        else:
+                            module = importlib.import_module(module_full_name)
+                    except Exception as e:
+                        logger.error(f"Błąd przy ładowaniu pluginu {name}: {e}", exc_info=True)
+                        continue
+                    if hasattr(module, 'register'):
+                        try:
+                            info = module.register()
+                        except Exception as e:
+                            logger.error(f"Błąd podczas register() pluginu {name}: {e}", exc_info=True)
+                            continue
+                        if isinstance(info, dict):
+                            info['_module_name'] = name
+                            cmd = info.get('command')
+                            if cmd and isinstance(cmd, str):
+                                new_modules[cmd] = info
+                            else:
+                                logger.warning(f"Plugin {name} missing 'command', skipping.")
+                self.modules = new_modules
+                logger.info("Plugins loaded: %s", list(self.modules.keys()))
+                return
+            except Exception:
+                logger.error("Error loading bundled plugins.", exc_info=True)
+        # Normal (filesystem) plugin loading
         # Determine plugin directory
         plugin_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), 'modules'))
         os.makedirs(plugin_folder, exist_ok=True)
-        plugins_state = load_plugins_state()
-        # Clean up stale modification times for removed modules
-        current_files = set(os.path.join(plugin_folder, f) for f in os.listdir(plugin_folder)
+        # Clean up removed modules
+        current_files = set(os.path.join(plugin_folder, f)
+                            for f in os.listdir(plugin_folder)
                             if f.endswith('_module.py') and not f.startswith('__'))
         for old_path in list(self.plugin_mod_times.keys()):
             if old_path not in current_files:
                 del self.plugin_mod_times[old_path]
-        # Keep track of current modules to diff changes
-        old_modules = self.modules if hasattr(self, 'modules') else {}
-        new_modules = {}
         # Ensure modules package is importable
-        import sys # Moved import here as it's only used here now
         if os.path.dirname(plugin_folder) not in sys.path:
             sys.path.insert(0, os.path.dirname(plugin_folder))
-        # Iterate over plugin files
+        old_modules = self.modules if hasattr(self, 'modules') else {}
+        # Iterate plugin files
         for filename in os.listdir(plugin_folder):
-            if not filename.endswith('_module.py') or filename.startswith('__'): # Skip __init__.py etc.
+            if not filename.endswith('_module.py') or filename.startswith('__'):
                 continue
             filepath = os.path.join(plugin_folder, filename)
-            module_name = filename[:-3]
-            # Skip disabled plugins
-            state = plugins_state.get(module_name, {})
+            mod_name = filename[:-3]
+            state = plugins_state.get(mod_name, {})
             if state.get('enabled') is False:
-                logger.info(f"Plugin {module_name} jest wyłączony - pomijam ładowanie.")
-                # Remove any previous registration for this module
-                for cmd, info in list(self.modules.items()):
-                    if info.get('_module_name') == module_name:
-                        del self.modules[cmd]
-                # Clean up modification tracking
-                if filepath in self.plugin_mod_times:
-                    del self.plugin_mod_times[filepath]
+                # disable tracking
+                self.modules = {k: v for k, v in self.modules.items() if v.get('_module_name') != mod_name}
+                self.plugin_mod_times.pop(filepath, None)
                 continue
-            # Check modification time to skip unchanged plugins
-            mod_time = os.path.getmtime(filepath)
-            module_full_name = f"modules.{module_name}"
-            if filepath in self.plugin_mod_times and self.plugin_mod_times[filepath] == mod_time and module_full_name in sys.modules:
-                logger.debug(f"No changes in plugin {module_name}, reusing existing plugin info.")
-                # Reuse existing plugin info without re-importing or re-registering
-                for cmd, info in self.modules.items():
-                    if info.get('_module_name') == module_name:
-                        new_modules[cmd] = info
+            # skip unchanged
+            try:
+                mtime = os.path.getmtime(filepath)
+            except OSError:
                 continue
-            else:
-                try:
-                    if module_full_name in sys.modules:
-                        # Reload the module if it exists
-                        module = importlib.reload(sys.modules[module_full_name])
-                        logger.debug(f"Reloaded module: {module_full_name}")
-                    else:
-                        # Import the module for the first time
-                        module = importlib.import_module(module_full_name)
-                        logger.debug(f"Imported module: {module_full_name}")
-                    # Update modification time after successful load/reload
-                    self.plugin_mod_times[filepath] = mod_time
-                except Exception as e:
-                    logger.error("Błąd przy ładowaniu/przeładowaniu pluginu %s: %s", module_name, e, exc_info=True)
-                    # Remove any previous registration for this module
-                    for cmd, info in list(self.modules.items()):
-                        if info.get('_module_name') == module_name:
-                            del self.modules[cmd]
-                    # Clean up modification tracking
-                    if filepath in self.plugin_mod_times:
-                        del self.plugin_mod_times[filepath]
-                    continue
-            # Register plugin if valid
+            full_name = f"modules.{mod_name}"
+            if filepath in self.plugin_mod_times and self.plugin_mod_times[filepath] == mtime and full_name in sys.modules:
+                # reuse
+                for k, v in self.modules.items():
+                    if v.get('_module_name') == mod_name:
+                        new_modules[k] = v
+                continue
+            # import or reload
+            try:
+                if full_name in sys.modules:
+                    module = importlib.reload(sys.modules[full_name])
+                else:
+                    module = importlib.import_module(full_name)
+                self.plugin_mod_times[filepath] = mtime
+            except Exception as e:
+                logger.error(f"Błąd przy ładowaniu pluginu {mod_name}: {e}", exc_info=True)
+                self.plugin_mod_times.pop(filepath, None)
+                continue
+            # register
             if hasattr(module, 'register'):
                 try:
-                    plugin_info = module.register()  # Should return a dict
-                    if not isinstance(plugin_info, dict):
-                        logger.error(f"Plugin {module_name} register() did not return a dictionary.")
-                        continue
-                    # Tag plugin with its source module for change tracking
-                    plugin_info['_module_name'] = module_name
+                    info = module.register()
                 except Exception as e:
-                    logger.error("Błąd podczas register() pluginu %s: %s", module_name, e, exc_info=True)
+                    logger.error(f"Błąd podczas register() pluginu {mod_name}: {e}", exc_info=True)
                     continue
-                command = plugin_info.get('command')
-                if command and isinstance(command, str):
-                    # Register valid plugin
-                    new_modules[command] = plugin_info
-                else:
-                    logger.warning("Plugin %s missing 'command' key or command is not a string, skipping.", module_name)
-            else:
-                logger.debug("Plugin file %s has no register(), skipping.", filename)
-        # Determine plugin changes
-        old_keys = set(old_modules.keys())
-        new_keys = set(new_modules.keys())
-        added = new_keys - old_keys
-        removed = old_keys - new_keys
-        # Atomically update modules
+                if isinstance(info, dict):
+                    info['_module_name'] = mod_name
+                    cmd = info.get('command')
+                    if cmd and isinstance(cmd, str):
+                        new_modules[cmd] = info
+                    else:
+                        logger.warning(f"Plugin {mod_name} missing 'command', skipping.")
+        # update and log
         self.modules = new_modules
-        # Log changes
+        added = set(new_modules) - set(old_modules)
+        removed = set(old_modules) - set(new_modules)
         for cmd in added:
-            info = new_modules.get(cmd, {})
-            logger.info("Plugin enabled: %s -> %s", cmd, info.get('description', ''))
+            logger.info("Plugin enabled: %s", cmd)
         for cmd in removed:
             logger.info("Plugin disabled/removed: %s", cmd)
         logger.info("Plugins loaded: %s", list(self.modules.keys()))
@@ -597,7 +611,7 @@ class Assistant:
                         break
                 if found_module_key: break
         
-        memory_keywords = ["pamiętasz", "przypomnij", "zapamiętałeś", "zapamiętaj", "czy pamiętasz", "przypomnij mi"]
+        memory_keywords = ["pamiętasz", "przypomnij", "zapamiętałeś", "zapamiętaj", "czy pamiętasz", "przypomnij mi"]        
         if not found_module_key and (not ai_command or not target_command_name) and any(keyword in refined_query.lower() for keyword in memory_keywords):
             # Check for 'memory_module' then 'memory'
             for mem_key_candidate in ['memory_module', 'memory']: 
@@ -608,15 +622,9 @@ class Assistant:
                     logger.info(f"Memory recall heuristic. Redirecting to '{found_module_key}' with query: '{actual_params_for_handler}'")
                     break
         
-        if not found_module_key: # Final fallback to core module
-            # Check for 'core_module' then 'core'
-            for core_key_candidate in ['core_module', 'core']:
-                if core_key_candidate in self.modules:
-                    logger.info(f"No specific module found by LLM or heuristics. Falling back to '{core_key_candidate}'.")
-                    found_module_key = core_key_candidate
-                    module_info = self.modules[core_key_candidate]
-                    actual_params_for_handler = refined_query
-                    break
+        if not found_module_key: # No module found - use AI response directly
+            logger.info("No specific module found by LLM or heuristics. Using AI response directly.")
+            # Don't fallback to core module - let AI response be used instead
 
         # 6. Execute module/tool if found
         if found_module_key and module_info:
