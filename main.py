@@ -20,6 +20,15 @@ else:
 sys.path.insert(0, script_dir)
 sys.path.insert(0, os.path.join(script_dir, 'web_ui'))
 
+# Early path setup for dependencies when running from PyInstaller
+if getattr(sys, 'frozen', False):
+    # Running in PyInstaller bundle - set up dependencies path early
+    deps_path = os.path.join(application_path, "dependencies", "packages")
+    if os.path.exists(deps_path) and deps_path not in sys.path:
+        sys.path.append(deps_path)
+
+# Dependency management for PyInstaller builds - moved to main() to avoid multiprocessing issues
+
 # Import main modules
 from assistant import Assistant
 from web_ui.app import create_app 
@@ -78,6 +87,22 @@ def run_flask_process(queue: multiprocessing.Queue):
 # --- Main Execution ---
 
 def main():
+    # Dependency management for PyInstaller builds - only run in main process
+    if getattr(sys, 'frozen', False):
+        try:
+            from dependency_manager import ensure_dependencies
+            print("🔄 Sprawdzanie zależności...")
+            if not ensure_dependencies():
+                print("❌ Nie udało się zainicjalizować zależności!")
+                print("🔍 Sprawdź połączenie internetowe i spróbuj ponownie")
+                input("Naciśnij Enter aby zamknąć...")
+                sys.exit(1)
+            print("✅ Zależności gotowe")
+        except Exception as e:
+            print(f"⚠️  Ostrzeżenie menedżera zależności: {e}")
+            print("🔄 Kontynuuję bez automatycznego pobierania zależności...")
+            # Kontynuuj bez menedżera zależności - może działać z systemowym Python
+    
     logger.info("Initializing application...")
     # Ensure database schema is initialized (creates chat_history, memories, etc.)
     try:

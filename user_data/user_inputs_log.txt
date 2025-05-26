@@ -71,3 +71,22 @@
 2025-05-20T17:07:20.965060 | A aktualnie testuję czy dobrze działasz. | intent=none | conf=0.11
 2025-05-24T21:52:08.696471 | Powiedz mi coś o sałbie. | intent=none | conf=0.39
 2025-05-24T21:52:32.130932 | Dobra, a powiedz mi coś o sobie. | intent=none | conf=0.50
+2025-05-25T22:26:34.052429 | Powiedz mi coś o sobie. | intent=about_assistant | conf=0.59
+2025-05-25T22:26:51.069539 | Czy możesz mi powiedzieć jakie były wyniki dzisiejszego gra w Primonako? | intent=none | conf=0.24
+2025-05-25T22:26:54.289232 | Thank you. | intent=none | conf=0.50
+2025-05-25T22:27:17.278208 | Wyszótej w Internecie wyniki dzisiejszego w grau Primonako. | intent=none | conf=0.10
+2025-05-25T22:27:42.284041 | Où j'ai commenté le web? | intent=none | conf=0.05
+2025-05-25T22:27:56.574409 | I jaka jest podlada w nowym Joryku? | intent=weather_query | conf=0.53
+2025-05-25T22:28:11.692967 | Proszę sprawdź. | intent=none | conf=0.16
+2025-05-25T23:02:00.791177 | Powiedz mi coś o sobie. | intent=about_assistant | conf=0.59
+2025-05-25T23:02:20.494581 | Potwierdź mi, że działasz dobrze. | intent=none | conf=0.17
+2025-05-25T23:21:19.294681 | Jak się czujesz? | intent=none | conf=0.21
+2025-05-25T23:21:33.466677 | A bada co dobrze, dzięki że pytasz. | intent=none | conf=0.27
+2025-05-26T15:14:12.255531 | Powiedz mi coś o sobie. | intent=about_assistant | conf=0.59
+2025-05-26T15:14:29.807194 | Dzięki bardzo za to, że jesteś i że działasz teraz. | intent=none | conf=0.17
+2025-05-26T15:22:58.929846 | J'incrue, yes. | intent=none | conf=0.06
+2025-05-26T15:23:11.332828 | Cieszę się niesamowicie. | intent=deep_reasoning | conf=0.61
+2025-05-26T15:23:28.936669 | Twój build developerski działa bez problemu. | intent=none | conf=0.10
+2025-05-26T15:23:47.346644 | Отфажешь мне и поташе YouTube? | intent=none | conf=0.06
+2025-05-26T15:24:11.324968 | Отпусти меня на YouTube. | intent=none | conf=0.06
+2025-05-26T15:31:13.863810 | Potwierdź, że działasz. | intent=none | conf=0.10

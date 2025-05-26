@@ -7,7 +7,15 @@ from functools import wraps
 from collections import defaultdict
 import threading
 import psutil
-import torch
+
+# Optional import for torch
+try:
+    import torch
+    TORCH_AVAILABLE = True
+except ImportError:
+    torch = None
+    TORCH_AVAILABLE = False
+
 import tracemalloc
 import subprocess
 
@@ -55,6 +63,7 @@ def measure_performance(func):
         start_traced_mem, _ = tracemalloc.get_traced_memory()
         # GPU utilization start
         start_gpu_util = _get_gpu_util_percent()
+        
         try:
             proc = psutil.Process()
             start_mem = proc.memory_info().rss
@@ -62,8 +71,9 @@ def measure_performance(func):
             start_cpu = cpu_times.user + cpu_times.system
         except Exception:
             start_mem = start_cpu = None
+        
         try:
-            start_gpu = torch.cuda.memory_allocated() if torch.cuda.is_available() else None
+            start_gpu = torch.cuda.memory_allocated() if TORCH_AVAILABLE and torch.cuda.is_available() else None
         except Exception:
             start_gpu = None
         try:
@@ -90,9 +100,10 @@ def measure_performance(func):
                 end_mem = end_cpu = None
             # Post-call GPU stats
             try:
-                end_gpu = torch.cuda.memory_allocated() if torch.cuda.is_available() else None
+                end_gpu = torch.cuda.memory_allocated() if TORCH_AVAILABLE and torch.cuda.is_available() else None
             except Exception:
                 end_gpu = None
+            # GPU utilization end
             end_gpu_util = _get_gpu_util_percent()
 
             # Build log entry with performance and resource stats

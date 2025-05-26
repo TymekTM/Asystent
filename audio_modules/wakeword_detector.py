@@ -8,7 +8,11 @@ import time
 import threading # Added for manual_trigger_event
 import numpy as np
 import sounddevice as sd
-from openwakeword.model import Model # Directly import Model
+
+Model = None
+OPENWAKEWORD_AVAILABLE = False
+# openwakeword will be imported dynamically inside run_wakeword_detection after ensuring dependencies
+
 from .beep_sounds import play_beep
 
 
@@ -120,6 +124,27 @@ def run_wakeword_detection(
     """
     Listens for wake word using openWakeWord and handles command recording/transcription.
     """
+    # Dynamic import of openwakeword Model, with fallback to accommodate package structure
+    _imported_model = None
+    try:
+        # Try importing from submodule
+        from openwakeword.model import Model as _ImportedModel
+        _imported_model = _ImportedModel
+    except ImportError:
+        try:
+            # Fallback: import directly from package
+            from openwakeword import Model as _ImportedModel
+            _imported_model = _ImportedModel
+        except ImportError as e:
+            logger.error(f"openwakeword library import failed: {e}")
+            _imported_model = None
+    if _imported_model is None:
+        OPENWAKEWORD_AVAILABLE = False
+        logger.warning("openwakeword Model unavailable: wakeword detection disabled.")
+        return None
+    # Set the Model and availability flag
+    Model = _imported_model
+    OPENWAKEWORD_AVAILABLE = True
     if mic_device_id is None:
         try:
             default_devices = sd.query_devices()
@@ -177,36 +202,52 @@ def run_wakeword_detection(
     
     wakeword_model_instance = None
     try:
-        # Check for custom models in the openWakeWord directory
-        if os.path.exists(model_dir):
-            custom_models = []
-            for f in os.listdir(model_dir):
-                if (f.endswith('.onnx') and 
-                    'preprocessor' not in f.lower() and 
-                    'embedding' not in f.lower() and 
-                    'melspectrogram' not in f.lower()):
-                    custom_models.append(os.path.join(model_dir, f))
+        # Initialize openWakeWord model using custom models from resources/openWakeWord
+        if not os.path.exists(model_dir):
+            logger.warning("openWakeWord directory not found, wake word detection disabled")
+            return None        # Gather custom ONNX models (exclude helper files)
+        custom_models = [os.path.join(model_dir, f)
+                         for f in os.listdir(model_dir)
+                         if f.endswith('.onnx') and not any(x in f.lower() for x in ['preprocessor', 'embedding', 'melspectrogram'])]
+        
+        if not custom_models:
+            logger.warning("No custom ONNX models found, wake word detection disabled")
+            return None
+        
+        logger.info(f"Found {len(custom_models)} custom ONNX wake word models: {[os.path.basename(m) for m in custom_models]}")
+        
+        # Attempt to initialize openWakeWord model
+        try:
+            # Initialize with custom models only - avoid embedding model issues
+            # by using only minimal required parameters
+            model_kwargs = {
+                'wakeword_models': custom_models,
+                'inference_framework': 'onnx'
+            }
             
-            if custom_models:
-                logger.info(f"Found {len(custom_models)} custom ONNX wake word models")
-                try:
-                    # Try to initialize Model with custom models
-                    wakeword_model_instance = Model(
-                        wakeword_models=custom_models,
-                        inference_framework='onnx'
-                    )
-                    logger.info(f"Initialized openWakeWord with custom models: {[os.path.basename(m) for m in custom_models]}")
-                except Exception as e:
-                    logger.warning(f"Failed to load custom models ({e}), falling back to default models")
-                    wakeword_model_instance = Model(inference_framework='onnx')
+            # Melspectrogram model - musi pochodzić z naszego folderu resources
+            melspec_path = os.path.join(model_dir, "melspectrogram.onnx")
+            if os.path.exists(melspec_path):
+                model_kwargs['melspec_model_path'] = melspec_path
+                logger.info(f"Używanie niestandardowego modelu melspektrogramu z: {melspec_path}")
             else:
-                # Fall back to default models if no custom ONNX models found
-                logger.info("No custom ONNX models found, using default models")
-                wakeword_model_instance = Model(inference_framework='onnx')
-        else:
-            # Fall back to default models if directory doesn't exist
-            logger.info("openWakeWord directory not found, using default models")
-            wakeword_model_instance = Model(inference_framework='onnx')
+                logger.error(f"KRYTYCZNY BŁĄD: Model melspektrogramu nie został znaleziony w {melspec_path}. "
+                             "Detekcja słowa kluczowego nie może zostać uruchomiona.")
+                return None # Przerywamy inicjalizację            # Model embedding: Próbujemy wyłączyć używając None
+            embedding_path = os.path.join(model_dir, "embedding_model.onnx")
+            if os.path.exists(embedding_path):
+                logger.warning(f"Znaleziono embedding_model.onnx w {embedding_path}, ale jest niekompatybilny. Pomijamy go.")
+            else:
+                logger.info("Brak embedding_model.onnx w resources/openWakeWord")
+            
+            # Sprawdźmy czy możemy pominąć embedding_model_path całkowicie
+            logger.info("Inicjalizacja OpenWakeWord bez parametru embedding_model_path")
+            wakeword_model_instance = Model(**model_kwargs)
+            logger.info("openWakeWord Model initialized with custom ONNX models")
+        except Exception as e:
+            logger.error(f"Error initializing openWakeWord Model: {e}", exc_info=True)
+            logger.warning("Wake word detection disabled due to initialization failure")
+            return None
 
         logger.info(f"openWakeWord Model initialized. Expected frame length: {getattr(wakeword_model_instance, 'expected_frame_length', 'N/A')}")
 

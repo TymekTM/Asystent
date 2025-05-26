@@ -15,8 +15,13 @@ from functools import lru_cache
 from typing import Any, Dict, List, Optional, Tuple, Callable
 from collections import deque
 
-import requests # Added requests import
-from transformers import pipeline # Added pipeline import
+import requests  # Added requests import
+# Optional import for transformers
+try:
+    from transformers import pipeline
+except ImportError:
+    pipeline = None
+    print("⚠️  transformers nie jest dostępny - będzie automatycznie doinstalowany przy pierwszym użyciu")
 
 # Language detection constants
 POLISH_DIACRITICS = set("ąćęłńóśźż")

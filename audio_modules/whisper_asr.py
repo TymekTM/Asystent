@@ -1,9 +1,21 @@
 from __future__ import annotations
 import os, pathlib, logging, ctypes
 from typing import List
-import torch
-# Remove the direct import of WhisperModel if using a bundled/vendored version
-# from faster_whisper import WhisperModel 
+
+# Optional imports for ML packages
+try:
+    import torch
+    TORCH_AVAILABLE = True
+except ImportError:
+    torch = None
+    TORCH_AVAILABLE = False
+    log = logging.getLogger(__name__)
+    print("⚠️  torch nie jest dostępny - będzie automatycznie doinstalowany przy pierwszym użyciu")
+
+# Placeholder for faster-whisper import after environment setup
+WhisperModel = None
+FASTER_WHISPER_AVAILABLE = False
+
 from performance_monitor import measure_performance
 import sys # Added for PyInstaller path correction
 
@@ -36,8 +48,15 @@ if IS_BUNDLED:
     if vendored_fw_path not in sys.path:
         sys.path.insert(0, vendored_fw_path)
 
-# Now, attempt to import WhisperModel after potentially adjusting paths
-from faster_whisper import WhisperModel
+# Now, attempt to import WhisperModel after adjusting paths
+if FASTER_WHISPER_AVAILABLE:
+    try:
+        from faster_whisper import WhisperModel
+    except ImportError:
+        WhisperModel = None
+        print("⚠️  Nie udało się zaimportować faster_whisper po bundle - będzie doinstalowany przy pierwszym użyciu")
+else:
+    WhisperModel = None
 
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -114,18 +133,21 @@ def _ensure_cublas() -> bool:
     return False
 
 def _gpu_ready() -> bool:
-    # Check for CUDA-capable GPU, but skip if it's AMD (CUDA unsupported)
-    if not torch.cuda.is_available():
+    # Check if torch is available and CUDA can be used
+    if not (globals().get('TORCH_AVAILABLE') and torch is not None):
         return False
+    # Check for CUDA-capable GPU
     try:
+        if not torch.cuda.is_available():
+            return False
         # detect device name and skip AMD GPUs
         device_name = torch.cuda.get_device_name(0)
         if any(keyword in device_name.lower() for keyword in ("amd", "radeon")):
             log.warning(f"GPU detected ({device_name}) is AMD – CUDA not supported, switching to CPU.")
             return False
     except Exception:
-        # if unable to get name, proceed to attempt CUDA
-        pass
+        return False
+    # Ensure cuBLAS alias is loaded
     return _ensure_cublas()
 
 def _candidates(size: str) -> List[str]:
@@ -152,36 +174,41 @@ class WhisperASR:
         else:
             log.info("GPU not available or cuBLAS not found - using CPU.")
 
-        # wymusz float16 na GPU, ograniczenie wątków na CPU
+        # ustal compute_type i ograniczenie wątków na CPU
         if self.device == "cuda":
             self.compute_type = "float16"
         else:
             self.compute_type = compute_type
-            torch.set_num_threads(4)
+            # Ogranicz wątki tylko jeśli torch jest dostępny i obsługuje ustawianie wątków
+            if globals().get('TORCH_AVAILABLE') and torch is not None and hasattr(torch, 'set_num_threads'):
+                torch.set_num_threads(4)
 
+        # Model availability flag
+        self.available = True
         self.model_id = None
         self.model = None
 
-        errors = []
+        # Load Whisper model using faster-whisper if available
         candidate_list = _candidates(model_size)
-        log.info(f"Whisper model candidates: {candidate_list}")
+        try:
+            from faster_whisper import WhisperModel as FastWhisperModel
+            for repo in candidate_list:
+                try:
+                    log.info(f"→ próba FastWhisper: {repo}")
+                    self.model = FastWhisperModel(repo, device=self.device, compute_type=self.compute_type)
+                    self.model_id = repo
+                    log.info(f"✓ załadowano FastWhisper: {repo}")
+                    break
+                except Exception as e:
+                    log.warning(f"✗ FastWhisper failed {repo}: {type(e).__name__}: {e}")
+        except ImportError:
+            log.warning("⚠️ faster_whisper not installed, skipping FastWhisper load")
 
-        for repo in candidate_list:
-            try:
-                log.info(f"→ próba: {repo}")
-                threads = os.cpu_count() if self.device == 'cpu' else None
-                ct = self.compute_type
-                self.model = WhisperModel(repo, device=self.device, compute_type=ct)
-                self.model_id = repo
-                log.info(f"✓ załadowano: {repo}")
-                break
-            except Exception as e:
-                msg = f"{type(e).__name__}: {e}"
-                log.warning(f"✗ nieudana próba: {repo} ({msg})")
-                errors.append(f"{repo} -> {msg}")
-
+        # If no model loaded, disable ASR feature
         if self.model is None:
-            raise RuntimeError("Nie udało się załadować modelu Whisper:\n" + "\n".join(errors))
+            log.error("WhisperASR disabled: could not load any FastWhisper model.")
+            self.available = False
+            return
 
     @measure_performance
     def transcribe(
