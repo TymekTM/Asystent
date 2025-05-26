@@ -6,6 +6,7 @@
 - Po skończeniu onboarding restart asystenta by załadować zmiany
 - Moduł od muzyki (jeśli nie działa jak powinien)
 - Fix tooltip placement and width on smaller screens
+- Manualne dodawanie wspomnień robi to 2x
 
 # ⭐ WAŻNE (strategiczne / fundamenty)
 - Kompletny rework intencji AI [Każdy moduł swoje AI ]
@@ -14,13 +15,14 @@
 - Podzielenie na serwer i klient
 - Plug and play installation
 - Find real use case
+- Jak błąd modułu, wywołujemy jeszcze raz AI
 
 # 🔧 OPTYMALIZACJE
 - RAM usage optymalizacja
 - Entire app start speed
 - Reduce number of heavy dependencies
 - Add loading indicators for long-running operations in web UI
-- Heatmap użycia + śledzenie token use dla dev
+- Heatmap użycia + śledzenie token useage
 
 # 🟢 ŁATWE (mały scope, max 1 dzień)
 - Powtórzysz proszę (jeszcze raz puszcza TTS)

@@ -76,7 +76,10 @@ def run_flask_process(queue: multiprocessing.Queue):
     logger.info("Starting Flask Web UI process...")
     try:
         flask_app = create_app(queue)
-        flask_app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
+        if getattr(sys, 'frozen', False):
+            flask_app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
+        else:
+            flask_app.run(host='0.0.0.0', port=5001, debug=False, use_reloader=False)
     except KeyboardInterrupt:
         logger.info("Flask process received KeyboardInterrupt. Exiting.")
     except Exception as e:

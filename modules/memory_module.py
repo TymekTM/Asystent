@@ -150,16 +150,17 @@ def _handle_get(params: str, conversation_history=None, user=None):
     # Get both summary and full memory list for AI
     summary, success = retrieve_memories(query=params, user=user)
     # Always fetch all memories for AI context
-    all_memories = get_memories_db(limit=10000)
-    # Convert to dicts for serialization if needed
+    all_memories = get_memories_db(limit=10000)    # Convert to dicts for serialization if needed
     from dataclasses import asdict
     def mem_to_dict(m):
+        if m is None:
+            return {}
         if hasattr(m, '__dataclass_fields__'):
             return asdict(m)
         elif hasattr(m, '__dict__'):
             return dict(m.__dict__)
         return dict(m)
-    all_memories_dicts = [mem_to_dict(m) for m in all_memories]
+    all_memories_dicts = [mem_to_dict(m) for m in all_memories if m is not None]
     return {
         'summary': summary,
         'success': success,
