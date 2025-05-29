@@ -49,6 +49,9 @@ SYSTEM_PROMPT = (
     '{{"text": "Alright, I\'ll remember that you want to be free and independent above all else", "command": "memory", "params": {{"add": "user values freedom and independence above all"}}, "listen_after_tts": "false"}}\n'
     '{{"text": "I\'d be happy to check the forecast for you so you know when it might rain. Just tell me which city you\'d like me to check", "command": "", "params": "", "listen_after_tts": "true"}}\n'
     '{{"text": "Alright, just remember I\'m here whenever you feel like talking—or just having someone around.", "command": "", "params": "", "listen_after_tts": "false"}}\n'
+    '{{"text": "Zatrzymuję muzykę", "command": "music", "params": {{"action": "pause"}}, "listen_after_tts": "false"}}\n'
+    '{{"text": "Włączam następny utwór", "command": "music", "params": {{"action": "next"}}, "listen_after_tts": "false"}}\n'
+    '{{"text": "Odtwarzam muzykę", "command": "music", "params": {{"action": "play"}}, "listen_after_tts": "false"}}\n'
     '{{"text": "That sounds like a wonderful plan—travel dreams bring hope. When do you think you\'ll feel ready for such a trip?", "command": "memory", "params": {{"add": "user wants to visit New York in the future"}}, "listen_after_tts": "true"}}'
 )
 

@@ -192,8 +192,13 @@ def handler(params: str = "", conversation_history: deque | None = None, user_la
         # Coerce params to string if needed (handle dict or other types)
         if not isinstance(params, str):
             if isinstance(params, dict):
-                # extract common keys
-                params = params.get("text") or params.get("params") or ""
+                # extract action from AI-generated parameters
+                action = params.get("action")
+                if action:
+                    params = action
+                else:
+                    # fallback to old behavior for other dict formats
+                    params = params.get("text") or params.get("params") or ""
             else:
                 params = str(params)
         return process_input(params)

@@ -660,7 +660,8 @@ class Assistant:
                 elif result is not None:
                     module_response_text = str(result)
 
-                text_to_speak = module_response_text if module_response_text is not None else ai_response_text
+                # Prefer AI's natural response, only fallback to module response if AI didn't provide text
+                text_to_speak = ai_response_text if ai_response_text and ai_response_text.strip() else (module_response_text if module_response_text is not None else "")
                 final_listen_after_tts = module_listen_override if module_listen_override is not None else listen_after_tts
                 
                 if text_to_speak:

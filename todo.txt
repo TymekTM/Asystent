@@ -11,11 +11,9 @@
 # ⭐ WAŻNE (strategiczne / fundamenty)
 - Kompletny rework intencji AI [Każdy moduł swoje AI ]
 - Behaviour fixes
-- Kontekst aplikacji V2 – to be tested/reimplemented
 - Podzielenie na serwer i klient
 - Plug and play installation
 - Find real use case
-- Jak błąd modułu, wywołujemy jeszcze raz AI
 
 # 🔧 OPTYMALIZACJE
 - RAM usage optymalizacja
@@ -25,13 +23,11 @@
 - Heatmap użycia + śledzenie token useage
 
 # 🟢 ŁATWE (mały scope, max 1 dzień)
-- Powtórzysz proszę (jeszcze raz puszcza TTS)
 - Daily przygotowanie informacji na dany dzień (święta, kalendarz)
 - Wheel decide do robienia czego
 - Overlay jak słucha lub coś robi (po wykryciu wake word) – *jeśli Tauri już w użyciu*
 - Add visual feedback for microphone and speech recognition status
 - Build-in system notatek UI kompatybilnych z Obsidian
-- Playground do testowania pluginów (np. mini-konsolka w UI)
 - Dev playground (do promptów, testowania outputów LLM)
 
 # 🟡 ŚREDNIE (2–4 dni, integracja kilku rzeczy)

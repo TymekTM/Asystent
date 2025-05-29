@@ -106,3 +106,26 @@
 2025-05-29T15:02:35.041538 | Otwórz mi YouTube. | intent=none | conf=0.10
 2025-05-29T15:02:38.157262 | Thank you. | intent=none | conf=0.50
 2025-05-29T15:02:51.245401 | Otworzysz mi proszę YouTube? | intent=none | conf=0.34
+2025-05-29T23:00:24.776486 | Pomin pieceńkę proszę. | intent=shopping_add | conf=0.56
+2025-05-29T23:00:41.619707 | Pomiń proszę piosencie, to, co teraz leci. | intent=none | conf=0.19
+2025-05-29T23:01:00.913388 | Pomiń proszę tą piosencie, która teraz mi leci nas potwifaju. | intent=none | conf=0.10
+2025-05-29T23:01:18.070357 | Zatrzymaj aktualną piosenkę. | intent=none | conf=0.05
+2025-05-29T23:01:32.106024 | Musisz użyć jakiejś kodmendy w tym przypadku Music. | intent=none | conf=0.10
+2025-05-29T23:01:51 | Późć następną. | intent=none | conf=0.06
+2025-05-29T23:05:14.795906 | Zatrzymaj proszę piosenkę. | intent=shopping_add | conf=0.56
+2025-05-29T23:05:14.883400 | Zatrzymaj proszę piosenkę. | intent=shopping_add | conf=0.56
+2025-05-29T23:05:30.365256 | Puszcz następną. | intent=none | conf=0.06
+2025-05-29T23:05:30.381627 | Puszcz następną. | intent=none | conf=0.06
+2025-05-29T23:06:47.114484 | Pushed pressure, I'm still standing. | intent=none | conf=0.06
+2025-05-29T23:06:55.171021 | Push brush 1 still standing. | intent=none | conf=0.06
+2025-05-29T23:07:05.908679 | Pójdź proszę, I'm still standing na Spotifyu. | intent=none | conf=0.17
+2025-05-29T23:07:05.984691 | Pójdź proszę, I'm still standing na Spotifyu. | intent=none | conf=0.17
+2025-05-29T23:07:44.080036 | Pamiętnie, Sankę. | intent=none | conf=0.06
+2025-05-29T23:07:54.767020 | Pójdź następną biesankę. | intent=none | conf=0.06
+2025-05-29T23:08:04.426859 | Скип. | intent=none | conf=0.06
+2025-05-29T23:08:18.811169 | skip | intent=none | conf=0.06
+2025-05-29T23:18:06.793443 | Pominę prze sańce. | intent=none | conf=0.06
+2025-05-29T23:18:23.177483 | Pójdź, proszę następną piosenkę. | intent=shopping_add | conf=0.56
+2025-05-29T23:18:42.274217 | او جی کمندی میوزیک | intent=none | conf=0.06
+2025-05-29T23:18:45.052130 | Thank you. | intent=none | conf=0.50
+2025-05-29T23:18:56.126559 | Póśćcie następną piosenkę. | intent=none | conf=0.06
