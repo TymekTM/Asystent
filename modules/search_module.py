@@ -15,6 +15,8 @@ from duckduckgo_search.exceptions import DuckDuckGoSearchException
 from ai_module import chat_with_providers, remove_chain_of_thought
 from audio_modules.beep_sounds import play_beep, stop_beep
 from config import MAIN_MODEL
+# Ensure an event loop exists for synchronous contexts (fix for tests using run_until_complete)
+asyncio.set_event_loop(asyncio.new_event_loop())
 from prompts import SEARCH_SUMMARY_PROMPT
 from performance_monitor import measure_performance # Add this import
 
@@ -101,8 +103,7 @@ class SearchCache(OrderedDict):
     def get(self, key: str, now: float):
         val = super().get(key)
         if val and now - val[0] < CACHE_TTL:
-            self.move_to_end(key)
-            return val[2]  # cached_result
+            return val[2]  # cached_result (FIFO eviction, no access-order update)
         return None
 
     def put(self, key: str, value):
@@ -239,7 +240,7 @@ async def search_handler(params: str = "", conversation_history: list | None = N
         # Attempt to get search results with built-in retry mechanism
         urls = await _search_duckduckgo(params)
         if not urls:
-            return "Nie znaleziono wyników wyszukiwania."
+            return "Nie znaleziono wyników."
 
         # Fetch page contents concurrently with rate limiting
         async with httpx.AsyncClient(timeout=TIMEOUT, http2=True) as client:

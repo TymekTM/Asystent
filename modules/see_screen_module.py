@@ -73,7 +73,12 @@ def capture_screen(params: str = "", conversation_history: list = None) -> str:
             screenshot.save(filepath)
         elif ImageGrab is not None:
             screenshot = ImageGrab.grab()
-            screenshot.save(filepath, "PNG")
+            # Handle save signature differences (PIL ImageGrab vs dummy)
+            try:
+                screenshot.save(filepath, "PNG")
+            except TypeError:
+                # Some ImageGrab implementations accept only path
+                screenshot.save(filepath)
         else:
             return "Nie można wykonać zrzutu ekranu - brak odpowiedniej biblioteki."
 

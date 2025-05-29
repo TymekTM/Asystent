@@ -2,6 +2,8 @@
 
 block_cipher = None
 import os
+import sys
+from PyInstaller.utils.hooks import collect_data_files, collect_dynamic_libs
 
 # Helper to collect all files under a directory into datas with relative dest
 def collect_dir(src_dir, dest_prefix):
@@ -14,6 +16,17 @@ def collect_dir(src_dir, dest_prefix):
                 dest = os.path.join(dest_prefix, rel_root)
                 collected.append((src, dest))
     return collected
+
+# Simplified: No sounddevice bundling - dependency manager handles it
+def collect_sounddevice_files():
+    """Skip sounddevice bundling - let dependency manager handle it at runtime"""
+    binaries = []
+    datas = []
+    
+    # Simple approach: Don't bundle sounddevice - let dependency manager handle it
+    # This avoids complex native DLL bundling issues
+    print("ℹ️  sounddevice will be auto-downloaded by dependency manager when needed")
+    return binaries, datas
 
 datas = []
 # Include essential files only (core application)
@@ -37,42 +50,68 @@ datas += [
 if os.path.exists('resources/sounds'):
     datas += collect_dir('resources/sounds', 'resources/sounds')
 
+# Note: sounddevice will be handled by dependency manager - no bundling needed
+
 a = Analysis(
     ['main.py'],
     pathex=[],
-    binaries=[],
-    datas=datas,    hiddenimports=[
-        # Essential for dependency manager
+    binaries=[],  # No pre-bundled binaries
+    datas=datas,
+    hiddenimports=[
+        # Essential for dependency manager and app startup
         'dependency_manager',
         'subprocess',
         'json',
         'pathlib',
         'logging',
         'shutil',
-          # Essential stdlib imports
-        'timeit',           # Required by openwakeword
-        'wave',            # Required by openwakeword
-        'fileinput',       # Required by openwakeword
+        'requests',         # Needed for downloading packages
+        'colorama',         # For colored console output        # Web UI dependencies (bundled for core functionality)
+        'flask',            # Web framework
+        'jinja2',           # Template engine
+        'werkzeug',         # Flask dependency
+        'markupsafe',       # Jinja2 dependency
+        'markdown',         # For documentation rendering
+        'webbrowser',       # For opening browser
         
-        # Remove these heavy imports - they'll be downloaded by dependency manager
-        # 'tqdm.auto',         # Will be downloaded
-        # 'tqdm.contrib',      # Will be downloaded  
-        # 'huggingface_hub',   # Will be downloaded
-        # 'transformers',      # Will be downloaded
-        # 'whisper',           # Will be downloaded
-    ],
-    hookspath=[],
-    runtime_hooks=[],    excludes=[
-        # Exclude all heavy ML/AI libraries - they'll be downloaded by dependency manager
-        'tensorflow',
+        # Web UI app
+        'web_ui.app',# Core modules
+        'config',
+        'database_manager',
+        'database_models',
+        'assistant',
+        'ai_module',
+        'intent_system',
+        'performance_monitor',
+        'prompt_builder',
+        'prompts',
+          # Web UI core modules
+        'web_ui.core.auth',
+        'web_ui.core.config',
+        'web_ui.core.i18n',
+          # Web UI utils
+        'web_ui.utils.audio_utils',
+        'web_ui.utils.history_manager',
+        'web_ui.utils.test_runner',
+        'web_ui.utils.benchmark_manager',
+        
+        # Web UI routes
+        'web_ui.routes.web_routes',
+        'web_ui.routes.api_routes',
+        'web_ui.routes.api_additional',
+        
+        # Essential stdlib imports that might be needed
+        'timeit',
+        'wave',
+        'fileinput',
+    ],    hookspath=[],  # No custom hooks needed
+    runtime_hooks=[],  # No runtime hooks needed
+    excludes=[
+        # Heavy ML/AI packages - will be auto-downloaded
         'torch',
         'torchvision', 
         'torchaudio',
-        'scipy',
-        'numpy',  # Will be included by dependency if needed
-        'matplotlib',
-        'cv2',
-        'sklearn',
+        'scipy',        'sklearn',
         'scikit_learn',
         'huggingface_hub',
         'transformers', 
@@ -80,16 +119,22 @@ a = Analysis(
         'openwakeword',
         'whisper',
         'tqdm',
-        'sounddevice',
+        # 'joblib' removed from excludes - needed for intent_system
         
-        # Other heavy packages
-        'pandas',
+        # Audio packages - let dependency manager handle native libs
+        'sounddevice',  # Added back to excludes - dependency manager handles it
+        '_sounddevice',  # Native module
+        
+        # Image processing
         'PIL',
-        'Pillow',
-        'requests',  # Common, but let dependency manager handle it
-    ],
-    win_no_prefer_redirects=False,
-    win_private_assemblies=False,    cipher=block_cipher,
+        'cv2',
+        'matplotlib',
+          # Data processing  
+        'pandas',
+        # 'numpy' removed from excludes - needed for core functionality
+    ],win_no_prefer_redirects=False,
+    win_private_assemblies=False,
+    cipher=block_cipher,
 )
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)

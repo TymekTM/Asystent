@@ -23,6 +23,7 @@ else:
     # Running in normal Python environment
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 CONFIG_FILE_PATH = os.path.join(BASE_DIR, 'config.json')
+CONFIG_FILE = CONFIG_FILE_PATH  # Alias for compatibility in tests
 
 DEFAULT_CONFIG = {
   "ASSISTANT_NAME": "Gaja",

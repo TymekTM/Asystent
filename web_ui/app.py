@@ -179,6 +179,37 @@ def api_new_module():
     from flask import render_template
     return render_template('module_create.html')
 
+# Configuration management page for module-level app (compatibility)
+from flask import render_template, request, flash
+from utils.audio_utils import get_audio_input_devices
+
+@app.route('/config', methods=['GET', 'POST'])
+@login_required(role="dev")
+def config():
+    """Configuration page for module-level app."""
+    current_config = load_main_config(MAIN_CONFIG_FILE)
+    audio_devices = get_audio_input_devices()
+    default_api_keys = DEFAULT_CONFIG.get('API_KEYS', {})
+    if request.method == 'POST':
+        mic_id = request.form.get('MIC_DEVICE_ID', '')
+        try:
+            current_config['MIC_DEVICE_ID'] = int(mic_id)
+        except ValueError:
+            flash("Invalid MIC_DEVICE_ID", 'danger')
+            return render_template('config.html', config=current_config,
+                                   audio_devices=audio_devices,
+                                   default_api_keys=default_api_keys)
+        wake_word = request.form.get('WAKE_WORD', '')
+        current_config['WAKE_WORD'] = wake_word
+        save_main_config(current_config)
+        flash("Configuration saved successfully!", 'success')
+        return render_template('config.html', config=current_config,
+                               audio_devices=audio_devices,
+                               default_api_keys=default_api_keys)
+    return render_template('config.html', config=current_config,
+                           audio_devices=audio_devices,
+                           default_api_keys=default_api_keys)
+
 
 if __name__ == '__main__':
     """

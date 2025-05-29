@@ -1,13 +1,21 @@
 import asyncio
 import os
 import logging
-import sys # Added sys import
+import sys
 from config import BASE_DIR
 import queue
 import time
-import threading # Added for manual_trigger_event
+import threading
 import numpy as np
-import sounddevice as sd
+from .sounddevice_loader import get_sounddevice, is_sounddevice_available
+
+# Load sounddevice using our centralized loader
+sd = get_sounddevice()
+SOUNDDEVICE_AVAILABLE = is_sounddevice_available()
+if SOUNDDEVICE_AVAILABLE:
+    logging.getLogger(__name__).info("sounddevice loaded successfully via loader")
+else:
+    logging.getLogger(__name__).warning("sounddevice not available - will be installed on demand")
 
 Model = None
 OPENWAKEWORD_AVAILABLE = False
@@ -43,6 +51,12 @@ def record_command_audio(mic_device_id: int, vad_silence_duration_ms: int, stop_
     Records audio from the microphone until silence is detected or timeout.
     Uses a simple VAD based on amplitude.
     """
+    # Check if sounddevice is available
+    if not SOUNDDEVICE_AVAILABLE:
+        logger.error("SoundDevice not available - cannot record command audio")
+        play_beep("error", loop=False)
+        return None
+    
     logger.info(f"Recording command audio from device ID: {mic_device_id}...")
     audio_buffer = []
 
@@ -124,6 +138,12 @@ def run_wakeword_detection(
     """
     Listens for wake word using openWakeWord and handles command recording/transcription.
     """
+    # Check if sounddevice is available
+    if not SOUNDDEVICE_AVAILABLE:
+        logger.error("SoundDevice not available - wake word detection disabled")
+        play_beep("error", loop=False)
+        return None
+    
     # Dynamic import of openwakeword Model, with fallback to accommodate package structure
     _imported_model = None
     try:

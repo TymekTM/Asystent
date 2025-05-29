@@ -47,14 +47,13 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {% if request.endpoint == 'mcp_page' %}active{% endif %}" href="{{ url_for('mcp_page') }}">MCP</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'config_page' %}active{% endif %}" href="{{ url_for('config_page') }}">Configuration</a>
                         </li>                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'config' %}active{% endif %}" href="{{ url_for('config') }}">Configuration</a>
+                        </li><li class="nav-item">
                             <a class="nav-link {% if request.endpoint == 'ltm_page' %}active{% endif %}" href="{{ url_for('ltm_page') }}">Long-Term Memory</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'dev_list_users' or request.endpoint == 'dev_page' %}active{% endif %}" href="{{ url_for('dev_list_users') }}">Dev</a>
+                            <a class="nav-link {% if request.endpoint == 'dev_list_users' or request.endpoint == 'dev_dashboard_page' %}active{% endif %}" href="{{ url_for('dev_list_users') }}">Dev</a>
                         </li>
                         {% endif %}
                     {% endif %}

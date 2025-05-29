@@ -5,6 +5,7 @@ import logging.handlers
 import sys
 import os
 import time 
+import threading
 from threading import Thread
 
 # Add current directory to Python path for PyInstaller
@@ -31,8 +32,14 @@ if getattr(sys, 'frozen', False):
 
 # Import main modules
 from assistant import Assistant
-from web_ui.app import create_app 
 from config import load_config
+
+# Import Flask app creation function at module level for multiprocessing
+try:
+    from web_ui.app import create_app 
+except ImportError as e:
+    print(f"Warning: Failed to import Flask app: {e}")
+    create_app = None
 
 # --- Logging Configuration ---
 log_filename = os.path.join("user_data", "assistant.log")
@@ -71,25 +78,42 @@ def run_assistant_process(queue: multiprocessing.Queue):
         if 'assistant' in locals() and hasattr(assistant, 'stop_active_window_tracker'):
             assistant.stop_active_window_tracker() # Ensure tracker is stopped on exit
 
-def run_flask_process(queue: multiprocessing.Queue):
-    """Target function to run the Flask Web UI in its own process."""
-    logger.info("Starting Flask Web UI process...")
+def run_flask_thread(queue: multiprocessing.Queue):
+    """Target function to run the Flask Web UI in its own thread."""
     try:
+        logger.info("Starting Flask Web UI thread...")
+        
+        # Check if create_app was imported successfully
+        if create_app is None:
+            logger.error("Flask app creation function not available")
+            return
+            
+        logger.info("Creating Flask app...")
         flask_app = create_app(queue)
-        if getattr(sys, 'frozen', False):
-            flask_app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
-        else:
-            flask_app.run(host='0.0.0.0', port=5001, debug=False, use_reloader=False)
+        logger.info("Flask app created successfully")
+        
+        port = 5000 if getattr(sys, 'frozen', False) else 5001
+        logger.info(f"Starting Flask server on port {port}...")
+        
+        # Run the Flask app
+        flask_app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False, threaded=True)
+        
     except KeyboardInterrupt:
-        logger.info("Flask process received KeyboardInterrupt. Exiting.")
+        logger.info("Flask thread received KeyboardInterrupt. Exiting.")
     except Exception as e:
-        logger.error(f"Critical error in Flask process: {e}", exc_info=True)
+        logger.error(f"Critical error in Flask thread: {e}", exc_info=True)
+        import traceback
+        traceback.print_exc()
     finally:
-        logger.info("Flask process finished.")
+        logger.info("Flask thread finished.")
 
 # --- Main Execution ---
 
 def main():
+    # Set multiprocessing start method for Windows compatibility
+    if sys.platform == "win32":
+        multiprocessing.set_start_method('spawn', force=True)
+    
     # Dependency management for PyInstaller builds - only run in main process
     if getattr(sys, 'frozen', False):
         try:
@@ -120,8 +144,7 @@ def main():
 
     config = load_config()
     exit_with_console = config.get('EXIT_WITH_CONSOLE', True)
-    
-    # Usuń stare pliki lock przy starcie, jeśli istnieją
+      # Usuń stare pliki lock przy starcie, jeśli istnieją
     stop_lock_path = os.path.join(os.path.dirname(__file__), 'assistant_stop.lock')
     restart_lock_path = os.path.join(os.path.dirname(__file__), 'assistant_restarting.lock')
     if os.path.exists(stop_lock_path):
@@ -129,16 +152,15 @@ def main():
     if os.path.exists(restart_lock_path):
         os.remove(restart_lock_path)
         
-    logger.info("Starting Flask process...")
+    logger.info("Starting Flask thread...")
 
     # --- Assistant Process ---
     assistant_process = multiprocessing.Process(target=run_assistant_process, args=(command_queue,))
-    assistant_process.start()
-
-    # --- Flask Process ---
-    flask_process = multiprocessing.Process(target=run_flask_process, args=(command_queue,))
-    flask_process.start()
-      # Check if this is the first run and open onboarding if needed
+    assistant_process.start()    # --- Flask Thread ---
+    flask_thread = Thread(target=run_flask_thread, args=(command_queue,), daemon=True)
+    flask_thread.start()
+    
+    # Check if this is the first run and open onboarding if needed
     if config.get('FIRST_RUN', True):
         logger.info("First run detected, preparing to launch onboarding...")
         import webbrowser
@@ -147,13 +169,15 @@ def main():
 
         def open_onboarding_with_retry(max_retries: int = 30, retry_delay: float = 1.0) -> bool:
             """Open onboarding page with retry mechanism to ensure Flask is ready"""
+            # Use correct port based on whether running from exe or development
+            port = 5000 if getattr(sys, 'frozen', False) else 5001
             for attempt in range(max_retries):
                 try:
                     # Test if Flask server is ready by checking the onboarding endpoint
-                    response = requests.get("http://localhost:5000/onboarding", timeout=2)
+                    response = requests.get(f"http://localhost:{port}/onboarding", timeout=2)
                     if response.status_code == 200:
                         # Server is ready, open the onboarding page
-                        webbrowser.open("http://localhost:5000/onboarding")
+                        webbrowser.open(f"http://localhost:{port}/onboarding")
                         logger.info(f"Opened onboarding page in browser after {attempt+1} attempts")
                         return True
                     else:
@@ -165,11 +189,8 @@ def main():
                 time.sleep(retry_delay)
 
             logger.error(f"Failed to open onboarding page after {max_retries} attempts")
-            return False
-
-        # Start a separate thread to handle the retries without blocking main execution
-        import threading
-        threading.Thread(target=open_onboarding_with_retry, daemon=True).start()
+            return False        # Start a separate thread to handle the retries without blocking main execution
+        Thread(target=open_onboarding_with_retry, daemon=True).start()
 
     try:
         while True:
@@ -185,12 +206,12 @@ def main():
                 assistant_process = multiprocessing.Process(target=run_assistant_process, args=(command_queue,))
                 assistant_process.start()
                 logger.info("Assistant process restarted.")
-
-            if not flask_process.is_alive():
-                logger.warning("Flask process died. Attempting to restart...")
-                flask_process = multiprocessing.Process(target=run_flask_process, args=(command_queue,))
-                flask_process.start()
-                logger.info("Flask process restarted.")
+            
+            if not flask_thread.is_alive():
+                logger.warning("Flask thread died. Attempting to restart...")
+                flask_thread = Thread(target=run_flask_thread, args=(command_queue,), daemon=True)
+                flask_thread.start()
+                logger.info("Flask thread restarted.")
             
             # Check for restart signal
             if os.path.exists(restart_lock_path):
@@ -199,9 +220,7 @@ def main():
                 if assistant_process.is_alive():
                     assistant_process.terminate()
                     assistant_process.join(timeout=5)
-                if flask_process.is_alive():
-                    flask_process.terminate()
-                    flask_process.join(timeout=5)
+                # Note: Flask thread will be terminated when main process ends
                 
                 # Remove restart lock
                 os.remove(restart_lock_path)
@@ -209,8 +228,8 @@ def main():
                 # Start new processes
                 assistant_process = multiprocessing.Process(target=run_assistant_process, args=(command_queue,))
                 assistant_process.start()
-                flask_process = multiprocessing.Process(target=run_flask_process, args=(command_queue,))
-                flask_process.start()
+                flask_thread = Thread(target=run_flask_thread, args=(command_queue,), daemon=True)
+                flask_thread.start()
                 logger.info("Processes restarted successfully.")
                 
             time.sleep(5)  # Check every 5 seconds
@@ -227,14 +246,7 @@ def main():
                 assistant_process.kill()
                 assistant_process.join()
 
-
-        if flask_process.is_alive():
-            flask_process.terminate()
-            flask_process.join(timeout=5)
-            if flask_process.is_alive(): # Force kill if terminate failed
-                logger.warning("Flask process did not terminate gracefully, killing.")
-                flask_process.kill()
-                flask_process.join()
+        # Flask thread will terminate when main process ends (daemon=True)
         
         # Clean up lock files on exit
         if os.path.exists(stop_lock_path):

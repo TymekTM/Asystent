@@ -19,6 +19,8 @@ from database_models import (get_user_by_username, get_user_password_hash, list_
 from performance_monitor import get_average_times, measure_performance, clear_performance_stats
 # Import benchmark manager
 from utils.benchmark_manager import run_assistant_benchmarks as start_benchmarks, get_benchmark_status
+# Import onboarding module for completion handling
+from onboarding_module import mark_onboarding_complete
 
 def setup_api_routes(app, assistant_queue):
     """Setup all API routes for the application."""
@@ -421,9 +423,7 @@ def setup_api_routes(app, assistant_queue):
             
         except Exception as e:
             logger.error(f"Error getting schedule status: {e}", exc_info=True)
-            return jsonify({"error": f"Failed to get schedule status: {str(e)}"}), 500
-
-    @app.route('/api/test_history', methods=['GET'])
+            return jsonify({"error": f"Failed to get schedule status: {str(e)}"}), 500    @app.route('/api/test_history', methods=['GET'])
     @login_required(role="dev")
     def api_test_history():
         """API endpoint to get test history."""
@@ -434,3 +434,22 @@ def setup_api_routes(app, assistant_queue):
         except Exception as e:
             logger.error(f"Error getting test history: {e}", exc_info=True)
             return jsonify({"error": f"Failed to get test history: {str(e)}"}), 500
+
+    # --- Onboarding API ---
+    @app.route('/api/complete-onboarding', methods=['POST'])
+    def api_complete_onboarding():
+        """API endpoint to mark onboarding as complete."""
+        try:
+            # Mark onboarding as complete
+            success = mark_onboarding_complete()
+            
+            if success:
+                logger.info("Onboarding completed successfully via API")
+                return jsonify({"success": True, "message": "Onboarding completed successfully"}), 200
+            else:
+                logger.error("Failed to mark onboarding as complete")
+                return jsonify({"success": False, "error": "Failed to mark onboarding as complete"}), 500
+                
+        except Exception as e:
+            logger.error(f"Error completing onboarding: {e}", exc_info=True)
+            return jsonify({"success": False, "error": f"Failed to complete onboarding: {str(e)}"}), 500

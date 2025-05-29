@@ -92,3 +92,6 @@
 2025-05-26T15:31:13.863810 | Potwierdź, że działasz. | intent=none | conf=0.10
 2025-05-26T22:51:48.010550 | Co zrobić, jeżeli mój kolega jest najebany w Katowicach? | intent=none | conf=0.11
 2025-05-26T22:52:18.896058 | Nie no, myślę że aż ta źle nie będzie. Widziałem się z nim dzisiaj, ale nie spodziewałem się, że słończy w kwiatowie. | intent=none | conf=0.33
+2025-05-28T20:27:59.129099 | Powiedz mi coś o sobie. | intent=about_assistant | conf=0.59
+2025-05-29T12:30:09.314066 | Powiedz mi coś o sobie. | intent=about_assistant | conf=0.59
+2025-05-29T12:30:29.568414 | Chciałbym, żebyś otworzyła mi Facebooka. | intent=none | conf=0.09

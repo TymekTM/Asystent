@@ -1,5 +1,13 @@
 import pytest
-import sounddevice as sd
+# Defensive import for sounddevice to handle PyInstaller bundling issues
+try:
+    import sounddevice as sd
+    SOUNDDEVICE_AVAILABLE = True
+except ImportError as e:
+    sd = None
+    SOUNDDEVICE_AVAILABLE = False
+    pytest.skip(f"Sounddevice not available: {e}", allow_module_level=True)
+
 from unittest.mock import patch, MagicMock
 import sys
 import os

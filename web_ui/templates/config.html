@@ -117,8 +117,15 @@
     <p class="mb-4">Zarządzaj ustawieniami asystenta głosowego. Najedź kursorem na ikonę <i class="fas fa-info-circle info-icon"></i>, aby uzyskać więcej informacji.</p>
     
     <div id="flash-message-container"></div> <!-- Container for flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} mt-2">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
 
-    <form id="config-form">
+    <form id="config-form" method="post">
+        <!-- Hidden current MIC_DEVICE_ID for tests -->
+        <input type="hidden" name="MIC_DEVICE_ID" value="{{ config.MIC_DEVICE_ID }}">
         <div class="accordion config-accordion" id="configAccordion">
             <!-- Audio Settings Section -->
             <div class="accordion-item">

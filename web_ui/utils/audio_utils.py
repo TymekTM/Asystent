@@ -2,10 +2,20 @@ import os
 import sys
 import subprocess
 import tempfile
-import sounddevice as sd
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+
+# Import sounddevice using our centralized loader
+from audio_modules.sounddevice_loader import get_sounddevice, is_sounddevice_available
+
+sd = get_sounddevice()
+SOUNDDEVICE_AVAILABLE = is_sounddevice_available()
+
 from audio_modules.ffmpeg_installer import ensure_ffmpeg_installed
-from core.config import logger
+try:
+    from core.config import logger
+except ImportError:
+    from config import logger
 
 def convert_audio(input_path: str) -> str:
     """Convert any audio file to WAV and return new path."""
@@ -49,6 +59,10 @@ def cleanup_files(*paths: str):
 def get_audio_input_devices():
     """Gets a list of available audio input devices with IDs and names."""
     devices = []
+    if not SOUNDDEVICE_AVAILABLE:
+        devices.append({"id": "error", "name": "SoundDevice not available", "is_default": False})
+        return devices
+    
     try:
         sd_devices = sd.query_devices()
         default_input_device_index = sd.default.device[0]  # Get default input device index

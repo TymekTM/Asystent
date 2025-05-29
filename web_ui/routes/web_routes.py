@@ -6,7 +6,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.
 from flask import render_template, request, session, redirect, url_for, flash, send_file, jsonify
 from werkzeug.security import check_password_hash, generate_password_hash
 from core.auth import login_required
-from core.config import load_main_config, DEFAULT_CONFIG, logger, _startup_time
+from core.config import load_main_config, save_main_config, DEFAULT_CONFIG, logger, _startup_time
 from utils.audio_utils import get_audio_input_devices, get_assistant_instance
 from utils.history_manager import get_conversation_history
 from database_models import (get_user_by_username, get_user_password_hash, list_users, 
@@ -128,17 +128,38 @@ def setup_web_routes(app):
                              recent_messages=recent_messages)
 
     # --- Configuration ---
-    @app.route('/config')
+    @app.route('/config', methods=['GET', 'POST'])
     @login_required(role="dev")
-    def config_page():
+    def config():
         """Configuration management page."""
         current_config = load_main_config()
-        audio_devices = get_audio_input_devices()
         default_api_keys = DEFAULT_CONFIG.get('API_KEYS', {})
+        audio_devices = get_audio_input_devices()
+        # Handle form submission
+        if request.method == 'POST':
+            # Process MIC_DEVICE_ID
+            mic_id = request.form.get('MIC_DEVICE_ID', '')
+            try:
+                current_config['MIC_DEVICE_ID'] = int(mic_id)
+            except ValueError:
+                flash("Invalid MIC_DEVICE_ID", 'danger')
+                return render_template('config.html', config=current_config,
+                                       audio_devices=audio_devices,
+                                       default_api_keys=default_api_keys)
+            # Process WAKE_WORD
+            wake_word = request.form.get('WAKE_WORD', '')
+            current_config['WAKE_WORD'] = wake_word
+            # Save updated config
+            save_main_config(current_config)
+            flash("Configuration saved successfully!", 'success')
+            return render_template('config.html', config=current_config,
+                                   audio_devices=audio_devices,
+                                   default_api_keys=default_api_keys)
+        # GET request
         return render_template('config.html', 
-                             config=current_config, 
-                             audio_devices=audio_devices, 
-                             default_api_keys=default_api_keys)
+                               config=current_config, 
+                               audio_devices=audio_devices, 
+                               default_api_keys=default_api_keys)
 
     # --- History ---
     @app.route('/history')
