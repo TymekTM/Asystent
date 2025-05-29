@@ -35,5 +35,17 @@ def register():
         "command": "open",
         "aliases": ["open", "url", "browser", "open_web"],
         "description": "Otwiera stronę internetową w domyślnej przeglądarce",
-        "handler": open_web_handler
+        "handler": open_web_handler,
+        "sub_commands": {
+            "open": {
+                "description": "Otwórz stronę internetową w przeglądarce",
+                "parameters": {
+                    "url": {
+                        "type": "string",
+                        "description": "URL strony do otwarcia (np. https://www.google.com)",
+                        "required": True
+                    }
+                }
+            }
+        }
     }

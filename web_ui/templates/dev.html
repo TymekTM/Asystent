@@ -60,6 +60,7 @@
 .status-indicator.failed { background: #f44336; }
 .status-indicator.running { background: #ffc107; }
 .status-indicator.idle { background: #888; }
+.status-indicator.success { background: #4caf50; }
 
 /* Test list */
 .test-item {
@@ -264,8 +265,7 @@
                     <!-- Data loaded dynamically -->
                 </tbody>
             </table>
-        </div>
-    </div>
+        </div>    </div>
 </div>
 {% endblock %}
 
@@ -737,6 +737,243 @@ function fetchTestHistory() {
         .catch(error => console.error('Error fetching test history:', error));
 }
 
+// Plugin Playground functionality
+let currentPlugins = {};
+
+// Load available plugins
+function loadPlugins() {    fetch('/api/playground/plugins')
+        .then(response => response.json())
+        .then(data => {
+            console.log('Loaded plugins from playground API:', data);
+            currentPlugins = data.plugins || {};
+            console.log('Current plugins object:', currentPlugins);
+            console.log('Plugin keys:', Object.keys(currentPlugins));
+            const pluginSelect = document.getElementById('plugin-select');
+            pluginSelect.innerHTML = '<option value="">-- Wybierz plugin --</option>';
+            
+            Object.keys(currentPlugins).forEach(pluginName => {
+                console.log('Processing plugin:', pluginName);
+                const option = document.createElement('option');
+                option.value = pluginName;
+                option.textContent = `${pluginName} (${currentPlugins[pluginName].sub_commands?.length || 0} podkomend)`;
+                pluginSelect.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading plugins:', error);
+            document.getElementById('plugin-result').textContent = `Błąd ładowania pluginów: ${error.message}`;
+        });
+}
+
+// Handle plugin selection
+document.getElementById('plugin-select').addEventListener('change', function() {
+    const selectedPlugin = this.value;
+    const subcommandSection = document.getElementById('subcommand-section');
+    const subcommandSelect = document.getElementById('subcommand-select');
+    const paramsSection = document.getElementById('params-section');
+    const pluginInfo = document.getElementById('plugin-info');
+    const executeBtn = document.getElementById('execute-plugin-btn');
+    const viewSourceBtn = document.getElementById('view-source-btn');
+    
+    if (selectedPlugin && currentPlugins[selectedPlugin]) {
+        const plugin = currentPlugins[selectedPlugin];
+        
+        // Show plugin info
+        pluginInfo.style.display = 'block';
+        document.getElementById('plugin-info-content').innerHTML = `
+            <strong>Opis:</strong> ${plugin.description || 'Brak opisu'}<br>
+            <strong>Kategoria:</strong> ${plugin.category || 'Nieznana'}<br>
+            <strong>Podkomendy:</strong> ${plugin.sub_commands?.length || 0}
+        `;
+        
+        // Setup subcommands
+        subcommandSelect.innerHTML = '<option value="">-- Wybierz podkomendę --</option>';
+        if (plugin.sub_commands && plugin.sub_commands.length > 0) {
+            subcommandSection.style.display = 'block';
+            plugin.sub_commands.forEach(subcmd => {
+                const option = document.createElement('option');
+                option.value = subcmd.name;
+                option.textContent = `${subcmd.name} - ${subcmd.description || 'Brak opisu'}`;
+                subcommandSelect.appendChild(option);
+            });
+        } else {
+            subcommandSection.style.display = 'none';
+            // Enable execute button for plugins without subcommands
+            executeBtn.disabled = false;
+        }
+        
+        viewSourceBtn.disabled = false;
+    } else {
+        subcommandSection.style.display = 'none';
+        paramsSection.style.display = 'none';
+        pluginInfo.style.display = 'none';
+        executeBtn.disabled = true;
+        viewSourceBtn.disabled = true;
+    }
+    
+    // Clear params when changing plugin
+    document.getElementById('params-container').innerHTML = '';
+});
+
+// Handle subcommand selection
+document.getElementById('subcommand-select').addEventListener('change', function() {
+    const selectedPlugin = document.getElementById('plugin-select').value;
+    const selectedSubcommand = this.value;
+    const paramsSection = document.getElementById('params-section');
+    const paramsContainer = document.getElementById('params-container');
+    const executeBtn = document.getElementById('execute-plugin-btn');
+    
+    paramsContainer.innerHTML = '';
+    
+    if (selectedPlugin && selectedSubcommand && currentPlugins[selectedPlugin]) {
+        const plugin = currentPlugins[selectedPlugin];
+        const subcmd = plugin.sub_commands?.find(sc => sc.name === selectedSubcommand);
+        
+        if (subcmd && subcmd.parameters) {
+            paramsSection.style.display = 'block';
+            
+            subcmd.parameters.forEach(param => {
+                const paramDiv = document.createElement('div');
+                paramDiv.className = 'mb-2';
+                paramDiv.innerHTML = `
+                    <label class="form-label">${param.name} ${param.required ? '*' : ''}</label>
+                    <input type="text" class="form-control param-input" 
+                           data-param="${param.name}" 
+                           placeholder="${param.description || ''}"
+                           ${param.required ? 'required' : ''}>
+                    <small class="form-text text-muted">Typ: ${param.type || 'string'}</small>
+                `;
+                paramsContainer.appendChild(paramDiv);
+            });
+        } else {
+            paramsSection.style.display = 'none';
+        }
+        
+        executeBtn.disabled = false;
+    } else {
+        paramsSection.style.display = 'none';
+        executeBtn.disabled = selectedPlugin ? false : true;
+    }
+});
+
+// Execute plugin
+document.getElementById('execute-plugin-btn').addEventListener('click', function() {
+    const selectedPlugin = document.getElementById('plugin-select').value;
+    const selectedSubcommand = document.getElementById('subcommand-select').value;
+    const useContext = document.getElementById('use-context').checked;
+    const statusDot = document.getElementById('plugin-status-dot');
+    const statusLabel = document.getElementById('plugin-status-label');
+    const resultDiv = document.getElementById('plugin-result');
+    
+    if (!selectedPlugin) {
+        alert('Wybierz plugin do wykonania');
+        return;
+    }
+    
+    // Collect parameters
+    const params = {};
+    document.querySelectorAll('.param-input').forEach(input => {
+        const paramName = input.getAttribute('data-param');
+        if (input.value.trim()) {
+            // Try to parse as JSON, fallback to string
+            try {
+                params[paramName] = JSON.parse(input.value);
+            } catch {
+                params[paramName] = input.value;
+            }
+        }
+    });
+    
+    // Update status
+    statusDot.className = 'status-indicator running';
+    statusLabel.textContent = 'Status: Wykonywanie...';
+    resultDiv.textContent = 'Wykonywanie pluginu...';
+    
+    // Prepare request data
+    const requestData = {
+        plugin_name: selectedPlugin,
+        sub_command: selectedSubcommand || null,
+        parameters: params,
+        use_context: useContext
+    };
+    
+    // Execute plugin
+    fetch('/api/playground/execute', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        statusDot.className = data.success ? 'status-indicator success' : 'status-indicator failed';
+        statusLabel.textContent = data.success ? 'Status: Sukces' : 'Status: Błąd';
+        
+        if (data.success) {
+            let resultText = '';
+            if (typeof data.result === 'object') {
+                resultText = JSON.stringify(data.result, null, 2);
+            } else {
+                resultText = String(data.result || '');
+            }
+            
+            resultDiv.innerHTML = `
+                <div class="alert alert-success mb-2">✅ Plugin wykonany pomyślnie</div>
+                <strong>Wynik:</strong><br>
+                <pre>${resultText}</pre>
+                ${data.execution_time ? `<small class="text-muted">Czas wykonania: ${data.execution_time}ms</small>` : ''}
+            `;
+        } else {
+            resultDiv.innerHTML = `
+                <div class="alert alert-danger mb-2">❌ Błąd wykonania</div>
+                <strong>Błąd:</strong> ${data.error || 'Nieznany błąd'}
+                ${data.details ? `<br><strong>Szczegóły:</strong> ${data.details}` : ''}
+            `;
+        }
+    })
+    .catch(error => {
+        statusDot.className = 'status-indicator failed';
+        statusLabel.textContent = 'Status: Błąd';
+        resultDiv.innerHTML = `
+            <div class="alert alert-danger mb-2">❌ Błąd komunikacji</div>
+            <strong>Błąd:</strong> ${error.message}
+        `;
+    });
+});
+
+// View source code
+document.getElementById('view-source-btn').addEventListener('click', function() {
+    const selectedPlugin = document.getElementById('plugin-select').value;
+    
+    if (!selectedPlugin) {
+        alert('Wybierz plugin aby zobaczyć kod źródłowy');
+        return;
+    }
+    
+    fetch(`/api/playground/plugin/${selectedPlugin}/info`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.source_code) {
+                document.getElementById('source-code-content').textContent = data.source_code;
+                
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('sourceCodeModal'));
+                modal.show();
+                
+                // Apply syntax highlighting if Prism.js is available
+                if (typeof Prism !== 'undefined') {
+                    Prism.highlightElement(document.getElementById('source-code-content'));
+                }
+            } else {
+                alert('Nie udało się pobrać kodu źródłowego: ' + (data.error || 'Nieznany błąd'));
+            }
+        })
+        .catch(error => {
+            alert('Błąd pobierania kodu źródłowego: ' + error.message);
+        });
+});
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM content loaded - initializing components');
@@ -753,8 +990,7 @@ document.addEventListener('DOMContentLoaded', function() {
     fetchScheduleStatus();
     
     setupDeleteUserButtons();
-    
-    // Set up polling for test stats
+      // Set up polling for test stats
     setInterval(fetchPerfStats, 30000);
 });
 </script>

@@ -95,3 +95,14 @@
 2025-05-28T20:27:59.129099 | Powiedz mi coś o sobie. | intent=about_assistant | conf=0.59
 2025-05-29T12:30:09.314066 | Powiedz mi coś o sobie. | intent=about_assistant | conf=0.59
 2025-05-29T12:30:29.568414 | Chciałbym, żebyś otworzyła mi Facebooka. | intent=none | conf=0.09
+2025-05-29T13:24:10.527141 | Pomin piersankę | intent=none | conf=0.06
+2025-05-29T13:24:25.852565 | Pomiń piosenkę na Spotifyu, pójdź następną. | intent=timer_set | conf=0.63
+2025-05-29T14:52:41.342772 | Pomyśl piesańkę. | intent=none | conf=0.06
+2025-05-29T14:52:53.852457 | Po mnie, piosenka. | intent=none | conf=0.12
+2025-05-29T14:52:57.096185 | Thank you. | intent=none | conf=0.50
+2025-05-29T14:53:09.161038 | Pójdź następną piosenkę. | intent=none | conf=0.06
+2025-05-29T14:53:19.932154 | Zatrzymaj aktualną piosenkę. | intent=none | conf=0.05
+2025-05-29T15:02:28.661526 | أتفوش مي يوتيوب | intent=none | conf=0.06
+2025-05-29T15:02:35.041538 | Otwórz mi YouTube. | intent=none | conf=0.10
+2025-05-29T15:02:38.157262 | Thank you. | intent=none | conf=0.50
+2025-05-29T15:02:51.245401 | Otworzysz mi proszę YouTube? | intent=none | conf=0.34

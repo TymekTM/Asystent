@@ -123,5 +123,17 @@ def register():
         "aliases": ["screenshot", "screen"],
         "description": "Wykonuje zrzut ekranu i analizuje go.",
         "handler": capture_screen,
-        "prompt": SEE_SCREEN_PROMPT
+        "prompt": SEE_SCREEN_PROMPT,
+        "sub_commands": {
+            "screenshot": {
+                "description": "Wykonaj zrzut ekranu i opisz co widzisz",
+                "parameters": {
+                    "question": {
+                        "type": "string", 
+                        "description": "Opcjonalne pytanie o ekran (np. 'co widzisz?', 'przeczytaj tekst')",
+                        "required": False
+                    }
+                }
+            }
+        }
     }

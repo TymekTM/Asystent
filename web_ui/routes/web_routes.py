@@ -200,13 +200,16 @@ def setup_web_routes(app):
         return render_template('dev.html', 
                              users=current_users, 
                              config=current_config, 
-                             audio_devices=audio_devices)
-
-    # --- Plugins ---
+                             audio_devices=audio_devices)    # --- Plugins ---
     @app.route('/plugins')
     @login_required(role="dev")
     def plugins_page():
         return render_template('plugins.html')
+
+    @app.route('/playground')
+    @login_required(role="dev")
+    def playground_page():
+        return render_template('playground.html')
 
     # --- MCP (Model Context Protocol) ---
     @app.route('/mcp')

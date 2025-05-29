@@ -155,7 +155,29 @@ def register():
         "command": "api",
         "aliases": ["api", "pogoda", "weather"],
         "description": "Obsługuje zapytania API na podstawie konfiguracji w JSON.",
-        "handler": handle_api_query_wrapper
+        "handler": handle_api_query_wrapper,
+        "sub_commands": {
+            "weather": {
+                "description": "Sprawdź pogodę dla danej lokalizacji",
+                "parameters": {
+                    "location": {
+                        "type": "string",
+                        "description": "Nazwa miasta lub lokalizacji do sprawdzenia pogody",
+                        "required": True
+                    }
+                }
+            },
+            "api_call": {
+                "description": "Wykonaj zapytanie API",
+                "parameters": {
+                    "query": {
+                        "type": "string", 
+                        "description": "Zapytanie do API",
+                        "required": True
+                    }
+                }
+            }
+        }
     }
 
 if __name__ == "__main__":

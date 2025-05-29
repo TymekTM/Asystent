@@ -300,4 +300,16 @@ def register():
         "description": "Wyszukuje informacje w internecie i podsumowuje wyniki.",
         "handler": search_handler,
         "prompt": SEARCH_SUMMARY_PROMPT,
+        "sub_commands": {
+            "search": {
+                "description": "Wyszukaj informacje w internecie",
+                "parameters": {
+                    "query": {
+                        "type": "string",
+                        "description": "Fraza do wyszukania w internecie",
+                        "required": True
+                    }
+                }
+            }
+        }
     }

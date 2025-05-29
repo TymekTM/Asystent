@@ -39,5 +39,17 @@ def register():
         "aliases": ["deep", "wgłęb"],
         "description": "Wykonuje głębokie rozumowanie",
         "handler": deep_reasoning_handler,
-        "prompt": DEEPTHINK_PROMPT # Add tool-specific prompt
+        "prompt": DEEPTHINK_PROMPT, # Add tool-specific prompt
+        "sub_commands": {
+            "think": {
+                "description": "Wykonaj głębokie rozumowanie na temat zadanego problemu",
+                "parameters": {
+                    "question": {
+                        "type": "string",
+                        "description": "Problem lub pytanie do głębokiej analizy",
+                        "required": True
+                    }
+                }
+            }
+        }
     }

@@ -218,4 +218,32 @@ def register():
         ],
         "description": "Steruje odtwarzaniem muzyki (play/pause/next/prev) na Spotify lub przez klawisze multimedialne.",
         "handler": handler,
+        "sub_commands": {
+            "play": {
+                "description": "Włącz odtwarzanie muzyki",
+                "parameters": {}
+            },
+            "pause": {
+                "description": "Zatrzymaj odtwarzanie muzyki", 
+                "parameters": {}
+            },
+            "next": {
+                "description": "Następny utwór",
+                "parameters": {}
+            },
+            "previous": {
+                "description": "Poprzedni utwór",
+                "parameters": {}
+            },
+            "search": {
+                "description": "Wyszukaj i odtwórz muzykę",
+                "parameters": {
+                    "query": {
+                        "type": "string",
+                        "description": "Nazwa utworu, artysty lub albumu do wyszukania",
+                        "required": True
+                    }
+                }
+            }
+        }
     }
