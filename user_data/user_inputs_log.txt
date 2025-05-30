@@ -129,3 +129,11 @@
 2025-05-29T23:18:42.274217 | او جی کمندی میوزیک | intent=none | conf=0.06
 2025-05-29T23:18:45.052130 | Thank you. | intent=none | conf=0.50
 2025-05-29T23:18:56.126559 | Póśćcie następną piosenkę. | intent=none | conf=0.06
+2025-05-30T11:23:00.663446 | Pytaszcie ustaw tajmy na minutę. | intent=none | conf=0.35
+2025-05-30T11:23:19.362228 | Tak, poproszę. | intent=none | conf=0.37
+2025-05-30T11:42:10.184579 | Ustaw tajmy na minutę. | intent=none | conf=0.35
+2025-05-30T11:42:48.281345 | Proszę sprawdź jakie były wyniki ostatniego Monaco. | intent=none | conf=0.13
+2025-05-30T11:43:21.931447 | Powiedz mi coś o sobie. | intent=about_assistant | conf=0.59
+2025-05-30T11:43:56.433049 | Czy jutro w sosnowcu będzie padać? | intent=weather_query | conf=0.81
+2025-05-30T11:44:20.390369 | Poproszę, zrób to. | intent=none | conf=0.24
+2025-05-30T11:45:40.570804 | Как вам на имя? | intent=none | conf=0.06

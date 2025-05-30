@@ -180,26 +180,89 @@ class AIProviders:
             }
 
     def chat_openai(
-        self, model: str, messages: List[dict], images: Optional[List[str]] = None
+        self, model: str, messages: List[dict], images: Optional[List[str]] = None,
+        functions: Optional[List[dict]] = None, function_calling_system = None
     ) -> Optional[Dict[str, Any]]:
         try:
             api_key = os.getenv("OPENAI_API_KEY") or _config["API_KEYS"]["OPENAI_API_KEY"]
             if not api_key:
                 raise ValueError("Brak OPENAI_API_KEY.")
-            # >= 1.0 klient
+            # >= 1.0 klient
             from openai import OpenAI  # type: ignore
 
             client = OpenAI(api_key=api_key)
             self._append_images(messages, images)
-            resp = client.chat.completions.create(
-                model=model,
-                messages=messages,
-                temperature=_config.get("temperature", 0.7),
-                max_tokens=_config.get("max_tokens", 150),
-            )
-            return {
-                "message": {"content": resp.choices[0].message.content}
+            
+            # Prepare parameters for OpenAI API call
+            params = {
+                "model": model,
+                "messages": messages,
+                "temperature": _config.get("temperature", 0.7),
+                "max_tokens": _config.get("max_tokens", 1500),
             }
+            
+            # Add tools (functions) if provided
+            if functions:
+                params["tools"] = functions
+                params["tool_choice"] = "auto"
+            
+            resp = client.chat.completions.create(**params)
+            
+            # Handle function calls
+            if resp.choices[0].message.tool_calls:                # Execute function calls and collect results
+                tool_results = []
+                for tool_call in resp.choices[0].message.tool_calls:
+                    function_name = tool_call.function.name
+                    function_args = json.loads(tool_call.function.arguments)
+                    
+                    if function_calling_system:
+                        result = function_calling_system.execute_function(
+                            function_name, function_args, 
+                            conversation_history=deque(messages[-10:]) if messages else None  # Pass recent conversation
+                        )
+                        tool_results.append({
+                            "tool_call_id": tool_call.id,
+                            "role": "tool",
+                            "name": function_name,
+                            "content": str(result)
+                        })
+                
+                # Add tool calls to conversation
+                messages.append({
+                    "role": "assistant",
+                    "content": resp.choices[0].message.content,
+                    "tool_calls": [
+                        {
+                            "id": tc.id,
+                            "type": "function", 
+                            "function": {
+                                "name": tc.function.name,
+                                "arguments": tc.function.arguments
+                            }
+                        } for tc in resp.choices[0].message.tool_calls
+                    ]
+                })
+                
+                # Add tool results
+                messages.extend(tool_results)
+                
+                # Get final response with tool results
+                final_params = {
+                    "model": model,
+                    "messages": messages,
+                    "temperature": _config.get("temperature", 0.7),
+                    "max_tokens": _config.get("max_tokens", 1500),
+                }
+                
+                final_resp = client.chat.completions.create(**final_params)
+                return {
+                    "message": {"content": final_resp.choices[0].message.content},
+                    "tool_calls_executed": len(tool_results)
+                }
+            else:
+                return {
+                    "message": {"content": resp.choices[0].message.content}
+                }
         except Exception as exc:
             logger.error("OpenAI error: %s", exc, exc_info=True)
             return {"message": {"content": f"Błąd OpenAI: {exc}"}}
@@ -374,6 +437,8 @@ def chat_with_providers(
     messages: List[dict],
     images: Optional[List[str]] = None,
     provider_override: Optional[str] = None,
+    functions: Optional[List[dict]] = None,
+    function_calling_system = None,
 ) -> Optional[Dict[str, Any]]:
     selected = (provider_override or PROVIDER).lower()
     provider_cfg = ai_providers.providers.get(selected)
@@ -382,7 +447,11 @@ def chat_with_providers(
         prov = ai_providers.providers[provider_name]
         try:
             if prov["check"]():
-                return prov["chat"](model, messages, images)
+                # Only pass functions to OpenAI provider for now
+                if provider_name == "openai" and functions:
+                    return prov["chat"](model, messages, images, functions, function_calling_system)
+                else:
+                    return prov["chat"](model, messages, images)
         except Exception as exc:  # pragma: no cover
             logger.error("Provider %s failed: %s", provider_name, exc)
         return None
@@ -476,10 +545,13 @@ def generate_response(
     language_confidence: float = 1.0,
     active_window_title: str = None, 
     track_active_window_setting: bool = False,
-    tool_suggestion: str = None
+    tool_suggestion: str = None,
+    modules: Dict[str, Any] = None,
+    use_function_calling: bool = True
 ) -> str:
     """
     Generates a response from the AI model based on conversation history and available tools.
+    Can use either traditional prompt-based approach or OpenAI Function Calling.
 
     Args:
         conversation_history: A deque of previous messages.
@@ -489,6 +561,8 @@ def generate_response(
         language_confidence: The confidence score for the detected language.
         active_window_title: The title of the currently active window.
         track_active_window_setting: Boolean indicating if active window tracking is enabled.
+        modules: Dictionary of available modules for function calling.
+        use_function_calling: Whether to use OpenAI Function Calling or traditional approach.
 
     Returns:
         A string containing the AI's response, potentially in JSON format for commands.
@@ -503,32 +577,54 @@ def generate_response(
         if not api_key:
             logger.error("OpenAI API key not found in configuration.")
             return '{"text": "Błąd: Klucz API OpenAI nie został skonfigurowany.", "command": "", "params": {}}'
-        system_prompt = build_full_system_prompt(
-            system_prompt_override=system_prompt_override,
-            detected_language=detected_language,
-            language_confidence=language_confidence,
-            tools_description=tools_info,
-            active_window_title=active_window_title, # Pass through
-            track_active_window_setting=track_active_window_setting, # Pass through
-            tool_suggestion=tool_suggestion
-        )
+        
+        # Initialize function calling system if enabled and modules provided
+        function_calling_system = None
+        functions = None
+        
+        if use_function_calling and modules and PROVIDER.lower() == "openai":
+            from function_calling_system import convert_module_system_to_function_calling
+            function_calling_system = convert_module_system_to_function_calling(modules)
+            functions = function_calling_system.convert_modules_to_functions()
+            logger.info(f"Function calling enabled with {len(functions)} functions")
+            
+            # Simplified system prompt for function calling
+            system_prompt = f"""You are Asystent, a helpful AI assistant. You can call functions to help users.
+Current date: {datetime.datetime.now().strftime('%Y-%m-%d')}
+Detected language: {detected_language}
+
+Respond naturally and use the available functions when appropriate to help the user."""
+        else:
+            # Traditional prompt-based approach
+            system_prompt = build_full_system_prompt(
+                system_prompt_override=system_prompt_override,
+                detected_language=detected_language,
+                language_confidence=language_confidence,
+                tools_description=tools_info,
+                active_window_title=active_window_title,
+                track_active_window_setting=track_active_window_setting,
+                tool_suggestion=tool_suggestion
+            )
         
         # --- PROMPT LOGGING ---
-        # Log ALL messages, including the system prompt
         try:
-            # Open the file once and write all messages
             import json
             timestamp = datetime.datetime.now().isoformat()
             
             with open("user_data/prompts_log.txt", "a", encoding="utf-8") as f:
-                # First log the complete system prompt we've built
+                # Log the system prompt
                 system_prompt_msg = {"role": "system", "content": system_prompt}
                 f.write(f"{timestamp} | {json.dumps(system_prompt_msg, ensure_ascii=False)}\n")
                 
-                # Then log all existing conversation messages
+                # Log conversation history
                 for msg in list(conversation_history):
-                    if msg.get("role") != "system":  # Skip any existing system messages to avoid duplication
+                    if msg.get("role") != "system":
                         f.write(f"{timestamp} | {json.dumps(msg, ensure_ascii=False)}\n")
+                
+                # Log available functions if using function calling
+                if functions:
+                    functions_msg = {"role": "system", "content": f"Available functions: {len(functions)}"}
+                    f.write(f"{timestamp} | {json.dumps(functions_msg, ensure_ascii=False)}\n")
         except Exception as log_exc:
             logger.warning(f"[PromptLog] Failed to log prompt: {log_exc}")
 
@@ -539,24 +635,44 @@ def generate_response(
         else:
             messages.insert(0, {"role": "system", "content": system_prompt})
 
-        # Assuming chat_with_providers expects a list
-        resp = chat_with_providers(MAIN_MODEL, messages)
+        # Make API call with or without functions
+        resp = chat_with_providers(
+            MAIN_MODEL, 
+            messages, 
+            functions=functions,
+            function_calling_system=function_calling_system
+        )
+        
         # --- RAW API RESPONSE LOGGING ---
         try:
-            # Log the raw content received from the AI provider
             raw_content = resp.get("message", {}).get("content", "").strip() if resp else ""
             import json
             import datetime
             with open("user_data/prompts_log.txt", "a", encoding="utf-8") as f:
                 raw_api_msg = {"role": "assistant_api_raw", "content": raw_content}
                 f.write(f"{datetime.datetime.now().isoformat()} | {json.dumps(raw_api_msg, ensure_ascii=False)}\n")
+                
+                # Log if function calls were executed
+                if resp and resp.get("tool_calls_executed"):
+                    tool_calls_msg = {"role": "system", "content": f"Tool calls executed: {resp['tool_calls_executed']}"}
+                    f.write(f"{datetime.datetime.now().isoformat()} | {json.dumps(tool_calls_msg, ensure_ascii=False)}\n")
         except Exception as log_exc:
             logger.warning(f"[RawAPI Log] Failed to log raw API response: {log_exc}")
+        
         content = resp["message"]["content"].strip() if resp else ""
         if not content:
             raise ValueError("Empty response.")
 
-        # jeśli content to string zawierający JSON – zwróć jako dict
+        # If using function calling, return the content directly as it should be a natural response
+        if use_function_calling and functions and resp.get("tool_calls_executed"):
+            return json.dumps({
+                "text": content,
+                "command": "",
+                "params": {},
+                "function_calls_executed": True
+            }, ensure_ascii=False)
+
+        # Traditional JSON parsing for non-function calling responses
         parsed = extract_json(content)
         try:
             result = json.loads(parsed)
