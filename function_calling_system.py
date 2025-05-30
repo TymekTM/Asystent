@@ -151,9 +151,7 @@ class FunctionCallingSystem:
         enhanced_description = self._enhance_function_description(module_name, sub_name, base_description)
         
         return {
-            "type": "function",
-            "function": {
-                "name": function_name,
+            "type": "function",            "function": {                "name": function_name,
                 "description": enhanced_description,
                 "parameters": parameters
             }
@@ -163,9 +161,10 @@ class FunctionCallingSystem:
         """Enhance main function descriptions for better OpenAI understanding."""
         
         enhanced_main_descriptions = {
-            'core': 'Core functionality module for timers, calendar events, reminders, shopping lists, and to-do tasks. Use this when user wants to manage time, schedule, or organize tasks.',
-            'memory': 'Long-term memory management module. Use this when user wants to save, remember, recall, or manage stored information.',
-            'search': 'Internet search module. Use this when user wants to search for information online, find facts, or research topics.'
+            'core': 'Core functionality module for timers, calendar events, reminders, shopping lists, and to-do tasks. Use this when user wants to manage time, schedule, or organize tasks',
+            'memory': 'Long-term memory management module. Use this when user wants to save, remember, recall, or manage stored information',
+            'search': 'Internet search module. Use this when user wants to search for information online, find facts, or research topics',
+            'music': 'Music control module for playing, pausing, skipping tracks on Spotify or using media keys. Use when user wants to control music playback'
         }
         
         if module_name in enhanced_main_descriptions:
@@ -178,28 +177,24 @@ class FunctionCallingSystem:
         
         # Enhanced descriptions for common functions
         enhanced_descriptions = {
-            'core': {
-                'set_timer': 'Set a countdown timer for a specified duration in seconds. Use this when user wants to set a timer, minutnik, stoper, or countdown.',
-                'timer': 'Set a countdown timer for a specified duration in seconds. Use this when user wants to set a timer, minutnik, stoper, or countdown.',
-                'view_timers': 'View all active timers and their remaining time. Use this when user wants to check active timers.',
-                'timers': 'View all active timers and their remaining time. Use this when user wants to check active timers.',
-                'add_event': 'Add a calendar event with date and description. Use for scheduling appointments, meetings, or events.',
-                'event': 'Add a calendar event with date and description. Use for scheduling appointments, meetings, or events.',
-                'set_reminder': 'Set a reminder for a specific date and time with a note. Use when user wants to be reminded about something.',
-                'reminder': 'Set a reminder for a specific date and time with a note. Use when user wants to be reminded about something.',
-                'add_item': 'Add an item to the shopping list. Use when user wants to add something to buy or purchase.',
-                'item': 'Add an item to the shopping list. Use when user wants to add something to buy or purchase.',
-                'add_task': 'Add a task to the to-do list. Use when user wants to add something to do or complete.',
-                'task': 'Add a task to the to-do list. Use when user wants to add something to do or complete.'
-            },
-            'memory': {
-                'add': 'Save information to long-term memory. Use when user wants to remember, store, or save something for later.',
-                'get': 'Retrieve information from long-term memory. Use when user asks to recall, remember, or check stored information.',
-                'show': 'Retrieve information from long-term memory. Use when user asks to recall, remember, or check stored information.',
-                'check': 'Retrieve information from long-term memory. Use when user asks to recall, remember, or check stored information.'
+            'core': {                'set_timer': 'Set a countdown timer for a specified duration in seconds. Use this when user wants to set a timer, minutnik, stoper, or countdown',
+                'timer': 'Set a countdown timer for a specified duration in seconds. Use this when user wants to set a timer, minutnik, stoper, or countdown',                'view_timers': 'View all active timers and their remaining time. Use this when user wants to check active timers',
+                'timers': 'View all active timers and their remaining time. Use this when user wants to check active timers',                'add_event': 'Add a calendar event with date and description. Use for scheduling appointments, meetings, or events',
+                'event': 'Add a calendar event with date and description. Use for scheduling appointments, meetings, or events',
+                'set_reminder': 'Set a reminder for a specific date and time with a note. Use when user wants to be reminded about something',
+                'reminder': 'Set a reminder for a specific date and time with a note. Use when user wants to be reminded about something',
+                'add_item': 'Add an item to the shopping list. Use when user wants to add something to buy or purchase',
+                'item': 'Add an item to the shopping list. Use when user wants to add something to buy or purchase',
+                'add_task': 'Add a task to the to-do list. Use when user wants to add something to do or complete',
+                'task': 'Add a task to the to-do list. Use when user wants to add something to do or complete'
+            },            'memory': {
+                'add': 'Save information to long-term memory. Use when user wants to remember, store, or save something for later',
+                'get': 'Retrieve information from long-term memory. Use when user asks to recall, remember, or check stored information',
+                'show': 'Retrieve information from long-term memory. Use when user asks to recall, remember, or check stored information',
+                'check': 'Retrieve information from long-term memory. Use when user asks to recall, remember, or check stored information'
             },
             'search': {
-                'main': 'Search the internet for information and provide summarized results. Use when user asks to search, find, or look up information online.'
+                'main': 'Search the internet for information and provide summarized results. Use when user asks to search, find, or look up information online'
             }
         }
         
