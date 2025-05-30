@@ -5,7 +5,7 @@ import pytest
 import asyncio
 import sys
 import os
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, AsyncMock # ADDED AsyncMock
 
 # Add project root to sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -24,7 +24,7 @@ def mock_config(monkeypatch):
 def mock_assistant():
     """Mock Assistant class"""
     assistant_mock = MagicMock()
-    assistant_mock.process_query = MagicMock(return_value=None)
+    assistant_mock.process_query = AsyncMock(return_value=None) # MODIFIED: Use AsyncMock
     return assistant_mock
 
 
@@ -50,7 +50,7 @@ def test_music_query_patterns():
     """Test recognition of music-related queries"""
     music_queries = [
         "zatrzymaj muzykę",
-        "pause music", 
+        "pause music",
         "następny utwór",
         "next song",
         "odtwórz muzykę",
@@ -61,11 +61,11 @@ def test_music_query_patterns():
         "next",
         "previous"
     ]
-    
+
     # These should be recognized as music-related
     for query in music_queries:
-        assert any(keyword in query.lower() for keyword in 
-                  ['music', 'muzy', 'play', 'pause', 'stop', 'next', 'previous', 'utwór'])
+        assert any(keyword in query.lower() for keyword in
+                  ['music', 'muzy', 'play', 'pause', 'stop', 'next', 'previous', 'utwór', 'wstrzymaj']) # MODIFIED: Added 'wstrzymaj'
 
 
 def test_non_music_queries():
@@ -92,8 +92,8 @@ async def test_music_responses_integration(mock_load_config, mock_assistant_clas
     # Setup mocks
     mock_assistant_instance = MagicMock()
     mock_assistant_class.return_value = mock_assistant_instance
-    mock_assistant_instance.process_query = MagicMock(return_value=None)
-    
+    mock_assistant_instance.process_query = AsyncMock(return_value=None) # MODIFIED: Use AsyncMock
+
     # Import after mocking
     from assistant import Assistant
     import config

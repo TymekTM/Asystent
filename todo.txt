@@ -36,7 +36,6 @@
 - API integrations: weather, calendar, IoT – MCP
 - Desktop/mobile version (Tauri)
 - Advanced user authentication and role management
-- Train Gaia
 - Interakcje z przeglądarką (prosty Puppeteer / Pyppeteer)
 - Day summary (do obserwacji nawyków, przygotowanie działania)
 - Podstawowa nauka zachowań użytkownika (np. przez zapis do JSON)

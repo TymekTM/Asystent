@@ -41,7 +41,6 @@ SAMPLE_RATE = 16000  # Hz (openWakeWord and Whisper typically use 16kHz)
 CHUNK_DURATION_MS = 50  # openWakeWord processes audio in chunks (adjust if oww expects different chunk size)
 CHUNK_SAMPLES = int(SAMPLE_RATE * CHUNK_DURATION_MS / 1000) # Samples per chunk for VAD and command recording
 COMMAND_RECORD_TIMEOUT_SECONDS = 7 # Max duration for command recording
-# SILENCE_THRESHOLD_MULTIPLIER = 1.5 # This was for Vosk's energy, not directly usable.
 MIN_COMMAND_AUDIO_CHUNKS = 40 # Minimum audio chunks (2000ms) to ensure more time for command capture before silence detection
 VAD_SILENCE_AMPLITUDE_THRESHOLD = 0.01 # Updated to legacy threshold for VAD (float32 audio).
 # stt_silence_threshold (from config, in ms) is now used as duration of silence for VAD.
@@ -127,7 +126,6 @@ def run_wakeword_detection(
     stt_silence_threshold_ms: int, # Used for VAD in command recording
     wake_word_config_name: str, # Name of wake word from config (for logging)
     tts_module, 
-    use_whisper_stt: bool, # Should always be True
     process_query_callback_async, 
     async_event_loop: asyncio.AbstractEventLoop,
     oww_sensitivity_threshold: float,
@@ -325,7 +323,7 @@ def run_wakeword_detection(
                         manual_listen_trigger_event.clear()
 
                         if command_audio_data_np is not None and command_audio_data_np.size > 0:
-                            if use_whisper_stt and whisper_asr_instance:
+                            if whisper_asr_instance:
                                 logger.info("Transcribing command with Whisper (manual trigger)...")
                                 audio_to_transcribe = command_audio_data_np.flatten()
                                 logger.debug(f"Audio to Whisper (manual): Max amp={np.max(np.abs(audio_to_transcribe)):.4f}, Mean amp={np.mean(np.abs(audio_to_transcribe)):.4f}, dtype={audio_to_transcribe.dtype}, shape={audio_to_transcribe.shape}")
@@ -337,7 +335,7 @@ def run_wakeword_detection(
                                     logger.warning("Whisper returned empty transcription (manual).")
                                     play_beep("error", loop=False)
                             else:
-                                logger.error("Whisper STT not configured or ASR instance missing for manual trigger.")
+                                logger.error("Whisper ASR instance missing for manual trigger.")
                         else:
                             logger.warning("No audio recorded for manual trigger command.")
                         if wakeword_model_instance: wakeword_model_instance.reset()
@@ -364,7 +362,7 @@ def run_wakeword_detection(
                                 tts_module.cancel()
                             command_audio_data_np = record_command_audio(mic_device_id, stt_silence_threshold_ms, stop_detector_event)
                             if command_audio_data_np is not None and command_audio_data_np.size > 0:
-                                if use_whisper_stt and whisper_asr_instance:
+                                if whisper_asr_instance:
                                     logger.info("Transcribing command with Whisper after wake word...")
                                     audio_to_transcribe = command_audio_data_np.flatten()
                                     logger.debug(f"Audio to Whisper: Max amp={np.max(np.abs(audio_to_transcribe)):.4f}, Mean amp={np.mean(np.abs(audio_to_transcribe)):.4f}, dtype={audio_to_transcribe.dtype}, shape={audio_to_transcribe.shape}")
@@ -376,7 +374,7 @@ def run_wakeword_detection(
                                         logger.warning("Whisper returned empty transcription after wake word.")
                                         play_beep("error", loop=False)
                                 else:
-                                    logger.error("Whisper STT not configured or ASR instance missing.")
+                                    logger.error("Whisper ASR instance missing.")
                             else:
                                 logger.warning("No audio recorded for command after wake word.")
                             if wakeword_model_instance: wakeword_model_instance.reset()

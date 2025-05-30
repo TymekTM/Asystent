@@ -3,11 +3,31 @@ import os
 import logging
 import sys  # Added sys import
 from config import BASE_DIR
-from .ffmpeg_installer import ensure_ffmpeg_installed
+
+# Handle imports depending on execution context
+try:
+    from .ffmpeg_installer import ensure_ffmpeg_installed
+except ImportError:
+    # Fallback for direct execution or tests
+    try:
+        from ffmpeg_installer import ensure_ffmpeg_installed
+    except ImportError:
+        def ensure_ffmpeg_installed():
+            """Fallback function when ffmpeg_installer is not available"""
+            pass
 
 # Try to import sounddevice with dependency manager integration
 try:
     from .sounddevice_loader import get_sounddevice, is_sounddevice_available
+except ImportError:
+    # Fallback for direct execution or tests
+    try:
+        from sounddevice_loader import get_sounddevice, is_sounddevice_available
+    except ImportError:
+        def get_sounddevice():
+            return None
+        def is_sounddevice_available():
+            return False
     sd = get_sounddevice()
     SOUNDDEVICE_AVAILABLE = is_sounddevice_available()
     if SOUNDDEVICE_AVAILABLE:

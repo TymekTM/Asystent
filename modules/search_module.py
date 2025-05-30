@@ -7,6 +7,7 @@ from collections import OrderedDict
 from functools import lru_cache
 
 import httpx
+import anyio # Added anyio
 from bs4 import BeautifulSoup
 from charset_normalizer import from_bytes
 from duckduckgo_search import DDGS
@@ -16,7 +17,7 @@ from ai_module import chat_with_providers, remove_chain_of_thought
 from audio_modules.beep_sounds import play_beep, stop_beep
 from config import MAIN_MODEL
 # Ensure an event loop exists for synchronous contexts (fix for tests using run_until_complete)
-asyncio.set_event_loop(asyncio.new_event_loop())
+# asyncio.set_event_loop(asyncio.new_event_loop()) # Removed this problematic line
 from prompts import SEARCH_SUMMARY_PROMPT
 from performance_monitor import measure_performance # Add this import
 
@@ -151,6 +152,21 @@ async def _fetch_page(client: httpx.AsyncClient, url: str) -> str:
 
 
 @measure_performance
+async def _fetch_pages_concurrently(urls: list[str]) -> str:
+    """Fetch multiple pages concurrently and concatenate their content."""
+    if not urls:
+        return ""
+    
+    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+        tasks = [_fetch_page(client, url) for url in urls[:FETCH_CONCURRENCY]] # Limit concurrency
+        pages_content_list = await asyncio.gather(*tasks, return_exceptions=True)
+    
+    # Filter out exceptions and join successful results
+    successful_content = [str(content) for content in pages_content_list if isinstance(content, str) and content]
+    return " ".join(successful_content)
+
+
+@measure_performance
 async def _search_duckduckgo(query: str) -> list[str]:
     """Search DuckDuckGo with retry mechanism and rate limit handling."""
     global _last_ddgs_error_time
@@ -218,76 +234,84 @@ async def _fallback_search(query: str) -> list[str]:
 # ──────────────────────────────────────────
 
 @measure_performance
-async def search_handler(params: str = "", conversation_history: list | None = None, user_lang: str | None = None) -> str:
-    # Ensure params is a string (handle cases where params might be passed as a dict)
-    if isinstance(params, dict):
-        # Use 'query' key if present, else convert dict to string
-        params = params.get("query", "") if "query" in params else str(params)
-    if not params:
-        return "Podaj zapytanie wyszukiwania po komendzie !search"
+async def search_handler(query: str, user_id: str = None) -> str: # Added user_id for consistency if needed later
+    if not query:
+        return "Podaj zapytanie wyszukiwania."
 
+    normalized_query = normalize_query(query)
     now = time.time()
-    normalized = normalize_query(params)
-    cached_response = _search_cache.get(normalized, now)
-    if cached_response:
-        logger.info("Returning cached result for %s", params)
-        return cached_response
 
-    # Start search beep in loop until search completes
-    beep_process = await asyncio.to_thread(play_beep, "search", True)
+    # Check cache first
+    cached_result = _search_cache.get(normalized_query, now)
+    if cached_result:
+        logger.info(f"Cache hit for query: '{query}'")
+        return cached_result
 
     try:
-        # Attempt to get search results with built-in retry mechanism
-        urls = await _search_duckduckgo(params)
-        if not urls:
-            return "Nie znaleziono wyników."
+        await anyio.to_thread.run_sync(play_beep, "search", True) # Changed to anyio
 
-        # Fetch page contents concurrently with rate limiting
-        async with httpx.AsyncClient(timeout=TIMEOUT, http2=True) as client:
-            sem = asyncio.Semaphore(FETCH_CONCURRENCY)
+        search_results = await _search_duckduckgo(normalized_query)
+        pages_content_str = ""
 
-            async def sem_fetch(u):
-                async with sem:
-                    return await _fetch_page(client, u)
+        if search_results:
+            pages_content_str = await _fetch_pages_concurrently(search_results)
+        
+        # Fallback search if no results or no content from initial search
+        fallback_content_str = ""
+        if not search_results or not pages_content_str:
+            logger.info(f"No results or content from initial search for '{query}'. Trying fallback.")
+            fallback_urls = await _fallback_search(normalized_query) # Fallback gives URLs
+            if fallback_urls:
+                logger.info(f"Fallback search provided {len(fallback_urls)} URLs.")
+                fallback_content_str = await _fetch_pages_concurrently(fallback_urls)
+                if fallback_content_str:
+                    logger.info(f"Successfully fetched content from fallback URLs for '{query}'.")
+                    # Use fallback content if primary search yielded nothing
+                    if not pages_content_str: # Only use fallback if primary was empty
+                         pages_content_str = fallback_content_str
+                else:
+                    logger.warning(f"Fallback search URLs yielded no content for '{query}'.")
+            else:
+                logger.warning(f"Fallback search found no URLs for '{query}'.")
 
-            texts = [t for t in await asyncio.gather(*[sem_fetch(u) for u in urls[:FETCH_CONCURRENCY]]) if t]
 
-        if not texts:
-            return "Nie udało się pobrać treści stron. Spróbuj ponownie za chwilę."
+        if not pages_content_str: # Check if any content was actually fetched (primary or fallback)
+            logger.warning(f"No content to summarize for query: '{query}' after primary and fallback attempts.")
+            await anyio.to_thread.run_sync(stop_beep) # Changed to anyio
+            return "Nie znaleziono wyników. Spróbuj przeformułować zapytanie lub sprawdź połączenie internetowe."
 
-        combined = "\n\n".join(texts)[:PAGE_CHAR_LIMIT]
+        text_to_summarize = pages_content_str[:PAGE_CHAR_LIMIT]
+        
+        messages = [{"role": "user", "content": SEARCH_SUMMARY_PROMPT.format(query=query, text=text_to_summarize)}]
+        
+        # Use a default model or allow configuration
+        summary_response = await chat_with_providers(
+            model_name=MAIN_MODEL, 
+            messages=messages, 
+            user_id=user_id # Pass user_id if chat_with_providers supports it
+        )
 
-        lang_instruction = {
-            "pl": "Odpowiadaj po polsku. ",
-            "en": "Respond in English. ",
-        }.get(user_lang, f"Respond in {user_lang}. " if user_lang else "")
-
-        summary_messages = [
-            {"role": "system", "content": lang_instruction + SEARCH_SUMMARY_PROMPT},
-            {"role": "user", "content": f"Summarize the following text based on the user query: '{params}'\n\nText:\n{combined}"},
-        ]
-
-        response = await asyncio.to_thread(chat_with_providers, MAIN_MODEL, summary_messages)
-        summary = remove_chain_of_thought(response["message"]["content"].strip()) or "Nie udało się wygenerować podsumowania."
-
-        _search_cache.put(normalized, (now, params, summary))
-        return summary
+        if summary_response and summary_response.get("message", {}).get("content"):
+            final_summary = remove_chain_of_thought(summary_response["message"]["content"].strip())
+            _search_cache.put(normalized_query, (now, query, final_summary))
+            await anyio.to_thread.run_sync(stop_beep) # Changed to anyio
+            return final_summary
+        else:
+            logger.error(f"Failed to get summary from provider for query: '{query}'")
+            await anyio.to_thread.run_sync(stop_beep) # Changed to anyio
+            return "Błąd podczas generowania podsumowania. Spróbuj ponownie później."
 
     except DuckDuckGoSearchException as e:
-        logger.error("DuckDuckGo search error: %s", e)
-        return "Przepraszam, wystąpił problem z wyszukiwarką (ograniczenie liczby zapytań). Spróbuj ponownie za kilka minut."
-    
-    except httpx.HTTPError as e:
-        logger.error("HTTP error during search: %s", e)
-        return "Przepraszam, wystąpił problem z połączeniem internetowym. Spróbuj ponownie za chwilę."
-        
+        logger.error(f"Search error for query '{query}': {e}")
+        await anyio.to_thread.run_sync(stop_beep) # Changed to anyio
+        # Specific message for rate limit, more generic for other DDGS errors
+        if "Ratelimit" in str(e): # Check if this is how DDGS library signals rate limit
+             return "Przepraszam, przekroczono limit zapytań do wyszukiwarki. Spróbuj ponownie za chwilę."
+        return "Przepraszam, napotkałem chwilowy problem z wyszukiwaniem. Spróbuj ponownie za kilka minut."
     except Exception as e:
-        logger.error("Search handler error: %s", e, exc_info=True)
-        return "Błąd podczas przetwarzania wyszukiwania. Spróbuj ponownie lub zmień zapytanie."
-    finally:
-        # Stop the search beep when action completes
-        if beep_process:
-            await asyncio.to_thread(stop_beep, beep_process)
+        logger.error(f"Unexpected error in search_handler for query '{query}': {e}", exc_info=True)
+        await anyio.to_thread.run_sync(stop_beep) # Changed to anyio
+        return "Wystąpił nieoczekiwany błąd podczas wyszukiwania. Spróbuj ponownie później."
     
 # ──────────────────────────────────────────
 #  Command registration – same interface

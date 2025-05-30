@@ -172,12 +172,11 @@ def register():
         "command": "weather",
         "aliases": ["pogoda"],
         "description": "Pobiera pogodę i prognozę oraz inne dane z wttr.in",
-        "handler": handler,
-        "sub_commands": {
-            "current": {"function": _handle_current, "description": "Aktualna pogoda", "aliases": ["teraz"], "params_desc": "<lokacja> [lang=] [unit=]"},
-            "forecast": {"function": _handle_forecast, "description": "Prognoza", "aliases": ["prognoza"], "params_desc": "<lokacja> [dni] [lang=] [unit=]"},
-            "astronomy": {"function": _handle_astronomy, "description": "Dane astronomiczne", "aliases": ["astronomia", "astro"], "params_desc": "<lokacja> [dni] [lang=]"},
-            "map": {"function": _handle_map, "description": "Mapa pogodowa", "aliases": ["mapa"], "params_desc": "<lokacja> [lang=] [unit=]"}
+        "handler": handler,        "sub_commands": {
+            "current": {"function": _handle_current, "description": "Pobiera aktualną pogodę dla podanej lokacji", "aliases": ["teraz"], "params_desc": "<lokacja> [lang=] [unit=]"},
+            "forecast": {"function": _handle_forecast, "description": "Pobiera prognozę pogody na kilka dni", "aliases": ["prognoza"], "params_desc": "<lokacja> [dni] [lang=] [unit=]"},
+            "astronomy": {"function": _handle_astronomy, "description": "Pobiera dane astronomiczne jak wschód/zachód słońca", "aliases": ["astronomia", "astro"], "params_desc": "<lokacja> [dni] [lang=]"},
+            "map": {"function": _handle_map, "description": "Wyświetla mapę pogodową dla lokacji", "aliases": ["mapa"], "params_desc": "<lokacja> [lang=] [unit=]"}
         }
     }
     subs = info["sub_commands"]

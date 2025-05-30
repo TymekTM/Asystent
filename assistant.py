@@ -757,7 +757,6 @@ class Assistant:
                 self.stt_silence_threshold, 
                 self.wake_word,
                 self.tts,
-                self.use_whisper, 
                 self.process_query_from_audio, 
                 self.loop,
                 self.wake_word_sensitivity_threshold,

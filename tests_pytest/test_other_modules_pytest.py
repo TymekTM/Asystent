@@ -4,6 +4,7 @@
 import pytest
 import sys
 import os
+import importlib
 
 # Add project root to sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -30,7 +31,7 @@ def test_module_imports():
 def test_open_web_module_structure():
     """Test open_web_module structure"""
     try:
-        from open_web_module import register
+        from modules.open_web_module import register # Corrected import
         info = register()
         
         assert 'command' in info
@@ -45,7 +46,7 @@ def test_open_web_module_structure():
 def test_see_screen_module_structure():
     """Test see_screen_module structure"""
     try:
-        from see_screen_module import register
+        from modules.see_screen_module import register # Corrected import
         info = register()
         
         assert 'command' in info
@@ -60,7 +61,7 @@ def test_see_screen_module_structure():
 def test_music_module_structure():
     """Test music_module structure"""
     try:
-        from music_module import register
+        from modules.music_module import register # Corrected import
         info = register()
         
         assert 'command' in info
@@ -77,7 +78,7 @@ def test_music_module_structure():
 def test_deepseek_module_structure():
     """Test deepseek_module structure"""
     try:
-        from deepseek_module import register
+        from modules.deepseek_module import register # Corrected import
         info = register()
         
         assert 'command' in info
@@ -92,30 +93,38 @@ def test_deepseek_module_structure():
 def test_modules_registration_consistency():
     """Test that all modules follow consistent registration pattern"""
     modules_to_test = [
-        ('open_web_module', 'open_web'),
-        ('see_screen_module', 'see_screen'),
-        ('music_module', 'music'),
-        ('deepseek_module', 'deepseek')
+        # (module_path, expected_command_key_in_dict, expected_command_value, should_exist)
+        ('modules.open_web_module', 'command', 'open', True),
+        ('modules.see_screen_module', 'command', 'screenshot', True),
+        ('modules.music_module', 'command', 'music', True),
+        ('modules.deepseek_module', 'command', 'deep', True) # deepseek module uses 'deep' as its main command
     ]
-    
-    for module_name, expected_command in modules_to_test:
+
+    for module_path, command_key, expected_command_value, should_exist in modules_to_test:
         try:
-            module = __import__(module_name)
-            info = module.register()
+            module = importlib.import_module(module_path)
             
-            # Check basic structure
-            assert isinstance(info, dict)
-            assert 'command' in info
-            assert 'description' in info
+            if not hasattr(module, 'register') or not callable(module.register):
+                pytest.fail(f"{module_path} does not have a callable register function.")
+
+            registered_info = module.register()
+
+            assert isinstance(registered_info, dict), f"{module_path} did not return a dict"
+            assert command_key in registered_info, f"'{command_key}' is missing in {module_path} registration"
+            assert 'description' in registered_info, f"description is missing in {module_path} registration"
             
-            # Check command matches expected
-            if expected_command:
-                assert info['command'] == expected_command
+            # Check command value matches expected
+            actual_command_value = registered_info.get(command_key)
+            assert actual_command_value == expected_command_value, \
+                f"Command mismatch for {module_path}. Expected '{expected_command_value}', got '{actual_command_value}'"
                 
         except ImportError:
-            pytest.skip(f"{module_name} not available")
+            if should_exist:
+                pytest.fail(f"Module {module_path} not found but was expected.")
+            else:
+                pytest.skip(f"Module {module_path} not found and was not expected.")
         except Exception as e:
-            pytest.fail(f"Error testing {module_name}: {e}")
+            pytest.fail(f"Error testing {module_path}: {e}")
 
 
 def test_sub_commands_structure():

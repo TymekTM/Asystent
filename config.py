@@ -30,7 +30,6 @@ DEFAULT_CONFIG = {
   "WAKE_WORD": "gaja",
   "WAKE_WORD_SENSITIVITY_THRESHOLD": 0.35,
   "LANGUAGE": "pl-PL",
-  "SPEECH_RECOGNITION_PROVIDER": "google", # google, azure, openai
   "API_KEYS": {
     "OPENAI_API_KEY": "YOUR_OPENAI_API_KEY",
     "AZURE_SPEECH_KEY": "YOUR_AZURE_SPEECH_KEY",
@@ -38,13 +37,13 @@ DEFAULT_CONFIG = {
     "ANTHROPIC_API_KEY": "YOUR_ANTHROPIC_API_KEY",
     "DEEPSEEK_API_KEY": "YOUR_DEEPSEEK_API_KEY"
   },
-  "STT_MODEL": "whisper-1", # Speech-to-Text model
+  "STT_MODEL": "whisper-1", # Speech-to-Text model (cloud, e.g. OpenAI)
   "MAIN_MODEL": "gpt-4.1-nano",   # Main interaction LLM
   "PROVIDER": "openai", # Default provider for MAIN_MODEL if not specified in model string
   "DEEP_MODEL": "gpt-4.1-nano", # Model for deeper analysis if needed
   "MIC_DEVICE_ID": None,
   "STT_SILENCE_THRESHOLD": 500, # Milliseconds of silence to end STT
-  "WHISPER_MODEL": "openai/whisper-base", # Local whisper model
+  "WHISPER_MODEL": "openai/whisper-base", # Local whisper model (for wakeword confirmation or primary STT if cloud STT fails/disabled)
   "MAX_HISTORY_LENGTH": 10,
   "PLUGIN_MONITOR_INTERVAL": 30, # Seconds
   "LOW_POWER_MODE": False,
@@ -69,7 +68,6 @@ ASSISTANT_NAME = DEFAULT_CONFIG["ASSISTANT_NAME"]
 WAKE_WORD = DEFAULT_CONFIG["WAKE_WORD"]
 WAKE_WORD_SENSITIVITY_THRESHOLD = DEFAULT_CONFIG["WAKE_WORD_SENSITIVITY_THRESHOLD"]
 LANGUAGE = DEFAULT_CONFIG["LANGUAGE"]
-SPEECH_RECOGNITION_PROVIDER = DEFAULT_CONFIG["SPEECH_RECOGNITION_PROVIDER"]
 OPENAI_API_KEY = DEFAULT_CONFIG["API_KEYS"]["OPENAI_API_KEY"]
 AZURE_SPEECH_KEY = DEFAULT_CONFIG["API_KEYS"]["AZURE_SPEECH_KEY"]
 AZURE_SPEECH_REGION = DEFAULT_CONFIG["API_KEYS"]["AZURE_SPEECH_REGION"]
@@ -99,7 +97,7 @@ API_KEYS = DEFAULT_CONFIG["API_KEYS"].copy()
 
 def load_config(path=CONFIG_FILE_PATH):
     global _config, ASSISTANT_NAME, WAKE_WORD, WAKE_WORD_SENSITIVITY_THRESHOLD, LANGUAGE, \
-           SPEECH_RECOGNITION_PROVIDER, OPENAI_API_KEY, AZURE_SPEECH_KEY, AZURE_SPEECH_REGION, \
+           OPENAI_API_KEY, AZURE_SPEECH_KEY, AZURE_SPEECH_REGION, \
            STT_MODEL, MAIN_MODEL, PROVIDER, DEEP_MODEL, WHISPER_MODEL, \
            MAX_HISTORY_LENGTH, LOW_POWER_MODE, EXIT_WITH_CONSOLE, DEV_MODE, \
            AUTO_LISTEN_AFTER_TTS, TRACK_ACTIVE_WINDOW, ACTIVE_WINDOW_POLL_INTERVAL, \
@@ -152,7 +150,6 @@ def load_config(path=CONFIG_FILE_PATH):
     WAKE_WORD = _config.get("WAKE_WORD", DEFAULT_CONFIG["WAKE_WORD"])
     WAKE_WORD_SENSITIVITY_THRESHOLD = _config.get("WAKE_WORD_SENSITIVITY_THRESHOLD", DEFAULT_CONFIG["WAKE_WORD_SENSITIVITY_THRESHOLD"])
     LANGUAGE = _config.get("LANGUAGE", DEFAULT_CONFIG["LANGUAGE"])
-    SPEECH_RECOGNITION_PROVIDER = _config.get("SPEECH_RECOGNITION_PROVIDER", DEFAULT_CONFIG["SPEECH_RECOGNITION_PROVIDER"])
     
     API_KEYS = _config.get("API_KEYS", DEFAULT_CONFIG["API_KEYS"].copy())
     OPENAI_API_KEY = API_KEYS.get("OPENAI_API_KEY", DEFAULT_CONFIG["API_KEYS"]["OPENAI_API_KEY"])
@@ -193,6 +190,9 @@ def save_config(data_to_save=None, path=CONFIG_FILE_PATH):
     if data_to_save is None:
         data_to_save = _config
     
+    # Ensure legacy keys are not saved
+    data_to_save.pop("SPEECH_RECOGNITION_PROVIDER", None)
+            
     try:
         with open(path, 'w', encoding='utf-8') as f:
             json.dump(data_to_save, f, indent=2, ensure_ascii=False)

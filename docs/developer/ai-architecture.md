@@ -15,11 +15,9 @@ Input → Wake Word → STT → Language Detection → Query Refinement → Inte
 ### 1. Input Processing
 
 **Speech Recognition**
-- **Wake Word Detection**: Continuously listens for a trigger phrase via `audio_modules/wakeword_detector.py`
-- **Speech-to-Text (STT)**: Converts audio into text using either:
-  - Vosk (offline, lightweight) via `audio_modules/speech_recognition.py`
-  - Whisper (higher accuracy) via `audio_modules/whisper_asr.py`
-  - Automatic language detection for multilingual support
+- **Wake Word Detection**: Continuously listens for a trigger phrase via `audio_modules/wakeword_detector.py` using openWakeWord.
+- **Speech-to-Text (STT)**: Converts audio into text using Whisper (local or API) via `audio_modules/whisper_asr.py`.
+  - Automatic language detection for multilingual support is handled by Whisper.
 
 **Text Input**
 - Web UI chat interface 

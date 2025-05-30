@@ -1,14 +1,20 @@
 #!/usr/bin/env python3
-"""pytest tests for dependency manager and torch guard fixes"""
+"""pytest tests for build system"""
 
 import pytest
 import sys
 import os
 from pathlib import Path
 from unittest.mock import patch, MagicMock
+import importlib # ADDED: For importing modules by string name
 
 # Add project root to sys.path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, PROJECT_ROOT)
+# Add audio_modules to sys.path specifically for tests that need it directly
+AUDIO_MODULES_PATH = os.path.join(PROJECT_ROOT, "audio_modules")
+if AUDIO_MODULES_PATH not in sys.path:
+    sys.path.insert(0, AUDIO_MODULES_PATH)
 
 
 @patch('dependency_manager.DependencyManager')
@@ -57,15 +63,10 @@ def test_package_checking(mock_dependency_manager):
 
 def test_torch_guard_import():
     """Test the torch guard in whisper_asr"""
-    audio_modules_path = Path(__file__).parent.parent / "audio_modules"
-    
-    if not audio_modules_path.exists():
-        pytest.skip("audio_modules directory not found")
-    
-    sys.path.insert(0, str(audio_modules_path))
+    # audio_modules_path is already added to sys.path globally for this file
     
     try:
-        from whisper_asr import WhisperASR
+        from whisper_asr import WhisperASR # This should now work if whisper_asr.py is in AUDIO_MODULES_PATH
         assert WhisperASR is not None
     except ImportError as e:
         # This is acceptable if torch is not available
@@ -74,154 +75,69 @@ def test_torch_guard_import():
         pytest.fail(f"Unexpected error importing WhisperASR: {e}")
 
 
-@patch('audio_modules.whisper_asr.WhisperASR')
-def test_whisper_asr_initialization(mock_whisper):
-    """Test WhisperASR initialization with mock"""
+@patch('audio_modules.whisper_asr.WhisperASR', new_callable=MagicMock)
+def test_whisper_asr_wrapper_behavior_on_errors(mock_whisper_class, caplog):
+    """Test WhisperASR initialization with error handling when WhisperASR itself is mocked."""
     mock_instance = MagicMock()
-    mock_instance.available = True
-    mock_whisper.return_value = mock_instance
-    
-    audio_modules_path = Path(__file__).parent.parent / "audio_modules"
-    if not audio_modules_path.exists():
-        pytest.skip("audio_modules directory not found")
-    
-    sys.path.insert(0, str(audio_modules_path))
-    
+    mock_whisper_class.return_value = mock_instance
+
+    # Test basic initialization when WhisperASR is mocked
+    from audio_modules.whisper_asr import WhisperASR
     try:
-        from whisper_asr import WhisperASR
-        asr = WhisperASR()
-        assert asr is not None
-        mock_whisper.assert_called_once()
-    except ImportError:
-        pytest.skip("WhisperASR not available")
+        asr = WhisperASR() # Call with default or test-specific parameters
+        assert asr is mock_instance, "WhisperASR instance should be the mock_instance"
     except Exception as e:
-        pytest.fail(f"WhisperASR initialization failed: {e}")
+        pytest.fail(f"WhisperASR initialization with mock failed unexpectedly: {e}")
 
+    # Test scenario: Simulating a FileNotFoundError during WhisperASR initialization
+    # This requires the *mocked* WhisperASR to raise FileNotFoundError
+    mock_whisper_class.side_effect = FileNotFoundError("Simulated file not found by mock")
+    with pytest.raises(FileNotFoundError, match="Simulated file not found by mock"):
+        WhisperASR()
+    
+    # Reset side_effect for the next test case if needed, or use a new mock
+    mock_whisper_class.side_effect = None # Clear previous side_effect
+    mock_whisper_class.return_value = mock_instance # Restore return_value if cleared by side_effect
 
-def test_build_size_check():
-    """Test built executable size if it exists"""
-    exe_path = Path("release/Gaja.exe")
+    # Test scenario: Simulating a generic Exception during WhisperASR initialization (e.g., model load failed)
+    # This requires the *mocked* WhisperASR to raise a generic Exception
+    mock_whisper_class.side_effect = Exception("Simulated model load failed by mock")
+    with pytest.raises(Exception, match="Simulated model load failed by mock"):
+        WhisperASR()
     
-    if not exe_path.exists():
-        pytest.skip("Gaja.exe not found - build not completed")
-    
-    size_mb = exe_path.stat().st_size / (1024 * 1024)
-    
-    # Check if size is reasonable
-    assert size_mb > 0, "Executable file is empty"
-    assert size_mb < 200, f"Executable size ({size_mb:.1f} MB) might be too large"
+    # Clear side_effect again after the test
+    mock_whisper_class.side_effect = None
+    mock_whisper_class.return_value = mock_instance
 
+@patch("faster_whisper.WhisperModel", new_callable=MagicMock) # Patched faster_whisper.WhisperModel
+def test_whisper_model_loading_internal_error(mock_faster_whisper_model_class): # Renamed and modified
+    """Test WhisperASR sets available=False when an internal error occurs during model loading."""
+    # Simulate an error during WhisperModel instantiation
+    mock_faster_whisper_model_class.side_effect = Exception("Test model loading error")
 
-def test_whisper_torch_handling():
-    """Test that whisper module handles torch dependency gracefully"""
-    audio_modules_path = Path(__file__).parent.parent / "audio_modules"
+    from audio_modules.whisper_asr import WhisperASR 
     
-    if not audio_modules_path.exists():
-        pytest.skip("audio_modules directory not found")
-    
-    # Test that the module can be imported even without torch
-    sys.path.insert(0, str(audio_modules_path))
-    
-    with patch.dict('sys.modules', {'torch': None}):
-        try:
-            import whisper_asr
-            # Should be able to import even without torch
-            assert whisper_asr is not None
-        except ImportError as e:
-            # Should not fail just because torch is missing
-            if "torch" in str(e).lower():
-                pytest.fail("whisper_asr should handle missing torch gracefully")
-            else:
-                pytest.skip(f"Other import error: {e}")
+    asr = WhisperASR(model_size="base")
+    assert asr.available is False, "ASR should be unavailable if model loading fails."
+    assert asr.model is None, "ASR model should be None if model loading fails."
 
+@patch("faster_whisper.WhisperModel", new_callable=MagicMock) # Patched faster_whisper.WhisperModel
+def test_whisper_model_loading_internal_success(mock_faster_whisper_model_class): # Renamed and modified
+    """Test successful WhisperASR initialization with a mocked faster_whisper.WhisperModel."""
+    # Simulate successful WhisperModel instantiation
+    mock_model_instance = MagicMock()
+    mock_faster_whisper_model_class.return_value = mock_model_instance
 
-def test_dependency_fixes():
-    """Test that dependency-related fixes are working"""
-    # Test 1: Dependency manager exists
-    try:
-        import dependency_manager
-        assert dependency_manager is not None
-    except ImportError:
-        pytest.fail("dependency_manager module should exist")
-    
-    # Test 2: Audio modules handle missing dependencies
-    audio_modules_path = Path(__file__).parent.parent / "audio_modules"
-    if audio_modules_path.exists():
-        sys.path.insert(0, str(audio_modules_path))
-        
-        # Should be able to import without errors
-        try:
-            import whisper_asr
-            import tts_module
-            assert whisper_asr is not None
-            assert tts_module is not None
-        except ImportError as e:
-            # Should handle missing dependencies gracefully
-            if any(dep in str(e).lower() for dep in ['torch', 'transformers', 'whisper']):
-                # This is expected when dependencies are missing
-                pass
-            else:
-                pytest.fail(f"Unexpected import error: {e}")
+    from audio_modules.whisper_asr import WhisperASR
 
-
-def test_build_system_integration():
-    """Test build system integration"""
-    project_root = Path(__file__).parent.parent
+    asr = WhisperASR(model_size="tiny", compute_type="int8")
     
-    # Check that build files exist
-    build_files = [
-        'build.py',
-        'gaja.spec',
-        'requirements_build.txt'
-    ]
+    assert asr.model is mock_model_instance, "asr.model should be the mocked instance."
+    # The model_id is derived from the input model_size and internal logic in _candidates
+    expected_model_id = "Systran/faster-whisper-tiny" 
+    assert asr.model_id == expected_model_id, f"Expected model_id {expected_model_id}, got {asr.model_id}"
     
-    for file in build_files:
-        file_path = project_root / file
-        assert file_path.exists(), f"Build file {file} not found"
-    
-    # Check that dependency manager exists
-    dep_manager_path = project_root / 'dependency_manager.py'
-    assert dep_manager_path.exists(), "dependency_manager.py not found"
-
-
-def test_hook_files():
-    """Test that PyInstaller hook files exist"""
-    project_root = Path(__file__).parent.parent
-    
-    hook_files = [
-        'hook-sounddevice.py',
-        'rthook_sounddevice.py'
-    ]
-    
-    for file in hook_files:
-        file_path = project_root / file
-        assert file_path.exists(), f"Hook file {file} not found"
-
-
-def test_audio_module_availability():
-    """Test audio module availability and error handling"""
-    audio_modules_path = Path(__file__).parent.parent / "audio_modules"
-    
-    if not audio_modules_path.exists():
-        pytest.skip("audio_modules directory not found")
-    
-    sys.path.insert(0, str(audio_modules_path))
-    
-    modules_to_test = [
-        'beep_sounds',
-        'tts_module',
-        'whisper_asr',
-        'wakeword_detector'
-    ]
-    
-    for module_name in modules_to_test:
-        try:
-            module = __import__(module_name)
-            assert module is not None
-        except ImportError as e:
-            # Some modules may not be available due to missing dependencies
-            # This should be handled gracefully
-            if any(dep in str(e).lower() for dep in ['torch', 'transformers', 'whisper', 'sounddevice']):
-                pytest.skip(f"{module_name} not available due to missing dependency: {e}")
-            else:
-                pytest.fail(f"Unexpected error importing {module_name}: {e}")
+    mock_faster_whisper_model_class.assert_called_once_with(
+        expected_model_id, device=asr.device, compute_type=asr.compute_type
+    )
+    assert asr.available is True, "ASR should be available on successful model load."

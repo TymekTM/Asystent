@@ -12,6 +12,7 @@ from unittest.mock import patch, MagicMock
 import sys
 import os
 import importlib # ADDED: For reloading modules
+# REMOVED: import speech_recognition - will be imported from audio_modules if needed or mocked
 
 # Add project root to sys.path to allow importing audio_modules
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -22,6 +23,7 @@ from audio_modules import wakeword_detector
 from audio_modules import whisper_asr
 # Import the config module directly to mock load_config
 import config # MODIFIED: Import config directly
+# REMOVED: from audio_modules import speech_recognition
 
 # Mock config for tests
 @pytest.fixture(autouse=True) # MODIFIED: Added autouse=True
@@ -29,9 +31,7 @@ def mock_config_for_audio_tests(monkeypatch):
     # --- Mock config values --- 
     sample_config = {
         "MIC_DEVICE_ID": 0, 
-        # "VOSK_MODEL_PATH": "mock_vosk_model", # Removed
         "WAKE_WORD": "testword",
-        # "USE_WHISPER_FOR_COMMAND": False, # Removed
         "WHISPER_MODEL": "mock_whisper_model"
     }
     # MODIFIED: Mock config.load_config directly
@@ -96,14 +96,7 @@ def mock_config_for_audio_tests(monkeypatch):
                 pass # Ignore errors during this best-effort cleanup
             monkeypatch.setattr(original_global_instance, 'current_process', None)
 
-    # --- Mock SpeechRecognition and Wakeword components ---
-    # REMOVED global SpeechRecognizer mock:
-    # mock_sr_instance = MagicMock()
-    # mock_sr_instance.model = MagicMock()
-    # monkeypatch.setattr(speech_recognition, 'SpeechRecognizer', MagicMock(return_value=mock_sr_instance))
-    
-    mock_kaldi_recognizer = MagicMock()
-    monkeypatch.setattr(wakeword_detector, 'KaldiRecognizer', MagicMock(return_value=mock_kaldi_recognizer))
+    # --- Mock Wakeword components (no longer SpeechRecognition specific) ---
     monkeypatch.setattr(wakeword_detector, 'play_beep', MagicMock())
 
 
@@ -146,94 +139,3 @@ def test_list_input_audio_devices_query_devices_error(monkeypatch): # REMOVED mo
     input_devices = list_audio_devices.list_input_audio_devices()
     assert len(input_devices) == 1
     assert "Could not retrieve audio devices" in input_devices[0]
-
-def test_speech_recognizer_init_with_valid_device_id(mock_sd_devices, monkeypatch): # REMOVED mock_config_for_audio_tests
-    """Test SpeechRecognizer initialization with a valid device ID from config."""
-    # MODIFIED: Update the return value of the mocked config.load_config
-    config.load_config.return_value["MIC_DEVICE_ID"] = 0
-    
-    monkeypatch.setattr(speech_recognition, "Model", MagicMock())
-    monkeypatch.setattr(sd, "InputStream", MagicMock()) # ADDED InputStream mock
-    
-    try:
-        sr = speech_recognition.SpeechRecognizer()
-        # If stream is opened, it would use the device ID.
-        # We can't easily check the actual device used without deeper mocking of sounddevice.InputStream
-        # So, we mainly check that no error is raised.
-        assert sr.device_id == 0 
-    except Exception as e:
-        pytest.fail(f"SpeechRecognizer initialization failed with valid device ID: {e}")
-
-
-def test_speech_recognizer_init_with_invalid_device_id(mock_sd_devices, monkeypatch): # REMOVED mock_config_for_audio_tests
-    """Test SpeechRecognizer initialization with an invalid device ID."""
-    # MODIFIED: Update the return value of the mocked config.load_config
-    config.load_config.return_value["MIC_DEVICE_ID"] = 99
-    
-    monkeypatch.setattr(speech_recognition, "Model", MagicMock())
-    monkeypatch.setattr(sd, "InputStream", MagicMock()) # Mock InputStream
-
-    with pytest.raises(ValueError, match="Invalid microphone device ID: 99"):
-        speech_recognition.SpeechRecognizer()
-
-
-def test_speech_recognizer_init_with_non_input_device_id(mock_sd_devices, monkeypatch): # REMOVED mock_config_for_audio_tests
-    """Test SpeechRecognizer init with a device ID that is not an input device."""
-    # MODIFIED: Update the return value of the mocked config.load_config
-    config.load_config.return_value["MIC_DEVICE_ID"] = 1
-    
-    monkeypatch.setattr(speech_recognition, "Model", MagicMock())
-    monkeypatch.setattr(sd, "InputStream", MagicMock()) # Mock InputStream
-    
-    with pytest.raises(ValueError, match="Device ID 1 is not an input device."):
-        speech_recognition.SpeechRecognizer()
-
-def test_wakeword_detector_uses_speech_recognizer(mock_sd_devices, monkeypatch): # REMOVED mock_config_for_audio_tests
-    """Test that wakeword detector initializes and uses SpeechRecognizer."""
-    # MODIFIED: Update the return value of the mocked config.load_config
-    config.load_config.return_value["MIC_DEVICE_ID"] = 0
-    
-    # Define a local mock for SpeechRecognizer instance
-    local_mock_sr_instance = MagicMock()
-    local_mock_sr_instance.model = MagicMock() 
-    local_mock_sr_instance.stream = MagicMock() 
-    local_mock_sr_instance.stream.read.return_value = b'' 
-    
-    # Ensure SpeechRecognizer constructor is called and returns our local mock
-    mock_speech_recognizer_class = MagicMock(return_value=local_mock_sr_instance)
-    monkeypatch.setattr(speech_recognition, 'SpeechRecognizer', mock_speech_recognizer_class)
-
-    # Mock KaldiRecognizer to control its behavior (local mock for this test)
-    mock_kaldi_recognizer_instance = MagicMock()
-    mock_kaldi_recognizer_instance.AcceptWaveform.return_value = True # Process some data
-    mock_kaldi_recognizer_instance.Result.return_value = '{"text": "testword"}' # Simulate wake word detected
-    monkeypatch.setattr(wakeword_detector, 'KaldiRecognizer', MagicMock(return_value=mock_kaldi_recognizer_instance))
-    
-    tts_mock = MagicMock()
-    process_query_callback_mock = MagicMock(return_value="TERMINATE") # To stop the loop
-    loop_mock = MagicMock() # Dummy asyncio loop
-
-    # Run for a short duration or until callback signals termination
-    try:
-        wakeword_detector.run_wakeword_detection(
-            speech_recognizer=mock_speech_recognizer_class(), 
-            wake_word="testword",
-            tts=tts_mock,
-            use_whisper=False,
-            process_query_callback=process_query_callback_mock,
-            loop=loop_mock
-        )
-    except TypeError as e: # Catch if run_wakeword_detection tries to call SpeechRecognizer class again
-        if "KaldiRecognizer" in str(e) and "speech_recognizer.model" in str(e):
-             # This can happen if the mock_speech_recognizer_class is not properly passed/used
-             # and the actual class is called, leading to issues with its 'model' attribute.
-             pass # Expected if the loop runs and tries to use the recognizer
-        else:
-            raise e
-    
-    mock_speech_recognizer_class.assert_called_once()
-    # Check if KaldiRecognizer was initialized with the model from SpeechRecognizer
-    wakeword_detector.KaldiRecognizer.assert_called_with(local_mock_sr_instance.model, 16000) # Use local_mock_sr_instance
-    assert local_mock_sr_instance.stream.read.called # Use local_mock_sr_instance
-    mock_kaldi_recognizer_instance.AcceptWaveform.assert_called()
-    process_query_callback_mock.assert_called_once() # Ensure the callback was triggered
