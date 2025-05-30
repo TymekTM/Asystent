@@ -577,8 +577,7 @@ def generate_response(
         if not api_key:
             logger.error("OpenAI API key not found in configuration.")
             return '{"text": "Błąd: Klucz API OpenAI nie został skonfigurowany.", "command": "", "params": {}}'
-        
-        # Initialize function calling system if enabled and modules provided
+          # Initialize function calling system if enabled and modules provided
         function_calling_system = None
         functions = None
         
@@ -588,12 +587,16 @@ def generate_response(
             functions = function_calling_system.convert_modules_to_functions()
             logger.info(f"Function calling enabled with {len(functions)} functions")
             
-            # Simplified system prompt for function calling
-            system_prompt = f"""You are Asystent, a helpful AI assistant. You can call functions to help users.
-Current date: {datetime.datetime.now().strftime('%Y-%m-%d')}
-Detected language: {detected_language}
-
-Respond naturally and use the available functions when appropriate to help the user."""
+            # Use standard system prompt for function calling
+            system_prompt = build_full_system_prompt(
+                system_prompt_override=system_prompt_override,
+                detected_language=detected_language,
+                language_confidence=language_confidence,
+                tools_description="",  # Functions are handled separately
+                active_window_title=active_window_title,
+                track_active_window_setting=track_active_window_setting,
+                tool_suggestion=tool_suggestion
+            )
         else:
             # Traditional prompt-based approach
             system_prompt = build_full_system_prompt(

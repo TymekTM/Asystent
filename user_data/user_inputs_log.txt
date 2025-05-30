@@ -137,3 +137,16 @@
 2025-05-30T11:43:56.433049 | Czy jutro w sosnowcu będzie padać? | intent=weather_query | conf=0.81
 2025-05-30T11:44:20.390369 | Poproszę, zrób to. | intent=none | conf=0.24
 2025-05-30T11:45:40.570804 | Как вам на имя? | intent=none | conf=0.06
+2025-05-30T11:53:05.665080 | Ustaw proszę timer na minutę. | intent=timer_set | conf=0.67
+2025-05-30T11:53:05.711210 | Ustaw proszę tajmy na minutę. | intent=timer_set | conf=0.50
+2025-05-30T11:54:18.043458 | Otworzysz mi proszę YouTube? | intent=none | conf=0.34
+2025-05-30T11:54:18.058551 | Otworzysz mi proszę YouTube? | intent=none | conf=0.34
+2025-05-30T11:55:34.979979 | Jakie były wyniki tego rocznego grau Primonaco? | intent=none | conf=0.19
+2025-05-30T11:55:54.005215 | Chodziło mi o Grand Prix Monaco Formule I w 2025 roku. | intent=none | conf=0.09
+2025-05-30T11:56:48.464540 | Otworzysz mi proszę YouTube? | intent=none | conf=0.34
+2025-05-30T11:57:09.403258 | Jakie były wyniki wczorajszego meczu we Wododzławiu? | intent=none | conf=0.13
+2025-05-30T11:57:22.148689 | No właśnie nie wiem, wiem tyle, że mecz był we Wrocławiu. | intent=none | conf=0.13
+2025-05-30T11:57:42.302977 | Pomijisz, proszę piosenkę? | intent=shopping_add | conf=0.56
+2025-05-30T12:17:00.948724 | Zatrzymaj piosenkę. | intent=none | conf=0.06
+2025-05-30T12:17:12.645229 | A puścisz pod asenptną? | intent=none | conf=0.06
+2025-05-30T12:17:23.457555 | Pójdź następną piosenkę. | intent=none | conf=0.06
