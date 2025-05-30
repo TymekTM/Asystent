@@ -54,11 +54,11 @@ DEFAULT_CONFIG = {
   "query_refinement": {
     "model": "gpt-4.1-nano", # Model for query refinement
     "enabled": True
-  },
-  "version": "1.1.0", # Current assistant version
+  },  "version": "1.1.0", # Current assistant version
   "AUTO_LISTEN_AFTER_TTS": False, # Should assistant listen automatically after speaking?
   "TRACK_ACTIVE_WINDOW": False, # Track active window title for context
-  "ACTIVE_WINDOW_POLL_INTERVAL": 5 # Seconds
+  "ACTIVE_WINDOW_POLL_INTERVAL": 5, # Seconds
+  "USE_FUNCTION_CALLING": True # Enable OpenAI Function Calling (requires OpenAI provider)
 }
 
 # Global dictionary to hold the current configuration
@@ -93,6 +93,7 @@ version = DEFAULT_CONFIG["version"]
 AUTO_LISTEN_AFTER_TTS = DEFAULT_CONFIG["AUTO_LISTEN_AFTER_TTS"]
 TRACK_ACTIVE_WINDOW = DEFAULT_CONFIG["TRACK_ACTIVE_WINDOW"]
 ACTIVE_WINDOW_POLL_INTERVAL = DEFAULT_CONFIG["ACTIVE_WINDOW_POLL_INTERVAL"]
+USE_FUNCTION_CALLING = DEFAULT_CONFIG["USE_FUNCTION_CALLING"]
 API_KEYS = DEFAULT_CONFIG["API_KEYS"].copy()
 
 
@@ -102,7 +103,7 @@ def load_config(path=CONFIG_FILE_PATH):
            STT_MODEL, MAIN_MODEL, PROVIDER, DEEP_MODEL, WHISPER_MODEL, \
            MAX_HISTORY_LENGTH, LOW_POWER_MODE, EXIT_WITH_CONSOLE, DEV_MODE, \
            AUTO_LISTEN_AFTER_TTS, TRACK_ACTIVE_WINDOW, ACTIVE_WINDOW_POLL_INTERVAL, \
-           ANTHROPIC_API_KEY, DEEPSEEK_API_KEY, \
+           USE_FUNCTION_CALLING, ANTHROPIC_API_KEY, DEEPSEEK_API_KEY, \
            MIC_DEVICE_ID, STT_SILENCE_THRESHOLD, API_KEYS, query_refinement, version, \
            PLUGIN_MONITOR_INTERVAL, FIRST_RUN
 
@@ -179,6 +180,7 @@ def load_config(path=CONFIG_FILE_PATH):
     AUTO_LISTEN_AFTER_TTS = _config.get("AUTO_LISTEN_AFTER_TTS", DEFAULT_CONFIG["AUTO_LISTEN_AFTER_TTS"])
     TRACK_ACTIVE_WINDOW = _config.get("TRACK_ACTIVE_WINDOW", DEFAULT_CONFIG["TRACK_ACTIVE_WINDOW"])
     ACTIVE_WINDOW_POLL_INTERVAL = _config.get("ACTIVE_WINDOW_POLL_INTERVAL", DEFAULT_CONFIG["ACTIVE_WINDOW_POLL_INTERVAL"])
+    USE_FUNCTION_CALLING = _config.get("USE_FUNCTION_CALLING", DEFAULT_CONFIG["USE_FUNCTION_CALLING"])
     FIRST_RUN = _config.get("FIRST_RUN", DEFAULT_CONFIG["FIRST_RUN"])
 
     return _config # Return the global _config dict itself

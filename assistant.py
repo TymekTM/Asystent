@@ -37,7 +37,7 @@ from config import (
     WHISPER_MODEL, MAX_HISTORY_LENGTH,
     LOW_POWER_MODE, DEV_MODE,
     TRACK_ACTIVE_WINDOW, ACTIVE_WINDOW_POLL_INTERVAL, WAKE_WORD_SENSITIVITY_THRESHOLD,
-    AUTO_LISTEN_AFTER_TTS # Ensure AUTO_LISTEN_AFTER_TTS is imported if used as a global default
+    AUTO_LISTEN_AFTER_TTS, USE_FUNCTION_CALLING # Ensure USE_FUNCTION_CALLING is imported
 )
 from config import _config
 QUERY_REFINEMENT_ENABLED = False  # prompt refinement disabled for new testing approach
@@ -532,21 +532,23 @@ class Assistant:
                         break
             if module_key:
                 mod = self.modules[module_key]
-                tool_suggestion = f"{module_key} - {mod.get('description','')}"
-
-        # 4. LLM response        # We no longer build the system prompt here
-        # The generate_response function will build it internally
-        # This avoids duplication in the logs# generate_response returns a JSON string
+                tool_suggestion = f"{module_key} - {mod.get('description','')}"        # 4. LLM response with function calling support
+        # Check if function calling is enabled (default to True for OpenAI)
+        use_function_calling = _config.get('USE_FUNCTION_CALLING', True)
+        
         response_json_str = generate_response(
             list(self.conversation_history), # Pass a list copy
             tools_info=functions_info,
-            system_prompt_override=None,  # We're already building the system_prompt above
+            system_prompt_override=None,
             detected_language=lang_code,
             language_confidence=lang_conf,
             active_window_title=self.current_active_window if self.track_active_window else None,
             track_active_window_setting=self.track_active_window,
-            tool_suggestion=tool_suggestion
-        )
+            tool_suggestion=tool_suggestion,
+            modules=self.modules if use_function_calling else None,
+            use_function_calling=use_function_calling
+        )        
+        
         logger.info("AI response (raw JSON string): %s", response_json_str)
         
         # Log the raw API response 
@@ -557,7 +559,48 @@ class Assistant:
                 api_response_msg = {"role": "assistant_api", "content": response_json_str}
                 f.write(f"{datetime.datetime.now().isoformat()} | {json.dumps(api_response_msg, ensure_ascii=False)}\n")
         except Exception as log_exc:
-            logger.warning(f"[API Log] Failed to log API response: {log_exc}")
+            logger.warning(f"[API Log] Failed to log API response: {log_exc}")        # Check if function calling was used and functions were executed
+        try:
+            # Try to parse the response to check for function_calls_executed flag
+            parsed_response = json.loads(response_json_str) if isinstance(response_json_str, str) else response_json_str
+            if use_function_calling and parsed_response.get("function_calls_executed"):
+                # Function calling handled the request completely
+                logger.info("Function calling executed. Processing complete.")
+                # Extract response text and speak it if available
+                response_text = parsed_response.get("text", "")
+                
+                # Check for system listen command in response
+                listen_after_tts = self.auto_listen_after_tts if not TextMode else False
+                if "SYSTEM_LISTEN_AFTER_TTS:" in response_text:
+                    # Extract listen flag from system response
+                    if "SYSTEM_LISTEN_AFTER_TTS:True" in response_text:
+                        listen_after_tts = True
+                    elif "SYSTEM_LISTEN_AFTER_TTS:False" in response_text:
+                        listen_after_tts = False
+                    # Remove system command from response text
+                    response_text = response_text.replace("SYSTEM_LISTEN_AFTER_TTS:True", "").replace("SYSTEM_LISTEN_AFTER_TTS:False", "").strip()
+                
+                if response_text:
+                    await self.speak_and_maybe_listen(response_text, listen_after_tts, TextMode)
+                return
+        except (json.JSONDecodeError, TypeError) as e:            logger.debug(f"Response is not JSON or missing function_calls_executed flag: {e}")
+            # Continue with traditional parsing only if function calling is disabled
+        
+        # Skip traditional command parsing if function calling is enabled
+        if use_function_calling:
+            logger.info("Function calling enabled but no functions were executed. Speaking AI response directly.")
+            try:
+                parsed_response = json.loads(response_json_str) if isinstance(response_json_str, str) else response_json_str
+                response_text = parsed_response.get("text", response_json_str)
+            except (json.JSONDecodeError, TypeError):
+                response_text = response_json_str
+            
+            listen_after_tts = self.auto_listen_after_tts if not TextMode else False
+            if response_text:
+                await self.speak_and_maybe_listen(response_text, listen_after_tts, TextMode)
+            return
+        
+        # Traditional command parsing approach (for backward compatibility when function calling is disabled)
         
         # parse_response handles json.loads and error cases
         structured_output = parse_response(response_json_str) 
