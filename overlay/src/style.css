@@ -1,0 +1,161 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Gaja Branding Palette */
+  --gaja-mint: #98E6C0;
+  --gaja-blue: #B0D9E8;
+  --gaja-peach: #F5D6A0;
+  --gaja-rose: #F4B6B6;
+  --gaja-charcoal: #2E2E2E;
+  --gaja-soft: #F6F6F6;
+
+  /* Design system variables from branding */
+  --bg-overlay: rgba(46, 46, 46, 0.8); /* Darker semi-transparent for better text visibility */
+  --text-overlay: var(--gaja-soft);
+  --card-overlay-bg: rgba(255, 255, 255, 0.15); /* Subtle glassmorphism */
+  
+  --gaja-border-radius-xl: 1.5rem;
+  --gaja-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --gaja-font-family: 'Poppins', 'Inter', sans-serif;
+}
+
+body, html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: transparent; /* Crucial for overlay */
+  font-family: var(--gaja-font-family);
+  color: var(--text-overlay); /* Default text color for overlay */
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center; /* Center horizontally */
+  align-items: flex-end;   /* Align to bottom */
+  padding: 20px; /* Add some padding so overlay doesn't touch edges */
+  box-sizing: border-box;
+}
+
+.overlay-container {
+  background-color: var(--card-overlay-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 25px 35px;
+  border-radius: var(--gaja-border-radius-xl);
+  text-align: center;
+  max-width: 70%; /* Max width of the overlay content */
+  margin-bottom: 30px; /* Space from bottom */
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); /* Enhanced shadow for glass */
+  border: 1px solid rgba(255, 255, 255, 0.18); /* Subtle border for glass effect */
+  
+  transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+  opacity: 1;
+  transform: translateY(0);
+  color: var(--text-overlay);
+}
+
+.overlay-container.hidden {
+  opacity: 0;
+  transform: translateY(100px); /* Animate out downwards */
+}
+
+.text-display {
+  font-size: 1.75rem; /* Larger text */
+  font-weight: 500;
+  margin-bottom: 20px;
+  word-wrap: break-word;
+  line-height: 1.4;
+}
+
+.status-indicator {
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 15px;
+  padding: 8px 15px;
+  border-radius: 2rem; /* Pill shape like .btn-gaja */
+  display: inline-block;
+  color: var(--gaja-charcoal); /* Dark text on light badges */
+}
+
+.listening {
+  background-color: var(--gaja-mint);
+}
+
+.speaking {
+  background-color: var(--gaja-peach);
+}
+
+.wakeword {
+  background-color: var(--gaja-rose);
+}
+
+/* Animations with Gaja Branding Colors */
+@keyframes pulse-listening {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(152, 230, 192, 0.7); } /* --gaja-mint */
+  70% { transform: scale(1.02); box-shadow: 0 0 15px 10px rgba(152, 230, 192, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(152, 230, 192, 0); }
+}
+
+.listening-animation .status-indicator.listening { /* Target the badge itself for animation */
+  animation: pulse-listening 2s infinite;
+}
+.listening-animation { /* Keep border on container if desired */
+   border: 2px solid var(--gaja-mint);
+}
+
+
+@keyframes glow-speaking {
+  0% { box-shadow: 0 0 5px var(--gaja-peach), 0 0 10px var(--gaja-peach); }
+  50% { box-shadow: 0 0 20px var(--gaja-peach), 0 0 30px var(--gaja-peach); }
+  100% { box-shadow: 0 0 5px var(--gaja-peach), 0 0 10px var(--gaja-peach); }
+}
+
+.speaking-animation .status-indicator.speaking {
+  animation: glow-speaking 1.5s infinite alternate;
+}
+.speaking-animation {
+  border: 2px solid var(--gaja-peach);
+}
+
+
+@keyframes pop-wakeword {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.wakeword-animation .status-indicator.wakeword {
+  animation: pop-wakeword 0.8s ease-in-out; /* Run once or a few times? For now, infinite */
+  animation-iteration-count: 2; /* Pop a couple of times */
+}
+.wakeword-animation {
+   border: 2px solid var(--gaja-rose);
+}
+
+/* Ensure container border animation does not add too much visual noise if badge is also animated */
+.listening-animation,
+.speaking-animation,
+.wakeword-animation {
+  /* Common style for animated container border if needed, or remove if too busy */
+  /* For example, a subtle border:
+  border: 2px solid transparent; 
+  transition: border-color 0.3s ease;
+  */
+  /* Removing empty rules by commenting out or adding a placeholder if needed */
+  /* border: 2px solid transparent; */ /* Example placeholder */
+}
+
+/* Specific animation border colors, applied when active */
+.listening-animation {
+  border-color: var(--gaja-mint);
+}
+.speaking-animation {
+  border-color: var(--gaja-peach);
+}
+.wakeword-animation {
+  border-color: var(--gaja-rose);
+}

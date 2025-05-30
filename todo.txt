@@ -2,9 +2,9 @@
 - Zweryfikować działanie innych rzeczy w core (timer działa)
 - When AI wants to activate listening and user does the same at the same time it just happens twice
 - Dodawanie użytkownika nie działa
-- Nie działa wiele języków
+- Nie działa wiele języków w web panel
 - Po skończeniu onboarding restart asystenta by załadować zmiany
-- Moduł od muzyki (jeśli nie działa jak powinien)
+- Moduł od muzyki klucz spotify
 - Fix tooltip placement and width on smaller screens
 - Manualne dodawanie wspomnień robi to 2x
 

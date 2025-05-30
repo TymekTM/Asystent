@@ -178,7 +178,7 @@ def setup_api_routes(app, assistant_queue):
         return jsonify({"error": "Assistant connection not available."}), 503
 
     @app.route('/api/status', methods=['GET'])
-    @login_required()
+    # @login_required() # Removed for Tauri overlay access
     def api_status():
         """API endpoint for assistant status (for dashboard polling)."""
         lock_path = os.path.join(os.path.dirname(__file__), '..', '..', 'assistant_restarting.lock')

@@ -16,3 +16,5 @@ modules.zip
 resources.zip
 /release
 /Gaja_test
+/overlay/node_modules
+/overlay/target
