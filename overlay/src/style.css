@@ -1,161 +1,327 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
-
-:root {
-  /* Gaja Branding Palette */
-  --gaja-mint: #98E6C0;
-  --gaja-blue: #B0D9E8;
-  --gaja-peach: #F5D6A0;
-  --gaja-rose: #F4B6B6;
-  --gaja-charcoal: #2E2E2E;
-  --gaja-soft: #F6F6F6;
-
-  /* Design system variables from branding */
-  --bg-overlay: rgba(46, 46, 46, 0.8); /* Darker semi-transparent for better text visibility */
-  --text-overlay: var(--gaja-soft);
-  --card-overlay-bg: rgba(255, 255, 255, 0.15); /* Subtle glassmorphism */
-  
-  --gaja-border-radius-xl: 1.5rem;
-  --gaja-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  --gaja-font-family: 'Poppins', 'Inter', sans-serif;
-}
-
-body, html {
-  margin: 0;
-  padding: 0;
+/* Base HTML and Body styles for fullscreen transparent overlay */
+html,
+body {
   width: 100%;
   height: 100%;
-  overflow: hidden;
-  background-color: transparent; /* Crucial for overlay */
-  font-family: var(--gaja-font-family);
-  color: var(--text-overlay); /* Default text color for overlay */
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Prevent scrollbars on the overlay itself */
+  background-color: transparent; /* Crucial for the overlay */
+  color: var(--text, #2E2E2E); /* Default text color from Gaja branding */
+  font-family: var(--gaja-font-family, 'Poppins', 'Inter', sans-serif); /* Default font */
 }
 
 #root {
   width: 100%;
   height: 100%;
   display: flex;
-  justify-content: center; /* Center horizontally */
-  align-items: flex-end;   /* Align to bottom */
-  padding: 20px; /* Add some padding so overlay doesn't touch edges */
-  box-sizing: border-box;
+  flex-direction: column;
+  justify-content: center; /* Center content vertically */
+  align-items: center; /* Center content horizontally */
+  background-color: transparent; /* Ensure root is also transparent */
 }
 
-.overlay-container {
-  background-color: var(--card-overlay-bg);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  padding: 25px 35px;
-  border-radius: var(--gaja-border-radius-xl);
-  text-align: center;
-  max-width: 70%; /* Max width of the overlay content */
-  margin-bottom: 30px; /* Space from bottom */
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); /* Enhanced shadow for glass */
-  border: 1px solid rgba(255, 255, 255, 0.18); /* Subtle border for glass effect */
+/* Gaja Branding Styles - Modern Glassmorphism Design */
+
+:root {
+  /* Color palette - Tailwind style */
+  --gaja-mint: #98E6C0;
+  --gaja-blue: #B0D9E8;
+  --gaja-peach: #F5D6A0;
+  --gaja-rose: #F4B6B6;
+  --gaja-charcoal: #2E2E2E;
+  --gaja-soft: #F6F6F6;
   
-  transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
-  opacity: 1;
-  transform: translateY(0);
-  color: var(--text-overlay);
+  /* Design system variables */
+  --bg: var(--gaja-soft); /* Default background, not used for overlay body */
+  --text: var(--gaja-charcoal);
+  --card: rgba(255, 255, 255, 0.7);
+  
+  /* Styling variables */
+  --gaja-border-radius-xl: 1.5rem;
+  --gaja-border-radius-2xl: 2rem;
+  --gaja-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --gaja-font-family: 'Poppins', 'Inter', sans-serif;
+  
+  /* Container sizing */
+  --gaja-container-max: 1440px;
+  --gaja-container-padding: 2rem;
 }
 
-.overlay-container.hidden {
-  opacity: 0;
-  transform: translateY(100px); /* Animate out downwards */
+/* Container styles (less relevant for fullscreen overlay but included for completeness) */
+.container,
+.container-fluid {
+  max-width: var(--gaja-container-max);
+  padding-left: var(--gaja-container-padding);
+  padding-right: var(--gaja-container-padding);
 }
 
-.text-display {
-  font-size: 1.75rem; /* Larger text */
+/* Glassmorphism card styles (can be adapted for overlay elements) */
+.card {
+  background-color: var(--card);
+  border-radius: var(--gaja-border-radius-xl);
+  box-shadow: var(--gaja-shadow);
+  border: none;
+  margin-bottom: 1.5rem;
+  backdrop-filter: blur(5px);
+}
+
+.card-header {
+  background-color: var(--gaja-mint);
+  color: var(--text);
+  border-top-left-radius: var(--gaja-border-radius-xl) !important;
+  border-top-right-radius: var(--gaja-border-radius-xl) !important;
+  border: none;
   font-weight: 500;
-  margin-bottom: 20px;
-  word-wrap: break-word;
-  line-height: 1.4;
+}
+
+/* Button styles - Gaja style */
+.btn-gaja {
+  background-color: var(--gaja-peach);
+  color: var(--gaja-charcoal);
+  padding: 0.6rem 1.4rem;
+  border: none;
+  border-radius: 2rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-gaja:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Welcome message - Glassmorphism style (Good candidate for overlay text) */
+.gaja-welcome {
+  background-color: rgba(176, 217, 232, 0.4); /* Semi-transparent blue */
+  color: var(--text);
+  padding: 1.5rem 2rem;
+  border-radius: var(--gaja-border-radius-2xl);
+  margin-bottom: 2rem;
+  box-shadow: var(--gaja-shadow);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+}
+
+/* Add shimmer effect */
+.gaja-welcome::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+.gaja-welcome h1 {
+  font-weight: 600;
+  font-size: 1.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.gaja-welcome p {
+  margin-bottom: 0;
+  opacity: 0.9;
+}
+
+/* Styles for the overlay elements from App.jsx */
+.overlay-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  box-sizing: border-box;
+  background-color: transparent; /* Ensure container is transparent */
+  text-align: center;
 }
 
 .status-indicator {
-  font-size: 1rem;
+  /* Using gaja-welcome style as a base for the status message box */
+  background-color: rgba(176, 217, 232, 0.5); /* gaja-blue with alpha */
+  color: var(--gaja-charcoal);
+  padding: 1rem 1.5rem;
+  border-radius: var(--gaja-border-radius-xl);
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
   font-weight: 500;
-  margin-bottom: 15px;
-  padding: 8px 15px;
-  border-radius: 2rem; /* Pill shape like .btn-gaja */
-  display: inline-block;
-  color: var(--gaja-charcoal); /* Dark text on light badges */
+  box-shadow: var(--gaja-shadow);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  min-width: 200px; /* Ensure a minimum width */
 }
 
-.listening {
-  background-color: var(--gaja-mint);
+.status-indicator.listening {
+  background-color: rgba(152, 230, 192, 0.6); /* gaja-mint with alpha */
 }
 
-.speaking {
-  background-color: var(--gaja-peach);
+.status-indicator.speaking {
+  background-color: rgba(245, 214, 160, 0.6); /* gaja-peach with alpha */
 }
 
-.wakeword {
-  background-color: var(--gaja-rose);
+.status-indicator.wakeword {
+  background-color: rgba(244, 182, 182, 0.6); /* gaja-rose with alpha */
 }
 
-/* Animations with Gaja Branding Colors */
-@keyframes pulse-listening {
-  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(152, 230, 192, 0.7); } /* --gaja-mint */
-  70% { transform: scale(1.02); box-shadow: 0 0 15px 10px rgba(152, 230, 192, 0); }
-  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(152, 230, 192, 0); }
+.text-display {
+  /* Using gaja-welcome style as a base for the main text display */
+  background-color: rgba(255, 255, 255, 0.6); /* Lighter, more transparent card */
+  color: var(--gaja-charcoal);
+  padding: 1.5rem 2.5rem;
+  border-radius: var(--gaja-border-radius-2xl);
+  font-size: 1.8rem;
+  line-height: 1.6;
+  box-shadow: var(--gaja-shadow);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  max-width: 70%; /* Prevent text from being too wide */
+  margin-top: 1rem;
 }
 
-.listening-animation .status-indicator.listening { /* Target the badge itself for animation */
-  animation: pulse-listening 2s infinite;
-}
-.listening-animation { /* Keep border on container if desired */
-   border: 2px solid var(--gaja-mint);
-}
-
-
-@keyframes glow-speaking {
-  0% { box-shadow: 0 0 5px var(--gaja-peach), 0 0 10px var(--gaja-peach); }
-  50% { box-shadow: 0 0 20px var(--gaja-peach), 0 0 30px var(--gaja-peach); }
-  100% { box-shadow: 0 0 5px var(--gaja-peach), 0 0 10px var(--gaja-peach); }
+/* Animation placeholder styles (from App.jsx) */
+.speaking-animation .status-indicator.speaking,
+.listening-animation .status-indicator.listening,
+.wakeword-animation .status-indicator.wakeword {
+    animation: pulse-active-status 1.5s infinite ease-in-out;
 }
 
-.speaking-animation .status-indicator.speaking {
-  animation: glow-speaking 1.5s infinite alternate;
-}
-.speaking-animation {
-  border: 2px solid var(--gaja-peach);
-}
-
-
-@keyframes pop-wakeword {
+@keyframes pulse-active-status {
   0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.1); opacity: 0.8; }
+  50% { transform: scale(1.05); opacity: 0.7; }
   100% { transform: scale(1); opacity: 1; }
 }
 
-.wakeword-animation .status-indicator.wakeword {
-  animation: pop-wakeword 0.8s ease-in-out; /* Run once or a few times? For now, infinite */
-  animation-iteration-count: 2; /* Pop a couple of times */
-}
-.wakeword-animation {
-   border: 2px solid var(--gaja-rose);
+
+/* Copied from gaja-branding.css, excluding :root and body as they are handled above */
+
+/* Grid system - 12 column layout */
+.gaja-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1.5rem;
 }
 
-/* Ensure container border animation does not add too much visual noise if badge is also animated */
-.listening-animation,
-.speaking-animation,
-.wakeword-animation {
-  /* Common style for animated container border if needed, or remove if too busy */
-  /* For example, a subtle border:
-  border: 2px solid transparent; 
-  transition: border-color 0.3s ease;
-  */
-  /* Removing empty rules by commenting out or adding a placeholder if needed */
-  /* border: 2px solid transparent; */ /* Example placeholder */
+/* Form elements */
+.form-control, .form-select {
+  border-radius: var(--gaja-border-radius-xl);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 0.75rem 1rem;
+  background-color: rgba(255, 255, 255, 0.8);
 }
 
-/* Specific animation border colors, applied when active */
-.listening-animation {
-  border-color: var(--gaja-mint);
+/* Module cards */
+.module-card {
+  border-radius: var(--gaja-border-radius-xl);
+  transition: all 0.3s ease;
+  position: relative;
 }
-.speaking-animation {
-  border-color: var(--gaja-peach);
+
+.module-card:hover {
+  transform: translateY(-5px);
 }
-.wakeword-animation {
-  border-color: var(--gaja-rose);
+
+.module-card .card-header {
+  background-color: var(--gaja-blue);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Active module pulse effect */
+.module-card.active::before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  border-radius: var(--gaja-border-radius-xl);
+  border: 2px solid var(--gaja-mint);
+  animation: pulse 2s infinite;
+  z-index: -1;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.5; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Status badges & indicators from gaja-branding, might be useful */
+.badge {
+  border-radius: 1rem;
+  padding: 0.4rem 0.8rem;
+}
+
+.badge.pulse {
+  animation: pulse-badge 2s infinite;
+}
+
+@keyframes pulse-badge {
+  0% { opacity: 1; }
+  50% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+.status-panel {
+  background-color: rgba(152, 230, 192, 0.2);
+  border-radius: var(--gaja-border-radius-xl);
+  padding: 1rem 1.5rem;
+  color: var(--text);
+}
+
+/* Ensure dark mode overrides from gaja-branding are also present if you plan to support it */
+[data-bs-theme="dark"] {
+  --bg: #1b1b1b;
+  --text: #eeeeee;
+  --card: rgba(42, 42, 42, 0.8);
+  /* The overlay body is transparent, so --bg might not be directly visible on body,
+     but components using --bg will pick this up. */
+}
+
+[data-bs-theme="dark"] .overlay-container,
+[data-bs-theme="dark"] .status-indicator,
+[data-bs-theme="dark"] .text-display {
+    color: var(--text); /* Ensure text color updates for dark mode */
+}
+
+[data-bs-theme="dark"] .status-indicator {
+  background-color: rgba(62, 62, 62, 0.7); /* Darker semi-transparent background */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-bs-theme="dark"] .status-indicator.listening {
+  background-color: rgba(80, 120, 100, 0.7);
+}
+
+[data-bs-theme="dark"] .status-indicator.speaking {
+  background-color: rgba(120, 100, 80, 0.7);
+}
+
+[data-bs-theme="dark"] .status-indicator.wakeword {
+  background-color: rgba(120, 80, 80, 0.7);
+}
+
+[data-bs-theme="dark"] .text-display {
+  background-color: rgba(30, 30, 30, 0.75); /* Darker semi-transparent background */
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }

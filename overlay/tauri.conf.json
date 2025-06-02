@@ -72,11 +72,11 @@
     },
     "windows": [
       {
-        "fullscreen": true,
-        "height": 1080,
+        "fullscreen": false,
+        "height": 600,
         "resizable": false,
         "title": "Asystent Overlay",
-        "width": 1920,
+        "width": 800,
         "decorations": false,
         "transparent": true,
         "alwaysOnTop": true,

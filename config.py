@@ -53,11 +53,28 @@ DEFAULT_CONFIG = {
   "query_refinement": {
     "model": "gpt-4.1-nano", # Model for query refinement
     "enabled": True
-  },  "version": "1.1.0", # Current assistant version
+  },
+  "version": "1.1.0", # Current assistant version
   "AUTO_LISTEN_AFTER_TTS": False, # Should assistant listen automatically after speaking?
   "TRACK_ACTIVE_WINDOW": False, # Track active window title for context
   "ACTIVE_WINDOW_POLL_INTERVAL": 5, # Seconds
-  "USE_FUNCTION_CALLING": True # Enable OpenAI Function Calling (requires OpenAI provider)
+  "USE_FUNCTION_CALLING": True, # Enable OpenAI Function Calling (requires OpenAI provider)
+  "daily_briefing": {
+    "enabled": True, # Enable daily briefing feature
+    "startup_briefing": True, # Deliver briefing on startup
+    "scheduled_briefing": False, # Enable scheduled briefings
+    "briefing_time": "08:00", # Time for scheduled briefing (HH:MM format)
+    "location": "Warsaw,PL", # Location for weather information
+    "user_name": "Tymek", # User name for personalized greetings
+    "briefing_style": "normal", # Briefing style: normal, funny, serious
+    "use_ai_generation": True, # Use AI to generate personalized briefings
+    "include_weather": True, # Include weather in briefing
+    "include_calendar": True, # Include calendar events and reminders
+    "include_holidays": True, # Include Polish holidays
+    "include_memories": True, # Include memories and historical data
+    "weekend_briefing": True, # Deliver briefings on weekends
+    "min_interval_hours": 12 # Minimum hours between briefings
+  }
 }
 
 # Global dictionary to hold the current configuration
@@ -93,6 +110,7 @@ TRACK_ACTIVE_WINDOW = DEFAULT_CONFIG["TRACK_ACTIVE_WINDOW"]
 ACTIVE_WINDOW_POLL_INTERVAL = DEFAULT_CONFIG["ACTIVE_WINDOW_POLL_INTERVAL"]
 USE_FUNCTION_CALLING = DEFAULT_CONFIG["USE_FUNCTION_CALLING"]
 API_KEYS = DEFAULT_CONFIG["API_KEYS"].copy()
+daily_briefing = DEFAULT_CONFIG["daily_briefing"].copy() # Daily briefing configuration
 
 
 def load_config(path=CONFIG_FILE_PATH):
@@ -103,7 +121,7 @@ def load_config(path=CONFIG_FILE_PATH):
            AUTO_LISTEN_AFTER_TTS, TRACK_ACTIVE_WINDOW, ACTIVE_WINDOW_POLL_INTERVAL, \
            USE_FUNCTION_CALLING, ANTHROPIC_API_KEY, DEEPSEEK_API_KEY, \
            MIC_DEVICE_ID, STT_SILENCE_THRESHOLD, API_KEYS, query_refinement, version, \
-           PLUGIN_MONITOR_INTERVAL, FIRST_RUN
+           PLUGIN_MONITOR_INTERVAL, FIRST_RUN, daily_briefing
 
     loaded_file_data = {}
     try:
@@ -179,6 +197,7 @@ def load_config(path=CONFIG_FILE_PATH):
     ACTIVE_WINDOW_POLL_INTERVAL = _config.get("ACTIVE_WINDOW_POLL_INTERVAL", DEFAULT_CONFIG["ACTIVE_WINDOW_POLL_INTERVAL"])
     USE_FUNCTION_CALLING = _config.get("USE_FUNCTION_CALLING", DEFAULT_CONFIG["USE_FUNCTION_CALLING"])
     FIRST_RUN = _config.get("FIRST_RUN", DEFAULT_CONFIG["FIRST_RUN"])
+    daily_briefing = _config.get("daily_briefing", DEFAULT_CONFIG["daily_briefing"]).copy()
 
     return _config # Return the global _config dict itself
 

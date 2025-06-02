@@ -155,3 +155,12 @@
 2025-05-30T16:53:04.533303 | Hogy jó, mi a faszomú érdem. | intent=none | conf=0.32
 2025-05-30T17:36:00.906871 | Powiedz mi coś o sobie. | intent=about_assistant | conf=0.59
 2025-05-30T18:03:34.804363 | Powiedz mi coś o sobie. | intent=about_assistant | conf=0.59
+2025-05-30T18:09:41.834396 | Powertzmitze ich osaubjeprasche | intent=none | conf=0.09
+2025-05-30T18:30:58.721923 | powiedzmy czy jutro będzie to padać? | intent=none | conf=0.40
+2025-05-30T18:31:14.131024 | Wy sąsnowicą. | intent=none | conf=0.06
+2025-05-30T18:32:28.621139 | Powiedz mi coś o sobie. | intent=about_assistant | conf=0.59
+2025-05-30T18:36:40.433994 | Powiedz mi coś o sobie. | intent=about_assistant | conf=0.59
+2025-06-02T11:23:59.534361 | Hej, Gaia. Powiedz mi, jaka jest dzisiaj pogoda. | intent=weather_query | conf=0.91
+2025-06-02T11:24:33.240884 | Proszę sprawdź w Warszawie. | intent=none | conf=0.27
+2025-06-02T11:30:52.207306 | Hej, Gaia. Jakie mam dzisiaj wydarzenia w kalendarzu? | intent=none | conf=0.27
+2025-06-02T11:31:33.634957 | Dobra, gotowe. Hej, gaja, czy mogłabyś podsumować moje najważniejsze zadania na ten tydzień? | intent=none | conf=0.15

@@ -329,6 +329,145 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Daily Briefing Settings Section -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingDailyBriefing">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDailyBriefing" aria-expanded="false" aria-controls="collapseDailyBriefing">
+                        <i class="fas fa-calendar-day"></i> Daily Briefing
+                    </button>
+                </h2>
+                <div id="collapseDailyBriefing" class="accordion-collapse collapse" aria-labelledby="headingDailyBriefing" data-bs-parent="#configAccordion">
+                    <div class="accordion-body">
+                        <div class="config-grid">
+                            <!-- Enable Daily Briefing -->
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="daily_briefing_enabled" name="daily_briefing.enabled" {% if config.daily_briefing.enabled %}checked{% endif %}>
+                                    <label class="form-check-label" for="daily_briefing_enabled">
+                                        Włącz Daily Briefing
+                                        <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Włącza proaktywne poranne briefingi z pogodą, kalendarzem i informacjami."></i>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Startup Briefing -->
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="daily_briefing_startup" name="daily_briefing.startup_briefing" {% if config.daily_briefing.startup_briefing %}checked{% endif %}>
+                                    <label class="form-check-label" for="daily_briefing_startup">
+                                        Briefing po uruchomieniu
+                                        <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Przedstaw briefing automatycznie po uruchomieniu asystenta."></i>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Scheduled Briefing -->
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="daily_briefing_scheduled" name="daily_briefing.scheduled_briefing" {% if config.daily_briefing.scheduled_briefing %}checked{% endif %}>
+                                    <label class="form-check-label" for="daily_briefing_scheduled">
+                                        Briefing zaplanowany
+                                        <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Włącz automatyczne briefingi o ustalonej godzinie każdego dnia."></i>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Weekend Briefing -->
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="daily_briefing_weekend" name="daily_briefing.weekend_briefing" {% if config.daily_briefing.weekend_briefing %}checked{% endif %}>
+                                    <label class="form-check-label" for="daily_briefing_weekend">
+                                        Briefing w weekendy
+                                        <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Włącz briefingi także w soboty i niedziele."></i>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- User Name -->
+                            <div class="mb-3">
+                                <label for="daily_briefing_user_name" class="form-label">
+                                    Imię użytkownika
+                                    <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Imię używane w personalnych powitaniach podczas briefingu."></i>
+                                </label>
+                                <input type="text" class="form-control" id="daily_briefing_user_name" name="daily_briefing.user_name" value="{{ config.daily_briefing.user_name }}">
+                            </div>
+                            
+                            <!-- Location -->
+                            <div class="mb-3">
+                                <label for="daily_briefing_location" class="form-label">
+                                    Lokalizacja dla pogody
+                                    <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Miasto dla informacji pogodowych w formacie: Miasto,KodKraju (np. Warsaw,PL)."></i>
+                                </label>
+                                <input type="text" class="form-control" id="daily_briefing_location" name="daily_briefing.location" value="{{ config.daily_briefing.location }}">
+                            </div>
+                              <!-- Briefing Time -->
+                            <div class="mb-3">
+                                <label for="daily_briefing_time" class="form-label">
+                                    Czas briefingu (zaplanowany)
+                                    <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Godzina automatycznego briefingu w formacie HH:MM. Wymaga włączenia 'Briefing zaplanowany'."></i>
+                                </label>
+                                <input type="time" class="form-control" id="daily_briefing_time" name="daily_briefing.briefing_time" value="{{ config.daily_briefing.briefing_time }}">
+                            </div>
+                            
+                            <!-- Include Options -->
+                            <div class="mb-3">
+                                <label class="form-label">Elementy briefingu:</label>
+                                
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="daily_briefing_weather" name="daily_briefing.include_weather" {% if config.daily_briefing.include_weather %}checked{% endif %}>
+                                    <label class="form-check-label" for="daily_briefing_weather">
+                                        Pogoda
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="daily_briefing_calendar" name="daily_briefing.include_calendar" {% if config.daily_briefing.include_calendar %}checked{% endif %}>
+                                    <label class="form-check-label" for="daily_briefing_calendar">
+                                        Kalendarz i przypomnienia
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="daily_briefing_holidays" name="daily_briefing.include_holidays" {% if config.daily_briefing.include_holidays %}checked{% endif %}>
+                                    <label class="form-check-label" for="daily_briefing_holidays">
+                                        Święta polskie
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="daily_briefing_memories" name="daily_briefing.include_memories" {% if config.daily_briefing.include_memories %}checked{% endif %}>
+                                    <label class="form-check-label" for="daily_briefing_memories">
+                                        Wspomnienia (w rozwoju)
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Minimum Interval -->
+                            <div class="mb-3">
+                                <label for="daily_briefing_interval" class="form-label">
+                                    Minimalny odstęp (godziny)
+                                    <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Minimalna liczba godzin między briefingami aby uniknąć spam-u."></i>
+                                </label>
+                                <input type="number" class="form-control" id="daily_briefing_interval" name="daily_briefing.min_interval_hours" value="{{ config.daily_briefing.min_interval_hours }}" min="1" max="48">
+                            </div>
+                            
+                            <!-- Briefing Style -->
+                            <div class="mb-3">
+                                <label for="daily_briefing_style" class="form-label">
+                                    Styl briefingu
+                                    <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Wybierz styl wypowiedzi briefingu: normalny, zabawny lub poważny."></i>
+                                </label>
+                                <select class="form-control" id="daily_briefing_style" name="daily_briefing.briefing_style">
+                                    <option value="normal" {% if config.daily_briefing.briefing_style == 'normal' %}selected{% endif %}>Normalny</option>
+                                    <option value="funny" {% if config.daily_briefing.briefing_style == 'funny' %}selected{% endif %}>Zabawny 😄</option>
+                                    <option value="serious" {% if config.daily_briefing.briefing_style == 'serious' %}selected{% endif %}>Poważny</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <div class="text-center mb-5">

@@ -200,6 +200,10 @@ class Assistant:
         self.command_queue = command_queue
         self.manual_trigger_event = threading.Event() # For signaling manual listen to wakeword_detector
 
+        # Initialize daily briefing module
+        self.daily_briefing = None
+        self._init_daily_briefing()
+
         if self.track_active_window:
             self.start_active_window_tracker()
         
@@ -297,6 +301,48 @@ class Assistant:
                 # Avoid busy-looping on error, wait before retrying
                 time.sleep(self.active_window_poll_interval) 
 
+    def _init_daily_briefing(self):
+        """Initialize the daily briefing module."""
+        try:
+            from modules.daily_briefing_module import DailyBriefingModule
+            from config import daily_briefing
+            
+            # Merge global daily_briefing config with user-specific settings
+            briefing_config = _config.copy()
+            self.daily_briefing = DailyBriefingModule(briefing_config)
+            
+            # Start scheduler if enabled
+            if self.daily_briefing.scheduled_briefing:
+                self.daily_briefing.start_scheduler(assistant_callback=self._deliver_scheduled_briefing)
+            
+            logger.info("Daily briefing module initialized")
+        except Exception as e:
+            logger.error(f"Failed to initialize daily briefing module: {e}", exc_info=True)
+            self.daily_briefing = None
+
+    async def _deliver_scheduled_briefing(self, briefing_text: str):
+        """Callback for delivering scheduled briefings."""
+        try:
+            logger.info("Delivering scheduled daily briefing")
+            await self.speak_and_maybe_listen(briefing_text, listen_after_tts=False, TextMode=False)
+            logger.info("Scheduled daily briefing delivered successfully")
+        except Exception as e:
+            logger.error(f"Error delivering scheduled briefing: {e}", exc_info=True)
+
+    async def check_daily_briefing(self):
+        """Check if daily briefing should be delivered and deliver it if needed."""
+        if not self.daily_briefing:
+            return
+        
+        try:
+            briefing_text = await self.daily_briefing.deliver_briefing()
+            if briefing_text:
+                logger.info("Delivering daily briefing")
+                await self.speak_and_maybe_listen(briefing_text, listen_after_tts=False, TextMode=False)
+                logger.info("Daily briefing delivered successfully")
+        except Exception as e:
+            logger.error(f"Error delivering daily briefing: {e}", exc_info=True)
+
     def reload_config_values(self):
         """Reloads configuration values from the config module."""
         logger.info("Reloading configuration values in Assistant...")
@@ -349,6 +395,10 @@ class Assistant:
         self.active_window_poll_interval = _config.get('ACTIVE_WINDOW_POLL_INTERVAL', ACTIVE_WINDOW_POLL_INTERVAL)
         self.wake_word_sensitivity_threshold = _config.get('WAKE_WORD_SENSITIVITY_THRESHOLD', WAKE_WORD_SENSITIVITY_THRESHOLD)
         self.auto_listen_after_tts = _config.get('AUTO_LISTEN_AFTER_TTS', AUTO_LISTEN_AFTER_TTS)
+        
+        # Reload daily briefing configuration
+        if self.daily_briefing:
+            self._init_daily_briefing()
         
         global QUERY_REFINEMENT_ENABLED
         QUERY_REFINEMENT_ENABLED = False  # prompt refinement remains disabled for testing
@@ -769,6 +819,9 @@ class Assistant:
         self.wakeword_thread.start()
         logger.info("Wake word detection thread started.")
 
+        # Check for daily briefing on startup
+        await self.check_daily_briefing()
+
         try:
             while not self.should_exit.is_set():
                 try:
@@ -840,6 +893,10 @@ class Assistant:
     async def shutdown(self):
         logger.info("Shutting down assistant...")
         self.should_exit.set() # Signal all loops and threads to exit
+
+        # Stop daily briefing scheduler
+        if self.daily_briefing:
+            self.daily_briefing.stop_scheduler()
 
         # Stop active window tracker
         self.stop_active_window_tracker()

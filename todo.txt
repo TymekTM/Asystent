@@ -1,3 +1,7 @@
+# ✅ COMPLETED
+- ✅ Daily przygotowanie informacji na dany dzień z AI (święta, kalendarz, pogoda, wspomnienia)
+- ✅ AI integration for daily briefing system with memory support
+
 # ✅ FIXY
 - Zweryfikować działanie innych rzeczy w core (timer działa)
 - When AI wants to activate listening and user does the same at the same time it just happens twice
@@ -7,6 +11,7 @@
 - Moduł od muzyki klucz spotify
 - Fix tooltip placement and width on smaller screens
 - Manualne dodawanie wspomnień robi to 2x
+- Po onboarding auto zalogowanie
 
 # ⭐ WAŻNE (strategiczne / fundamenty)
 - Kompletny rework intencji AI [Każdy moduł swoje AI ]
@@ -23,7 +28,6 @@
 - Heatmap użycia + śledzenie token useage
 
 # 🟢 ŁATWE (mały scope, max 1 dzień)
-- Daily przygotowanie informacji na dany dzień (święta, kalendarz)
 - Wheel decide do robienia czego
 - Overlay jak słucha lub coś robi (po wykryciu wake word) – *jeśli Tauri już w użyciu*
 - Add visual feedback for microphone and speech recognition status

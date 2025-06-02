@@ -463,3 +463,19 @@ def register():
     
 # Start polling thread when module is loaded
 _start_timer_polling_thread()
+
+def get_reminders_for_today():
+    """Get reminders for today only - helper function for daily briefing."""
+    data = _load_storage()
+    today = datetime.now().date()
+    today_reminders = []
+    
+    for reminder in data['reminders']:
+        reminder_date = datetime.fromisoformat(reminder['time']).date()
+        if reminder_date == today:
+            today_reminders.append({
+                'title': reminder['note'],
+                'time': reminder['time']
+            })
+    
+    return today_reminders
