@@ -41,13 +41,12 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {% if request.endpoint == 'logs_page' %}active{% endif %}" href="{{ url_for('logs_page') }}">Logi</a>
-                        </li>
-                        <li class="nav-item">
+                        </li>                        <li class="nav-item">
                             <a class="nav-link {% if request.endpoint == 'plugins_page' %}active{% endif %}" href="{{ url_for('plugins_page') }}">Pluginy</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {% if request.endpoint == 'mcp_page' %}active{% endif %}" href="{{ url_for('mcp_page') }}">MCP</a>
-                        </li>                        <li class="nav-item">
+                        </li><li class="nav-item">
                             <a class="nav-link {% if request.endpoint == 'config' %}active{% endif %}" href="{{ url_for('config') }}">Configuration</a>
                         </li><li class="nav-item">
                             <a class="nav-link {% if request.endpoint == 'ltm_page' %}active{% endif %}" href="{{ url_for('ltm_page') }}">Long-Term Memory</a>

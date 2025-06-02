@@ -211,6 +211,11 @@ def setup_web_routes(app):
     def playground_page():
         return render_template('playground.html')
 
+    @app.route('/playground/enhanced')
+    @login_required(role="dev")
+    def playground_enhanced_page():
+        return render_template('playground_enhanced.html')
+
     # --- MCP (Model Context Protocol) ---
     @app.route('/mcp')
     @login_required(role="dev")

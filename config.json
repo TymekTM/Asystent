@@ -28,5 +28,6 @@
   "ASSISTANT_NAME": "Gaja",
   "LANGUAGE": "pl-PL",
   "MODEL": "",
-  "FIRST_RUN": false
+  "FIRST_RUN": false,
+  "AI_PROVIDER": "openai"
 }

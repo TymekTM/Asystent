@@ -1,17 +1,13 @@
-# ✅ COMPLETED
-- ✅ Daily przygotowanie informacji na dany dzień z AI (święta, kalendarz, pogoda, wspomnienia)
-- ✅ AI integration for daily briefing system with memory support
-
 # ✅ FIXY
 - Zweryfikować działanie innych rzeczy w core (timer działa)
 - When AI wants to activate listening and user does the same at the same time it just happens twice
 - Dodawanie użytkownika nie działa
 - Nie działa wiele języków w web panel
-- Po skończeniu onboarding restart asystenta by załadować zmiany
 - Moduł od muzyki klucz spotify
 - Fix tooltip placement and width on smaller screens
 - Manualne dodawanie wspomnień robi to 2x
 - Po onboarding auto zalogowanie
+-Zalogowanie restartuje asystenta(miało to robić tylko po onboarding)
 
 # ⭐ WAŻNE (strategiczne / fundamenty)
 - Kompletny rework intencji AI [Każdy moduł swoje AI ]
@@ -19,6 +15,7 @@
 - Podzielenie na serwer i klient
 - Plug and play installation
 - Find real use case
+- Change version + all "assistant" to "Gaja"
 
 # 🔧 OPTYMALIZACJE
 - RAM usage optymalizacja
@@ -32,7 +29,6 @@
 - Overlay jak słucha lub coś robi (po wykryciu wake word) – *jeśli Tauri już w użyciu*
 - Add visual feedback for microphone and speech recognition status
 - Build-in system notatek UI kompatybilnych z Obsidian
-- Dev playground (do promptów, testowania outputów LLM)
 
 # 🟡 ŚREDNIE (2–4 dni, integracja kilku rzeczy)
 - Instalator z GUI

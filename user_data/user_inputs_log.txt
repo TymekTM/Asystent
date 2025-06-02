@@ -164,3 +164,4 @@
 2025-06-02T11:24:33.240884 | Proszę sprawdź w Warszawie. | intent=none | conf=0.27
 2025-06-02T11:30:52.207306 | Hej, Gaia. Jakie mam dzisiaj wydarzenia w kalendarzu? | intent=none | conf=0.27
 2025-06-02T11:31:33.634957 | Dobra, gotowe. Hej, gaja, czy mogłabyś podsumować moje najważniejsze zadania na ten tydzień? | intent=none | conf=0.15
+2025-06-02T16:44:31.659681 | Thank you. | intent=none | conf=0.50

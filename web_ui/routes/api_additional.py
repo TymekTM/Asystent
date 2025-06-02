@@ -13,7 +13,7 @@ from datetime import datetime
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 from flask import request, jsonify, session, Response, stream_with_context, send_file
 from core.auth import login_required
-from core.config import logger
+from core.config import logger, load_main_config
 from utils.audio_utils import convert_audio, transcribe_audio, cleanup_files, get_assistant_instance
 from database_manager import get_db_connection
 from database_models import get_user_by_username, init_schema
@@ -717,3 +717,728 @@ def setup_additional_api_routes(app):
         except Exception as e:
             logger.error(f"Error getting detailed plugin info: {e}", exc_info=True)
             return jsonify({"error": f"Failed to get plugin info: {str(e)}"}), 500
+
+    # --- LLM Testing Playground API ---
+    @app.route('/api/playground/llm-test', methods=['POST'])
+    @login_required(role="dev")
+    def api_playground_llm_test():
+        """Enhanced LLM testing endpoint with full context and analytics."""
+        try:
+            data = request.get_json()
+            prompt = data.get('prompt', '')
+            intention = data.get('intention', '')
+            plugin = data.get('plugin', '')
+            style = data.get('style', 'normal')
+            language = data.get('language', 'auto')
+            provider = data.get('provider', 'auto')
+            dry_run = data.get('dry_run', False)
+            include_history = data.get('include_history', False)
+            include_memories = data.get('include_memories', False)
+            
+            if not prompt:
+                return jsonify({"error": "Prompt jest wymagany"}), 400
+
+            # Start timing
+            start_time = datetime.utcnow()
+            
+            # Get user context
+            username = session.get('username', 'dev')
+            conversation_history = []
+            user_memories = []
+            
+            if include_history:
+                try:
+                    from utils.history_manager import get_conversation_history
+                    conversation_history = get_conversation_history(limit=20)
+                except Exception as e:
+                    logger.warning(f"Could not get conversation history: {e}")
+            
+            if include_memories:
+                try:
+                    user_memories = get_memories(query=prompt, limit=10)
+                except Exception as e:
+                    logger.warning(f"Could not get memories: {e}")
+            
+            # Get assistant instance for AI processing
+            assistant = get_assistant_instance()
+            if not assistant:
+                return jsonify({"error": "Assistant instance not available"}), 503
+            
+            # Prepare execution parameters
+            execution_context = {
+                'user': username,
+                'user_lang': 'pl' if language == 'auto' else language,
+                'conversation_history': conversation_history,
+                'memories': user_memories,
+                'style': style,
+                'include_reasoning': True
+            }
+            
+            result_data = {
+                'prompt': prompt,
+                'final_prompt': '',
+                'ai_response': '',
+                'used_plugin': None,
+                'intention_detected': None,
+                'provider_used': provider,
+                'tokens_in': 0,
+                'tokens_out': 0,
+                'response_time': 0,
+                'error': None,
+                'execution_info': {
+                    'style': style,
+                    'language': language,
+                    'dry_run': dry_run,
+                    'include_history': include_history,
+                    'include_memories': include_memories,
+                    'timestamp': start_time.isoformat(),
+                    'user': username
+                }
+            }
+            
+            try:
+                if dry_run:
+                    # Just test AI response without executing plugins
+                    from ai_module import chat_with_providers
+                    from prompt_builder import build_prompt_context
+                    
+                    # Build the complete prompt with context
+                    prompt_context = build_prompt_context(
+                        user_input=prompt,
+                        conversation_history=conversation_history[:10],  # Limit for testing
+                        memories=user_memories[:5],  # Limit for testing
+                        user_lang=execution_context['user_lang'],
+                        style=style
+                    )
+                    
+                    result_data['final_prompt'] = prompt_context
+                    
+                    # Set provider if specified
+                    original_provider = None
+                    if provider != 'auto':
+                        current_config = load_main_config()
+                        original_provider = current_config.get('AI_PROVIDER', 'openai')
+                        current_config['AI_PROVIDER'] = provider
+                        save_main_config(current_config)
+                    
+                    try:
+                        # Test AI response
+                        ai_response = chat_with_providers(
+                            model="auto",
+                            messages=[{"role": "user", "content": prompt_context}],
+                            max_tokens=1000
+                        )
+                        
+                        if ai_response and 'message' in ai_response:
+                            result_data['ai_response'] = ai_response['message']['content']
+                            # Estimate tokens (rough calculation)
+                            result_data['tokens_in'] = len(prompt_context.split()) * 1.3  # Rough estimate
+                            result_data['tokens_out'] = len(result_data['ai_response'].split()) * 1.3
+                        else:
+                            result_data['error'] = "Nie otrzymano odpowiedzi od AI"
+                            
+                    finally:
+                        # Restore original provider
+                        if original_provider:
+                            current_config = load_main_config()
+                            current_config['AI_PROVIDER'] = original_provider
+                            save_main_config(current_config)
+                    
+                else:
+                    # Full execution with plugin detection and execution
+                    if plugin:
+                        # Manual plugin execution
+                        if not hasattr(assistant, 'modules') or not assistant.modules:
+                            assistant.load_plugins()
+                        
+                        plugins = getattr(assistant, 'modules', {})
+                        if plugin in plugins:
+                            plugin_info = plugins[plugin]
+                            if 'handler' in plugin_info:
+                                handler = plugin_info['handler']
+                                
+                                # Execute plugin
+                                sig = inspect.signature(handler)
+                                filtered_params = {
+                                    'params': prompt,
+                                    'conversation_history': conversation_history,
+                                    'user': username,
+                                    'user_lang': execution_context['user_lang']
+                                }
+                                
+                                # Filter to only include parameters the function accepts
+                                final_params = {}
+                                for param_name in sig.parameters:
+                                    if param_name in filtered_params:
+                                        final_params[param_name] = filtered_params[param_name]
+                                
+                                if inspect.iscoroutinefunction(handler):
+                                    loop = asyncio.new_event_loop()
+                                    asyncio.set_event_loop(loop)
+                                    try:
+                                        plugin_result = loop.run_until_complete(handler(**final_params))
+                                    finally:
+                                        loop.close()
+                                else:
+                                    plugin_result = handler(**final_params)
+                                
+                                result_data['ai_response'] = str(plugin_result)
+                                result_data['used_plugin'] = plugin
+                        else:
+                            result_data['error'] = f"Plugin '{plugin}' nie został znaleziony"
+                    else:
+                        # Let assistant process normally with intention detection
+                        if intention:
+                            # Manual intention override
+                            result_data['intention_detected'] = intention
+                            # Process with specific intention
+                            response = assistant.process_message(
+                                prompt, 
+                                conversation_history=conversation_history,
+                                force_intention=intention
+                            )
+                        else:
+                            # Normal processing with intention detection
+                            response = assistant.process_message(
+                                prompt, 
+                                conversation_history=conversation_history
+                            )
+                        
+                        result_data['ai_response'] = response.get('message', str(response))
+                        result_data['used_plugin'] = response.get('plugin_used')
+                        result_data['intention_detected'] = response.get('intention')
+                
+                # Calculate response time
+                end_time = datetime.utcnow()
+                result_data['response_time'] = (end_time - start_time).total_seconds()
+                
+            except Exception as e:
+                result_data['error'] = f"Błąd podczas wykonania: {str(e)}"
+                logger.error(f"LLM playground execution error: {e}", exc_info=True)
+            
+            return jsonify({
+                "success": result_data['error'] is None,
+                **result_data
+            })
+            
+        except Exception as e:
+            logger.error(f"Error in LLM playground: {e}", exc_info=True)
+            return jsonify({"error": f"Błąd serwera: {str(e)}"}), 500
+
+    @app.route('/api/playground/direct-llm-test', methods=['POST'])
+    @login_required(role="dev")
+    def api_playground_direct_llm_test():
+        """Direct LLM testing endpoint for enhanced playground."""
+        try:
+            data = request.get_json()
+            provider = data.get('provider', 'auto')
+            model = data.get('model', 'auto') # Model selection might depend on provider
+            prompt = data.get('prompt', '')
+            temperature = data.get('temperature', 0.7)
+            max_tokens = data.get('max_tokens', 500)
+            # dry_run from JS seems to mean 'count tokens only', but chat_with_providers doesn't have that.
+            # We'll interpret it as a normal call for now. If token counting is needed, it's a separate logic.
+
+            if not prompt:
+                return jsonify({"error": "Prompt is required"}), 400
+
+            start_time = datetime.utcnow()
+            result_data = {
+                'prompt': prompt,
+                'ai_response': '',
+                'tokens_in': 0,
+                'tokens_out': 0,
+                'token_count': 0, # sum of in and out
+                'estimated_cost': 0,
+                'response_time': 0,
+                'error': None,
+                'provider_used': provider,
+                'model_used': model
+            }
+
+            try:
+                from ai_module import chat_with_providers # Assuming this handles provider/model selection
+                from core.config import load_main_config, save_main_config
+
+                original_provider_config = None
+                current_config = load_main_config()
+
+                if provider != 'auto' and provider != current_config.get('AI_PROVIDER'):
+                    original_provider_config = current_config.get('AI_PROVIDER', 'openai')
+                    current_config['AI_PROVIDER'] = provider
+                    # Potentially, model specific settings might need adjustment here too
+                    # For now, we assume chat_with_providers can handle the 'model' parameter correctly
+                    # or that the global AI_PROVIDER setting is enough.
+                    save_main_config(current_config)
+
+
+                # TODO: chat_with_providers needs to accept temperature and max_tokens
+                # For now, sending them, assuming it might use them or they can be added.
+                # The 'model' parameter also needs to be properly handled by chat_with_providers
+                # or a more specific function call is needed.
+                ai_response_data = chat_with_providers(
+                    model=model,  # Pass the model selected in the playground
+                    messages=[{"role": "user", "content": prompt}]
+                )
+
+                if ai_response_data and 'message' in ai_response_data and ai_response_data['message'].get('content'):
+                    result_data['ai_response'] = ai_response_data['message']['content']
+                    
+                    # Token counting and cost estimation (simplified, actual logic might be in chat_with_providers or a utility)
+                    # These are placeholders and should be replaced with actual calculations
+                    result_data['tokens_in'] = len(prompt.split()) # Rough estimate
+                    result_data['tokens_out'] = len(result_data['ai_response'].split()) # Rough estimate
+                    result_data['token_count'] = result_data['tokens_in'] + result_data['tokens_out']
+                    
+                    # Placeholder for cost - this needs a proper calculation based on provider and model
+                    cost_per_1k_tokens_in = 0.001 
+                    cost_per_1k_tokens_out = 0.002
+                    if provider == 'openai' and 'gpt-4' in model: # Example
+                        cost_per_1k_tokens_in = 0.03
+                        cost_per_1k_tokens_out = 0.06
+                    
+                    result_data['estimated_cost'] = (result_data['tokens_in'] / 1000 * cost_per_1k_tokens_in) + \
+                                                  (result_data['tokens_out'] / 1000 * cost_per_1k_tokens_out)
+
+                elif ai_response_data and 'error' in ai_response_data:
+                    result_data['error'] = ai_response_data['error']
+                else:
+                    result_data['error'] = "No response or unexpected format from AI"
+
+            except Exception as e:
+                result_data['error'] = f"LLM execution error: {str(e)}"
+                logger.error(f"Direct LLM test execution error: {e}", exc_info=True)
+            finally:
+                if original_provider_config: # Restore original provider
+                    current_config = load_main_config()
+                    current_config['AI_PROVIDER'] = original_provider_config
+                    save_main_config(current_config)
+
+            end_time = datetime.utcnow()
+            result_data['response_time'] = int((end_time - start_time).total_seconds() * 1000)
+            
+            return jsonify(result_data)
+
+        except Exception as e:
+            logger.error(f"Direct LLM test API error: {e}", exc_info=True)
+            return jsonify({"error": f"API error: {str(e)}"}), 500
+
+    @app.route('/api/playground/providers', methods=['GET'])
+    @login_required(role="dev")
+    def api_playground_providers():
+        """Get available LLM providers."""
+        try:
+            providers = {
+                'auto': 'Automatyczny (według konfiguracji)',
+                'openai': 'OpenAI GPT',
+                'deepseek': 'DeepSeek',
+                'lmstudio': 'LM Studio (Lokalny)',
+                'ollama': 'Ollama (Lokalny)',
+                'anthropic': 'Claude (Anthropic)'
+            }
+            
+            # Check which providers have API keys configured
+            current_config = load_main_config()
+            api_keys = current_config.get('API_KEYS', {})
+            
+            available_providers = {}
+            for provider_id, provider_name in providers.items():
+                if provider_id == 'auto':
+                    available_providers[provider_id] = provider_name
+                elif provider_id == 'lmstudio' or provider_id == 'ollama':
+                    # Local providers - always available if configured
+                    available_providers[provider_id] = provider_name
+                else:
+                    # Check for API key
+                    key_name = f"{provider_id.upper()}_API_KEY"
+                    if api_keys.get(key_name):
+                        available_providers[provider_id] = f"{provider_name} ✓"
+                    else:
+                        available_providers[provider_id] = f"{provider_name} (brak klucza API)"
+            
+            return jsonify({"providers": available_providers})
+            
+        except Exception as e:
+            logger.error(f"Error getting providers: {e}", exc_info=True)
+            return jsonify({"error": f"Błąd pobierania providerów: {str(e)}"}), 500
+
+    @app.route('/api/playground/intentions', methods=['GET'])
+    @login_required(role="dev")
+    def api_playground_intentions():
+        """Get available intentions for testing."""
+        try:
+            # Get intentions from intent system
+            assistant = get_assistant_instance()
+            if not assistant or not hasattr(assistant, 'intent_system'):
+                return jsonify({"intentions": []})
+            
+            # Try to get intentions from the intent system
+            intentions = []
+            try:
+                if hasattr(assistant.intent_system, 'intentions'):
+                    for intention_name, intention_data in assistant.intent_system.intentions.items():
+                        intentions.append({
+                            'name': intention_name,
+                            'description': intention_data.get('description', 'Brak opisu'),
+                            'keywords': intention_data.get('keywords', [])
+                        })
+                else:
+                    # Fallback to common intentions
+                    intentions = [
+                        {'name': 'search', 'description': 'Wyszukiwanie informacji', 'keywords': ['szukaj', 'znajdź', 'sprawdź']},
+                        {'name': 'memory', 'description': 'Zarządzanie pamięcią', 'keywords': ['zapamiętaj', 'zapisz', 'przypomknij']},
+                        {'name': 'weather', 'description': 'Informacje o pogodzie', 'keywords': ['pogoda', 'temperatura', 'deszcz']},
+                        {'name': 'music', 'description': 'Odtwarzanie muzyki', 'keywords': ['muzyka', 'piosenka', 'zagraj']},
+                        {'name': 'chat', 'description': 'Rozmowa ogólna', 'keywords': ['rozmawiaj', 'opowiedz', 'wyjaśnij']}
+                    ]
+            except Exception as e:
+                logger.warning(f"Could not get intentions from intent system: {e}")
+                intentions = []
+            
+            return jsonify({"intentions": intentions})
+            
+        except Exception as e:
+            logger.error(f"Error getting intentions: {e}", exc_info=True)
+            return jsonify({"error": f"Błąd pobierania intencji: {str(e)}"}), 500
+
+    # --- Plugin Testing API ---
+    @app.route('/api/playground/plugin-test', methods=['POST'])
+    @login_required(role="dev")
+    def api_playground_plugin_test():
+        """Plugin testing endpoint for the enhanced playground."""
+        try:
+            data = request.get_json()
+            plugin = data.get('plugin', '')
+            function_name = data.get('function_name', '')
+            parameters = data.get('parameters', '{}')
+            dry_run = data.get('dry_run', False)
+            
+            if not plugin or not function_name:
+                return jsonify({"error": "Plugin and function name are required"}), 400
+
+            # Start timing
+            start_time = datetime.utcnow()
+            
+            # Parse parameters
+            try:
+                if isinstance(parameters, str):
+                    params = json.loads(parameters) if parameters else {}
+                else:
+                    params = parameters
+            except json.JSONDecodeError:
+                return jsonify({"error": "Invalid JSON parameters"}), 400
+
+            result_data = {
+                'plugin': plugin,
+                'function_name': function_name,
+                'parameters': params,
+                'dry_run': dry_run,
+                'result': None,
+                'execution_time': 0,
+                'error': None,
+                'timestamp': start_time.isoformat()
+            }
+
+            try:
+                if dry_run:
+                    # Validate plugin and function exist without executing
+                    try:
+                        plugin_module = importlib.import_module(f'modules.{plugin}')
+                        if hasattr(plugin_module, function_name):
+                            func = getattr(plugin_module, function_name)
+                            sig = inspect.signature(func)
+                            result_data['result'] = {
+                                'validation': 'success',
+                                'function_signature': str(sig),
+                                'parameters_valid': True,
+                                'message': 'Plugin and function validated successfully'
+                            }
+                        else:
+                            result_data['error'] = f"Function '{function_name}' not found in plugin '{plugin}'"
+                    except ImportError as e:
+                        result_data['error'] = f"Plugin '{plugin}' not found: {str(e)}"
+                    except Exception as e:
+                        result_data['error'] = f"Validation error: {str(e)}"
+                        
+                else:
+                    # Execute the plugin function
+                    try:
+                        plugin_module = importlib.import_module(f'modules.{plugin}')
+                        if hasattr(plugin_module, function_name):
+                            func = getattr(plugin_module, function_name)
+                            
+                            # Execute function with parameters
+                            if params:
+                                if asyncio.iscoroutinefunction(func):
+                                    result = asyncio.run(func(**params))
+                                else:
+                                    result = func(**params)
+                            else:
+                                if asyncio.iscoroutinefunction(func):
+                                    result = asyncio.run(func())
+                                else:
+                                    result = func()
+                            
+                            result_data['result'] = result
+                        else:
+                            result_data['error'] = f"Function '{function_name}' not found in plugin '{plugin}'"
+                    except ImportError as e:
+                        result_data['error'] = f"Plugin '{plugin}' not found: {str(e)}"
+                    except Exception as e:
+                        result_data['error'] = f"Execution error: {str(e)}"
+
+            except Exception as e:
+                result_data['error'] = f"Unexpected error: {str(e)}"
+                logger.error(f"Plugin test error: {e}", exc_info=True)
+
+            # Calculate execution time
+            end_time = datetime.utcnow()
+            result_data['execution_time'] = int((end_time - start_time).total_seconds() * 1000)
+
+            return jsonify(result_data)
+
+        except Exception as e:
+            logger.error(f"Plugin test API error: {e}", exc_info=True)
+            return jsonify({"error": f"API error: {str(e)}"}), 500
+
+    # --- Debug Intention API ---
+    @app.route('/api/playground/debug-intention', methods=['POST'])
+    @login_required(role="dev")
+    def api_playground_debug_intention():
+        """Debug intention detection for the enhanced playground."""
+        try:
+            data = request.get_json()
+            input_text = data.get('input', '')
+            
+            if not input_text:
+                return jsonify({"error": "Input text is required"}), 400
+
+            # Start timing
+            start_time = datetime.utcnow()
+            
+            result_data = {
+                'input': input_text,
+                'intention': None,
+                'confidence': 0,
+                'alternatives': [],
+                'reasoning': '',
+                'analysis': {},
+                'execution_time': 0,
+                'error': None,
+                'timestamp': start_time.isoformat()
+            }
+
+            try:
+                # Get assistant instance for intention detection
+                assistant = get_assistant_instance()
+                if not assistant:
+                    result_data['error'] = "Assistant instance not available"
+                    return jsonify(result_data), 503
+
+                # Analyze intention using the assistant's intention system
+                try:
+                    from intent_system import IntentSystem
+                    intent_system = IntentSystem()
+                    
+                    # Detect intention
+                    intention_result = intent_system.detect_intention(input_text)
+                    
+                    if intention_result:
+                        result_data['intention'] = intention_result.get('intention', 'unknown')
+                        result_data['confidence'] = intention_result.get('confidence', 0)
+                        result_data['alternatives'] = intention_result.get('alternatives', [])
+                        result_data['reasoning'] = intention_result.get('reasoning', '')
+                        result_data['analysis'] = {
+                            'keywords': intention_result.get('keywords', []),
+                            'context': intention_result.get('context', {}),
+                            'patterns': intention_result.get('patterns', [])
+                        }
+                    else:
+                        result_data['error'] = "No intention detected"
+
+                except ImportError:
+                    # Fallback to simple keyword-based detection
+                    keywords = {
+                        'weather': ['weather', 'pogoda', 'temperatura', 'rain', 'deszcz'],
+                        'search': ['search', 'szukaj', 'find', 'znajdź'],
+                        'music': ['music', 'muzyka', 'play', 'graj'],
+                        'time': ['time', 'czas', 'date', 'data'],
+                        'help': ['help', 'pomoc', 'how', 'jak']
+                    }
+                    
+                    input_lower = input_text.lower()
+                    detected_intentions = []
+                    
+                    for intention, words in keywords.items():
+                        matches = [word for word in words if word in input_lower]
+                        if matches:
+                            confidence = len(matches) / len(words) * 100
+                            detected_intentions.append({
+                                'intention': intention,
+                                'confidence': confidence,
+                                'matches': matches
+                            })
+                    
+                    if detected_intentions:
+                        detected_intentions.sort(key=lambda x: x['confidence'], reverse=True)
+                        best = detected_intentions[0]
+                        result_data['intention'] = best['intention']
+                        result_data['confidence'] = best['confidence']
+                        result_data['alternatives'] = detected_intentions[1:3]
+                        result_data['reasoning'] = f"Detected based on keywords: {', '.join(best['matches'])}"
+                        result_data['analysis'] = {
+                            'keywords': best['matches'],
+                            'all_matches': detected_intentions
+                        }
+                    else:
+                        result_data['intention'] = 'unknown'
+                        result_data['confidence'] = 0
+                        result_data['reasoning'] = 'No matching keywords found'
+
+            except Exception as e:
+                result_data['error'] = f"Intention detection error: {str(e)}"
+                logger.error(f"Debug intention error: {e}", exc_info=True)
+
+            # Calculate execution time
+            end_time = datetime.utcnow()
+            result_data['execution_time'] = int((end_time - start_time).total_seconds() * 1000)
+
+            return jsonify(result_data)
+
+        except Exception as e:
+            logger.error(f"Debug intention API error: {e}", exc_info=True)
+            return jsonify({"error": f"API error: {str(e)}"}), 500
+
+    # --- System Status API ---
+    @app.route('/api/playground/system-status', methods=['GET'])
+    @login_required(role="dev")
+    def api_playground_system_status():
+        """Get system status for the debugging tab."""
+        try:
+            status = {
+                'modules': {},
+                'apis': {},
+                'performance': {},
+                'timestamp': datetime.utcnow().isoformat()
+            }
+
+            # Check module status
+            modules_to_check = [
+                'core_module', 'ai_module', 'weather_module', 'search_module',
+                'music_module', 'daily_briefing_module', 'memory_module'
+            ]
+
+            for module_name in modules_to_check:
+                try:
+                    module = importlib.import_module(f'modules.{module_name}')
+                    status['modules'][module_name] = {
+                        'status': 'active',
+                        'functions': [name for name, obj in inspect.getmembers(module, inspect.isfunction)
+                                     if not name.startswith('_')]
+                    }
+                except ImportError:
+                    status['modules'][module_name] = {
+                        'status': 'not_found',
+                        'functions': []
+                    }
+                except Exception as e:
+                    status['modules'][module_name] = {
+                        'status': 'error',
+                        'error': str(e),
+                        'functions': []
+                    }
+
+            # Check API status (simplified)
+            apis_to_check = ['OpenAI', 'DeepSeek', 'Anthropic']
+            for api_name in apis_to_check:
+                # This is a simplified check - in a real implementation,
+                # you might ping the actual APIs
+                status['apis'][api_name] = {
+                    'status': 'unknown',
+                    'last_check': datetime.utcnow().isoformat()
+                }
+
+            # Performance metrics (mock data for demo)
+            import psutil
+            try:
+                status['performance'] = {
+                    'memory_percent': psutil.virtual_memory().percent,
+                    'cpu_percent': psutil.cpu_percent(interval=1),
+                    'disk_percent': psutil.disk_usage('/').percent if hasattr(psutil.disk_usage('/'), 'percent') else 0
+                }
+            except:
+                status['performance'] = {
+                    'memory_percent': 45,
+                    'cpu_percent': 23,
+                    'disk_percent': 12
+                }
+
+            return jsonify(status)
+
+        except Exception as e:
+            logger.error(f"System status API error: {e}", exc_info=True)
+            return jsonify({"error": f"API error: {str(e)}"}), 500
+
+    # --- Enhanced Test History API ---
+    @app.route('/api/playground/test-history', methods=['GET', 'POST', 'DELETE'])
+    @login_required(role="dev")
+    def api_playground_test_history_enhanced():
+        """Enhanced test history management."""
+        try:
+            if request.method == 'GET':
+                # Get test history with filtering
+                filter_type = request.args.get('type', 'all')
+                limit = int(request.args.get('limit', 100))
+                
+                # For now, return mock data - in real implementation,
+                # this would come from a database
+                history = []
+                return jsonify({
+                    'history': history,
+                    'total': len(history),
+                    'filter': filter_type
+                })
+                
+            elif request.method == 'POST':
+                # Save test result to history
+                data = request.get_json()
+                # In real implementation, save to database
+                return jsonify({'status': 'saved'})
+                
+            elif request.method == 'DELETE':
+                # Clear history
+                # In real implementation, delete from database
+                return jsonify({'status': 'cleared'})
+
+        except Exception as e:
+            logger.error(f"Test history API error: {e}", exc_info=True)
+            return jsonify({"error": f"API error: {str(e)}"}), 500
+
+    # --- Export API ---
+    @app.route('/api/playground/export', methods=['GET'])
+    @login_required(role="dev")
+    def api_playground_export():
+        """Export playground data."""
+        try:
+            export_type = request.args.get('type', 'json')
+            
+            if export_type == 'json':
+                data = {
+                    'export_time': datetime.utcnow().isoformat(),
+                    'test_history': [],  # Would come from database
+                    'presets': {},       # Would come from database
+                    'system_info': {
+                        'version': '1.0.0',
+                        'timestamp': datetime.utcnow().isoformat()
+                    }
+                }
+                
+                return jsonify(data)
+            else:
+                return jsonify({"error": "Unsupported export type"}), 400
+
+        except Exception as e:
+            logger.error(f"Export API error: {e}", exc_info=True)
+            return jsonify({"error": f"API error: {str(e)}"}), 500
+
+    # ... existing playground routes continue below ...

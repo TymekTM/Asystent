@@ -114,6 +114,8 @@
   align-self: end;
 }
 </style>
+  {# Gaja branding stylesheet #}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/gaja-branding.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -266,7 +268,33 @@
                 </tbody>
             </table>
         </div>    </div>
+
+    <!-- Dev Playground Access Button -->
+    <div class="dev-section">
+        <h2><i class="fas fa-code"></i> 🚀 Dev Playground</h2>
+        <p class="mb-3">Zaawansowane środowisko testowe dla pluginów, interakcji LLM i debugowania systemu.</p>
+        <a href="/playground/enhanced" class="chip-button">
+            <i class="fas fa-external-link-alt"></i> Otwórz Dev Playground
+        </a>
+    </div>
+<!-- Source Code Modal -->
+<div class="modal fade" id="sourceCodeModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Kod źródłowy pluginu</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <pre><code id="source-code-content" class="language-python"></code></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
+            </div>
+        </div>
+    </div>
 </div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -741,7 +769,8 @@ function fetchTestHistory() {
 let currentPlugins = {};
 
 // Load available plugins
-function loadPlugins() {    fetch('/api/playground/plugins')
+function loadPlugins() {
+    fetch('/api/playground/plugins')
         .then(response => response.json())
         .then(data => {
             console.log('Loaded plugins from playground API:', data);
@@ -780,10 +809,12 @@ document.getElementById('plugin-select').addEventListener('change', function() {
         
         // Show plugin info
         pluginInfo.style.display = 'block';
+        const subCommandCount = plugin.sub_commands ? plugin.sub_commands.length : 0;
         document.getElementById('plugin-info-content').innerHTML = `
             <strong>Opis:</strong> ${plugin.description || 'Brak opisu'}<br>
-            <strong>Kategoria:</strong> ${plugin.category || 'Nieznana'}<br>
-            <strong>Podkomendy:</strong> ${plugin.sub_commands?.length || 0}
+            <strong>Moduł:</strong> ${plugin.module_name || 'Nieznany'}<br>
+            <strong>Podkomendy:</strong> ${subCommandCount}<br>
+            <strong>Ma handler:</strong> ${plugin.has_handler ? 'Tak' : 'Nie'}
         `;
         
         // Setup subcommands
@@ -798,6 +829,11 @@ document.getElementById('plugin-select').addEventListener('change', function() {
             });
         } else {
             subcommandSection.style.display = 'none';
+            // For plugins without subcommands, show parameter input for main handler
+            if (plugin.has_handler) {
+                paramsSection.style.display = 'block';
+                createGenericParameterInput(document.getElementById('params-container'));
+            }
             // Enable execute button for plugins without subcommands
             executeBtn.disabled = false;
         }
@@ -827,34 +863,145 @@ document.getElementById('subcommand-select').addEventListener('change', function
     
     if (selectedPlugin && selectedSubcommand && currentPlugins[selectedPlugin]) {
         const plugin = currentPlugins[selectedPlugin];
+        // Find subcommand in array
         const subcmd = plugin.sub_commands?.find(sc => sc.name === selectedSubcommand);
         
-        if (subcmd && subcmd.parameters) {
+        if (subcmd && (subcmd.params_desc || subcmd.parameters)) {
             paramsSection.style.display = 'block';
             
-            subcmd.parameters.forEach(param => {
-                const paramDiv = document.createElement('div');
-                paramDiv.className = 'mb-2';
-                paramDiv.innerHTML = `
-                    <label class="form-label">${param.name} ${param.required ? '*' : ''}</label>
-                    <input type="text" class="form-control param-input" 
-                           data-param="${param.name}" 
-                           placeholder="${param.description || ''}"
-                           ${param.required ? 'required' : ''}>
-                    <small class="form-text text-muted">Typ: ${param.type || 'string'}</small>
-                `;
-                paramsContainer.appendChild(paramDiv);
-            });
+            // Handle both params_desc and parameters format
+            if (subcmd.params_desc) {
+                createParameterInputs(subcmd.params_desc, paramsContainer);
+            } else if (subcmd.parameters) {
+                createParameterInputsFromObject(subcmd.parameters, paramsContainer);
+            }
         } else {
             paramsSection.style.display = 'none';
         }
         
+        executeBtn.disabled = false;
+    } else if (selectedPlugin && !selectedSubcommand && currentPlugins[selectedPlugin]) {
+        // Plugin selected but no subcommand - show generic parameter input for main handler
+        const plugin = currentPlugins[selectedPlugin];
+        if (plugin.has_handler) {
+            paramsSection.style.display = 'block';
+            createGenericParameterInput(paramsContainer);
+        } else {
+            paramsSection.style.display = 'none';
+        }
         executeBtn.disabled = false;
     } else {
         paramsSection.style.display = 'none';
         executeBtn.disabled = selectedPlugin ? false : true;
     }
 });
+
+// Enhanced parameter input creation
+function createParameterInputs(paramsDesc, container) {
+    const paramDiv = document.createElement('div');
+    paramDiv.className = 'param-group';
+    
+    let inputHtml = '';
+    let placeholder = paramsDesc;
+    
+    // Detect common parameter patterns and create appropriate inputs
+    if (paramsDesc.toLowerCase().includes('url') || paramsDesc.toLowerCase().includes('link')) {
+        inputHtml = `<input type="url" class="form-control param-input" placeholder="${placeholder}" name="param_value">`;
+    } else if (paramsDesc.toLowerCase().includes('email')) {
+        inputHtml = `<input type="email" class="form-control param-input" placeholder="${placeholder}" name="param_value">`;
+    } else if (paramsDesc.toLowerCase().includes('number') || paramsDesc.toLowerCase().includes('count')) {
+        inputHtml = `<input type="number" class="form-control param-input" placeholder="${placeholder}" name="param_value">`;
+    } else if (paramsDesc.toLowerCase().includes('password')) {
+        inputHtml = `<input type="password" class="form-control param-input" placeholder="${placeholder}" name="param_value">`;
+    } else if (paramsDesc.length > 50) {
+        inputHtml = `<textarea class="form-control param-input" rows="3" placeholder="${placeholder}" name="param_value"></textarea>`;
+    } else {
+        inputHtml = `<input type="text" class="form-control param-input" placeholder="${placeholder}" name="param_value">`;
+    }
+    
+    paramDiv.innerHTML = `
+        <label class="form-label">${paramsDesc}:</label>
+        ${inputHtml}
+    `;
+    
+    container.appendChild(paramDiv);
+}
+
+// Create parameter inputs from parameters object (used by some modules like search)
+function createParameterInputsFromObject(parameters, container) {
+    if (!Array.isArray(parameters)) {
+        console.warn('Parameters is not an array:', parameters);
+        createGenericParameterInput(container);
+        return;
+    }
+    
+    parameters.forEach(param => {
+        const paramDiv = document.createElement('div');
+        paramDiv.className = 'param-group mb-3';
+        
+        let inputHtml = '';
+        let inputType = 'text';
+        
+        // Determine input type based on parameter type
+        switch (param.type) {
+            case 'number':
+            case 'integer':
+                inputType = 'number';
+                break;
+            case 'email':
+                inputType = 'email';
+                break;
+            case 'url':
+                inputType = 'url';
+                break;
+            case 'password':
+                inputType = 'password';
+                break;
+            case 'boolean':
+                inputHtml = `<div class="form-check">
+                    <input class="form-check-input param-input" type="checkbox" name="${param.name}" id="${param.name}">
+                    <label class="form-check-label" for="${param.name}">${param.description || param.name}</label>
+                </div>`;
+                break;
+            default:
+                if (param.description && param.description.length > 50) {
+                    inputHtml = `<textarea class="form-control param-input" rows="3" placeholder="${param.description}" name="${param.name}"></textarea>`;
+                } else {
+                    inputType = 'text';
+                }
+        }
+        
+        if (!inputHtml) {
+            inputHtml = `<input type="${inputType}" class="form-control param-input" placeholder="${param.description || param.name}" name="${param.name}" ${param.required ? 'required' : ''}>`;
+        }
+        
+        if (param.type !== 'boolean') {
+            paramDiv.innerHTML = `
+                <label class="form-label">${param.name}${param.required ? ' *' : ''}:</label>
+                ${inputHtml}
+                ${param.description ? `<small class="form-text text-muted">${param.description}</small>` : ''}
+            `;
+        } else {
+            paramDiv.innerHTML = inputHtml;
+        }
+        
+        container.appendChild(paramDiv);
+    });
+}
+
+// Create generic parameter input for main plugin handlers
+function createGenericParameterInput(container) {
+    const paramDiv = document.createElement('div');
+    paramDiv.className = 'param-group';
+    
+    paramDiv.innerHTML = `
+        <label class="form-label">Parametry (opcjonalne):</label>
+        <textarea class="form-control param-input" rows="3" placeholder="Wprowadź parametry dla pluginu..." name="param_value"></textarea>
+        <small class="form-text text-muted">Można wprowadzić dowolny tekst lub pary klucz=wartość oddzielone spacjami</small>
+    `;
+    
+    container.appendChild(paramDiv);
+}
 
 // Execute plugin
 document.getElementById('execute-plugin-btn').addEventListener('click', function() {
@@ -871,31 +1018,52 @@ document.getElementById('execute-plugin-btn').addEventListener('click', function
     }
     
     // Collect parameters
-    const params = {};
-    document.querySelectorAll('.param-input').forEach(input => {
-        const paramName = input.getAttribute('data-param');
-        if (input.value.trim()) {
-            // Try to parse as JSON, fallback to string
-            try {
-                params[paramName] = JSON.parse(input.value);
-            } catch {
-                params[paramName] = input.value;
+    let params = '';
+    const paramInputs = document.querySelectorAll('.param-input');
+    
+    if (paramInputs.length === 1 && paramInputs[0].name === 'param_value') {
+        // Single generic input
+        params = paramInputs[0].value;
+    } else if (paramInputs.length > 1) {
+        // Multiple specific inputs - create object or string
+        const paramObj = {};
+        let hasValues = false;
+        
+        paramInputs.forEach(input => {
+            if (input.type === 'checkbox') {
+                if (input.checked) {
+                    paramObj[input.name] = true;
+                    hasValues = true;
+                }
+            } else if (input.value.trim()) {
+                paramObj[input.name] = input.value.trim();
+                hasValues = true;
             }
+        });
+        
+        if (hasValues) {
+            // Try to format as key=value pairs for simple cases
+            const pairs = Object.entries(paramObj).map(([k, v]) => `${k}=${v}`);
+            params = pairs.join(' ');
         }
-    });
+    }
+    
+    console.log('Collected params:', params);
     
     // Update status
     statusDot.className = 'status-indicator running';
     statusLabel.textContent = 'Status: Wykonywanie...';
-    resultDiv.textContent = 'Wykonywanie pluginu...';
+    resultDiv.innerHTML = '<div class="alert alert-info">Wykonywanie pluginu...</div>';
     
     // Prepare request data
     const requestData = {
-        plugin_name: selectedPlugin,
-        sub_command: selectedSubcommand || null,
-        parameters: params,
-        use_context: useContext
+        plugin: selectedPlugin,
+        sub_command: selectedSubcommand || '',
+        params: params,
+        include_history: useContext
     };
+    
+    console.log('Executing plugin with data:', requestData);
     
     // Execute plugin
     fetch('/api/playground/execute', {
@@ -907,6 +1075,8 @@ document.getElementById('execute-plugin-btn').addEventListener('click', function
     })
     .then(response => response.json())
     .then(data => {
+        console.log('Plugin execution result:', data);
+        
         statusDot.className = data.success ? 'status-indicator success' : 'status-indicator failed';
         statusLabel.textContent = data.success ? 'Status: Sukces' : 'Status: Błąd';
         
@@ -933,6 +1103,7 @@ document.getElementById('execute-plugin-btn').addEventListener('click', function
         }
     })
     .catch(error => {
+        console.error('Plugin execution error:', error);
         statusDot.className = 'status-indicator failed';
         statusLabel.textContent = 'Status: Błąd';
         resultDiv.innerHTML = `
@@ -954,7 +1125,7 @@ document.getElementById('view-source-btn').addEventListener('click', function() 
     fetch(`/api/playground/plugin/${selectedPlugin}/info`)
         .then(response => response.json())
         .then(data => {
-            if (data.success && data.source_code) {
+            if (data.source_code) {
                 document.getElementById('source-code-content').textContent = data.source_code;
                 
                 // Show modal
@@ -974,24 +1145,15 @@ document.getElementById('view-source-btn').addEventListener('click', function() 
         });
 });
 
-// Initialize on page load
+// Call initialization
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM content loaded - initializing components');
+    loadPlugins(); // Initialize plugins for playground functionality
     
-    // First, ensure all tables have proper structure
-    const perfTableBody = document.querySelector('#perf-stats-table tbody');
-    if (!perfTableBody) {
-        console.error('Performance stats table body not found on page load');
-    }
-    
+    // Initialize other functionality
     fetchPerfStats();
     fetchUsers();
     fetchTestHistory();
     fetchScheduleStatus();
-    
-    setupDeleteUserButtons();
-      // Set up polling for test stats
-    setInterval(fetchPerfStats, 30000);
 });
 </script>
 {% endblock %}
