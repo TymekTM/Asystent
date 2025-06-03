@@ -71,7 +71,7 @@ def save_plugins_state(plugins):
         logger.error(f"Failed to save plugins state: {e}")
 
 
-class Assistant:    
+class Assistant:
     async def speak_and_maybe_listen(self, text, listen_after_tts: bool, TextMode: bool = False):
         """Helper: Speak text, and if listen_after_tts, trigger manual listen after TTS."""
         if not text:
@@ -94,14 +94,27 @@ class Assistant:
             logger.warning(f"[PromptLog] Failed to log TTS output: {log_exc}")
         if listen_after_tts:
             logger.info(f"[TTS+Listen] Speaking and will listen again: '{text[:100]}...'")
+            self.is_speaking = True
+            self.last_tts_text = text
             await self.tts.speak(text)
+            self.is_speaking = False
+            self.last_tts_text = ""
             logger.info("[TTS+Listen] TTS finished, triggering manual listen.")
             self.is_processing = False
             self.is_listening = True
             self.manual_trigger_event.set()
         else:
             logger.info(f"[TTS] Speaking (no re-listen): '{text[:100]}...'")
-            asyncio.create_task(self.tts.speak(text))
+            asyncio.create_task(self._speak_async(text))
+
+    async def _speak_async(self, text: str):
+        """Background speaking task used when no re-listen is requested."""
+        self.is_speaking = True
+        self.last_tts_text = text
+        await self.tts.speak(text)
+        self.is_speaking = False
+        self.last_tts_text = ""
+        self.is_processing = False
     """Main class for the assistant."""
     @measure_performance
     def __init__(self, mic_device_id: int = None, wake_word: str = None, stt_silence_threshold: int = None, command_queue: queue.Queue = None): # Type hint for command_queue
@@ -133,8 +146,10 @@ class Assistant:
 
         self.intent_detector = None # Initialized later
         self.should_exit = threading.Event()
-        self.is_listening = False 
+        self.is_listening = False
         self.is_processing = False
+        self.is_speaking = False
+        self.last_tts_text = ""
         self.current_active_window = None
         self._active_window_thread = None
         self._stop_event_active_window = threading.Event()
@@ -536,6 +551,8 @@ class Assistant:
         # --- Centralized process_query logic ---
         beep_sounds.MUTE = bool(TextMode)
         self.tts.mute = bool(TextMode)
+        self.is_listening = False
+        self.is_processing = True
         listen_after_tts = False
         # Use global flag to control prompt refinement (disabled by default for new testing approach)
         query_refinement_enabled = QUERY_REFINEMENT_ENABLED
@@ -887,6 +904,7 @@ class Assistant:
             logger.warning("Manual trigger ignored: Already listening or processing.")
             return
         logger.info("Manual listen triggered.")
+        self.is_listening = True
         self.manual_trigger_event.set() # Signal the wakeword_detector to listen once
 
     @measure_performance
