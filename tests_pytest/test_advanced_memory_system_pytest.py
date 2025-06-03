@@ -564,7 +564,10 @@ class TestIntegrationFunctions:
     def test_add_memory_advanced(self, mock_get_manager):
         """Test add_memory_advanced function"""
         mock_manager = Mock()
-        mock_manager.add_memory.return_value = 123
+        # Mock MemoryEntry object with required attributes
+        mock_entry = Mock()
+        mock_entry.memory_type = MemoryType.SHORT_TERM
+        mock_manager.add_memory.return_value = mock_entry
         mock_get_manager.return_value = mock_manager
         
         result = add_memory_advanced(
@@ -573,7 +576,10 @@ class TestIntegrationFunctions:
             memory_type=MemoryType.SHORT_TERM
         )
         
-        assert result == 123
+        # Expect tuple (message, success)        assert isinstance(result, tuple)
+        assert len(result) == 2
+        assert result[1] is True  # success
+        assert "Test memory" in result[0]  # message contains content
         mock_manager.add_memory.assert_called_once()
     
     @patch('advanced_memory_system.get_memory_manager')
@@ -583,7 +589,10 @@ class TestIntegrationFunctions:
         mock_results = [
             MemoryEntry(content="Test result", user="user1", memory_type=MemoryType.LONG_TERM)
         ]
-        mock_manager.search_memories.return_value = mock_results
+        # Mock get_memories to return object with memories attribute
+        mock_search_result = Mock()
+        mock_search_result.memories = mock_results
+        mock_manager.get_memories.return_value = mock_search_result
         mock_get_manager.return_value = mock_manager
         
         results = search_memories_advanced(
@@ -594,7 +603,7 @@ class TestIntegrationFunctions:
         
         assert len(results) == 1
         assert results[0].content == "Test result"
-        mock_manager.search_memories.assert_called_once()
+        mock_manager.get_memories.assert_called_once()
 
 
 class TestConfigurationAndConstants:
@@ -697,8 +706,7 @@ class TestPerformanceAndEdgeCases:
         start_time = time.time()
         results = search_engine.search_memories(large_dataset, "content", limit=10)
         end_time = time.time()
-        
-        # Should complete within reasonable time (1 second)
+          # Should complete within reasonable time (1 second)
         assert end_time - start_time < 1.0
         assert len(results) <= 10
     
@@ -719,8 +727,9 @@ class TestPerformanceAndEdgeCases:
                 )
                 results.append(result)
             
-            # All operations should succeed
-            assert all(r == 1 for r in results)
+            # All operations should succeed and return MemoryEntry objects
+            assert all(isinstance(r, MemoryEntry) for r in results)
+            assert all(r.id == 1 for r in results)  # All should have the mocked ID
             assert mock_add.call_count == 10
 
 

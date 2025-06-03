@@ -246,14 +246,15 @@ class MemoryAnalyzer:
             original_score=original_score,
             new_score=importance_score,
             factors=factors,
-            should_promote=should_promote,
-            recommended_type=recommended_type
+            should_promote=should_promote,            recommended_type=recommended_type
         )
     
     def _analyze_length(self, content: str) -> float:
         """Analyze content length - longer content might be more important."""
         words = len(content.split())
-        if words < 3:
+        if words == 0:
+            return 0.0  # Empty content has no length value
+        elif words < 3:
             return 0.1
         elif words < 10:
             return 0.3
@@ -868,8 +869,7 @@ class MemoryManager:
             # Remove from mid-term
             from database_models import get_connection
             with get_connection() as conn:
-                conn.execute("DELETE FROM mid_term_memory WHERE id = ?", (memory.id,))
-              # Add analytics
+                conn.execute("DELETE FROM mid_term_memory WHERE id = ?", (memory.id,))            # Add analytics
             add_memory_analytics_entry(
                 memory_id=long_id,
                 memory_type=MemoryType.LONG_TERM.value,
@@ -883,6 +883,21 @@ class MemoryManager:
         except Exception as e:
             logger.error(f"Failed to promote mid-term memory {memory.id}: {e}")
             return False
+    
+    def cleanup_old_analytics(self, days: int = 30) -> int:
+        """Clean up old analytics entries and return count of deleted entries."""
+        try:
+            cutoff_date = datetime.now() - timedelta(days=days)
+            from database_models import get_connection
+            with get_connection() as conn:
+                cursor = conn.execute("DELETE FROM memory_analytics WHERE timestamp < ?", (cutoff_date,))
+                deleted_count = cursor.rowcount
+                conn.commit()
+            logger.info(f"Cleaned up {deleted_count} old analytics entries")
+            return deleted_count
+        except Exception as e:
+            logger.error(f"Failed to cleanup analytics: {e}")
+            return 0
 
 # -----------------------------------------------------------------------------
 # Background Tasks
@@ -972,12 +987,10 @@ async def analytics_cleanup_loop(interval_hours: int = 24):
     """Analytics cleanup loop function."""
     while True:
         try:
-            # Clean up old analytics entries (older than 30 days)
-            cutoff_date = datetime.now() - timedelta(days=30)
-            from database_models import get_connection
-            with get_connection() as conn:
-                conn.execute("DELETE FROM memory_analytics WHERE timestamp < ?", (cutoff_date,))
-            logger.info("Analytics cleanup completed")
+            # Clean up old analytics entries using memory manager
+            manager = get_memory_manager()
+            cleaned_count = manager.cleanup_old_analytics()
+            logger.info(f"Analytics cleanup completed, removed {cleaned_count} entries")
         except Exception as e:
             logger.error(f"Analytics cleanup error: {e}")
         
