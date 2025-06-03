@@ -1,4 +1,8 @@
-import base64, os, datetime, logging, subprocess, ollama
+import base64, os, datetime, logging, subprocess
+try:
+    import ollama  # noqa: F401
+except Exception:
+    ollama = None
 import numpy as np
 
 from ai_module import chat_with_providers, remove_chain_of_thought

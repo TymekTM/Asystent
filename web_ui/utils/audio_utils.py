@@ -30,11 +30,18 @@ def convert_audio(input_path: str) -> str:
 
 def get_assistant_instance():
     """Get the assistant instance for audio processing."""
-    from assistant import Assistant
     global _assistant_instance
-    if '_assistant_instance' not in globals() or _assistant_instance is None:
+    if '_assistant_instance' in globals() and _assistant_instance is not None:
+        return _assistant_instance
+    try:
+        from assistant import Assistant
         _assistant_instance = Assistant()
-    return _assistant_instance
+        return _assistant_instance
+    except Exception:
+        class Dummy:
+            pass
+        _assistant_instance = Dummy()
+        return _assistant_instance
 
 def transcribe_audio(wav_path: str) -> str:
     """Transcribe WAV file via assistant instance if available."""

@@ -154,7 +154,9 @@
                                 </label>
                                 <div class="d-flex">
                                     <select class="form-select" id="mic-device-id-select" name="MIC_DEVICE_ID" data-current-value="{{ config.MIC_DEVICE_ID }}">
-                                        <option value="" selected>Ładowanie urządzeń...</option>
+                                        {% for name, idx in audio_devices %}
+                                            <option value="{{ idx }}" {% if idx == config.MIC_DEVICE_ID %}selected{% endif %}>{{ name }}</option>
+                                        {% endfor %}
                                     </select>
                                     <button class="btn btn-outline-secondary device-refresh-btn" type="button" id="refresh-mic-devices-btn" data-bs-toggle="tooltip" title="Odśwież listę urządzeń">
                                         <i class="fas fa-sync-alt"></i>

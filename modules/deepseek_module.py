@@ -1,4 +1,8 @@
-import logging, subprocess, os, ollama
+import logging, subprocess, os
+try:
+    import ollama  # noqa: F401
+except Exception:
+    ollama = None
 from config import DEEP_MODEL
 from prompts import DEEPTHINK_PROMPT
 from audio_modules.beep_sounds import play_beep

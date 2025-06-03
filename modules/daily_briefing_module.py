@@ -9,7 +9,10 @@ import logging
 import os
 from datetime import datetime, timedelta, time
 from typing import Dict, List, Optional, Any
-import requests
+try:
+    import requests  # noqa: F401
+except Exception:
+    requests = None
 from pathlib import Path
 import threading
 
@@ -214,9 +217,11 @@ class DailyBriefingModule:
             return []
             
         try:
+            if requests is None:
+                return []
             year = datetime.now().year
             url = f"{self.holidays_api_url}/{year}/PL"
-            
+
             response = requests.get(url, timeout=5)
             response.raise_for_status()
             holidays = response.json()

@@ -6,7 +6,10 @@ import time
 from collections import OrderedDict
 from functools import lru_cache
 
-import httpx
+try:
+    import httpx
+except Exception:
+    httpx = None
 import anyio # Added anyio
 from bs4 import BeautifulSoup
 from charset_normalizer import from_bytes

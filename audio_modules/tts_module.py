@@ -1,5 +1,8 @@
 import asyncio, logging, os, subprocess, uuid, threading
-from edge_tts import Communicate
+try:
+    from edge_tts import Communicate
+except Exception:  # edge_tts not installed
+    Communicate = None
 from performance_monitor import measure_performance
 
 # Handle relative imports
@@ -77,6 +80,9 @@ class TTSModule:
         if getattr(self, 'mute', False):
             return
         logger.info("TTS: %s", text)
+        if Communicate is None:
+            logger.error("edge_tts library is not available")
+            return
         tts = Communicate(text, "pl-PL-MarekNeural")
         temp_filename = f"temp_tts_{uuid.uuid4().hex}.mp3"
         temp_path = os.path.join("resources", "sounds", temp_filename)

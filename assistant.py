@@ -3,7 +3,10 @@ __version__ = "1.1.0" # Updated version
 import asyncio, json, logging, os, glob, importlib, time
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
-import ollama
+try:
+    import ollama  # noqa: F401
+except Exception:
+    ollama = None
 import inspect # Add inspect import back
 import queue # Import queue for Empty exception
 import threading

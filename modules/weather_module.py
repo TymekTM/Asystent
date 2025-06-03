@@ -1,5 +1,8 @@
 import logging
-import requests
+try:
+    import requests
+except Exception:
+    requests = None
 from audio_modules.beep_sounds import play_beep
 
 logger = logging.getLogger(__name__)
@@ -21,6 +24,8 @@ def _fetch_wttr(location, format="j1", lang=None, unit=None, custom=None):
             params["u"] = ""
     if custom and isinstance(custom, dict):
         params.update(custom)
+    if requests is None:
+        raise RuntimeError("biblioteka requests niedostępna")
     resp = requests.get(url, params=params, timeout=5)
     resp.raise_for_status()
     if format == "j1":
@@ -140,6 +145,8 @@ def _handle_map(params, conversation_history=None, user=None):
             qp["M"] = ""
         elif unit and unit.lower() in ("imperial", "u"):
             qp["u"] = ""
+        if requests is None:
+            raise RuntimeError("biblioteka requests niedostępna")
         req = requests.Request('GET', url, params=qp).prepare()
         return f"Mapa pogodowa: {req.url}"
     except Exception as e:
