@@ -1,6 +1,6 @@
 # Web UI Guide
 
-This guide provides detailed information about using the Asystent Web User Interface.
+This guide provides detailed information about using the Gaja Web User Interface, updated for version 1.2.0 with new features including the onboarding wizard, function calling configuration, and enhanced developer tools.
 
 ## General Navigation
 
@@ -16,28 +16,28 @@ The Dashboard provides an overview of system status and quick access to common a
 
 ### Key Elements
 
-- **Assistant Status**: Shows if the assistant is online, offline, or restarting
+- **Gaja Status**: Shows if Gaja is online, offline, or restarting
 - **Wake Word**: Displays the current wake word configuration
 - **STT Engine**: Shows which speech recognition engine is being used
 - **Quick Actions**: 
-  - **Activate Manually**: Triggers the assistant to listen without wake word
-  - **Restart Assistant**: Restarts the assistant process
+  - **Activate Manually**: Triggers Gaja to listen without wake word
+  - **Restart Gaja**: Restarts the Gaja process
   - **Restart Web Panel**: Restarts the web interface
   - **Restart All**: Restarts both components
-  - **Stop Assistant**: Shuts down the assistant process
+  - **Stop Gaja**: Shuts down the Gaja process
 - **Performance Stats**: Displays CPU, memory usage, and response times
 - **Recent Activity**: Shows recent interaction logs
 
 ## Chat Interface
 
-The chat page allows direct text interaction with the assistant.
+The chat page allows direct text interaction with Gaja.
 
 ### Features
 
 - **Message Input**: Type your message in the input field at the bottom
 - **Send Button**: Click to send your message
 - **Microphone Button**: Click to activate voice input
-- **Conversation Display**: Shows the conversation history with user and assistant messages
+- **Conversation Display**: Shows the conversation history with user and Gaja messages
 - **Clear Chat**: Button to clear the current conversation history
 
 ## Configuration Page
@@ -56,6 +56,8 @@ The configuration page allows you to customize various system settings.
   - Model selection for different functions
   - API key management
   - Context length and temperature settings
+  - Function calling configuration
+  - Personalization and style settings
   
 - **TTS Settings**:
   - Voice selection
@@ -78,7 +80,7 @@ After making changes, click the "Save Configuration" button at the bottom of the
 
 ## Long-Term Memory Page
 
-The Long-Term Memory page manages the assistant's persistent knowledge.
+The Long-Term Memory page manages Gaja's persistent knowledge.
 
 ### Managing Memories
 
@@ -131,10 +133,63 @@ The History page shows a chronological record of conversations.
 
 ## Dev Tools (Admin Only)
 
-The Dev section provides advanced tools for system administrators.
+The Dev section provides advanced tools for system administrators and developers.
 
 ### Features
 
 - **Unit Tests**: Run and view results of system tests
 - **Benchmarks**: Measure system performance
 - **User Management**: Add, edit, and delete user accounts
+- **Enhanced Playground**: Test and debug AI components
+
+### Developer Playground
+
+The Developer Playground provides a comprehensive testing environment for AI and plugin components:
+
+- **Plugin Testing**: Execute plugin functions with custom parameters
+- **LLM Testing**: Test language models with different providers and settings 
+- **Intention Analysis**: Debug intent classification and recognition
+- **Function Calling Debugging**: Test and verify function calling schemas
+- **System Status**: Monitor all components in real-time
+- **History Tracking**: View and filter test execution history
+
+## Plugins Page
+
+The Plugins page allows you to manage Gaja's plugins.
+
+### Features
+
+- **Plugin List**: Shows all available plugins
+- **Status Indicators**: Shows whether each plugin is enabled or disabled
+- **Toggle Buttons**: Enable or disable individual plugins
+- **Reload Button**: Refresh plugins after changes without restarting
+
+## Documentation Page
+
+The Documentation page provides access to comprehensive system documentation directly in the web interface.
+
+### Features
+
+- **Documentation Browser**: Navigate through all system documentation
+- **Section Navigation**: Access different documentation categories
+- **Markdown Rendering**: Properly formatted documentation with code highlighting
+- **Table of Contents**: Easy navigation within documentation files
+- **Breadcrumb Navigation**: Track your path through documentation hierarchy
+
+## Onboarding Wizard
+
+The Onboarding Wizard guides new users through the initial setup process when launching Asystent for the first time.
+
+### Features
+
+- **Step-by-Step Interface**: Guides users through essential configuration
+- **Assistant Personalization**: Configure assistant name and wake word
+- **Audio Setup**: Select microphone and configure voice settings
+- **AI Provider Selection**: Choose and configure your preferred AI provider
+- **Progressive Disclosure**: Reveals options in a logical sequence
+- **Configuration Testing**: Verify settings work correctly before proceeding
+- **State Persistence**: Save progress in case of interruption
+
+For detailed information about the onboarding process, see the [Onboarding Guide](./onboarding.md).
+
+For more details, see the [Documentation UI Guide](documentation-ui.md).

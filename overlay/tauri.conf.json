@@ -7,7 +7,7 @@
     "distDir": "./dist"
   },
   "package": {
-    "productName": "Asystent Overlay",
+    "productName": "Gaja Overlay",
     "version": "0.1.0"
   },
   "tauri": {
@@ -45,7 +45,7 @@
       ],
       "icon": [
       ],
-      "identifier": "com.asystent.overlay",
+      "identifier": "com.gaja.overlay",
       "longDescription": "",
       "macOS": {
         "entitlements": null,
@@ -75,7 +75,7 @@
         "fullscreen": false,
         "height": 600,
         "resizable": false,
-        "title": "Asystent Overlay",
+        "title": "Gaja Overlay",
         "width": 800,
         "decorations": false,
         "transparent": true,

@@ -1,6 +1,6 @@
-# Asystent - Advanced AI Assistant System
+# Gaja - Advanced AI Assistant System (v1.2.0)
 
-Asystent is a powerful AI assistant system that provides interactive natural language processing through text, voice, and web interfaces. It's designed to be modular, extensible, and adaptable to various usage scenarios.
+Gaja is a powerful AI assistant system that provides interactive natural language processing through text, voice, and web interfaces. It's designed to be modular, extensible, and adaptable to various usage scenarios. With its new Daily Briefing capability and enhanced API, version 1.2.0 brings even more functionality to users.
 
 ## Features
 
@@ -12,6 +12,9 @@ Asystent is a powerful AI assistant system that provides interactive natural lan
 - **Modular plugin system:** Easily extend functionality with custom plugins
 - **Tool integration:** Built-in tools for web search, API connections, screen analysis, and more
 - **Web control panel:** Configure, monitor, and interact with the system via browser
+- **Daily Briefings:** AI-generated personalized daily summaries with weather and memory integration
+- **RESTful API:** Comprehensive API for external system integration
+- **Documentation Integration:** Web UI integrated documentation viewer
 
 ## Installation
 
@@ -25,8 +28,8 @@ Asystent is a powerful AI assistant system that provides interactive natural lan
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/asystent.git
-cd asystent
+git clone https://github.com/yourusername/gaja.git
+cd gaja
 ```
 
 2. Install the required packages:
@@ -34,40 +37,52 @@ cd asystent
 pip install -r requirements.txt
 ```
 
-3. Configure your settings in `config.json` or via the web interface
+3. Configure your settings:
+   - Create a `config.json` file from `dummy_config.json`
+   - Add your API keys and customize settings
+   - Or configure via the web interface after first run
 
 4. Run the application:
 ```bash
 python main.py
 ```
 
+5. Build an executable (optional):
+```bash
+python build.py
+```
+   See [README_BUILD.md](README_BUILD.md) for detailed build instructions.
+
 ## Usage
 
 ### Web Interface
 
-Access the control panel by navigating to http://localhost:5000 in your browser after starting the application.
+Access the control panel by navigating to http://localhost:5000 in your browser after starting the application. Default login credentials are:
+- Username: `dev` or `user`
+- Password: `devpassword` or `password`
 
 ### Voice Interaction
 
 1. Start the application with voice support enabled
-2. Use the wake word (default: "Hey Assistant") to begin voice interaction
+2. Use the wake word (default: "gaja") to begin voice interaction
 3. Speak your command or question
+4. Or click the "Activate" button in the web UI to listen without a wake word
 
 ### API Integration
 
-Asystent provides REST API endpoints for programmatic interaction. See the [API documentation](docs/api/README.md) for details.
+Gaja provides REST API endpoints for programmatic interaction. See the [API documentation](docs/api/README.md) for details.
 
 ## Documentation
 
 Comprehensive documentation is available in the following sections:
 
-- [User Guide](docs/user-guide/README.md) - How to use Asystent
+- [User Guide](docs/user-guide/README.md) - How to use Gaja
 - [Developer Guide](docs/developer/README.md) - Technical information and setup instructions
 - [API Documentation](docs/api/README.md) - API reference and integration guides
 
 ## Development
 
-To contribute to Asystent:
+To contribute to Gaja:
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
@@ -83,4 +98,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - OpenAI, Ollama, DeepSeek, and Anthropic for their language models
 - Flask for the web framework
-- All contributors who have helped build and improve Asystent
+- All contributors who have helped build and improve Gaja

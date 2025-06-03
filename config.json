@@ -23,7 +23,7 @@
   "query_refinement": {
     "model": "gpt-4.1-nano"
   },
-  "version": "1.1.0",
+  "version": "1.2.0",
   "AUTO_LISTEN_AFTER_TTS": false,
   "ASSISTANT_NAME": "Gaja",
   "LANGUAGE": "pl-PL",

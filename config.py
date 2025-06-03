@@ -54,7 +54,7 @@ DEFAULT_CONFIG = {
     "model": "gpt-4.1-nano", # Model for query refinement
     "enabled": True
   },
-  "version": "1.1.0", # Current assistant version
+  "version": "1.2.0", # Current assistant version
   "AUTO_LISTEN_AFTER_TTS": False, # Should assistant listen automatically after speaking?
   "TRACK_ACTIVE_WINDOW": False, # Track active window title for context
   "ACTIVE_WINDOW_POLL_INTERVAL": 5, # Seconds

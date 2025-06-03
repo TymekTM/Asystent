@@ -7,7 +7,7 @@
 - Fix tooltip placement and width on smaller screens
 - Manualne dodawanie wspomnień robi to 2x
 - Po onboarding auto zalogowanie
--Zalogowanie restartuje asystenta(miało to robić tylko po onboarding)
+- Zalogowanie restartuje Gaja(miało to robić tylko po onboarding)
 
 # ⭐ WAŻNE (strategiczne / fundamenty)
 - Kompletny rework intencji AI [Każdy moduł swoje AI ]
@@ -15,7 +15,6 @@
 - Podzielenie na serwer i klient
 - Plug and play installation
 - Find real use case
-- Change version + all "assistant" to "Gaja"
 
 # 🔧 OPTYMALIZACJE
 - RAM usage optymalizacja

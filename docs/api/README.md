@@ -1,10 +1,10 @@
 # API Documentation
 
-This document outlines the API endpoints available in the Asystent system, allowing for integration with external applications.
+This document outlines the API endpoints available in the Gaja system, allowing for integration with external applications.
 
 ## Base URL
 
-All API endpoints are relative to the base URL where your Asystent instance is running:
+All API endpoints are relative to the base URL where your Gaja instance is running:
 
 ```
 http://[host]:[port]/api
@@ -46,10 +46,9 @@ Returns the current status of the assistant.
 
 **Response:**
 ```json
-{
-  "status": "Online",  // Can be "Online", "Offline", or "Restarting"
+{  "status": "Online",  // Can be "Online", "Offline", or "Restarting"
   "uptime": 3600,      // Seconds since last startup
-  "wake_word": "asystent"
+  "wake_word": "gaja"
 }
 ```
 
@@ -131,7 +130,7 @@ Retrieves the current system configuration.
 **Response:**
 ```json
 {
-  "WAKE_WORD": "asystent",
+  "WAKE_WORD": "gaja",
   "MIC_DEVICE_ID": "",
   "PROVIDER": "ollama",
   "MAIN_MODEL": "llama3",
@@ -365,6 +364,24 @@ Retrieves usage statistics.
   "unique_users": ["user1", "user2"],
   "avg_response_time": 1.23,
   "last_query_time": 1714743330
+}
+```
+
+### Module-Specific Endpoints
+
+#### GET /api/briefing
+
+Generates and retrieves a daily briefing.
+
+**Query Parameters:**
+- `style` (optional): Briefing style, can be "normal", "funny", or "serious" (default: "normal")
+- `lang` (optional): Language code for the briefing (default: auto-detect)
+
+**Response:**
+```json
+{
+  "success": true,
+  "briefing": "Good morning! Today is Monday, June 2, 2025. The weather in your area is sunny with a temperature of 22°C. You have 2 events scheduled today. Remember that yesterday you asked me to remind you about submitting your report."
 }
 ```
 

@@ -283,7 +283,7 @@ def run_wakeword_detection(
         return
 
     logger.info(f"Starting wake word detection for '{wake_word_config_name}' using openWakeWord.")
-    logger.info("Asystent jest załadowany i nasłuchuje.")
+    logger.info("Gaja jest załadowana i nasłuchuje.")
 
     audio_data_queue = queue.Queue()
 

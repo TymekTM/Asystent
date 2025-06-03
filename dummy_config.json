@@ -23,6 +23,6 @@
     "enabled": true,
     "model": "gpt-4.1-nano"
   },
-  "version": "1.1.0",
+  "version": "1.2.0",
   "ACTIVE_WINDOW_POLL_INTERVAL": 5
 }

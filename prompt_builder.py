@@ -1,7 +1,7 @@
 """
 prompt_builder.py
 
-Centralized prompt building utilities for Asystent AI system.
+Centralized prompt building utilities for Gaja AI system.
 All logic for constructing prompts for AI models, including system prompts, module prompts, and dynamic prompt generation, should be placed here.
 """
 

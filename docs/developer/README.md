@@ -1,6 +1,6 @@
 # Developer Setup Guide
 
-This guide will help you set up a development environment for Asystent and understand the system architecture. Updated for version 1.1.0.
+This guide will help you set up a development environment for Gaja and understand the system architecture. Updated for version 1.2.0.
 
 ## Table of Contents
 
@@ -15,7 +15,7 @@ This guide will help you set up a development environment for Asystent and under
 
 ## Prerequisites
 
-Before setting up Asystent for development, ensure you have:
+Before setting up Gaja for development, ensure you have:
 
 - Python 3.10 or higher
 - Git
@@ -45,9 +45,8 @@ The main dependencies are listed in `requirements.txt` and include:
 ## Installation
 
 1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-username/asystent.git
-   cd asystent
+   ```bash   git clone https://github.com/your-username/gaja.git
+   cd gaja
    ```
 
 2. Create and activate a virtual environment:
@@ -101,9 +100,9 @@ The main dependencies are listed in `requirements.txt` and include:
 The project is organized for modularity and maintainability:
 
 ```
-asystent/
+gaja/
 ├── main.py                 # Application entry point
-├── assistant.py            # Core assistant logic
+├── assistant.py            # Core Gaja logic
 ├── ai_module.py            # LLM integration with multiple providers
 ├── ai_layers.txt           # Layer structure for AI processing
 ├── config.py               # Configuration management
@@ -168,9 +167,9 @@ asystent/
 
 ## Architecture Overview
 
-Asystent uses a multi-process architecture with these main components:
+Gaja uses a multi-process architecture with these main components:
 
-1. **Assistant Process**: Manages voice interaction, AI processing, and core functionality
+1. **Gaja Process**: Manages voice interaction, AI processing, and core functionality
 2. **Web Server Process**: Handles the web UI and API endpoints
 3. **Inter-process Communication**: Uses shared queues for messaging between processes
 
@@ -188,9 +187,9 @@ The system is designed with these key architectural principles:
 
 ## Core Components
 
-### Assistant Class
+### Gaja Class
 
-The `Assistant` class in `assistant.py` is the central coordinator that:
+The `Assistant` class in `assistant.py` (representing Gaja) is the central coordinator that:
 - Initializes and manages all subsystems
 - Handles the main interaction loop via asyncio
 - Routes commands to appropriate handlers
@@ -238,6 +237,17 @@ The intent system in `intent_system.py` routes commands to the appropriate handl
 - Maps intents to handler functions in various modules
 - Supports function extraction from AI responses
 - Provides unified intent routing with `handle_intent()`
+- Integrates with the Function Calling System
+
+### Function Calling System
+
+The Function Calling System in `function_calling_system.py` enhances interaction accuracy:
+- Converts module definitions to OpenAI function calling format
+- Handles parameter extraction and validation
+- Maps function calls to module handlers
+- Provides strongly typed parameter passing
+- Enhances accuracy of module invocation
+- Supports nested function structures
 - Manages sub-command registry with aliases
 - Supports both sync and async handler functions
 
@@ -254,7 +264,7 @@ Functional capabilities are organized into modules in the `modules/` directory:
 ### Web Interface
 
 The web UI in `web_ui/app.py` provides:
-- User interface for interacting with the assistant
+- User interface for interacting with Gaja
 - Configuration management
 - System monitoring and control
 - API endpoints for external integration
@@ -271,17 +281,31 @@ The configuration system in `config.py`:
 
 ## Module Development
 
-To develop modules for Asystent, follow these guidelines:
+To develop modules for Gaja, follow these guidelines:
 
 1. **Module Creation**: Create a new file in the `modules/` directory with a `_module.py` suffix
 2. **Registration Function**: Implement a `register()` function that returns module metadata:
    ```python
    def register():
        return {
-           "name": "your_module",
+           "command": "your_module",
            "description": "Module description",
            "handler": your_main_handler,
            "aliases": ["alias1", "alias2"],  # Optional
+           "function_schema": {  # For OpenAI Function Calling support
+               "name": "your_module_function",
+               "description": "Detailed description for the AI model",
+               "parameters": {
+                   "type": "object",
+                   "properties": {
+                       "param_name": {
+                           "type": "string",
+                           "description": "Parameter description"
+                       }
+                   },
+                   "required": ["param_name"]
+               }
+           },
            "sub_commands": {  # Optional
                "subcommand_name": {
                    "function": subcommand_handler,
@@ -314,7 +338,7 @@ To develop modules for Asystent, follow these guidelines:
 
 ## Performance Monitoring
 
-Asystent includes a comprehensive performance monitoring system:
+Gaja includes a comprehensive performance monitoring system:
 
 ### Decorator-based Tracking
 

@@ -2,6 +2,20 @@
 
 ## Currently Implemented Modules
 
+### Daily Briefing Module
+- **Command**: `briefing` (aliases: `brief`, `podsumowanie`, `dzień`)
+- **Description**: Generates personalized daily briefing with weather, memories, and other relevant information
+- **Features**:
+  - AI-generated personalized briefings
+  - Weather data integration
+  - Memory context integration
+  - Language detection and multi-language support
+  - Style variations (normal, funny, serious)
+  - Scheduled briefings at specified times
+  - Holiday and special date notifications
+  - Calendar integration for upcoming events
+- **Example**: "Give me my daily briefing" or "Co dziś planujemy?"
+
 ### Search Module
 - **Command**: `search` (aliases: `search`, `wyszukaj`, `web`)
 - **Description**: Searches for information on the internet and summarizes the results
@@ -87,6 +101,15 @@
   - Provides context about current application
   - Helps assistant understand user's current activity
   - Can be enabled/disabled for privacy
+
+### Function Calling Integration
+- **Description**: Enables structured function calling with LLM models
+- **Features**:
+  - Converts module system to OpenAI function calling format
+  - Allows for more precise command interpretation
+  - Enhances module execution accuracy
+  - Streamlined parameter handling for all modules
+  - Support for nested function calling
   - Configurable polling interval
 - **Note**: This module runs in the background and doesn't have direct commands
 
@@ -97,6 +120,37 @@
   - Can open specific URLs
   - Can search and open common websites
 - **Example**: "Open GitHub website"
+
+### API Module
+- **Command**: `api` (aliases: `api`, `endpoint`)
+- **Description**: Makes requests to external APIs
+- **Features**:
+  - Supports various HTTP methods (GET, POST, PUT, DELETE)
+  - Can send and receive JSON data
+  - Handles authentication
+  - Configurable via `api_integrations_config.json`
+- **Example**: "Make an API call to get the latest data"
+
+### Music Module
+- **Command**: `music` (aliases: `play`, `graj`, `muzyka`)
+- **Description**: Controls music playback
+- **Features**:
+  - Play/pause/stop music
+  - Skip tracks
+  - Volume control
+  - Playlist management
+  - Genre-based recommendations
+- **Example**: "Play some relaxing music"
+
+### Open Web Module
+- **Command**: `open` (aliases: `otwórz`, `web`, `webpage`)
+- **Description**: Opens websites and performs web navigation
+- **Features**:
+  - Opens URLs in default browser
+  - Intelligent URL construction from search terms
+  - Support for common websites and services
+  - Handles URL validation and formatting
+- **Example**: "Open Google" or "Otwórz YouTube"
 
 ## Module Management
 

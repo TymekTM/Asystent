@@ -1,7 +1,7 @@
 """
 function_calling_system.py
 
-OpenAI Function Calling system for Asystent AI assistant.
+OpenAI Function Calling system for Gaja AI assistant.
 Converts the existing module system to OpenAI function calling format.
 """
 
