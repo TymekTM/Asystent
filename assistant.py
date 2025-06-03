@@ -9,14 +9,13 @@ import queue # Import queue for Empty exception
 import threading
 import logging.handlers # Add this import
 from collections import deque # Import deque for conversation history
-import numpy as np # Added for model warm-up
+# numpy imported lazily when needed
 
-# Import modułów audio z nowej lokalizacji
-from audio_modules.tts_module import TTSModule
+# Import modułów audio z nowej lokalizacji - some imported lazily
 from audio_modules.beep_sounds import play_beep
 import audio_modules.beep_sounds as beep_sounds
 from audio_modules.wakeword_detector import run_wakeword_detection
-from audio_modules.whisper_asr import WhisperASR # Ensure WhisperASR is imported
+# TTSModule and WhisperASR imported lazily when needed
 
 # Import funkcji AI z nowego modułu
 from ai_module import refine_query, generate_response, parse_response, remove_chain_of_thought, detect_language, detect_language_async
@@ -141,6 +140,7 @@ class Assistant:
         self._stop_event_active_window = threading.Event()
 
         self.conversation_history = deque(maxlen=self.max_history_length)
+        from audio_modules.tts_module import TTSModule  # Lazy import
         self.tts = TTSModule()
         
         # The old SpeechRecognizer instance (Vosk-based) is removed.
@@ -209,9 +209,7 @@ class Assistant:
         
         self.initialize_components() # Initializes WhisperASR and other components
         logger.info("Assistant initialized.")
-        # --- End of __init__ ---
-
-    def initialize_components(self):
+        # --- End of __init__ ---    def initialize_components(self):
         """Initializes components that require hardware access or network."""
         logger.info("Initializing components...")
         
@@ -219,10 +217,12 @@ class Assistant:
         if self.use_whisper: # This will always be true now
             if not self.whisper_asr: 
                 logger.info(f"Initializing WhisperASR with model: {self.whisper_model}")
+                from audio_modules.whisper_asr import WhisperASR  # Lazy import
                 self.whisper_asr = WhisperASR(model_size=self.whisper_model)
             
             logger.info("Warming up Whisper ASR model...")
             try:
+                import numpy as np  # Lazy import
                 sample_rate = 16000
                 duration = 1
                 num_samples = sample_rate * duration
@@ -364,9 +364,9 @@ class Assistant:
                      self.whisper_asr.unload()
                 self.whisper_asr = None # Force re-initialization
             
-            if self.use_whisper: # This will be true
-                 self.whisper_asr = WhisperASR(model_size=self.whisper_model)
+            if self.use_whisper: # This will be true                 self.whisper_asr = WhisperASR(model_size=self.whisper_model)
                  try:
+                    import numpy as np  # Lazy import
                     logger.info(f"Warming up new Whisper ASR model: {self.whisper_model}")
                     sample_rate = 16000; duration = 1; num_samples = sample_rate * duration
                     dummy_audio_np = np.zeros(num_samples, dtype=np.float32)

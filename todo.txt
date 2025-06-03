@@ -1,13 +1,8 @@
 # ✅ FIXY
 - Zweryfikować działanie innych rzeczy w core (timer działa)
 - When AI wants to activate listening and user does the same at the same time it just happens twice
-- Dodawanie użytkownika nie działa
-- Nie działa wiele języków w web panel
 - Moduł od muzyki klucz spotify
 - Fix tooltip placement and width on smaller screens
-- Manualne dodawanie wspomnień robi to 2x
-- Po onboarding auto zalogowanie
-- Zalogowanie restartuje Gaja(miało to robić tylko po onboarding)
 
 # ⭐ WAŻNE (strategiczne / fundamenty)
 - Kompletny rework intencji AI [Każdy moduł swoje AI ]
@@ -17,9 +12,7 @@
 - Find real use case
 
 # 🔧 OPTYMALIZACJE
-- RAM usage optymalizacja
 - Entire app start speed
-- Reduce number of heavy dependencies
 - Add loading indicators for long-running operations in web UI
 - Heatmap użycia + śledzenie token useage
 

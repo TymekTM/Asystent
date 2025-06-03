@@ -97,16 +97,14 @@ def setup_api_routes(app, assistant_queue):
                 if get_user_by_username(username):
                     return jsonify({"error": "User already exists"}), 400
                 
-                user_data = {
-                    'username': username,
-                    'password': password,
-                    'role': role,
-                    'display_name': display_name,
-                    'ai_persona': ai_persona,
-                    'personalization': personalization
-                }
-                
-                add_user(user_data)
+                add_user(
+                    username=username,
+                    password=password,
+                    role=role,
+                    display_name=display_name,
+                    ai_persona=ai_persona,
+                    personalization=personalization
+                )
                 logger.info(f"User created: {username}")
                 return jsonify({"success": True})
             except Exception as e:
@@ -444,7 +442,11 @@ def setup_api_routes(app, assistant_queue):
             success = mark_onboarding_complete()
             
             if success:
-                logger.info("Onboarding completed successfully via API")
+                # Auto-login the dev user after onboarding completion
+                session['username'] = 'dev'
+                session.permanent = True
+                
+                logger.info("Onboarding completed successfully via API, dev user auto-logged in")
                 return jsonify({"success": True, "message": "Onboarding completed successfully"}), 200
             else:
                 logger.error("Failed to mark onboarding as complete")

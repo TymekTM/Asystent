@@ -3,13 +3,15 @@ assistant_memory.py – obsługa długoterminowych wspomnień asystenta.
 
 This module provides a typed, test‑friendly interface for adding,
 retrieving and deleting memories stored in a persistent database.
+
+Extended with advanced memory management system (KT/ŚT/DT).
 """
 
 from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Dict, Any, Tuple
 
 from database_models import (
     add_memory as add_memory_db,
@@ -17,6 +19,20 @@ from database_models import (
     delete_memory as delete_memory_db,
 )
 
+# Import advanced memory system
+try:
+    from advanced_memory_system import (
+        get_memory_manager,
+        add_memory_advanced,
+        search_memories_advanced,
+        MemoryType,
+        ContextType,
+        IMPORTANCE_THRESHOLDS
+    )
+    ADVANCED_MEMORY_AVAILABLE = True
+except ImportError as e:
+    logging.getLogger(__name__).warning(f"Advanced memory system not available: {e}")
+    ADVANCED_MEMORY_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +52,44 @@ class Result:
     """Unified return type for all public functions."""
     success: bool
     message: str
+
+@dataclass
+class MemoryStats:
+    """Statistics about memory usage."""
+    total_memories: int
+    unique_users: int
+    avg_memory_length: float
+    oldest_memory: Optional[str] = None
+    newest_memory: Optional[str] = None
+    
+    @classmethod
+    def get_stats(cls) -> 'MemoryStats':
+        """Calculate memory statistics from database."""
+        try:
+            memories = get_memories_db(query=None, limit=None)  # Get all memories
+            
+            if not memories:
+                return cls(0, 0, 0.0)
+            
+            total_memories = len(memories)
+            unique_users = len(set(m.get('user', '') for m in memories))
+            
+            content_lengths = [len(m.get('content', '')) for m in memories]
+            avg_length = sum(content_lengths) / len(content_lengths) if content_lengths else 0.0
+            
+            oldest = memories[-1].get('content', '') if memories else None
+            newest = memories[0].get('content', '') if memories else None
+            
+            return cls(
+                total_memories=total_memories,
+                unique_users=unique_users,
+                avg_memory_length=avg_length,
+                oldest_memory=oldest,
+                newest_memory=newest
+            )
+        except Exception as exc:
+            logger.error("Failed to calculate memory stats: %s", exc)
+            return cls(0, 0, 0.0)
 
 # -----------------------------------------------------------------------------
 # Walidacja / filtracja
@@ -71,11 +125,6 @@ def add_memory(content: str, user: str = "assistant"):  # returns (message, succ
     # content too short
     if not _is_memorable(content):
         return "Treść jest zbyt krótkiej, by ją zapamiętać.", False
-
-    # Sprawdź duplikaty w DB – dużo szybciej niż pobieranie listy.
-    if get_memories_db(query=content, limit=1):
-        # duplicate memory
-        return "Ta informacja już jest zapisana w pamięci.", False
 
     try:
         memory_id = add_memory_db(content=content, user=user)
@@ -236,3 +285,95 @@ def register():
         for alias in sc.get("aliases", []):
             subs.setdefault(alias, sc)
     return info
+
+# -----------------------------------------------------------------------------
+# Advanced Memory Functions (when available)
+# -----------------------------------------------------------------------------
+
+def add_memory_with_context(content: str, user: Optional[str] = None, 
+                           memory_type: Optional[str] = None, 
+                           context_type: Optional[str] = None) -> Tuple[str, bool]:
+    """Add memory with advanced context information."""
+    if not ADVANCED_MEMORY_AVAILABLE:
+        return add_memory(content, user)
+    
+    try:
+        memory_id = add_memory_advanced(
+            content=content,
+            user=user,
+            memory_type=memory_type,
+            context_type=context_type
+        )
+        logger.info("Added advanced memory %s by user %s", memory_id, user)
+        return f"Zapamiętałem (zaawansowane): {content}", True
+    except Exception as exc:
+        logger.error("Failed to add advanced memory: %s", exc)
+        # Fallback to legacy system
+        return add_memory(content, user)
+
+
+def search_memories_with_context(query: str, user: Optional[str] = None,
+                                memory_type: Optional[str] = None,
+                                limit: int = 10) -> Tuple[List[Dict], bool]:
+    """Search memories with advanced context filtering."""
+    if not ADVANCED_MEMORY_AVAILABLE:
+        memories, success = retrieve_memories(query, limit)
+        if success:
+            return [{'content': m.content, 'user': m.user, 'id': m.id} for m in memories], True
+        return [], False
+    
+    try:
+        results = search_memories_advanced(
+            query=query,
+            user=user,
+            memory_type=memory_type,
+            limit=limit
+        )
+        
+        # Convert to dictionary format for compatibility
+        formatted_results = []
+        for entry in results:
+            formatted_results.append({
+                'content': entry.content,
+                'user': entry.user,
+                'id': entry.id if hasattr(entry, 'id') else 0,
+                'memory_type': entry.memory_type,
+                'importance_score': entry.importance_score,
+                'context_tags': entry.context_tags,
+                'created_at': entry.created_at.isoformat() if entry.created_at else None
+            })
+        
+        return formatted_results, True
+    except Exception as exc:
+        logger.error("Failed to search advanced memories: %s", exc)
+        # Fallback to legacy system
+        memories, success = retrieve_memories(query, limit)
+        if success:
+            return [{'content': m.content, 'user': m.user, 'id': m.id} for m in memories], True
+        return [], False
+
+
+def get_advanced_memory_stats() -> Dict[str, Any]:
+    """Get advanced memory statistics."""
+    if not ADVANCED_MEMORY_AVAILABLE:
+        stats = MemoryStats.get_stats()
+        return {
+            'total_memories': stats.total_memories,
+            'unique_users': stats.unique_users,
+            'avg_memory_length': stats.avg_memory_length
+        }
+    
+    try:
+        manager = get_memory_manager()
+        return manager.get_memory_statistics()
+    except Exception as exc:
+        logger.error("Failed to get advanced memory stats: %s", exc)
+        # Fallback to basic stats
+        stats = MemoryStats.get_stats()
+        return {
+            'total_memories': stats.total_memories,
+            'unique_users': stats.unique_users,
+            'avg_memory_length': stats.avg_memory_length
+        }
+
+# -----------------------------------------------------------------------------

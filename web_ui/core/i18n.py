@@ -16,6 +16,12 @@ TRANSLATIONS = {
     }
 }
 
+def get_translation(key, lang=None):
+    """Get translation for a key in the specified language."""
+    if lang is None:
+        lang = session.get('lang', 'en')
+    return TRANSLATIONS.get(lang, {}).get(key, key)
+
 def setup_i18n(app):
     """Setup internationalization for the app."""
     from core.config import _config
@@ -27,6 +33,7 @@ def setup_i18n(app):
         # expose to templates
         app.jinja_env.globals['translations'] = TRANSLATIONS
         app.jinja_env.globals['current_lang'] = session['lang']
+        app.jinja_env.globals['_'] = get_translation  # Add translation helper to templates
 
     @app.route('/set_language/<lang>')
     def set_language(lang):
