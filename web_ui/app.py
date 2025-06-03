@@ -31,9 +31,9 @@ from core.i18n import setup_i18n
 from core.auth import login_required
 
 # Import route setup functions
-from routes.api_routes import setup_api_routes
-from routes.api_additional import setup_additional_api_routes
-from routes.web_routes import setup_web_routes
+from web_ui.routes.api_routes import setup_api_routes
+from web_ui.routes.api_additional import setup_additional_api_routes
+from web_ui.routes.web_routes import setup_web_routes
 
 # Import utility functions
 from utils.test_runner import test_status, bench_status
@@ -202,10 +202,8 @@ def config():
         wake_word = request.form.get('WAKE_WORD', '')
         current_config['WAKE_WORD'] = wake_word
         save_main_config(current_config)
-        flash("Configuration saved successfully!", 'success')
-        return render_template('config.html', config=current_config,
-                               audio_devices=audio_devices,
-                               default_api_keys=default_api_keys)
+        flash("Konfiguracja zapisana", 'success')
+        return "Konfiguracja zapisana", 200
     return render_template('config.html', config=current_config,
                            audio_devices=audio_devices,
                            default_api_keys=default_api_keys)

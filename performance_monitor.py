@@ -6,7 +6,10 @@ import logging
 from functools import wraps
 from collections import defaultdict
 import threading
-import psutil
+try:
+    import psutil
+except Exception:
+    psutil = None
 
 # Optional import for torch
 try:
@@ -64,12 +67,15 @@ def measure_performance(func):
         # GPU utilization start
         start_gpu_util = _get_gpu_util_percent()
         
-        try:
-            proc = psutil.Process()
-            start_mem = proc.memory_info().rss
-            cpu_times = proc.cpu_times()
-            start_cpu = cpu_times.user + cpu_times.system
-        except Exception:
+        if psutil is not None:
+            try:
+                proc = psutil.Process()
+                start_mem = proc.memory_info().rss
+                cpu_times = proc.cpu_times()
+                start_cpu = cpu_times.user + cpu_times.system
+            except Exception:
+                start_mem = start_cpu = None
+        else:
             start_mem = start_cpu = None
         
         try:
@@ -91,12 +97,15 @@ def measure_performance(func):
             full_name = f"{module_name}.{func_name}"
 
             # Post-call resource measurements
-            try:
-                proc = psutil.Process()
-                end_mem = proc.memory_info().rss
-                cpu_times_end = proc.cpu_times()
-                end_cpu = cpu_times_end.user + cpu_times_end.system
-            except Exception:
+            if psutil is not None:
+                try:
+                    proc = psutil.Process()
+                    end_mem = proc.memory_info().rss
+                    cpu_times_end = proc.cpu_times()
+                    end_cpu = cpu_times_end.user + cpu_times_end.system
+                except Exception:
+                    end_mem = end_cpu = None
+            else:
                 end_mem = end_cpu = None
             # Post-call GPU stats
             try:
