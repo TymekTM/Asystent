@@ -9,8 +9,8 @@ def test_status_endpoint_structure():
     dummy.is_speaking = True
     dummy.last_tts_text = "Hello"
 
-    with patch('routes.api_routes.get_assistant_instance', return_value=dummy), \
-         patch('routes.api_routes.load_main_config', return_value={'WAKE_WORD': 'gaja', 'MIC_DEVICE_ID': 0}):
+    with patch('web_ui.routes.api_routes.get_assistant_instance', return_value=dummy), \
+         patch('web_ui.routes.api_routes.load_main_config', return_value={'WAKE_WORD': 'gaja', 'MIC_DEVICE_ID': 0}):
         app = create_app()
         app.config['TESTING'] = True
         client = app.test_client()
