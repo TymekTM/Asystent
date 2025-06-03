@@ -136,6 +136,7 @@ def run_wakeword_detection(
     """
     Listens for wake word using openWakeWord and handles command recording/transcription.
     """
+    from utils.audio_utils import get_assistant_instance
     # Check if sounddevice is available
     if not SOUNDDEVICE_AVAILABLE:
         logger.error("SoundDevice not available - wake word detection disabled")
@@ -319,6 +320,8 @@ def run_wakeword_detection(
                         play_beep("listening_start", loop=False)
                         if tts_module:
                             tts_module.cancel()
+                        assistant = get_assistant_instance()
+                        assistant.is_listening = True
                         command_audio_data_np = record_command_audio(mic_device_id, stt_silence_threshold_ms, stop_detector_event)
                         manual_listen_trigger_event.clear()
 
@@ -338,6 +341,7 @@ def run_wakeword_detection(
                                 logger.error("Whisper ASR instance missing for manual trigger.")
                         else:
                             logger.warning("No audio recorded for manual trigger command.")
+                        assistant.is_listening = False
                         if wakeword_model_instance: wakeword_model_instance.reset()
                         continue
 
@@ -360,6 +364,8 @@ def run_wakeword_detection(
                             play_beep("listening_start", loop=False)
                             if tts_module:
                                 tts_module.cancel()
+                            assistant = get_assistant_instance()
+                            assistant.is_listening = True
                             command_audio_data_np = record_command_audio(mic_device_id, stt_silence_threshold_ms, stop_detector_event)
                             if command_audio_data_np is not None and command_audio_data_np.size > 0:
                                 if whisper_asr_instance:
@@ -377,6 +383,7 @@ def run_wakeword_detection(
                                     logger.error("Whisper ASR instance missing.")
                             else:
                                 logger.warning("No audio recorded for command after wake word.")
+                            assistant.is_listening = False
                             if wakeword_model_instance: wakeword_model_instance.reset()
                             break
 

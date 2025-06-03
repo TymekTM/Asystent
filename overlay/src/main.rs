@@ -118,7 +118,10 @@ fn get_state(state: tauri::State<Arc<Mutex<OverlayState>>>) -> Result<OverlaySta
 
 async fn poll_assistant_status(app_handle: AppHandle, state: Arc<Mutex<OverlayState>>) {
     let client = reqwest::Client::new();
-    let poll_url = "http://localhost:5001/api/status"; // Ensure this matches your Python dev server
+    let port = std::env::var("GAJA_PORT").unwrap_or_else(|_| {
+        if cfg!(debug_assertions) { "5001".to_string() } else { "5000".to_string() }
+    });
+    let poll_url = format!("http://localhost:{}/api/status", port);
 
     loop {
         sleep(Duration::from_millis(200)).await; // Poll frequently but not too aggressively
@@ -240,7 +243,7 @@ async fn poll_assistant_status(app_handle: AppHandle, state: Arc<Mutex<OverlaySt
                 }
             }
             Err(e) => {
-                eprintln!("[Rust] Failed to connect to status endpoint (http://localhost:5001/api/status): {}. Is the Python server running?", e);
+                eprintln!("[Rust] Failed to connect to status endpoint ({}): {}. Is the Python server running?", poll_url, e);
             }
         }
         // Poll every 500ms

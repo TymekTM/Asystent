@@ -187,11 +187,15 @@ def setup_api_routes(app, assistant_queue):
         else:
             status_str = "Online"
         current_config = load_main_config()
+        assistant = get_assistant_instance()
         status = {
             "status": status_str,
             "wake_word": current_config.get('WAKE_WORD', 'N/A'),
             "stt_engine": "Whisper",
-            "mic_device_id": current_config.get('MIC_DEVICE_ID', 'Not Set')
+            "mic_device_id": current_config.get('MIC_DEVICE_ID', 'Not Set'),
+            "is_listening": getattr(assistant, 'is_listening', False),
+            "is_speaking": getattr(assistant, 'is_speaking', False),
+            "text": getattr(assistant, 'last_tts_text', "")
         }
         return jsonify(status)
 
