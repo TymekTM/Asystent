@@ -16,12 +16,21 @@ from typing import Any, Dict, List, Optional, Tuple, Callable
 from collections import deque
 
 import requests  # Added requests import
-# Optional import for transformers
-try:
-    from transformers import pipeline
-except ImportError:
-    pipeline = None
-    print("⚠️  transformers nie jest dostępny - będzie automatycznie doinstalowany przy pierwszym użyciu")
+# Lazy import for transformers to speed up startup
+pipeline = None
+
+def _load_pipeline():
+    global pipeline
+    if pipeline is None:
+        try:
+            from transformers import pipeline as _pipeline
+            pipeline = _pipeline
+        except ImportError:
+            pipeline = None
+            print(
+                "⚠️  transformers nie jest dostępny - będzie automatycznie doinstalowany przy pierwszym użyciu"
+            )
+    return pipeline
 
 # Language detection constants
 POLISH_DIACRITICS = set("ąćęłńóśźż")
@@ -51,6 +60,10 @@ class AIProviders:
     def __init__(self) -> None:
         # Własne HTTP session dla LM Studio (redukcja latency handshake)
         self._lmstudio_session = requests.Session()
+
+        # Cached clients to avoid reinitialization overhead
+        self._openai_client = None
+        self._deepseek_client = None
 
         # Dynamiczny import modułów – brakujące biblioteki ≠ twardy crash
         self._modules: Dict[str, Any] = {
@@ -144,7 +157,12 @@ class AIProviders:
     # Chat‑y
     # ---------------------------------------------------------------------
     def chat_ollama(
-        self, model: str, messages: List[dict], images: Optional[List[str]] = None
+        self,
+        model: str,
+        messages: List[dict],
+        images: Optional[List[str]] = None,
+        temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None,
     ) -> Optional[Dict[str, Any]]:
         try:
             self._append_images(messages, images)
@@ -156,14 +174,21 @@ class AIProviders:
             return None
 
     def chat_lmstudio(
-        self, model: str, messages: List[dict], images: Optional[List[str]] = None
+        self,
+        model: str,
+        messages: List[dict],
+        images: Optional[List[str]] = None,
+        temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None,
     ) -> Optional[Dict[str, Any]]:
         try:
             payload = {
                 "model": model,
                 "messages": messages,
-                "temperature": _config.get("temperature", 0.7),
+                "temperature": temperature if temperature is not None else _config.get("temperature", 0.7),
             }
+            if max_tokens is not None:
+                payload["max_tokens"] = max_tokens
             self._append_images(messages, images)
             url = _config.get(
                 "LMSTUDIO_URL", "http://localhost:1234/v1/chat/completions"
@@ -180,25 +205,33 @@ class AIProviders:
             }
 
     def chat_openai(
-        self, model: str, messages: List[dict], images: Optional[List[str]] = None,
-        functions: Optional[List[dict]] = None, function_calling_system = None
+        self,
+        model: str,
+        messages: List[dict],
+        images: Optional[List[str]] = None,
+        functions: Optional[List[dict]] = None,
+        function_calling_system=None,
+        temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None,
     ) -> Optional[Dict[str, Any]]:
         try:
             api_key = os.getenv("OPENAI_API_KEY") or _config["API_KEYS"]["OPENAI_API_KEY"]
             if not api_key:
                 raise ValueError("Brak OPENAI_API_KEY.")
-            # >= 1.0 klient
-            from openai import OpenAI  # type: ignore
 
-            client = OpenAI(api_key=api_key)
+            if self._openai_client is None:
+                from openai import OpenAI  # type: ignore
+                self._openai_client = OpenAI(api_key=api_key)
+
+            client = self._openai_client
             self._append_images(messages, images)
-            
+
             # Prepare parameters for OpenAI API call
             params = {
                 "model": model,
                 "messages": messages,
-                "temperature": _config.get("temperature", 0.7),
-                "max_tokens": _config.get("max_tokens", 1500),
+                "temperature": temperature if temperature is not None else _config.get("temperature", 0.7),
+                "max_tokens": max_tokens if max_tokens is not None else _config.get("max_tokens", 1500),
             }
             
             # Add tools (functions) if provided
@@ -250,8 +283,8 @@ class AIProviders:
                 final_params = {
                     "model": model,
                     "messages": messages,
-                    "temperature": _config.get("temperature", 0.7),
-                    "max_tokens": _config.get("max_tokens", 1500),
+                    "temperature": temperature if temperature is not None else _config.get("temperature", 0.7),
+                    "max_tokens": max_tokens if max_tokens is not None else _config.get("max_tokens", 1500),
                 }
                 
                 final_resp = client.chat.completions.create(**final_params)
@@ -268,7 +301,12 @@ class AIProviders:
             return {"message": {"content": f"Błąd OpenAI: {exc}"}}
 
     def chat_deepseek(
-        self, model: str, messages: List[dict], images: Optional[List[str]] = None
+        self,
+        model: str,
+        messages: List[dict],
+        images: Optional[List[str]] = None,
+        temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None,
     ) -> Optional[Dict[str, Any]]:
         try:
             api_key = (
@@ -278,11 +316,18 @@ class AIProviders:
             if not api_key:
                 raise ValueError("Brak DEEPSEEK_API_KEY.")
             # DeepSeek jest w 100 % OpenAI‑compatible
-            from openai import OpenAI  # type: ignore
+            if self._deepseek_client is None:
+                from openai import OpenAI  # type: ignore
+                self._deepseek_client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
 
-            client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
+            client = self._deepseek_client
             self._append_images(messages, images)
-            resp = client.chat.completions.create(model=model, messages=messages)
+            resp = client.chat.completions.create(
+                model=model,
+                messages=messages,
+                temperature=temperature if temperature is not None else _config.get("temperature", 0.7),
+                max_tokens=max_tokens if max_tokens is not None else _config.get("max_tokens", 1500),
+            )
             return {
                 "message": {"content": resp.choices[0].message.content}
             }
@@ -291,7 +336,12 @@ class AIProviders:
             return None
 
     def chat_anthropic(
-        self, model: str, messages: List[dict], images: Optional[List[str]] = None
+        self,
+        model: str,
+        messages: List[dict],
+        images: Optional[List[str]] = None,
+        temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None,
     ) -> Optional[Dict[str, Any]]:
         try:
             api_key = (
@@ -307,7 +357,8 @@ class AIProviders:
             resp = client.messages.create(
                 model=model,
                 messages=messages,
-                max_tokens=1000,
+                max_tokens=max_tokens if max_tokens is not None else 1000,
+                temperature=temperature if temperature is not None else _config.get("temperature", 0.7),
             )
             return {"message": {"content": resp.content[0].text}}
         except Exception as exc:
@@ -315,29 +366,44 @@ class AIProviders:
             return None
 
     def chat_transformer(
-        self, model: str, messages: List[dict], images: Optional[List[str]] = None
+        self,
+        model: str,
+        messages: List[dict],
+        images: Optional[List[str]] = None,
+        temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None,
     ) -> Optional[Dict[str, Any]]:
         try:
             self._append_images(messages, images)
-            generator = pipeline("text-generation", model=model)
-            resp = generator(messages[-1]["content"], max_length=512, do_sample=True)
+            pl = _load_pipeline()
+            if pl is None:
+                return None
+            generator = pl("text-generation", model=model)
+            gen_kwargs = {"max_length": max_tokens or 512, "do_sample": True}
+            if temperature is not None:
+                gen_kwargs["temperature"] = temperature
+            resp = generator(messages[-1]["content"], **gen_kwargs)
             return {"message": {"content": resp[0]["generated_text"]}}
         except Exception as exc:  # pragma: no cover
             logger.error("Transformers error: %s", exc)
             return None
 
 
-# Jedna globalna instancja
-ai_providers = AIProviders()
+_ai_providers: Optional[AIProviders] = None
+
+def get_ai_providers() -> AIProviders:
+    global _ai_providers
+    if _ai_providers is None:
+        _ai_providers = AIProviders()
+    return _ai_providers
 
 # -----------------------------------------------------------------------------
 # Publiczne funkcje
 # -----------------------------------------------------------------------------
 @measure_performance
 def health_check() -> Dict[str, bool]:
-    return {
-        name: cfg["check"]() for name, cfg in ai_providers.providers.items()
-    }
+    providers = get_ai_providers()
+    return {name: cfg["check"]() for name, cfg in providers.providers.items()}
 
 
 # ------------------------------------------------------------------ utils ---
@@ -438,20 +504,37 @@ def chat_with_providers(
     images: Optional[List[str]] = None,
     provider_override: Optional[str] = None,
     functions: Optional[List[dict]] = None,
-    function_calling_system = None,
+    function_calling_system=None,
+    temperature: Optional[float] = None,
+    max_tokens: Optional[int] = None,
 ) -> Optional[Dict[str, Any]]:
+    providers = get_ai_providers()
     selected = (provider_override or PROVIDER).lower()
-    provider_cfg = ai_providers.providers.get(selected)
+    provider_cfg = providers.providers.get(selected)
 
     def _try(provider_name: str) -> Optional[Dict[str, Any]]:
-        prov = ai_providers.providers[provider_name]
+        prov = providers.providers[provider_name]
         try:
             if prov["check"]():
                 # Only pass functions to OpenAI provider for now
                 if provider_name == "openai" and functions:
-                    return prov["chat"](model, messages, images, functions, function_calling_system)
+                    return prov["chat"](
+                        model,
+                        messages,
+                        images,
+                        functions,
+                        function_calling_system,
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                    )
                 else:
-                    return prov["chat"](model, messages, images)
+                    return prov["chat"](
+                        model,
+                        messages,
+                        images,
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                    )
         except Exception as exc:  # pragma: no cover
             logger.error("Provider %s failed: %s", provider_name, exc)
         return None
@@ -463,7 +546,7 @@ def chat_with_providers(
             return resp
 
     # fallback‑i
-    for name in ai_providers.providers:
+    for name in providers.providers:
         if name == selected:
             continue
         resp = _try(name)

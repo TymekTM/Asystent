@@ -972,13 +972,11 @@ def setup_additional_api_routes(app):
                     save_main_config(current_config)
 
 
-                # TODO: chat_with_providers needs to accept temperature and max_tokens
-                # For now, sending them, assuming it might use them or they can be added.
-                # The 'model' parameter also needs to be properly handled by chat_with_providers
-                # or a more specific function call is needed.
                 ai_response_data = chat_with_providers(
                     model=model,  # Pass the model selected in the playground
-                    messages=[{"role": "user", "content": prompt}]
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=temperature,
+                    max_tokens=max_tokens
                 )
 
                 if ai_response_data and 'message' in ai_response_data and ai_response_data['message'].get('content'):
