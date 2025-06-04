@@ -27,7 +27,7 @@ def _load_pipeline():
             pipeline = _pipeline
         except ImportError:
             pipeline = None
-            print(
+            logger.warning(
                 "⚠️  transformers nie jest dostępny - będzie automatycznie doinstalowany przy pierwszym użyciu"
             )
     return pipeline
