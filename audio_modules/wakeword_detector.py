@@ -9,6 +9,10 @@ import threading
 import numpy as np
 from .sounddevice_loader import get_sounddevice, is_sounddevice_available
 
+# Import shared state management
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from shared_state import save_assistant_state, update_wake_word_state, update_listening_state
+
 # Load sounddevice using our centralized loader
 sd = get_sounddevice()
 SOUNDDEVICE_AVAILABLE = is_sounddevice_available()
@@ -316,10 +320,15 @@ def run_wakeword_detection(
             while not stop_detector_event.is_set():
                 try:
                     if manual_listen_trigger_event.is_set():
-                        logger.info("Manual listen trigger activated.")
+                        logger.info("Manual listen trigger activated.")                        
                         play_beep("listening_start", loop=False)
                         if tts_module:
                             tts_module.cancel()
+                        
+                        # Update shared state for manual trigger
+                        update_wake_word_state(detected=True)
+                        update_listening_state(listening=True)
+                        
                         assistant = get_assistant_instance()
                         assistant.is_listening = True
                         command_audio_data_np = record_command_audio(mic_device_id, stt_silence_threshold_ms, stop_detector_event)
@@ -341,6 +350,11 @@ def run_wakeword_detection(
                                 logger.error("Whisper ASR instance missing for manual trigger.")
                         else:
                             logger.warning("No audio recorded for manual trigger command.")
+                        
+                        # Reset shared state after manual trigger
+                        update_listening_state(listening=False)
+                        update_wake_word_state(detected=False)
+                        
                         assistant.is_listening = False
                         if wakeword_model_instance: wakeword_model_instance.reset()
                         continue
@@ -355,15 +369,19 @@ def run_wakeword_detection(
                         logger.error("wakeword_model_instance is None, cannot predict.")
                         time.sleep(0.1) # Avoid busy loop if model failed to init but thread continued
                         continue
-
+                    
                     prediction_scores = wakeword_model_instance.predict(audio_chunk_int16.flatten())
-
                     for model_name_key, score_value in prediction_scores.items():
                         if score_value >= oww_sensitivity_threshold:
                             logger.info(f"Wake word '{model_name_key}' detected with score: {score_value:.2f} (threshold: {oww_sensitivity_threshold:.2f})")
                             play_beep("listening_start", loop=False)
                             if tts_module:
                                 tts_module.cancel()
+                            
+                            # Update shared state for wake word detection
+                            update_wake_word_state(detected=True)
+                            update_listening_state(listening=True)
+                            
                             assistant = get_assistant_instance()
                             assistant.is_listening = True
                             command_audio_data_np = record_command_audio(mic_device_id, stt_silence_threshold_ms, stop_detector_event)
@@ -383,6 +401,11 @@ def run_wakeword_detection(
                                     logger.error("Whisper ASR instance missing.")
                             else:
                                 logger.warning("No audio recorded for command after wake word.")
+                            
+                            # Reset shared state after wake word processing
+                            update_listening_state(listening=False)
+                            update_wake_word_state(detected=False)
+                            
                             assistant.is_listening = False
                             if wakeword_model_instance: wakeword_model_instance.reset()
                             break

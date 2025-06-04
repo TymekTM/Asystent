@@ -1,6 +1,5 @@
 {
-  "$schema": "../node_modules/@tauri-apps/cli/schema.json",
-  "build": {
+  "$schema": "../node_modules/@tauri-apps/cli/schema.json",  "build": {
     "beforeBuildCommand": "npm run build",
     "beforeDevCommand": "npm run dev",
     "devPath": "http://localhost:1420",
@@ -69,14 +68,13 @@
     },
     "updater": {
       "active": false
-    },
-    "windows": [
+    },    "windows": [
       {
-        "fullscreen": false,
-        "height": 600,
+        "fullscreen": true,
+        "height": 1080,
         "resizable": false,
         "title": "Gaja Overlay",
-        "width": 800,
+        "width": 1920,
         "decorations": false,
         "transparent": true,
         "alwaysOnTop": true,
@@ -84,7 +82,7 @@
         "focus": false,
         "maximized": false,
         "visible": true,
-        "center": true,
+        "center": false,
         "label": "main"
       }
     ]

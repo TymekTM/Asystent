@@ -165,3 +165,16 @@
 2025-06-02T11:30:52.207306 | Hej, Gaia. Jakie mam dzisiaj wydarzenia w kalendarzu? | intent=none | conf=0.27
 2025-06-02T11:31:33.634957 | Dobra, gotowe. Hej, gaja, czy mogłabyś podsumować moje najważniejsze zadania na ten tydzień? | intent=none | conf=0.15
 2025-06-02T16:44:31.659681 | Thank you. | intent=none | conf=0.50
+2025-06-03T21:33:43.594861 | Thank you. | intent=none | conf=0.50
+2025-06-03T21:33:59.320583 | Jaka jest pododa w sesnowcu? | intent=weather_query | conf=0.77
+2025-06-03T21:34:14.869933 | Nie, w sosnowcu. | intent=none | conf=0.39
+2025-06-03T21:34:33.293063 | A jutro jaka będzie podroda? | intent=weather_query | conf=0.88
+2025-06-03T21:36:20.964219 | Powiedz mi coś o sobie, proszę. | intent=none | conf=0.43
+2025-06-03T22:11:44.392386 | Thank you. | intent=none | conf=0.50
+2025-06-03T22:29:28.706922 | Thank you. | intent=none | conf=0.50
+2025-06-04T20:52:43.702881 | Thank you. | intent=none | conf=0.50
+2025-06-04T20:58:33.545707 | Powiedz mi coś o sobie. | intent=about_assistant | conf=0.59
+2025-06-04T21:05:43.745362 | Powiedz mi coś o sobie. | intent=about_assistant | conf=0.59
+2025-06-04T21:10:24.070498 | Powertz mit euch aus Taubier. | intent=none | conf=0.06
+2025-06-04T21:19:27.606893 | Thank you. | intent=none | conf=0.50
+2025-06-04T21:20:42.844249 | Jaka jest pogoda w Warszawie? | intent=weather_query | conf=0.91

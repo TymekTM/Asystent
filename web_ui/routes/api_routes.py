@@ -9,7 +9,7 @@ import threading
 from datetime import datetime
 # Ensure parent directory is in path for imports
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-from flask import request, jsonify, session, current_app
+from flask import request, jsonify, session, current_app, Response
 from core.auth import login_required
 from core.config import load_main_config, save_main_config, MAIN_CONFIG_FILE, DEFAULT_CONFIG, _config, logger
 from utils.history_manager import get_conversation_history, clear_conversation_history, load_ltm, save_ltm
@@ -459,3 +459,84 @@ def setup_api_routes(app, assistant_queue):
         except Exception as e:
             logger.error(f"Error completing onboarding: {e}", exc_info=True)
             return jsonify({"success": False, "error": f"Failed to complete onboarding: {str(e)}"}), 500
+
+    # --- SSE Status Stream ---
+    @app.route('/status/stream')
+    def status_stream():
+        """Server-Sent Events endpoint for real-time status updates."""
+        def generate():
+            import time
+            import json
+            import sys
+            import os
+            
+            # Add parent directory to path for shared_state import
+            sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+            from shared_state import load_assistant_state
+            
+            # Debug logging
+            import logging
+            sse_logger = logging.getLogger('sse_endpoint')
+            
+            last_status = {}
+            
+            while True:
+                try:
+                    lock_path = os.path.join(os.path.dirname(__file__), '..', '..', 'assistant_restarting.lock')
+                    if os.path.exists(lock_path):
+                        status_str = "Restarting"
+                    else:
+                        status_str = "Online"
+                    
+                    current_config = load_main_config()
+                    
+                    # Try to read state from shared file first
+                    shared_state = load_assistant_state()
+                    sse_logger.debug(f"SSE: Loaded shared state: {shared_state}")
+                    
+                    if shared_state:
+                        is_listening = shared_state.get('is_listening', False)
+                        is_speaking = shared_state.get('is_speaking', False)
+                        last_text = shared_state.get('last_tts_text', "")
+                        wake_word_detected = shared_state.get('wake_word_detected', False)
+                    else:
+                        # Fallback to assistant instance if shared state fails
+                        assistant = get_assistant_instance()
+                        is_listening = getattr(assistant, 'is_listening', False) if assistant else False
+                        is_speaking = getattr(assistant, 'is_speaking', False) if assistant else False
+                        last_text = getattr(assistant, 'last_tts_text', "") if assistant else ""
+                        wake_word_detected = getattr(assistant, 'wake_word_detected', False) if assistant else False
+                    
+                    current_status = {
+                        "status": status_str,
+                        "wake_word": current_config.get('WAKE_WORD', 'N/A'),
+                        "stt_engine": "Whisper",
+                        "mic_device_id": current_config.get('MIC_DEVICE_ID', 'Not Set'),
+                        "is_listening": is_listening,
+                        "is_speaking": is_speaking,
+                        "text": last_text,
+                        "wake_word_detected": wake_word_detected
+                    }
+                      # Send initial status or when changed
+                    if current_status != last_status or not last_status:
+                        data = json.dumps(current_status)
+                        yield f"data: {data}\n\n"
+                        last_status = current_status.copy()
+                        # Only log significant state changes
+                        if current_status.get('is_listening') or current_status.get('is_speaking') or current_status.get('wake_word_detected'):
+                            logger.info(f"SSE sent: {current_status}")
+                            sse_logger.info(f"Status update: {current_status}")  # Debug log
+                    
+                    time.sleep(0.1)  # Check every 100ms for changes
+                    
+                except Exception as e:
+                    logger.error(f"Error in SSE stream: {e}")
+                    yield f"data: {json.dumps({'error': str(e)})}\n\n"
+                    time.sleep(1)
+        
+        return Response(generate(), mimetype='text/event-stream',
+                       headers={'Cache-Control': 'no-cache',
+                               'Connection': 'keep-alive',
+                               'Access-Control-Allow-Origin': '*',
+                               'Access-Control-Allow-Headers': 'Content-Type',
+                               'Access-Control-Allow-Methods': 'GET'})

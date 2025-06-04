@@ -3,10 +3,7 @@ __version__ = "1.1.0" # Updated version
 import asyncio, json, logging, os, glob, importlib, time
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
-try:
-    import ollama  # noqa: F401
-except Exception:
-    ollama = None
+import ollama
 import inspect # Add inspect import back
 import queue # Import queue for Empty exception
 import threading
@@ -95,16 +92,20 @@ class Assistant:
                 f.write(f"{datetime.datetime.now().isoformat()} | {json.dumps(tts_message, ensure_ascii=False)}\n")
         except Exception as log_exc:
             logger.warning(f"[PromptLog] Failed to log TTS output: {log_exc}")
+        
         if listen_after_tts:
             logger.info(f"[TTS+Listen] Speaking and will listen again: '{text[:100]}...'")
             self.is_speaking = True
             self.last_tts_text = text
+            self._update_shared_state()
             await self.tts.speak(text)
             self.is_speaking = False
             self.last_tts_text = ""
+            self._update_shared_state()
             logger.info("[TTS+Listen] TTS finished, triggering manual listen.")
             self.is_processing = False
             self.is_listening = True
+            self._update_shared_state()
             self.manual_trigger_event.set()
         else:
             logger.info(f"[TTS] Speaking (no re-listen): '{text[:100]}...'")
@@ -114,10 +115,12 @@ class Assistant:
         """Background speaking task used when no re-listen is requested."""
         self.is_speaking = True
         self.last_tts_text = text
+        self._update_shared_state()
         await self.tts.speak(text)
         self.is_speaking = False
         self.last_tts_text = ""
         self.is_processing = False
+        self._update_shared_state()
     """Main class for the assistant."""
     @measure_performance
     def __init__(self, mic_device_id: int = None, wake_word: str = None, stt_silence_threshold: int = None, command_queue: queue.Queue = None): # Type hint for command_queue
@@ -152,6 +155,7 @@ class Assistant:
         self.is_listening = False
         self.is_processing = False
         self.is_speaking = False
+        self.wake_word_detected = False
         self.last_tts_text = ""
         self.current_active_window = None
         self._active_window_thread = None
@@ -216,9 +220,7 @@ class Assistant:
         self.load_plugins()
         self.loop = None 
         self.command_queue = command_queue
-        self.manual_trigger_event = threading.Event() # For signaling manual listen to wakeword_detector
-
-        # Initialize daily briefing module
+        self.manual_trigger_event = threading.Event() # For signaling manual listen to wakeword_detector        # Initialize daily briefing module
         self.daily_briefing = None
         self._init_daily_briefing()
 
@@ -227,7 +229,9 @@ class Assistant:
         
         self.initialize_components() # Initializes WhisperASR and other components
         logger.info("Assistant initialized.")
-        # --- End of __init__ ---    def initialize_components(self):
+        # --- End of __init__ ---
+    
+    def initialize_components(self):
         """Initializes components that require hardware access or network."""
         logger.info("Initializing components...")
         
@@ -1008,56 +1012,36 @@ class Assistant:
         # The check for lingering tasks has been moved to before loop.close()
         logger.info("Assistant shutdown sequence complete.")
 
-# Example usage (typically in main.py)
-if __name__ == '__main__':
-    # Setup basic logging for the example
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    logger.info("Starting Assistant example...")
+    def _update_shared_state(self):
+        """Update shared state file for Flask SSE endpoint"""
+        try:
+            from shared_state import save_assistant_state
+            save_assistant_state(
+                is_listening=self.is_listening,
+                is_speaking=self.is_speaking,
+                wake_word_detected=self.wake_word_detected,
+                last_tts_text=self.last_tts_text,
+                is_processing=self.is_processing
+            )
+        except Exception as e:
+            logger.error(f"Failed to update shared state file: {e}")
 
-    # Create a command queue for communication
-    cmd_queue = queue.Queue()
+    def set_listening_state(self, is_listening):
+        """Set listening state and update shared state"""
+        self.is_listening = is_listening
+        self._update_shared_state()
 
-    # Initialize and run the assistant
-    assistant_instance = Assistant(command_queue=cmd_queue)
-    
-    # Get the asyncio event loop
-    main_loop = asyncio.get_event_loop()
-    
-    try:
-        # Start the assistant's async processing
-        main_loop.create_task(assistant_instance.run_async())
-        
-        # Example: Simulate receiving a text command after 5 seconds
-        async def send_test_command():
-            await asyncio.sleep(15) # Increased time to allow model loading
-            logger.info("Simulating text command from UI/external source...")
-            cmd_queue.put(("process_text", "jaka jest pogoda?"))
-            await asyncio.sleep(10)
-            logger.info("Simulating shutdown command...")
-            cmd_queue.put(("shutdown", None))
-            # await assistant_instance.shutdown() # Alternative way to trigger shutdown
+    def set_speaking_state(self, is_speaking):
+        """Set speaking state and update shared state"""
+        self.is_speaking = is_speaking
+        self._update_shared_state()
 
-        main_loop.create_task(send_test_command())
-        
-        # Run the event loop until all tasks are complete or shutdown is called
-        main_loop.run_forever() # This will run until loop.stop() is called
+    def set_wake_word_detected(self, detected):
+        """Set wake word detected state and update shared state"""
+        self.wake_word_detected = detected
+        self._update_shared_state()
 
-    except KeyboardInterrupt:
-        logger.info("Keyboard interrupt received, shutting down...")
-        # Ensure shutdown is handled gracefully
-        if main_loop.is_running():
-            # Schedule shutdown in the loop and wait for it
-            main_loop.run_until_complete(assistant_instance.shutdown())
-    finally:
-        if main_loop.is_running():
-            main_loop.close()
-        logger.info("Assistant example finished.")
-
-
-# TODO:
-# - Review TTS warm-up: Ensure it's called correctly (async vs sync) and doesn't block unnecessarily.
-#   If tts.warm_up is async, it should be `await self.tts.warm_up()` in an async context or run via asyncio.run().
-#   If called from initialize_components (sync), and it's async, it needs careful handling.
-#   Current direct call `self.tts.warm_up()` assumes it's sync or handles its own async execution.
-# - VAD in wakeword_detector.py: Review and potentially tune or replace the basic VAD implementation.
-# - Thorough testing: Wake word, command transcription, manual trigger, overall functionality.
+    def set_processing_state(self, is_processing):
+        """Set processing state and update shared state"""
+        self.is_processing = is_processing
+        self._update_shared_state()

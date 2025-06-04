@@ -7,18 +7,14 @@ use std::sync::{Arc, Mutex};
 use serde::{Deserialize, Serialize};
 use raw_window_handle::{HasRawWindowHandle, RawWindowHandle}; // Added HasRawWindowHandle
 use std::time::{Instant, Duration};
+use futures_util::StreamExt;
 
 #[derive(Clone, Serialize)]
 struct StatusUpdate {
-    #[serde(rename = "isVisible")]
-    is_visible: bool,
-    #[serde(rename = "statusText")]
-    status_text: String,
-    #[serde(rename = "isListening")]
+    status: String,
+    text: String,
     is_listening: bool,
-    #[serde(rename = "isSpeaking")]
     is_speaking: bool,
-    #[serde(rename = "wakeWordDetected")]
     wake_word_detected: bool,
 }
 
@@ -116,123 +112,110 @@ fn get_state(state: tauri::State<Arc<Mutex<OverlayState>>>) -> Result<OverlaySta
     Ok(state.inner().lock().unwrap().clone())
 }
 
+#[tauri::command]
+fn open_devtools(window: Window) {
+    window.open_devtools();
+    println!("[Rust] Dev tools opened");
+}
+
 async fn poll_assistant_status(app_handle: AppHandle, state: Arc<Mutex<OverlayState>>) {
     let client = reqwest::Client::new();
-    let port = std::env::var("GAJA_PORT").unwrap_or_else(|_| {
-        if cfg!(debug_assertions) { "5001".to_string() } else { "5000".to_string() }
+    let ports = vec!["5000", "5001"]; // Try both ports
+    let mut working_port = None;
+    
+    // First, find which port is working
+    for port in &ports {
+        let test_url = format!("http://localhost:{}/api/status", port);
+        if let Ok(response) = client.get(&test_url).send().await {
+            if response.status().is_success() {
+                working_port = Some(port.to_string());
+                println!("[Rust] Found working port: {}", port);
+                break;
+            }
+        }
+    }
+    
+    let current_port = working_port.unwrap_or_else(|| {
+        std::env::var("GAJA_PORT").unwrap_or_else(|_| {
+            if cfg!(debug_assertions) { "5001".to_string() } else { "5000".to_string() }
+        })
     });
-    let poll_url = format!("http://localhost:{}/api/status", port);
+      // Try SSE first, fallback to polling if not available
+    let sse_url = format!("http://localhost:{}/status/stream", current_port);
+    
+    println!("[Rust] Attempting to connect to SSE stream: {}", sse_url);
+    
+    // Try to establish SSE connection
+    match client.get(&sse_url).send().await {
+        Ok(response) => {
+            if response.status().is_success() {
+                println!("[Rust] Successfully connected to SSE stream");
+                handle_sse_stream(response, app_handle.clone(), state.clone()).await;
+            } else {
+                println!("[Rust] SSE not available, falling back to polling");
+                handle_polling(client, current_port, app_handle, state).await;
+            }
+        }
+        Err(e) => {
+            println!("[Rust] Failed to connect to SSE: {}, falling back to polling", e);
+            handle_polling(client, current_port, app_handle, state).await;
+        }
+    }
+}
 
+async fn handle_sse_stream(response: reqwest::Response, app_handle: AppHandle, state: Arc<Mutex<OverlayState>>) {
+    let mut stream = response.bytes_stream();
+    let mut buffer = String::new();
+    
+    while let Some(chunk) = stream.next().await {
+        match chunk {
+            Ok(bytes) => {
+                let chunk_str = String::from_utf8_lossy(&bytes);
+                buffer.push_str(&chunk_str);
+                  // Process complete SSE messages
+                while let Some(pos) = buffer.find("\n\n") {
+                    let message = buffer[..pos].to_string();
+                    buffer.drain(..pos + 2);
+                    
+                    if message.starts_with("data: ") {
+                        let json_str = &message[6..]; // Remove "data: " prefix
+                          match serde_json::from_str::<serde_json::Value>(json_str) {
+                            Ok(data) => {
+                                println!("[Rust] Received SSE data: {}", data);
+                                process_status_data(data, app_handle.clone(), state.clone()).await;
+                            }
+                            Err(e) => {
+                                eprintln!("[Rust] Failed to parse SSE JSON: {}", e);
+                                eprintln!("[Rust] Raw JSON: {}", json_str);
+                            }
+                        }
+                    }
+                }
+            }
+            Err(e) => {
+                eprintln!("[Rust] SSE stream error: {}", e);
+                break;
+            }
+        }
+    }
+      println!("[Rust] SSE stream ended, attempting to reconnect...");
+    // Reconnect after a delay
+    tokio::time::sleep(Duration::from_secs(5)).await;
+    Box::pin(poll_assistant_status(app_handle, state)).await;
+}
+
+async fn handle_polling(client: reqwest::Client, mut current_port: String, app_handle: AppHandle, state: Arc<Mutex<OverlayState>>) {
+    println!("[Rust] Using polling mode");
+    
     loop {
-        sleep(Duration::from_millis(200)).await; // Poll frequently but not too aggressively
-
-        match client.get(poll_url).send().await {
+        sleep(Duration::from_millis(500)).await; // Poll every 500ms
+        
+        let poll_url = format!("http://localhost:{}/api/status", current_port);        match client.get(&poll_url).send().await {
             Ok(response) => {
                 if response.status().is_success() {
-                    match response.json::<AssistantStatusResponse>().await {
+                    match response.json::<serde_json::Value>().await {
                         Ok(data) => {
-                            let mut state_guard = state.lock().unwrap();
-                            let window = app_handle.get_window("main").unwrap();
-
-                            // Extract text, prioritizing 'text' then 'message'
-                            let current_text = data.text.or(data.message).unwrap_or_else(|| "".to_string());
-
-                            // Determine flags based on status string
-                            let status_lower = data.status.to_lowercase();
-                            let mut wake_word_detected_flag = state_guard.wake_word_detected; // Persist unless explicitly changed
-                            let mut is_listening_flag = state_guard.is_listening;
-                            let mut is_speaking_flag = state_guard.is_speaking;
-
-                            if status_lower.contains("wakeword") || status_lower.contains("detected") {
-                                wake_word_detected_flag = true;
-                                is_listening_flag = true; // Typically, wake word means listening starts
-                                is_speaking_flag = false;
-                            } else if status_lower.contains("listening") || status_lower.contains("recording") {
-                                is_listening_flag = true;
-                                wake_word_detected_flag = false; // Explicitly listening, not just wake word
-                                is_speaking_flag = false;
-                            } else if status_lower.contains("speaking") || status_lower.contains("processing") || status_lower.contains("thinking") {
-                                is_speaking_flag = true;
-                                is_listening_flag = false;
-                                wake_word_detected_flag = false;
-                            } else if status_lower.contains("idle") || status_lower.contains("online") || status_lower.contains("ready") {
-                                // If assistant is idle/online but there's text, it might be a lingering message
-                                if current_text.is_empty() {
-                                    is_listening_flag = false;
-                                    is_speaking_flag = false;
-                                    wake_word_detected_flag = false;
-                                }
-                            } else if status_lower.contains("offline") || status_lower.contains("error") {
-                                is_listening_flag = false;
-                                is_speaking_flag = false;
-                                wake_word_detected_flag = false;
-                            }
-                            // If there's text, we assume the assistant is "active" in some way (e.g. displaying a message)
-                            // or speaking.
-                            if !current_text.is_empty() {
-                                is_speaking_flag = true; // Or some other appropriate flag to show text
-                            }
-
-
-                            let should_be_visible = wake_word_detected_flag || is_speaking_flag || is_listening_flag || !current_text.is_empty();
-
-                            let mut changed = false;
-                            if state_guard.text != current_text || // Use state_guard.text
-                                state_guard.is_listening != is_listening_flag ||
-                                state_guard.is_speaking != is_speaking_flag ||
-                                state_guard.wake_word_detected != wake_word_detected_flag ||
-                                state_guard.visible != should_be_visible
-                            {
-                                changed = true;
-                            }
-
-                            if changed {
-                                state_guard.status = data.status.clone();
-                                state_guard.text = current_text.clone(); // Use state_guard.text
-                                state_guard.is_listening = is_listening_flag;
-                                state_guard.is_speaking = is_speaking_flag;
-                                state_guard.wake_word_detected = wake_word_detected_flag;
-
-                                if should_be_visible && !state_guard.visible {
-                                    // Before showing, make it click-through if it's not already (might be redundant if set on setup)
-                                    // set_click_through(&window, true);
-                                    window.show().unwrap_or_else(|e| eprintln!("Failed to show window: {}", e));
-                                    state_guard.visible = true;
-                                    // Set focus to allow interaction if needed, then remove if it should be purely an overlay
-                                    // window.set_focus().unwrap_or_else(|e| eprintln!("Failed to focus window: {}", e));
-                                }
-                                state_guard.visible = should_be_visible; // Update visibility state
-
-                                // Emit status update to frontend
-                                let payload = StatusUpdate {
-                                    is_visible: state_guard.visible,
-                                    status_text: state_guard.text.clone(),
-                                    is_listening: state_guard.is_listening,
-                                    is_speaking: state_guard.is_speaking,
-                                    wake_word_detected: state_guard.wake_word_detected,
-                                };
-                                window.emit("status-update", payload).unwrap_or_else(|e| {
-                                    eprintln!("Failed to emit status-update: {}", e);
-                                });
-                                state_guard.last_activity_time = Instant::now();
-                            }
-
-                            if state_guard.visible && state_guard.last_activity_time.elapsed() > Duration::from_secs(10) && current_text.is_empty() && !is_listening_flag && !is_speaking_flag && !wake_word_detected_flag {
-                                if !current_text.is_empty() {
-                                     // If there's still text, don't hide, reset timer
-                                     state_guard.last_activity_time = Instant::now();
-                                } else if window.is_visible().unwrap_or(false) {
-                                    // Check if there's any reason to stay visible based on flags
-                                    if !state_guard.is_listening && !state_guard.is_speaking && !state_guard.wake_word_detected && state_guard.text.is_empty() {
-                                        println!("Auto-hiding window due to inactivity and no relevant status.");
-                                        window.hide().unwrap_or_else(|e| eprintln!("Failed to hide window: {}", e));
-                                        state_guard.visible = false;
-                                    } else {
-                                        // Still active, reset timer
-                                        state_guard.last_activity_time = Instant::now();
-                                    }
-                                }
-                            }
+                            process_status_data(data, app_handle.clone(), state.clone()).await;
                         }
                         Err(e) => {
                             eprintln!("[Rust] Failed to parse JSON response: {}", e);
@@ -243,11 +226,87 @@ async fn poll_assistant_status(app_handle: AppHandle, state: Arc<Mutex<OverlaySt
                 }
             }
             Err(e) => {
-                eprintln!("[Rust] Failed to connect to status endpoint ({}): {}. Is the Python server running?", poll_url, e);
+                eprintln!("[Rust] Failed to connect to status endpoint on port {}: {}. Trying other ports...", current_port, e);
+                
+                // Try the other port if connection fails
+                for test_port in &["5000", "5001"] {
+                    if test_port != &current_port {
+                        let test_url = format!("http://localhost:{}/api/status", test_port);
+                        if let Ok(response) = client.get(&test_url).send().await {
+                            if response.status().is_success() {
+                                eprintln!("[Rust] Successfully connected to port {}, switching...", test_port);
+                                current_port = test_port.to_string();
+                                break;
+                            }
+                        }
+                    }
+                }
             }
         }
-        // Poll every 500ms
-        tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+    }
+}
+
+async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, state: Arc<Mutex<OverlayState>>) {
+    println!("[Rust] Processing status data: {}", data);
+    let mut state_guard = state.lock().unwrap();
+    let window = app_handle.get_window("main").unwrap();
+    
+    // Extract data from JSON
+    let status = data.get("status").and_then(|v| v.as_str()).unwrap_or("Unknown").to_string();
+    let current_text = data.get("text").and_then(|v| v.as_str()).unwrap_or("").to_string();
+    let is_listening = data.get("is_listening").and_then(|v| v.as_bool()).unwrap_or(false);
+    let is_speaking = data.get("is_speaking").and_then(|v| v.as_bool()).unwrap_or(false);
+    let wake_word_detected = data.get("wake_word_detected").and_then(|v| v.as_bool()).unwrap_or(false);
+
+    // More generous visibility logic - keep overlay visible if there's any activity or recent text
+    let has_activity = wake_word_detected || is_speaking || is_listening;
+    let has_content = !current_text.is_empty();
+    let should_be_visible = has_activity || has_content;
+
+    let mut changed = false;
+    if state_guard.text != current_text ||
+        state_guard.is_listening != is_listening ||
+        state_guard.is_speaking != is_speaking ||
+        state_guard.wake_word_detected != wake_word_detected ||
+        state_guard.visible != should_be_visible
+    {
+        changed = true;
+    }
+
+    if changed {
+        println!("[Rust] Status update: listening={}, speaking={}, wake_word={}, text='{}', visible={}", 
+                is_listening, is_speaking, wake_word_detected, current_text, should_be_visible);
+        
+        state_guard.status = status.clone();
+        state_guard.text = current_text.clone();
+        state_guard.is_listening = is_listening;
+        state_guard.is_speaking = is_speaking;
+        state_guard.wake_word_detected = wake_word_detected;
+
+        if should_be_visible && !state_guard.visible {
+            window.show().unwrap_or_else(|e| eprintln!("Failed to show window: {}", e));
+            state_guard.visible = true;
+        }
+        state_guard.visible = should_be_visible;        // Emit status update to frontend
+        let payload = StatusUpdate {
+            status: status.clone(),
+            text: state_guard.text.clone(),
+            is_listening: state_guard.is_listening,
+            is_speaking: state_guard.is_speaking,
+            wake_word_detected: state_guard.wake_word_detected,
+        };
+        window.emit("status-update", payload).unwrap_or_else(|e| {
+            eprintln!("Failed to emit status-update: {}", e);
+        });
+        state_guard.last_activity_time = Instant::now();
+    }    // Auto-hide logic - only hide after longer period and when truly inactive
+    if state_guard.visible && state_guard.last_activity_time.elapsed() > Duration::from_secs(30) 
+        && current_text.is_empty() && !is_listening && !is_speaking && !wake_word_detected {
+        if window.is_visible().unwrap_or(false) {
+            println!("[Rust] Auto-hiding window due to prolonged inactivity and no relevant status.");
+            window.hide().unwrap_or_else(|e| eprintln!("Failed to hide window: {}", e));
+            state_guard.visible = false;
+        }
     }
 }
 
@@ -275,9 +334,11 @@ pub fn run() {
                 Err(e) => {
                     eprintln!("Error getting primary monitor: {}", e);
                 }
-            }
-
-            set_click_through(&main_window, true);
+            }            set_click_through(&main_window, true);
+            
+            // Force show window for debugging
+            main_window.show().unwrap_or_else(|e| eprintln!("Failed to show window: {}", e));
+            main_window.set_focus().unwrap_or_else(|e| eprintln!("Failed to focus window: {}", e));
 
             tauri::async_runtime::spawn(async move {
                 poll_assistant_status(app_handle, state_clone_for_poll).await;
@@ -289,7 +350,8 @@ pub fn run() {
             show_overlay,
             hide_overlay,
             update_status,
-            get_state
+            get_state,
+            open_devtools // Added command here
         ])
         .on_window_event(|event| {
             match event.event() {
