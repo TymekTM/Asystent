@@ -67,19 +67,25 @@ const App = () => {
     animationClass = 'wakeword-animation';
   }  // Render content always - Rust manages window visibility
   // React only focuses on displaying the correct content based on state
-
+  // Helper function to get icon based on status
+  const getStatusIcon = () => {
+    if (isSpeaking) return "🔊"; // Speaker icon
+    if (isListening) return "🎤"; // Microphone icon
+    if (wakeWordDetected) return "👂"; // Ear icon
+    return "";
+  };
   return (
     <div className={`overlay-container ${animationClass}`}>
       
       {(isListening || isSpeaking || wakeWordDetected) && displayStatusText && (
         <div className={`status-indicator ${isSpeaking ? 'speaking' : isListening ? 'listening' : 'wakeword'}`}>
-          {displayStatusText}
+          <span className="status-icon">{getStatusIcon()}</span>
+          <span className="status-text">{displayStatusText}</span>
         </div>
       )}
       
       {text && (
-        <div className="text-display gaja-welcome">
-          {/* Using gaja-welcome for styling the main text bubble */}
+        <div className="text-display">
           <p>{text}</p>
         </div>
       )}
