@@ -313,12 +313,15 @@
                     <button class="btn btn-outline-secondary btn-navigation" disabled>Wstecz</button>
                     <button class="btn btn-primary btn-navigation next-step">Dalej</button>
                 </div>
-            </div>
-
-            <!-- Step 2: Basic Configuration -->
+            </div>            <!-- Step 2: Basic Configuration -->
             <div class="step" id="step-2">
                 <h2 class="mb-4">Podstawowa konfiguracja</h2>
                 <div class="config-form">
+                    <div class="mb-3">
+                        <label for="userName" class="form-label">Twoje imię</label>
+                        <input type="text" class="form-control" id="userName" placeholder="np. Jan">
+                        <div class="form-text">Asystent będzie zwracać się do Ciebie po imieniu.</div>
+                    </div>
                     <div class="mb-3">
                         <label for="assistantName" class="form-label">Nazwa asystenta</label>
                         <input type="text" class="form-control" id="assistantName" value="Gaja">
@@ -520,6 +523,7 @@
                     const savedData = localStorage.getItem('onboardingFormData');
                     if (savedData) {
                         const data = JSON.parse(savedData);
+                        $('#userName').val(data.USER_NAME || '');
                         $('#assistantName').val(data.ASSISTANT_NAME || 'Gaja');
                         $('#mic-device-id-select').val(data.MIC_DEVICE_ID || '');
                         $('#language').val(data.LANGUAGE || 'pl-PL');
@@ -577,8 +581,8 @@
                 } else { // local
                     model = $('#localAddressInput').val();
                     endpoint = model;
-                }
-                const formData = {
+                }                const formData = {
+                    USER_NAME: $('#userName').val() || '',
                     ASSISTANT_NAME: $('#assistantName').val() || 'Gaja',
                     MIC_DEVICE_ID: $('#mic-device-id-select').val(),
                     LANGUAGE: $('#language').val() || 'pl-PL',
@@ -593,13 +597,38 @@
                     }
                 };
                 localStorage.setItem('onboardingFormData', JSON.stringify(formData));
+            }            // Function to get user location based on IP
+            function getUserLocation() {
+                return new Promise((resolve) => {
+                    // Try to get location from IP
+                    $.ajax({
+                        url: 'http://ip-api.com/json/',
+                        method: 'GET',
+                        timeout: 5000,
+                        success: function(data) {
+                            if (data && data.status === 'success') {
+                                const location = `${data.city},${data.countryCode}`;
+                                resolve(location);
+                            } else {
+                                resolve('Warsaw,PL'); // Default fallback
+                            }
+                        },
+                        error: function() {
+                            resolve('Warsaw,PL'); // Default fallback
+                        }
+                    });
+                });
             }
 
             // Save settings and complete onboarding
-            $('#finishBtn').click(function() {
+            $('#finishBtn').click(async function() {
+                // Get user location
+                const userLocation = await getUserLocation();
+                
                 // Retrieve any saved intermediary form data
                 const saved = JSON.parse(localStorage.getItem('onboardingFormData') || '{}');
                 const config = {
+                    USER_NAME: $('#userName').val() || saved.USER_NAME || '',
                     ASSISTANT_NAME: $('#assistantName').val() || saved.ASSISTANT_NAME || 'Gaja',
                     WAKE_WORD: $('#wakeWord').val() || 'gaja',
                     LANGUAGE: $('#language').val() || saved.LANGUAGE || 'pl-PL',
@@ -609,10 +638,14 @@
                     API_KEYS: {
                         OPENAI_API_KEY: $('#openaiKeyInput').val() || (saved.API_KEYS && saved.API_KEYS.OPENAI_API_KEY) || '',
                         AZURE_SPEECH_KEY: $('#azureKeyInput').val() || (saved.API_KEYS && saved.API_KEYS.AZURE_SPEECH_KEY) || '',
-                        AZURE_SPEECH_REGION: $('#azureRegion').val() || (saved.API_KEYS && saved.API_KEYS.AZURE_SPEECH_REGION) || '',
-                        ANTHROPIC_API_KEY: (saved.API_KEYS && saved.API_KEYS.ANTHROPIC_API_KEY) || '',
+                        AZURE_SPEECH_REGION: $('#azureRegion').val() || (saved.API_KEYS && saved.API_KEYS.AZURE_SPEECH_REGION) || '',                        ANTHROPIC_API_KEY: (saved.API_KEYS && saved.API_KEYS.ANTHROPIC_API_KEY) || '',
                         DEEPSEEK_API_KEY: (saved.API_KEYS && saved.API_KEYS.DEEPSEEK_API_KEY) || '',
                         LOCAL_ENDPOINT: (saved.API_KEYS && saved.API_KEYS.LOCAL_ENDPOINT) || ''
+                    },
+                    daily_briefing: {
+                        enabled: true,
+                        user_name: $('#userName').val() || saved.USER_NAME || '',
+                        location: userLocation
                     }
                 };
 

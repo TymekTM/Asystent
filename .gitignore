@@ -15,3 +15,11 @@ user_data.zip
 modules.zip
 resources.zip
 /release
+/Gaja_test
+/overlay/node_modules
+/overlay/target
+config.json
+plugins_state.json
+*.db
+user_data/
+gaja_memory.db

@@ -1,10 +1,10 @@
 # AI System Architecture
 
-This document explains the AI layers and components that power the Asystent system, updated for version 1.1.0.
+This document explains the AI layers and components that power the Gaja system, updated for version 1.2.0.
 
 ## AI Processing Pipeline
 
-Asystent uses a multi-layered architecture to process inputs and generate intelligent responses:
+Gaja uses a multi-layered architecture to process inputs and generate intelligent responses:
 
 ```
 Input → Wake Word → STT → Language Detection → Query Refinement → Intent Classification → LLM → Tool Use → TTS → Output
@@ -15,11 +15,9 @@ Input → Wake Word → STT → Language Detection → Query Refinement → Inte
 ### 1. Input Processing
 
 **Speech Recognition**
-- **Wake Word Detection**: Continuously listens for a trigger phrase via `audio_modules/wakeword_detector.py`
-- **Speech-to-Text (STT)**: Converts audio into text using either:
-  - Vosk (offline, lightweight) via `audio_modules/speech_recognition.py`
-  - Whisper (higher accuracy) via `audio_modules/whisper_asr.py`
-  - Automatic language detection for multilingual support
+- **Wake Word Detection**: Continuously listens for a trigger phrase via `audio_modules/wakeword_detector.py` using openWakeWord.
+- **Speech-to-Text (STT)**: Converts audio into text using Whisper (local or API) via `audio_modules/whisper_asr.py`.
+  - Automatic language detection for multilingual support is handled by Whisper.
 
 **Text Input**
 - Web UI chat interface 
@@ -28,15 +26,16 @@ Input → Wake Word → STT → Language Detection → Query Refinement → Inte
 
 ### 2. Query Processing Pipeline
 
-Located primarily in `ai_module.py`:
+Located primarily in `ai_module.py` and enhanced with function calling:
 
 - **Language Detection**: Identifies input language with `detect_language` and `detect_language_async`
 - **Query Refinement**: Preprocesses raw text to improve LLM performance via `refine_query`
 - **Intent Classification**: Categorizes inputs via `intent_system.py` and routes to appropriate handlers
+- **Function Calling System**: Extracts structured parameters from requests via `function_calling_system.py`
 
 ### 3. Conversation Management
 
-- **History Management**: Tracks conversation context using deque in `assistant.py`
+- **History Management**: Tracks conversation context using deque in `assistant.py` (representing Gaja)
 - **Memory System**: Long-term storage in `modules/memory_module.py` with database persistence
 - **Context Preservation**: Maintains coherent conversation flow with dynamic token management
 - **Active Window Context**: Tracks current application for contextual assistance via `modules/active_window_module.py`
@@ -54,12 +53,14 @@ Located in `ai_module.py`:
 
 - **Module System**: Dynamically loaded from the `modules/` directory with file watching for real-time updates
 - **Intent Routing**: Commands mapped to appropriate module handlers via `intent_system.py`
+- **Function Calling System**: Structured tool use via `function_calling_system.py` for more reliable command parsing
 - **Core Modules**:
   - **API Integration**: External services in `modules/api_module.py`
   - **Web Search**: Internet lookup in `modules/search_module.py`
-  - **Deep Reasoning**: Enhanced thinking in `modules/deepseek_module.py`
-  - **Visual Analysis**: Screen capture in `modules/see_screen_module.py`
   - **Memory Management**: Long-term storage in `modules/memory_module.py`
+  - **Daily Briefing**: Personalized summaries in `daily_briefing_module.py`
+  - **Music Control**: Media playback in `modules/music_module.py`
+  - **Web Navigation**: Browser control in `modules/open_web_module.py`
   - **Core Utilities**: Timers, reminders, and tasks in `modules/core_module.py`
   - **Active Window**: Context tracking in `modules/active_window_module.py`
   - **Web Browser**: URL opening in `modules/open_web_module.py`
@@ -85,7 +86,7 @@ Located in `performance_monitor.py`:
 ### 8. Multiprocessing Architecture
 
 - **Main Process** (`main.py`): Runs the Web UI
-- **Assistant Process** (spawned by `main.py`): Handles AI assistant functionality
+- **Gaja Process** (spawned by `main.py`): Handles AI assistant functionality
 - **Inter-Process Communication**: Uses multiprocessing Queue
 - **Asynchronous Operations**: Uses asyncio for non-blocking operations
 
@@ -108,9 +109,10 @@ Integration is managed via the `ai_module.py` file with appropriate configuratio
 4. **Context Assembly**: Conversation history, active window context, and relevant memories are gathered
 5. **LLM Interaction**: Prepared context is sent to the selected language model
 6. **Response Parsing**: Model output is structured into text and potential commands
-7. **Tool Execution**: If needed, specific module functions are invoked based on intent
-8. **Response Delivery**: Generated output is spoken via TTS and/or displayed in UI
-9. **Memory & History Update**: Conversation is stored and relevant information is added to long-term memory
+7. **Function Calling**: Structured parameters are extracted and validated if function calling is enabled
+8. **Tool Execution**: If needed, specific module functions are invoked based on intent or function calls
+9. **Response Delivery**: Generated output is spoken via TTS and/or displayed in UI
+10. **Memory & History Update**: Conversation is stored and relevant information is added to long-term memory
 
 ## Extending the AI System
 
@@ -122,6 +124,46 @@ Integration is managed via the `ai_module.py` file with appropriate configuratio
 4. Implement provider-specific handling for features like streaming, tool use, etc.
 5. Add appropriate error handling and fallback mechanisms
 
+### Function Calling System
+
+The Function Calling System enhances the AI's ability to understand and execute structured commands:
+
+1. **Module Schema Conversion**: Existing modules are automatically converted to function schemas
+2. **Parameter Extraction**: The AI model extracts and validates parameters from user requests
+3. **Type Validation**: Parameters are validated against their declared types
+4. **Handler Mapping**: Function calls are mapped to appropriate module handlers
+5. **Response Formatting**: Results are formatted according to the module's response type
+
+To leverage function calling in your modules:
+
+```python
+def register():
+    return {
+        "command": "weather",
+        "description": "Get weather information",
+        "handler": weather_handler,
+        "function_schema": {
+            "name": "get_weather",
+            "description": "Get current weather for a location",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "location": {
+                        "type": "string",
+                        "description": "City name (e.g., Warsaw)"
+                    },
+                    "units": {
+                        "type": "string",
+                        "enum": ["metric", "imperial"],
+                        "description": "Temperature units"
+                    }
+                },
+                "required": ["location"]
+            }
+        }
+    }
+```
+
 ### Creating New Modules
 
 1. Add a new module to the `modules/` directory with a `_module.py` suffix
@@ -129,10 +171,23 @@ Integration is managed via the `ai_module.py` file with appropriate configuratio
    ```python
    def register():
        return {
-           "name": "your_module_name",
+           "command": "your_module_name",
            "description": "Module description",
            "handler": your_handler_function,
            "aliases": ["alias1", "alias2"],
+           "function_schema": {
+               "name": "function_name",
+               "description": "Function description",
+               "parameters": {
+                   "type": "object",
+                   "properties": {
+                       "param_name": {
+                           "type": "string",
+                           "description": "Parameter description"
+                       }
+                   }
+               }
+           },
            "sub_commands": {
                "subcmd": {
                    "function": subcmd_handler,
@@ -157,7 +212,7 @@ The prompt system has been enhanced with dynamic building features in `prompt_bu
 - `build_active_window_prompt`: Adds context about the current application
 
 System prompts in `prompts.py` can be modified to:
-- Change the assistant's personality
+- Change Gaja's personality
 - Add specialized knowledge
 - Adjust response formatting
 - Enhance reasoning capabilities

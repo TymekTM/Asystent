@@ -1,8 +1,18 @@
-import sounddevice as sd
 import logging
+from .sounddevice_loader import get_sounddevice, is_sounddevice_available
+
+# Load sounddevice using our centralized loader
+sd = get_sounddevice()
+SOUNDDEVICE_AVAILABLE = is_sounddevice_available()
+if SOUNDDEVICE_AVAILABLE:
+    logging.getLogger(__name__).info("sounddevice loaded successfully via loader")
+else:    logging.getLogger(__name__).warning("sounddevice not available - will be installed on demand")
 
 def list_input_audio_devices():
     """Returns a list of available audio input device descriptions."""
+    if not SOUNDDEVICE_AVAILABLE:
+        return ["SoundDevice not available - audio devices cannot be listed"]
+    
     try:
         devices = sd.query_devices()
         result = []
@@ -21,6 +31,13 @@ def get_microphone_devices():
         list: A list of dictionaries with device information
               Each dictionary contains: id, name, is_default
     """
+    if not SOUNDDEVICE_AVAILABLE:
+        return [{
+            "id": "0",
+            "name": "SoundDevice not available",
+            "is_default": True
+        }]
+    
     try:
         devices = sd.query_devices()
         result = []
@@ -52,13 +69,16 @@ def get_microphone_devices():
 if __name__ == '__main__':
     # CLI behavior for listing devices
     print("Dostępne urządzenia wejściowe (mikrofony):")
-    try:
-        devices = sd.query_devices()
-        for i, device in enumerate(devices):
-            if device.get('max_input_channels', 0) > 0:
-                is_default = (i == sd.default.device[0])
-                default_marker = " (Domyślny)" if is_default else ""
-                print(f"  ID: {i}, Nazwa: {device.get('name')}{default_marker}")
-    except Exception:
-        print("Nie można pobrać urządzeń wejściowych (mikrofony).")
+    if not SOUNDDEVICE_AVAILABLE:
+        print("SoundDevice nie jest dostępny - nie można wyświetlić urządzeń audio.")
+    else:
+        try:
+            devices = sd.query_devices()
+            for i, device in enumerate(devices):
+                if device.get('max_input_channels', 0) > 0:
+                    is_default = (i == sd.default.device[0])
+                    default_marker = " (Domyślny)" if is_default else ""
+                    print(f"  ID: {i}, Nazwa: {device.get('name')}{default_marker}")
+        except Exception:
+            print("Nie można pobrać urządzeń wejściowych (mikrofony).")
     print("\nSkopiuj ID wybranego mikrofonu i wklej je jako wartość dla 'MIC_DEVICE_ID' w pliku config.json.")

@@ -98,6 +98,22 @@ Gaja Asystent is an advanced AI assistant system that provides voice, text, and 
   </div>
 </div>
 
+<div class="feature-item" style="display: flex; align-items: flex-start; gap: 10px; padding: 10px;">
+  <span style="background-color: rgba(152, 230, 192, 0.2); border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">🧩</span>
+  <div>
+    <strong>Function Calling</strong><br>
+    Precise parameter handling with OpenAI function calling
+  </div>
+</div>
+
+<div class="feature-item" style="display: flex; align-items: flex-start; gap: 10px; padding: 10px;">
+  <span style="background-color: rgba(152, 230, 192, 0.2); border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">✨</span>
+  <div>
+    <strong>Easy Onboarding</strong><br>
+    Streamlined setup process for new users
+  </div>
+</div>
+
 </div>
 
 <div style="text-align: center; margin: 30px 0; padding: 20px; background-color: rgba(152, 230, 192, 0.05); border-radius: 8px;">

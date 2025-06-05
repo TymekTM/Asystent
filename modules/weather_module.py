@@ -1,5 +1,8 @@
 import logging
-import requests
+try:
+    import requests
+except Exception:
+    requests = None
 from audio_modules.beep_sounds import play_beep
 
 logger = logging.getLogger(__name__)
@@ -21,6 +24,8 @@ def _fetch_wttr(location, format="j1", lang=None, unit=None, custom=None):
             params["u"] = ""
     if custom and isinstance(custom, dict):
         params.update(custom)
+    if requests is None:
+        raise RuntimeError("biblioteka requests niedostępna")
     resp = requests.get(url, params=params, timeout=5)
     resp.raise_for_status()
     if format == "j1":
@@ -140,6 +145,8 @@ def _handle_map(params, conversation_history=None, user=None):
             qp["M"] = ""
         elif unit and unit.lower() in ("imperial", "u"):
             qp["u"] = ""
+        if requests is None:
+            raise RuntimeError("biblioteka requests niedostępna")
         req = requests.Request('GET', url, params=qp).prepare()
         return f"Mapa pogodowa: {req.url}"
     except Exception as e:
@@ -172,12 +179,11 @@ def register():
         "command": "weather",
         "aliases": ["pogoda"],
         "description": "Pobiera pogodę i prognozę oraz inne dane z wttr.in",
-        "handler": handler,
-        "sub_commands": {
-            "current": {"function": _handle_current, "description": "Aktualna pogoda", "aliases": ["teraz"], "params_desc": "<lokacja> [lang=] [unit=]"},
-            "forecast": {"function": _handle_forecast, "description": "Prognoza", "aliases": ["prognoza"], "params_desc": "<lokacja> [dni] [lang=] [unit=]"},
-            "astronomy": {"function": _handle_astronomy, "description": "Dane astronomiczne", "aliases": ["astronomia", "astro"], "params_desc": "<lokacja> [dni] [lang=]"},
-            "map": {"function": _handle_map, "description": "Mapa pogodowa", "aliases": ["mapa"], "params_desc": "<lokacja> [lang=] [unit=]"}
+        "handler": handler,        "sub_commands": {
+            "current": {"function": _handle_current, "description": "Pobiera aktualną pogodę dla podanej lokacji", "aliases": ["teraz"], "params_desc": "<lokacja> [lang=] [unit=]"},
+            "forecast": {"function": _handle_forecast, "description": "Pobiera prognozę pogody na kilka dni", "aliases": ["prognoza"], "params_desc": "<lokacja> [dni] [lang=] [unit=]"},
+            "astronomy": {"function": _handle_astronomy, "description": "Pobiera dane astronomiczne jak wschód/zachód słońca", "aliases": ["astronomia", "astro"], "params_desc": "<lokacja> [dni] [lang=]"},
+            "map": {"function": _handle_map, "description": "Wyświetla mapę pogodową dla lokacji", "aliases": ["mapa"], "params_desc": "<lokacja> [lang=] [unit=]"}
         }
     }
     subs = info["sub_commands"]

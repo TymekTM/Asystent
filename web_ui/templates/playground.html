@@ -1,0 +1,613 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">    <div class="gaja-welcome">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+            <div>
+                <h1><i class="fas fa-code me-2"></i>Plugin Playground</h1>
+                <p>Testuj pluginy manualnie z niestandardowymi danymi i parametrami.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="/playground/enhanced" class="btn btn-gaja btn-gaja-primary">
+                    <i class="fas fa-rocket me-1"></i>Enhanced Playground
+                </a>
+                <a href="/plugins" class="btn btn-gaja btn-gaja-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Powrót do modułów
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-play-circle me-2"></i>Wykonanie pluginu
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="plugin-select" class="form-label">Wybierz plugin:</label>
+                        <select id="plugin-select" class="form-select">
+                            <option value="">-- Wybierz plugin --</option>
+                        </select>
+                    </div>
+                    
+                    <div id="subcommand-section" class="mb-3" style="display: none;">
+                        <label for="subcommand-select" class="form-label">Podkomenda:</label>
+                        <select id="subcommand-select" class="form-select">
+                            <option value="">-- Wybierz podkomendę --</option>
+                        </select>
+                    </div>
+                    
+                    <div id="params-section" class="mb-3" style="display: none;">
+                        <label class="form-label">Parametry:</label>
+                        <div id="params-container"></div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="use-context" checked>
+                            <label class="form-check-label" for="use-context">
+                                Użyj kontekstu konwersacji
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2 mb-3">
+                        <button id="execute-plugin-btn" class="btn btn-gaja btn-gaja-primary" disabled>
+                            <i class="fas fa-play me-1"></i>Wykonaj plugin
+                        </button>
+                        <button id="view-source-btn" class="btn btn-gaja btn-gaja-secondary" disabled>
+                            <i class="fas fa-code me-1"></i>Zobacz kod źródłowy
+                        </button>
+                    </div>
+                    
+                    <div class="status-display mb-3">
+                        <span id="plugin-status-dot" class="status-indicator idle"></span>
+                        <span id="plugin-status-label">Status: Gotowy</span>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Wynik wykonania:</label>
+                        <div id="plugin-result" class="log-container" style="min-height: 200px;">
+                            Wybierz plugin i kliknij "Wykonaj plugin" aby zobaczyć wynik
+                        </div>
+                    </div>
+                    
+                    <div id="plugin-info" class="mb-3" style="display: none;">
+                        <label class="form-label">Informacje o pluginie:</label>
+                        <div id="plugin-info-content" class="alert alert-info">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Source Code Modal -->
+<div class="modal fade" id="sourceCodeModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Kod źródłowy pluginu</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <pre><code id="source-code-content" class="language-python"></code></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Plugin Playground functionality
+let currentPlugins = {};
+
+// Load available plugins
+function loadPlugins() {
+    // First try the detailed playground API
+    fetch('/api/playground/plugins')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Playground API failed: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Loaded plugins from playground API:', data);
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            populatePlugins(data);
+        })
+        .catch(error => {
+            console.warn('Playground API failed, trying fallback:', error);
+            // Fallback to basic plugins API
+            fetch('/api/plugins')
+                .then(response => response.json())                .then(data => {
+                    console.log('Loaded plugins from fallback API:', data);                    // Convert simple plugin list to playground format
+                    const pluginData = {};
+                    Object.keys(data || {}).forEach(pluginName => {
+                        pluginData[pluginName] = {
+                            command: pluginName,
+                            description: `Module ${pluginName}`,
+                            module_name: pluginName,
+                            sub_commands: [], // Empty array instead of object
+                            has_handler: true
+                        };
+                    });
+                    populatePlugins({plugins: pluginData});
+                })
+                .catch(fallbackError => {
+                    console.error('Both APIs failed:', fallbackError);
+                    document.getElementById('plugin-result').innerHTML = `
+                        <div class="alert alert-danger">
+                            <strong>Błąd ładowania pluginów:</strong><br>
+                            Playground API: ${error.message}<br>
+                            Fallback API: ${fallbackError.message}
+                        </div>
+                    `;
+                });
+        });
+}
+
+function populatePlugins(data) {
+    // API zwraca dane w formacie {plugins: {...}}
+    currentPlugins = data.plugins || data || {};
+    const pluginSelect = document.getElementById('plugin-select');
+    pluginSelect.innerHTML = '<option value="">-- Wybierz plugin --</option>';
+    
+    const pluginCount = Object.keys(currentPlugins).length;
+    console.log(`Found ${pluginCount} plugins:`, Object.keys(currentPlugins));
+    
+    if (pluginCount === 0) {
+        document.getElementById('plugin-result').innerHTML = `
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Brak dostępnych pluginów do testowania.
+                <br><small>Upewnij się, że moduły są załadowane w aplikacji.</small>
+            </div>
+        `;
+        return;
+    }
+      Object.keys(currentPlugins).forEach(pluginName => {
+        const plugin = currentPlugins[pluginName];
+        const option = document.createElement('option');
+        option.value = pluginName;
+        
+        const subCommandCount = plugin.sub_commands ? plugin.sub_commands.length : 0;
+        option.textContent = `${pluginName} (${subCommandCount} podkomend)`;
+        
+        pluginSelect.appendChild(option);
+    });
+    
+    // Show success message
+    document.getElementById('plugin-result').innerHTML = `
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            Załadowano ${pluginCount} plugin(ów). Wybierz plugin z listy powyżej aby rozpocząć testowanie.
+        </div>
+    `;
+}
+
+// Handle plugin selection
+document.getElementById('plugin-select').addEventListener('change', function() {
+    const selectedPlugin = this.value;
+    const subcommandSection = document.getElementById('subcommand-section');
+    const subcommandSelect = document.getElementById('subcommand-select');
+    const paramsSection = document.getElementById('params-section');
+    const pluginInfo = document.getElementById('plugin-info');
+    const executeBtn = document.getElementById('execute-plugin-btn');
+    const viewSourceBtn = document.getElementById('view-source-btn');
+    
+    if (selectedPlugin && currentPlugins[selectedPlugin]) {
+        const plugin = currentPlugins[selectedPlugin];
+          // Show plugin info
+        pluginInfo.style.display = 'block';
+        const subCommandCount = plugin.sub_commands ? plugin.sub_commands.length : 0;
+        document.getElementById('plugin-info-content').innerHTML = `
+            <strong>Opis:</strong> ${plugin.description || 'Brak opisu'}<br>
+            <strong>Moduł:</strong> ${plugin.module_name || 'Nieznany'}<br>
+            <strong>Podkomendy:</strong> ${subCommandCount}<br>
+            <strong>Ma handler:</strong> ${plugin.has_handler ? 'Tak' : 'Nie'}
+        `;
+        
+        // Setup subcommands
+        subcommandSelect.innerHTML = '<option value="">-- Wybierz podkomendę --</option>';
+        if (plugin.sub_commands && plugin.sub_commands.length > 0) {
+            subcommandSection.style.display = 'block';
+            plugin.sub_commands.forEach(subcmd => {
+                const option = document.createElement('option');
+                option.value = subcmd.name;
+                option.textContent = `${subcmd.name} - ${subcmd.description || 'Brak opisu'}`;
+                subcommandSelect.appendChild(option);
+            });        } else {
+            subcommandSection.style.display = 'none';
+            // For plugins without subcommands, show parameter input for main handler
+            if (plugin.has_handler) {
+                paramsSection.style.display = 'block';
+                createGenericParameterInput(document.getElementById('params-container'));
+            }
+            // Enable execute button for plugins without subcommands
+            executeBtn.disabled = false;
+        }
+        
+        viewSourceBtn.disabled = false;
+    } else {
+        subcommandSection.style.display = 'none';
+        paramsSection.style.display = 'none';
+        pluginInfo.style.display = 'none';
+        executeBtn.disabled = true;
+        viewSourceBtn.disabled = true;
+    }
+    
+    // Clear params when changing plugin
+    document.getElementById('params-container').innerHTML = '';
+});
+
+// Handle subcommand selection
+document.getElementById('subcommand-select').addEventListener('change', function() {
+    const selectedPlugin = document.getElementById('plugin-select').value;
+    const selectedSubcommand = this.value;
+    const paramsSection = document.getElementById('params-section');
+    const paramsContainer = document.getElementById('params-container');
+    const executeBtn = document.getElementById('execute-plugin-btn');
+    
+    paramsContainer.innerHTML = '';    if (selectedPlugin && selectedSubcommand && currentPlugins[selectedPlugin]) {
+        const plugin = currentPlugins[selectedPlugin];
+        // Find subcommand in array
+        const subcmd = plugin.sub_commands?.find(sc => sc.name === selectedSubcommand);
+        
+        if (subcmd && (subcmd.params_desc || subcmd.parameters)) {
+            paramsSection.style.display = 'block';
+            
+            // Handle both params_desc and parameters format
+            if (subcmd.params_desc) {
+                createParameterInputs(subcmd.params_desc, paramsContainer);
+            } else if (subcmd.parameters) {
+                createParameterInputsFromObject(subcmd.parameters, paramsContainer);
+            }
+        } else {
+            paramsSection.style.display = 'none';
+        }
+        
+        executeBtn.disabled = false;
+    } else if (selectedPlugin && !selectedSubcommand && currentPlugins[selectedPlugin]) {
+        // Plugin selected but no subcommand - show generic parameter input for main handler
+        const plugin = currentPlugins[selectedPlugin];
+        if (plugin.has_handler) {
+            paramsSection.style.display = 'block';
+            createGenericParameterInput(paramsContainer);
+        } else {
+            paramsSection.style.display = 'none';
+        }
+        executeBtn.disabled = false;
+    } else {
+        paramsSection.style.display = 'none';
+        executeBtn.disabled = selectedPlugin ? false : true;
+    }
+});
+
+// Enhanced parameter input creation
+function createParameterInputs(paramsDesc, container) {
+    const paramDiv = document.createElement('div');
+    paramDiv.className = 'param-group';
+    
+    let inputHtml = '';
+    let placeholder = paramsDesc;
+    let example = '';
+    
+    // Parse parameter description for better UX
+    if (paramsDesc.includes('<') && paramsDesc.includes('>')) {
+        // Extract parameter types from description like "<seconds>", "<item>", etc.
+        const matches = paramsDesc.match(/<([^>]+)>/g);
+        if (matches) {
+            const paramTypes = matches.map(m => m.slice(1, -1));
+            
+            if (paramTypes.includes('seconds') || paramTypes.includes('number')) {
+                // Numeric input for seconds/numbers
+                inputHtml = `
+                    <input type="number" class="form-control param-input" 
+                           data-param="params" 
+                           placeholder="Wprowadź liczbę sekund"
+                           min="1" step="1">
+                `;
+                example = 'Przykład: 300 (dla 5 minut)';
+            } else if (paramTypes.includes('ISOdatetime')) {
+                // Datetime input for ISO datetime
+                inputHtml = `
+                    <input type="datetime-local" class="form-control param-input" 
+                           data-param="params">
+                `;
+                example = 'Wybierz datę i czas dla wydarzenia/przypomnienia';
+            } else if (paramTypes.some(p => p.includes('item') || p.includes('task') || p.includes('desc'))) {
+                // Text area for longer descriptions
+                inputHtml = `
+                    <textarea class="form-control param-input" 
+                              data-param="params" 
+                              rows="2"
+                              placeholder="Wprowadź tekst"></textarea>
+                `;
+                example = 'Wpisz tekst elementu, zadania lub opisu';
+            } else {
+                // Default text input
+                inputHtml = `
+                    <input type="text" class="form-control param-input" 
+                           data-param="params" 
+                           placeholder="Wprowadź parametr">
+                `;
+                example = `Wymagany format: ${paramsDesc}`;
+            }
+        }
+    } else {
+        // Simple text input for unstructured descriptions
+        inputHtml = `
+            <input type="text" class="form-control param-input" 
+                   data-param="params" 
+                   placeholder="Wprowadź parametry">
+        `;
+        example = paramsDesc || 'Wprowadź parametry wymagane przez komendę';
+    }
+    
+    paramDiv.innerHTML = `
+        <label class="form-label">Parametry komendy</label>
+        ${inputHtml}
+        <div class="param-description">Opis: ${paramsDesc}</div>
+        ${example ? `<div class="param-example">${example}</div>` : ''}
+    `;
+    
+    container.appendChild(paramDiv);
+}
+
+// Create parameter inputs from parameters object (used by some modules like search)
+function createParameterInputsFromObject(parameters, container) {
+    if (Array.isArray(parameters)) {
+        parameters.forEach(param => {
+            const paramDiv = document.createElement('div');
+            paramDiv.className = 'param-group mb-3';
+            
+            let inputHtml = '';
+            let inputType = 'text';
+            
+            // Determine input type based on parameter type
+            switch (param.type) {
+                case 'number':
+                case 'integer':
+                    inputType = 'number';
+                    break;
+                case 'boolean':
+                    inputType = 'checkbox';
+                    break;
+                case 'datetime':
+                    inputType = 'datetime-local';
+                    break;
+                default:
+                    inputType = 'text';
+            }
+            
+            if (inputType === 'checkbox') {
+                inputHtml = `
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input param-input" 
+                               data-param="${param.name}" 
+                               id="param-${param.name}">
+                        <label class="form-check-label" for="param-${param.name}">
+                            ${param.name} ${param.required ? '*' : ''}
+                        </label>
+                    </div>
+                `;
+            } else {
+                inputHtml = `
+                    <label class="form-label">${param.name} ${param.required ? '*' : ''}</label>
+                    <input type="${inputType}" class="form-control param-input" 
+                           data-param="${param.name}" 
+                           placeholder="${param.description || ''}"
+                           ${param.required ? 'required' : ''}>
+                `;
+            }
+            
+            paramDiv.innerHTML = `
+                ${inputHtml}
+                <div class="param-description">
+                    <small class="text-muted">
+                        ${param.description || ''}
+                        ${param.type ? ` (${param.type})` : ''}
+                    </small>
+                </div>
+            `;
+            
+            container.appendChild(paramDiv);
+        });
+    }
+}
+
+// Create generic parameter input for main plugin handlers
+function createGenericParameterInput(container) {
+    const paramDiv = document.createElement('div');
+    paramDiv.className = 'param-group';
+    
+    paramDiv.innerHTML = `
+        <label class="form-label">Parametry komendy</label>
+        <input type="text" class="form-control param-input" 
+               data-param="params" 
+               placeholder="Wprowadź parametry dla tego modułu">
+        <div class="param-description">
+            <small class="text-muted">Wprowadź parametry wymagane przez główny handler modułu</small>
+        </div>
+    `;
+    
+    container.appendChild(paramDiv);
+}
+
+// Execute plugin
+document.getElementById('execute-plugin-btn').addEventListener('click', function() {
+    const selectedPlugin = document.getElementById('plugin-select').value;
+    const selectedSubcommand = document.getElementById('subcommand-select').value;
+    const useContext = document.getElementById('use-context').checked;
+    const statusDot = document.getElementById('plugin-status-dot');
+    const statusLabel = document.getElementById('plugin-status-label');
+    const resultDiv = document.getElementById('plugin-result');
+    
+    if (!selectedPlugin) {
+        alert('Wybierz plugin do wykonania');
+        return;
+    }      // Collect parameters with enhanced logic
+    let params = '';
+    const paramInputs = document.querySelectorAll('.param-input');
+    if (paramInputs.length > 0) {
+        const namedParams = {};
+        const unnamedParams = [];
+        
+        paramInputs.forEach(input => {
+            const paramName = input.getAttribute('data-param');
+            let value = input.value.trim();
+            
+            if (!value && input.type === 'checkbox') {
+                value = input.checked;
+            }
+            
+            if (value !== '' && value !== false) {
+                // Handle datetime inputs - convert to ISO format
+                if (input.type === 'datetime-local') {
+                    const dt = new Date(value);
+                    value = dt.toISOString();
+                }
+                
+                if (paramName === 'params') {
+                    // Generic parameter field
+                    unnamedParams.push(value);
+                } else {
+                    // Named parameter
+                    namedParams[paramName] = value;
+                }
+            }
+        });
+        
+        // Build params string
+        if (Object.keys(namedParams).length > 0) {
+            // For named parameters, create a structured string or JSON
+            const paramPairs = Object.entries(namedParams).map(([key, value]) => `${key}=${value}`);
+            params = paramPairs.join(' ');
+        } else if (unnamedParams.length > 0) {
+            // For unnamed parameters, join them with spaces
+            params = unnamedParams.join(' ');
+        }
+    }
+    
+    // Update status
+    statusDot.className = 'status-indicator running';
+    statusLabel.textContent = 'Status: Wykonywanie...';
+    resultDiv.innerHTML = '<div class="alert alert-info">Wykonywanie pluginu...</div>';
+    
+    // Prepare request data
+    const requestData = {
+        plugin: selectedPlugin,
+        sub_command: selectedSubcommand || '',
+        params: params,
+        include_history: useContext
+    };
+    
+    console.log('Executing plugin with data:', requestData);
+    
+    // Execute plugin
+    fetch('/api/playground/execute', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Plugin execution result:', data);
+        
+        statusDot.className = data.success ? 'status-indicator success' : 'status-indicator failed';
+        statusLabel.textContent = data.success ? 'Status: Sukces' : 'Status: Błąd';
+        
+        if (data.success) {
+            let resultText = '';
+            if (typeof data.result === 'object') {
+                resultText = JSON.stringify(data.result, null, 2);
+            } else {
+                resultText = String(data.result || '');
+            }
+            
+            resultDiv.innerHTML = `
+                <div class="alert alert-success mb-2">✅ Plugin wykonany pomyślnie</div>
+                <strong>Wynik:</strong><br>
+                <pre>${resultText}</pre>
+                ${data.execution_time ? `<small class="text-muted">Czas wykonania: ${data.execution_time}ms</small>` : ''}
+            `;
+        } else {
+            resultDiv.innerHTML = `
+                <div class="alert alert-danger mb-2">❌ Błąd wykonania</div>
+                <strong>Błąd:</strong> ${data.error || 'Nieznany błąd'}
+                ${data.details ? `<br><strong>Szczegóły:</strong> ${data.details}` : ''}
+            `;
+        }
+    })
+    .catch(error => {
+        console.error('Plugin execution error:', error);
+        statusDot.className = 'status-indicator failed';
+        statusLabel.textContent = 'Status: Błąd';
+        resultDiv.innerHTML = `
+            <div class="alert alert-danger mb-2">❌ Błąd komunikacji</div>
+            <strong>Błąd:</strong> ${error.message}
+        `;
+    });
+});
+
+// View source code
+document.getElementById('view-source-btn').addEventListener('click', function() {
+    const selectedPlugin = document.getElementById('plugin-select').value;
+    
+    if (!selectedPlugin) {
+        alert('Wybierz plugin aby zobaczyć kod źródłowy');
+        return;
+    }
+    
+    fetch(`/api/playground/plugin/${selectedPlugin}/info`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.source_code) {
+                document.getElementById('source-code-content').textContent = data.source_code;
+                
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('sourceCodeModal'));
+                modal.show();
+                
+                // Apply syntax highlighting if Prism.js is available
+                if (typeof Prism !== 'undefined') {
+                    Prism.highlightElement(document.getElementById('source-code-content'));
+                }
+            } else {
+                alert('Nie udało się pobrać kodu źródłowego: ' + (data.error || 'Nieznany błąd'));
+            }
+        })
+        .catch(error => {
+            alert('Błąd pobierania kodu źródłowego: ' + error.message);
+        });
+});
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Playground page initialized - loading plugins...');
+    
+    // Add debugging for network requests
+    const originalFetch = window.fetch;
+    window.fetch = function(...args) {
+        console.log('Fetching:', args[0]);
+        return originalFetch.apply(this, args);
+    };
+    
+    loadPlugins();
+});
+</script>
+{% endblock %}

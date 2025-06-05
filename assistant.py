@@ -1,4 +1,4 @@
-__version__ = "1.1.0" # Updated version
+__version__ = "1.2.0" # Updated version
 
 import asyncio, json, logging, os, glob, importlib, time
 from watchdog.observers import Observer
@@ -9,14 +9,13 @@ import queue # Import queue for Empty exception
 import threading
 import logging.handlers # Add this import
 from collections import deque # Import deque for conversation history
-import numpy as np # Added for model warm-up
+# numpy imported lazily when needed
 
-# Import modułów audio z nowej lokalizacji
-from audio_modules.tts_module import TTSModule
+# Import modułów audio z nowej lokalizacji - some imported lazily
 from audio_modules.beep_sounds import play_beep
 import audio_modules.beep_sounds as beep_sounds
 from audio_modules.wakeword_detector import run_wakeword_detection
-from audio_modules.whisper_asr import WhisperASR # Ensure WhisperASR is imported
+# TTSModule and WhisperASR imported lazily when needed
 
 # Import funkcji AI z nowego modułu
 from ai_module import refine_query, generate_response, parse_response, remove_chain_of_thought, detect_language, detect_language_async
@@ -37,7 +36,7 @@ from config import (
     WHISPER_MODEL, MAX_HISTORY_LENGTH,
     LOW_POWER_MODE, DEV_MODE,
     TRACK_ACTIVE_WINDOW, ACTIVE_WINDOW_POLL_INTERVAL, WAKE_WORD_SENSITIVITY_THRESHOLD,
-    AUTO_LISTEN_AFTER_TTS # Ensure AUTO_LISTEN_AFTER_TTS is imported if used as a global default
+    AUTO_LISTEN_AFTER_TTS, USE_FUNCTION_CALLING # Ensure USE_FUNCTION_CALLING is imported
 )
 from config import _config
 QUERY_REFINEMENT_ENABLED = False  # prompt refinement disabled for new testing approach
@@ -72,7 +71,7 @@ def save_plugins_state(plugins):
         logger.error(f"Failed to save plugins state: {e}")
 
 
-class Assistant:    
+class Assistant:
     async def speak_and_maybe_listen(self, text, listen_after_tts: bool, TextMode: bool = False):
         """Helper: Speak text, and if listen_after_tts, trigger manual listen after TTS."""
         if not text:
@@ -93,16 +92,35 @@ class Assistant:
                 f.write(f"{datetime.datetime.now().isoformat()} | {json.dumps(tts_message, ensure_ascii=False)}\n")
         except Exception as log_exc:
             logger.warning(f"[PromptLog] Failed to log TTS output: {log_exc}")
+        
         if listen_after_tts:
             logger.info(f"[TTS+Listen] Speaking and will listen again: '{text[:100]}...'")
+            self.is_speaking = True
+            self.last_tts_text = text
+            self._update_shared_state()
             await self.tts.speak(text)
+            self.is_speaking = False
+            self.last_tts_text = ""
+            self._update_shared_state()
             logger.info("[TTS+Listen] TTS finished, triggering manual listen.")
             self.is_processing = False
             self.is_listening = True
+            self._update_shared_state()
             self.manual_trigger_event.set()
         else:
             logger.info(f"[TTS] Speaking (no re-listen): '{text[:100]}...'")
-            asyncio.create_task(self.tts.speak(text))
+            asyncio.create_task(self._speak_async(text))
+
+    async def _speak_async(self, text: str):
+        """Background speaking task used when no re-listen is requested."""
+        self.is_speaking = True
+        self.last_tts_text = text
+        self._update_shared_state()
+        await self.tts.speak(text)
+        self.is_speaking = False
+        self.last_tts_text = ""
+        self.is_processing = False
+        self._update_shared_state()
     """Main class for the assistant."""
     @measure_performance
     def __init__(self, mic_device_id: int = None, wake_word: str = None, stt_silence_threshold: int = None, command_queue: queue.Queue = None): # Type hint for command_queue
@@ -112,6 +130,7 @@ class Assistant:
         self.mic_device_id = mic_device_id if mic_device_id is not None else _config.get('MIC_DEVICE_ID', MIC_DEVICE_ID)
         self.wake_word = wake_word if wake_word is not None else _config.get('WAKE_WORD', WAKE_WORD)
         self.stt_silence_threshold = stt_silence_threshold if stt_silence_threshold is not None else _config.get('STT_SILENCE_THRESHOLD', STT_SILENCE_THRESHOLD)
+        self.user_name = _config.get('USER_NAME', '')
         self.whisper_model = _config.get('WHISPER_MODEL', WHISPER_MODEL)
         self.max_history_length = _config.get('MAX_HISTORY_LENGTH', MAX_HISTORY_LENGTH)
         self.low_power_mode = _config.get('LOW_POWER_MODE', LOW_POWER_MODE)
@@ -134,13 +153,17 @@ class Assistant:
 
         self.intent_detector = None # Initialized later
         self.should_exit = threading.Event()
-        self.is_listening = False 
+        self.is_listening = False
         self.is_processing = False
+        self.is_speaking = False
+        self.wake_word_detected = False
+        self.last_tts_text = ""
         self.current_active_window = None
         self._active_window_thread = None
         self._stop_event_active_window = threading.Event()
 
         self.conversation_history = deque(maxlen=self.max_history_length)
+        from audio_modules.tts_module import TTSModule  # Lazy import
         self.tts = TTSModule()
         
         # The old SpeechRecognizer instance (Vosk-based) is removed.
@@ -198,7 +221,9 @@ class Assistant:
         self.load_plugins()
         self.loop = None 
         self.command_queue = command_queue
-        self.manual_trigger_event = threading.Event() # For signaling manual listen to wakeword_detector
+        self.manual_trigger_event = threading.Event() # For signaling manual listen to wakeword_detector        # Initialize daily briefing module
+        self.daily_briefing = None
+        self._init_daily_briefing()
 
         if self.track_active_window:
             self.start_active_window_tracker()
@@ -206,7 +231,7 @@ class Assistant:
         self.initialize_components() # Initializes WhisperASR and other components
         logger.info("Assistant initialized.")
         # --- End of __init__ ---
-
+    
     def initialize_components(self):
         """Initializes components that require hardware access or network."""
         logger.info("Initializing components...")
@@ -215,10 +240,12 @@ class Assistant:
         if self.use_whisper: # This will always be true now
             if not self.whisper_asr: 
                 logger.info(f"Initializing WhisperASR with model: {self.whisper_model}")
+                from audio_modules.whisper_asr import WhisperASR  # Lazy import
                 self.whisper_asr = WhisperASR(model_size=self.whisper_model)
             
             logger.info("Warming up Whisper ASR model...")
             try:
+                import numpy as np  # Lazy import
                 sample_rate = 16000
                 duration = 1
                 num_samples = sample_rate * duration
@@ -297,14 +324,56 @@ class Assistant:
                 # Avoid busy-looping on error, wait before retrying
                 time.sleep(self.active_window_poll_interval) 
 
+    def _init_daily_briefing(self):
+        """Initialize the daily briefing module."""
+        try:
+            from daily_briefing_module import DailyBriefingModule
+            from config import daily_briefing
+            
+            # Merge global daily_briefing config with user-specific settings
+            briefing_config = _config.copy()
+            self.daily_briefing = DailyBriefingModule(briefing_config)
+            
+            # Start scheduler if enabled
+            if self.daily_briefing.scheduled_briefing:
+                self.daily_briefing.start_scheduler(assistant_callback=self._deliver_scheduled_briefing)
+            
+            logger.info("Daily briefing module initialized")
+        except Exception as e:
+            logger.error(f"Failed to initialize daily briefing module: {e}", exc_info=True)
+            self.daily_briefing = None
+
+    async def _deliver_scheduled_briefing(self, briefing_text: str):
+        """Callback for delivering scheduled briefings."""
+        try:
+            logger.info("Delivering scheduled daily briefing")
+            await self.speak_and_maybe_listen(briefing_text, listen_after_tts=False, TextMode=False)
+            logger.info("Scheduled daily briefing delivered successfully")
+        except Exception as e:
+            logger.error(f"Error delivering scheduled briefing: {e}", exc_info=True)
+
+    async def check_daily_briefing(self):
+        """Check if daily briefing should be delivered and deliver it if needed."""
+        if not self.daily_briefing:
+            return
+        
+        try:
+            briefing_text = await self.daily_briefing.deliver_briefing()
+            if briefing_text:
+                logger.info("Delivering daily briefing")
+                await self.speak_and_maybe_listen(briefing_text, listen_after_tts=False, TextMode=False)
+                logger.info("Daily briefing delivered successfully")
+        except Exception as e:
+            logger.error(f"Error delivering daily briefing: {e}", exc_info=True)
+
     def reload_config_values(self):
         """Reloads configuration values from the config module."""
         logger.info("Reloading configuration values in Assistant...")
         load_config() # Crucial: refreshes _config and global config variables
-
         self.mic_device_id = _config.get('MIC_DEVICE_ID', MIC_DEVICE_ID)
         self.wake_word = _config.get('WAKE_WORD', WAKE_WORD)
         self.stt_silence_threshold = _config.get('STT_SILENCE_THRESHOLD', STT_SILENCE_THRESHOLD)
+        self.user_name = _config.get('USER_NAME', '')
         
         new_whisper_model = _config.get('WHISPER_MODEL', WHISPER_MODEL)
         if self.whisper_model != new_whisper_model:
@@ -315,19 +384,21 @@ class Assistant:
                 if hasattr(self.whisper_asr, 'unload_model'): # Check if unload_model exists
                     self.whisper_asr.unload_model()
                 elif hasattr(self.whisper_asr, 'unload'): # Check for unload
-                     self.whisper_asr.unload()
+                    self.whisper_asr.unload()
                 self.whisper_asr = None # Force re-initialization
             
             if self.use_whisper: # This will be true
-                 self.whisper_asr = WhisperASR(model_size=self.whisper_model)
-                 try:
+                from audio_modules.whisper_asr import WhisperASR
+                self.whisper_asr = WhisperASR(model_size=self.whisper_model)
+                try:
+                    import numpy as np  # Lazy import
                     logger.info(f"Warming up new Whisper ASR model: {self.whisper_model}")
                     sample_rate = 16000; duration = 1; num_samples = sample_rate * duration
                     dummy_audio_np = np.zeros(num_samples, dtype=np.float32)
                     # Ensure correct parameters for transcribe, especially if language needs to be dynamic
                     self.whisper_asr.transcribe(dummy_audio_np, sample_rate=sample_rate, language=_config.get("LANGUAGE", "en")[:2])
                     logger.info("New Whisper ASR model warmed up.")
-                 except Exception as e:
+                except Exception as e:
                     logger.error(f"Error warming up new Whisper ASR model: {e}", exc_info=True)
 
         self.max_history_length = _config.get('MAX_HISTORY_LENGTH', MAX_HISTORY_LENGTH)
@@ -349,6 +420,10 @@ class Assistant:
         self.active_window_poll_interval = _config.get('ACTIVE_WINDOW_POLL_INTERVAL', ACTIVE_WINDOW_POLL_INTERVAL)
         self.wake_word_sensitivity_threshold = _config.get('WAKE_WORD_SENSITIVITY_THRESHOLD', WAKE_WORD_SENSITIVITY_THRESHOLD)
         self.auto_listen_after_tts = _config.get('AUTO_LISTEN_AFTER_TTS', AUTO_LISTEN_AFTER_TTS)
+        
+        # Reload daily briefing configuration
+        if self.daily_briefing:
+            self._init_daily_briefing()
         
         global QUERY_REFINEMENT_ENABLED
         QUERY_REFINEMENT_ENABLED = False  # prompt refinement remains disabled for testing
@@ -486,6 +561,8 @@ class Assistant:
         # --- Centralized process_query logic ---
         beep_sounds.MUTE = bool(TextMode)
         self.tts.mute = bool(TextMode)
+        self.is_listening = False
+        self.is_processing = True
         listen_after_tts = False
         # Use global flag to control prompt refinement (disabled by default for new testing approach)
         query_refinement_enabled = QUERY_REFINEMENT_ENABLED
@@ -532,21 +609,23 @@ class Assistant:
                         break
             if module_key:
                 mod = self.modules[module_key]
-                tool_suggestion = f"{module_key} - {mod.get('description','')}"
-
-        # 4. LLM response        # We no longer build the system prompt here
-        # The generate_response function will build it internally
-        # This avoids duplication in the logs# generate_response returns a JSON string
+                tool_suggestion = f"{module_key} - {mod.get('description','')}"        # 4. LLM response with function calling support
+        # Check if function calling is enabled (default to True for OpenAI)
+        use_function_calling = _config.get('USE_FUNCTION_CALLING', True)
+        
         response_json_str = generate_response(
             list(self.conversation_history), # Pass a list copy
             tools_info=functions_info,
-            system_prompt_override=None,  # We're already building the system_prompt above
+            system_prompt_override=None,
             detected_language=lang_code,
             language_confidence=lang_conf,
             active_window_title=self.current_active_window if self.track_active_window else None,
             track_active_window_setting=self.track_active_window,
-            tool_suggestion=tool_suggestion
-        )
+            tool_suggestion=tool_suggestion,
+            modules=self.modules if use_function_calling else None,
+            use_function_calling=use_function_calling
+        )        
+        
         logger.info("AI response (raw JSON string): %s", response_json_str)
         
         # Log the raw API response 
@@ -557,7 +636,48 @@ class Assistant:
                 api_response_msg = {"role": "assistant_api", "content": response_json_str}
                 f.write(f"{datetime.datetime.now().isoformat()} | {json.dumps(api_response_msg, ensure_ascii=False)}\n")
         except Exception as log_exc:
-            logger.warning(f"[API Log] Failed to log API response: {log_exc}")
+            logger.warning(f"[API Log] Failed to log API response: {log_exc}")        # Check if function calling was used and functions were executed
+        try:
+            # Try to parse the response to check for function_calls_executed flag
+            parsed_response = json.loads(response_json_str) if isinstance(response_json_str, str) else response_json_str
+            if use_function_calling and parsed_response.get("function_calls_executed"):
+                # Function calling handled the request completely
+                logger.info("Function calling executed. Processing complete.")
+                # Extract response text and speak it if available
+                response_text = parsed_response.get("text", "")
+                
+                # Check for system listen command in response
+                listen_after_tts = self.auto_listen_after_tts if not TextMode else False
+                if "SYSTEM_LISTEN_AFTER_TTS:" in response_text:
+                    # Extract listen flag from system response
+                    if "SYSTEM_LISTEN_AFTER_TTS:True" in response_text:
+                        listen_after_tts = True
+                    elif "SYSTEM_LISTEN_AFTER_TTS:False" in response_text:
+                        listen_after_tts = False
+                    # Remove system command from response text
+                    response_text = response_text.replace("SYSTEM_LISTEN_AFTER_TTS:True", "").replace("SYSTEM_LISTEN_AFTER_TTS:False", "").strip()
+                
+                if response_text:
+                    await self.speak_and_maybe_listen(response_text, listen_after_tts, TextMode)
+                return
+        except (json.JSONDecodeError, TypeError) as e:            logger.debug(f"Response is not JSON or missing function_calls_executed flag: {e}")
+            # Continue with traditional parsing only if function calling is disabled
+        
+        # Skip traditional command parsing if function calling is enabled
+        if use_function_calling:
+            logger.info("Function calling enabled but no functions were executed. Speaking AI response directly.")
+            try:
+                parsed_response = json.loads(response_json_str) if isinstance(response_json_str, str) else response_json_str
+                response_text = parsed_response.get("text", response_json_str)
+            except (json.JSONDecodeError, TypeError):
+                response_text = response_json_str
+            
+            listen_after_tts = self.auto_listen_after_tts if not TextMode else False
+            if response_text:
+                await self.speak_and_maybe_listen(response_text, listen_after_tts, TextMode)
+            return
+        
+        # Traditional command parsing approach (for backward compatibility when function calling is disabled)
         
         # parse_response handles json.loads and error cases
         structured_output = parse_response(response_json_str) 
@@ -660,7 +780,8 @@ class Assistant:
                 elif result is not None:
                     module_response_text = str(result)
 
-                text_to_speak = module_response_text if module_response_text is not None else ai_response_text
+                # Prefer AI's natural response, only fallback to module response if AI didn't provide text
+                text_to_speak = ai_response_text if ai_response_text and ai_response_text.strip() else (module_response_text if module_response_text is not None else "")
                 final_listen_after_tts = module_listen_override if module_listen_override is not None else listen_after_tts
                 
                 if text_to_speak:
@@ -713,7 +834,6 @@ class Assistant:
                 self.stt_silence_threshold, 
                 self.wake_word,
                 self.tts,
-                self.use_whisper, 
                 self.process_query_from_audio, 
                 self.loop,
                 self.wake_word_sensitivity_threshold,
@@ -725,6 +845,9 @@ class Assistant:
         )
         self.wakeword_thread.start()
         logger.info("Wake word detection thread started.")
+
+        # Check for daily briefing on startup
+        await self.check_daily_briefing()
 
         try:
             while not self.should_exit.is_set():
@@ -791,12 +914,17 @@ class Assistant:
             logger.warning("Manual trigger ignored: Already listening or processing.")
             return
         logger.info("Manual listen triggered.")
+        self.is_listening = True
         self.manual_trigger_event.set() # Signal the wakeword_detector to listen once
 
     @measure_performance
     async def shutdown(self):
         logger.info("Shutting down assistant...")
         self.should_exit.set() # Signal all loops and threads to exit
+
+        # Stop daily briefing scheduler
+        if self.daily_briefing:
+            self.daily_briefing.stop_scheduler()
 
         # Stop active window tracker
         self.stop_active_window_tracker()
@@ -887,56 +1015,36 @@ class Assistant:
         # The check for lingering tasks has been moved to before loop.close()
         logger.info("Assistant shutdown sequence complete.")
 
-# Example usage (typically in main.py)
-if __name__ == '__main__':
-    # Setup basic logging for the example
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    logger.info("Starting Assistant example...")
+    def _update_shared_state(self):
+        """Update shared state file for Flask SSE endpoint"""
+        try:
+            from shared_state import save_assistant_state
+            save_assistant_state(
+                is_listening=self.is_listening,
+                is_speaking=self.is_speaking,
+                wake_word_detected=self.wake_word_detected,
+                last_tts_text=self.last_tts_text,
+                is_processing=self.is_processing
+            )
+        except Exception as e:
+            logger.error(f"Failed to update shared state file: {e}")
 
-    # Create a command queue for communication
-    cmd_queue = queue.Queue()
+    def set_listening_state(self, is_listening):
+        """Set listening state and update shared state"""
+        self.is_listening = is_listening
+        self._update_shared_state()
 
-    # Initialize and run the assistant
-    assistant_instance = Assistant(command_queue=cmd_queue)
-    
-    # Get the asyncio event loop
-    main_loop = asyncio.get_event_loop()
-    
-    try:
-        # Start the assistant's async processing
-        main_loop.create_task(assistant_instance.run_async())
-        
-        # Example: Simulate receiving a text command after 5 seconds
-        async def send_test_command():
-            await asyncio.sleep(15) # Increased time to allow model loading
-            logger.info("Simulating text command from UI/external source...")
-            cmd_queue.put(("process_text", "jaka jest pogoda?"))
-            await asyncio.sleep(10)
-            logger.info("Simulating shutdown command...")
-            cmd_queue.put(("shutdown", None))
-            # await assistant_instance.shutdown() # Alternative way to trigger shutdown
+    def set_speaking_state(self, is_speaking):
+        """Set speaking state and update shared state"""
+        self.is_speaking = is_speaking
+        self._update_shared_state()
 
-        main_loop.create_task(send_test_command())
-        
-        # Run the event loop until all tasks are complete or shutdown is called
-        main_loop.run_forever() # This will run until loop.stop() is called
+    def set_wake_word_detected(self, detected):
+        """Set wake word detected state and update shared state"""
+        self.wake_word_detected = detected
+        self._update_shared_state()
 
-    except KeyboardInterrupt:
-        logger.info("Keyboard interrupt received, shutting down...")
-        # Ensure shutdown is handled gracefully
-        if main_loop.is_running():
-            # Schedule shutdown in the loop and wait for it
-            main_loop.run_until_complete(assistant_instance.shutdown())
-    finally:
-        if main_loop.is_running():
-            main_loop.close()
-        logger.info("Assistant example finished.")
-
-
-# TODO:
-# - Review TTS warm-up: Ensure it's called correctly (async vs sync) and doesn't block unnecessarily.
-#   If tts.warm_up is async, it should be `await self.tts.warm_up()` in an async context or run via asyncio.run().
-#   If called from initialize_components (sync), and it's async, it needs careful handling.
-#   Current direct call `self.tts.warm_up()` assumes it's sync or handles its own async execution.
-# - VAD in wakeword_detector.py: Review and potentially tune or replace the basic VAD implementation.
-# - Thorough testing: Wake word, command transcription, manual trigger, overall functionality.
+    def set_processing_state(self, is_processing):
+        """Set processing state and update shared state"""
+        self.is_processing = is_processing
+        self._update_shared_state()

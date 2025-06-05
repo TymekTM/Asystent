@@ -1,11 +1,17 @@
 import json
 import os
-import requests
+try:
+    import requests  # noqa: F401
+except Exception:
+    requests = None
 
 class APIManager:
     def __init__(self, config_path="modules\\api_integrations_config.json"):
         self.config_path = config_path
-        self.integrations = self.load_config()
+        try:
+            self.integrations = self.load_config()
+        except FileNotFoundError:
+            self.integrations = {}
         # Async HTTP session for non-blocking requests; created lazily in async context
         try:
             import aiohttp
@@ -20,7 +26,7 @@ class APIManager:
         Ładuje konfigurację integracji z pliku JSON.
         """
         if not os.path.exists(self.config_path):
-            raise FileNotFoundError(f"Nie znaleziono pliku konfiguracyjnego: {self.config_path}")
+            raise FileNotFoundError(self.config_path)
         with open(self.config_path, "r", encoding="utf-8") as f:
             return json.load(f)
 
@@ -46,7 +52,7 @@ class APIManager:
     def check_integration(self, integration_name: str) -> bool:
         """Synchronous check using requests library."""
         integration = self.integrations.get(integration_name)
-        if not integration:
+        if not integration or requests is None:
             return False
         default_location = integration.get("default_params", {}).get("location", "")
         url = integration["url_template"].format(default_location)
@@ -97,6 +103,8 @@ class APIManager:
         integration = self.integrations.get(integration_name)
         if not integration:
             return f"Nie znaleziono integracji o nazwie {integration_name}."
+        if requests is None:
+            return "Biblioteka requests niedostępna"
         location = params.get("location", integration.get("default_params", {}).get("location", ""))
         url = integration["url_template"].format(location)
         try:
@@ -125,8 +133,8 @@ class APIManager:
             return self.call_integration(best, params)
         return "Żadna integracja API nie jest dostępna."
 
-# Globalna instancja managera API
-api_manager = APIManager()
+# Globalna instancja managera API tworzona leniwie
+api_manager = None
 
 # Modify handler to accept conversation_history (though likely unused here)
 def handle_api_query_wrapper(params: str, conversation_history: list = None) -> str:
@@ -135,6 +143,9 @@ def handle_api_query_wrapper(params: str, conversation_history: list = None) -> 
     Parametry wejściowe traktujemy jako lokalizację dla zapytania o pogodę.
     Jeśli nie podano, użyjemy wartości domyślnej z konfiguracji.
     """
+    global api_manager
+    if api_manager is None:
+        api_manager = APIManager()
     location = params.strip() if params.strip() else ""
     # W tym przykładzie query jest ignorowane i zakładamy, że chodzi o pogodę.
     # conversation_history is available but not used in this specific tool
@@ -155,7 +166,29 @@ def register():
         "command": "api",
         "aliases": ["api", "pogoda", "weather"],
         "description": "Obsługuje zapytania API na podstawie konfiguracji w JSON.",
-        "handler": handle_api_query_wrapper
+        "handler": handle_api_query_wrapper,
+        "sub_commands": {
+            "weather": {
+                "description": "Sprawdź pogodę dla danej lokalizacji",
+                "parameters": {
+                    "location": {
+                        "type": "string",
+                        "description": "Nazwa miasta lub lokalizacji do sprawdzenia pogody",
+                        "required": True
+                    }
+                }
+            },
+            "api_call": {
+                "description": "Wykonaj zapytanie API",
+                "parameters": {
+                    "query": {
+                        "type": "string", 
+                        "description": "Zapytanie do API",
+                        "required": True
+                    }
+                }
+            }
+        }
     }
 
 if __name__ == "__main__":

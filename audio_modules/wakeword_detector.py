@@ -1,13 +1,25 @@
 import asyncio
 import os
 import logging
-import sys # Added sys import
+import sys
 from config import BASE_DIR
 import queue
 import time
-import threading # Added for manual_trigger_event
+import threading
 import numpy as np
-import sounddevice as sd
+from .sounddevice_loader import get_sounddevice, is_sounddevice_available
+
+# Import shared state management
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from shared_state import save_assistant_state, update_wake_word_state, update_listening_state
+
+# Load sounddevice using our centralized loader
+sd = get_sounddevice()
+SOUNDDEVICE_AVAILABLE = is_sounddevice_available()
+if SOUNDDEVICE_AVAILABLE:
+    logging.getLogger(__name__).info("sounddevice loaded successfully via loader")
+else:
+    logging.getLogger(__name__).warning("sounddevice not available - will be installed on demand")
 
 Model = None
 OPENWAKEWORD_AVAILABLE = False
@@ -33,7 +45,6 @@ SAMPLE_RATE = 16000  # Hz (openWakeWord and Whisper typically use 16kHz)
 CHUNK_DURATION_MS = 50  # openWakeWord processes audio in chunks (adjust if oww expects different chunk size)
 CHUNK_SAMPLES = int(SAMPLE_RATE * CHUNK_DURATION_MS / 1000) # Samples per chunk for VAD and command recording
 COMMAND_RECORD_TIMEOUT_SECONDS = 7 # Max duration for command recording
-# SILENCE_THRESHOLD_MULTIPLIER = 1.5 # This was for Vosk's energy, not directly usable.
 MIN_COMMAND_AUDIO_CHUNKS = 40 # Minimum audio chunks (2000ms) to ensure more time for command capture before silence detection
 VAD_SILENCE_AMPLITUDE_THRESHOLD = 0.01 # Updated to legacy threshold for VAD (float32 audio).
 # stt_silence_threshold (from config, in ms) is now used as duration of silence for VAD.
@@ -43,6 +54,12 @@ def record_command_audio(mic_device_id: int, vad_silence_duration_ms: int, stop_
     Records audio from the microphone until silence is detected or timeout.
     Uses a simple VAD based on amplitude.
     """
+    # Check if sounddevice is available
+    if not SOUNDDEVICE_AVAILABLE:
+        logger.error("SoundDevice not available - cannot record command audio")
+        play_beep("error", loop=False)
+        return None
+    
     logger.info(f"Recording command audio from device ID: {mic_device_id}...")
     audio_buffer = []
 
@@ -113,7 +130,6 @@ def run_wakeword_detection(
     stt_silence_threshold_ms: int, # Used for VAD in command recording
     wake_word_config_name: str, # Name of wake word from config (for logging)
     tts_module, 
-    use_whisper_stt: bool, # Should always be True
     process_query_callback_async, 
     async_event_loop: asyncio.AbstractEventLoop,
     oww_sensitivity_threshold: float,
@@ -124,6 +140,13 @@ def run_wakeword_detection(
     """
     Listens for wake word using openWakeWord and handles command recording/transcription.
     """
+    from utils.audio_utils import get_assistant_instance
+    # Check if sounddevice is available
+    if not SOUNDDEVICE_AVAILABLE:
+        logger.error("SoundDevice not available - wake word detection disabled")
+        play_beep("error", loop=False)
+        return None
+    
     # Dynamic import of openwakeword Model, with fallback to accommodate package structure
     _imported_model = None
     try:
@@ -265,7 +288,7 @@ def run_wakeword_detection(
         return
 
     logger.info(f"Starting wake word detection for '{wake_word_config_name}' using openWakeWord.")
-    logger.info("Asystent jest załadowany i nasłuchuje.")
+    logger.info("Gaja jest załadowana i nasłuchuje.")
 
     audio_data_queue = queue.Queue()
 
@@ -297,15 +320,22 @@ def run_wakeword_detection(
             while not stop_detector_event.is_set():
                 try:
                     if manual_listen_trigger_event.is_set():
-                        logger.info("Manual listen trigger activated.")
+                        logger.info("Manual listen trigger activated.")                        
                         play_beep("listening_start", loop=False)
                         if tts_module:
                             tts_module.cancel()
+                        
+                        # Update shared state for manual trigger
+                        update_wake_word_state(detected=True)
+                        update_listening_state(listening=True)
+                        
+                        assistant = get_assistant_instance()
+                        assistant.is_listening = True
                         command_audio_data_np = record_command_audio(mic_device_id, stt_silence_threshold_ms, stop_detector_event)
                         manual_listen_trigger_event.clear()
 
                         if command_audio_data_np is not None and command_audio_data_np.size > 0:
-                            if use_whisper_stt and whisper_asr_instance:
+                            if whisper_asr_instance:
                                 logger.info("Transcribing command with Whisper (manual trigger)...")
                                 audio_to_transcribe = command_audio_data_np.flatten()
                                 logger.debug(f"Audio to Whisper (manual): Max amp={np.max(np.abs(audio_to_transcribe)):.4f}, Mean amp={np.mean(np.abs(audio_to_transcribe)):.4f}, dtype={audio_to_transcribe.dtype}, shape={audio_to_transcribe.shape}")
@@ -317,9 +347,15 @@ def run_wakeword_detection(
                                     logger.warning("Whisper returned empty transcription (manual).")
                                     play_beep("error", loop=False)
                             else:
-                                logger.error("Whisper STT not configured or ASR instance missing for manual trigger.")
+                                logger.error("Whisper ASR instance missing for manual trigger.")
                         else:
                             logger.warning("No audio recorded for manual trigger command.")
+                        
+                        # Reset shared state after manual trigger
+                        update_listening_state(listening=False)
+                        update_wake_word_state(detected=False)
+                        
+                        assistant.is_listening = False
                         if wakeword_model_instance: wakeword_model_instance.reset()
                         continue
 
@@ -333,18 +369,24 @@ def run_wakeword_detection(
                         logger.error("wakeword_model_instance is None, cannot predict.")
                         time.sleep(0.1) # Avoid busy loop if model failed to init but thread continued
                         continue
-
+                    
                     prediction_scores = wakeword_model_instance.predict(audio_chunk_int16.flatten())
-
                     for model_name_key, score_value in prediction_scores.items():
                         if score_value >= oww_sensitivity_threshold:
                             logger.info(f"Wake word '{model_name_key}' detected with score: {score_value:.2f} (threshold: {oww_sensitivity_threshold:.2f})")
                             play_beep("listening_start", loop=False)
                             if tts_module:
                                 tts_module.cancel()
+                            
+                            # Update shared state for wake word detection
+                            update_wake_word_state(detected=True)
+                            update_listening_state(listening=True)
+                            
+                            assistant = get_assistant_instance()
+                            assistant.is_listening = True
                             command_audio_data_np = record_command_audio(mic_device_id, stt_silence_threshold_ms, stop_detector_event)
                             if command_audio_data_np is not None and command_audio_data_np.size > 0:
-                                if use_whisper_stt and whisper_asr_instance:
+                                if whisper_asr_instance:
                                     logger.info("Transcribing command with Whisper after wake word...")
                                     audio_to_transcribe = command_audio_data_np.flatten()
                                     logger.debug(f"Audio to Whisper: Max amp={np.max(np.abs(audio_to_transcribe)):.4f}, Mean amp={np.mean(np.abs(audio_to_transcribe)):.4f}, dtype={audio_to_transcribe.dtype}, shape={audio_to_transcribe.shape}")
@@ -356,9 +398,15 @@ def run_wakeword_detection(
                                         logger.warning("Whisper returned empty transcription after wake word.")
                                         play_beep("error", loop=False)
                                 else:
-                                    logger.error("Whisper STT not configured or ASR instance missing.")
+                                    logger.error("Whisper ASR instance missing.")
                             else:
                                 logger.warning("No audio recorded for command after wake word.")
+                            
+                            # Reset shared state after wake word processing
+                            update_listening_state(listening=False)
+                            update_wake_word_state(detected=False)
+                            
+                            assistant.is_listening = False
                             if wakeword_model_instance: wakeword_model_instance.reset()
                             break
 

@@ -1,6 +1,6 @@
-# Asystent User Guide
+# Gaja User Guide
 
-This guide helps you navigate and use all the features of the Asystent AI assistant system, updated for version 1.1.0.
+This guide helps you navigate and use all the features of the Gaja AI assistant system, updated for version 1.2.0.
 
 ## Table of Contents
 
@@ -11,31 +11,51 @@ This guide helps you navigate and use all the features of the Asystent AI assist
 5. [System Configuration](#system-configuration)
 6. [Long-term Memory Management](#long-term-memory-management)
 7. [Available Modules and Tools](#available-modules-and-tools)
-8. [Context-Aware Features](#context-aware-features)
-9. [Performance Settings](#performance-settings)
-10. [Troubleshooting](#troubleshooting)
+8. [Daily Briefing Feature](#daily-briefing-feature)
+9. [Context-Aware Features](#context-aware-features)
+10. [Performance Settings](#performance-settings)
+11. [API Integration](#api-integration)
+12. [Troubleshooting](#troubleshooting)
 
 ## Introduction
 
-Asystent is an advanced AI assistant system designed to help you with various tasks through natural language interaction. It supports multiple interaction methods including voice commands, text chat, and a comprehensive web interface for configuration and management. The system includes enhanced context awareness, multi-provider LLM support, and specialized tools for a more natural and helpful experience.
+Gaja is an advanced AI assistant system designed to help you with various tasks through natural language interaction. It supports multiple interaction methods including voice commands, text chat, and a comprehensive web interface for configuration and management. 
+
+Version 1.2.0 introduces several new features including:
+- AI-powered daily briefings with weather and memory integration
+- Enhanced documentation access directly within the web interface
+- Improved module system with automatic hot-reloading
+- Enhanced Function Calling System for more reliable command execution
+- Comprehensive REST API for external integration
+
+The system includes enhanced context awareness, multi-provider LLM support, and specialized tools for a more natural and helpful experience.
 
 ## Getting Started
 
-To start using Asystent:
+To start using Gaja:
 
 1. Make sure Python 3.10 or higher is installed on your system
-2. Launch the application by running `python main.py` from the Asystent directory
-3. The system will start both the assistant process and the web UI server
+2. Launch the application by running `python main.py` from the Gaja directory
+3. The system will start both the Gaja process and the web UI server
 4. Access the web interface at `http://localhost:5000` (default address)
 5. Log in with your credentials (default is dev/devpassword or user/password)
-6. You can interact with the assistant in three ways:
-   - Through voice using the wake word "asystencie" (configurable)
+6. You can interact with Gaja in three ways:
+   - Through voice using the wake word "gaja" (configurable)
    - Via text input in the web UI chat interface
    - Through the integrated API endpoints
 
 ### First-time Setup
 
-For optimal experience, configure these settings after installation:
+When you first run Gaja, the onboarding wizard will automatically launch in your web browser. This guided process helps you:
+
+1. Configure your AI assistant's name and wake word
+2. Select audio devices for voice interaction
+3. Choose and configure your preferred AI provider
+4. Set up initial preferences and API keys
+
+For more details, see the [Onboarding Guide](./onboarding.md).
+
+If you need to manually configure settings after installation:
 
 1. Configure your preferred AI models in Config > AI Settings
 2. Set up your audio devices in Config > Audio Settings
@@ -44,12 +64,12 @@ For optimal experience, configure these settings after installation:
 
 ## Web UI Interface
 
-The Asystent web interface includes several pages:
+The Gaja web interface includes several pages:
 
 ### Dashboard
 
 The main control center displaying:<br>
-- Assistant status (online/offline)<br>
+- Gaja status (online/offline)<br>
 - Quick actions (activate, restart, stop)<br>
 - Recent activity and interaction history<br>
 - Performance statistics and response times<br>
@@ -57,7 +77,7 @@ The main control center displaying:<br>
 
 ### Chat
 
-Text interaction with the assistant:<br>
+Text interaction with Gaja:<br>
 - Type messages in the input field<br>
 - Use the microphone button for voice input<br>
 - View full conversation history with timestamps<br>
@@ -89,10 +109,8 @@ Memory management interface:<br>
 Module management system:<br>
 - Enable/disable individual modules<br>
 
-Out of the box asystent comes with those modules:<br>
+Out of the box Gaja comes with those modules:<br>
 - Weather module with forecasting<br>
-- DeepSeek module for complex reasoning tasks - to be reworked<br>
-- Screen capture for visual analysis - broken<br>
 - Core utilities for timers and more<br>
 - Search module for web information access<br>
 - Screen capture module for visual context<br>
@@ -109,7 +127,7 @@ Comprehensive monitoring and analytics:<br>
 
 ## Voice Interaction
 
-Asystent provides a natural voice interaction experience:
+Gaja provides a natural voice interaction experience:
 
 ### Wake Word Detection
 
@@ -120,7 +138,7 @@ Asystent provides a natural voice interaction experience:
 
 ### Speech-to-Text Options
 
-Asystent supports two STT engines:
+Gaja supports two STT engines:
 
 1. **Vosk** (default):
    - Offline operation
@@ -175,7 +193,7 @@ Configure audio settings for optimal voice interaction:
 
 ### AI Model Configuration
 
-Asystent now supports an expanded range of AI models with enhanced configuration:
+Gaja now supports an expanded range of AI models with enhanced configuration:
 
 1. Navigate to the AI Settings tab
 2. Select your preferred provider:
@@ -202,23 +220,23 @@ Customize the wake word detection:
 
 ### Active Window Tracking
 
-New context-aware feature to help the assistant understand what you're working on:
+New context-aware feature to help Gaja understand what you're working on:
 
 1. Enable/disable in Configuration > Context Settings
 
 ### Auto-Listen Feature
 
-Configure the assistant to automatically listen after it speaks:
+Configure Gaja to automatically listen after it speaks:
 
 1. Enable in Configuration > Voice Interaction
-2. Set delay time between assistant response and listening activation
+2. Set delay time between Gaja's response and listening activation
 3. Configure question detection sensitivity
 
 - **Query Refinement**: The system can automatically refine user queries to improve AI responses. This can be toggled on/off in settings.
 
 - **Dynamic Configuration**: Most settings can be changed at runtime through the web interface without requiring a restart. Some hardware-related settings (like microphone device ID) may still require a system restart to take effect.
 
-- **Language Detection**: Asystent automatically detects the language of your input and responds in the same language. This works across all supported language models.
+- **Language Detection**: Gaja automatically detects the language of your input and responds in the same language. This works across all supported language models.
 
 ## Long-term Memory Management
 
@@ -243,7 +261,7 @@ Configure the assistant to automatically listen after it speaks:
 
 ## Multilingual Support
 
-Asystent now features enhanced multilingual capabilities:
+Gaja now features enhanced multilingual capabilities:
 
 ### Automatic Language Detection
 
@@ -260,7 +278,7 @@ Primary languages with full support:<br>
 
 ## Available Modules and Tools
 
-Asystent has a modular plugin system that extends functionality.
+Gaja has a modular plugin system that extends functionality.
 
 ### Currently Implemented Modules
 
@@ -278,16 +296,16 @@ For detailed information about each module, see the [Plugins Documentation](plug
 
 ### Active Window Context
 
-When enabled, Asystent can track the currently active window:
+When enabled, Gaja can track the currently active window:
 
 1. Enable this feature in Configuration > Advanced Settings
-2. The assistant will now be aware of which application you're using
+2. Gaja will now be aware of which application you're using
 3. Responses can be tailored to your current context
 4. This improves assistance for application-specific questions
 
 ### Multilingual Awareness
 
-Asystent detects the language you're speaking:
+Gaja detects the language you're speaking:
 
 1. Automatic language detection for input
 2. Responses in the same language
@@ -318,7 +336,7 @@ For developers and testing:
 
 ### Voice Recognition Issues
 
-If the assistant doesn't respond to your voice:
+If Gaja doesn't respond to your voice:
 
 1. Check that your microphone is properly connected
 2. Verify the correct microphone is selected in settings

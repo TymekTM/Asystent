@@ -1,4 +1,4 @@
 # Web UI Module
 """
-Web interface for Asystent AI Assistant.
+Web interface for Gaja AI Assistant.
 """

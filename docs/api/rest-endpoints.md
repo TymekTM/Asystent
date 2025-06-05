@@ -1,6 +1,6 @@
 # REST API Endpoints Reference
 
-This document provides detailed specifications for all REST API endpoints in the Asystent system.
+This document provides detailed specifications for all REST API endpoints in the Gaja system.
 
 ## Authentication Endpoints
 
@@ -33,7 +33,7 @@ Retrieves the current system status.
 {
   "status": "Online",
   "uptime": 3600,
-  "wake_word": "asystent",
+  "wake_word": "gaja",
   "last_activity": "2025-05-03T12:34:56"
 }
 ```
@@ -117,7 +117,7 @@ Retrieves the current system configuration.
 **Response Body:**
 ```json
 {
-  "WAKE_WORD": "asystent",
+  "WAKE_WORD": "gaja",
   "MIC_DEVICE_ID": "",
   "PROVIDER": "ollama",
   "MAIN_MODEL": "llama3",
@@ -128,8 +128,14 @@ Retrieves the current system configuration.
   "PLUGIN_MONITOR_INTERVAL": 5,
   "API_KEYS": {
     "OPENAI_API_KEY": "••••••••",
-    "DEEPSEEK_API_KEY": "••••••••"
-  }
+    "DEEPSEEK_API_KEY": "••••••••",
+    "ANTHROPIC_API_KEY": "••••••••",
+    "AZURE_SPEECH_KEY": "••••••••"
+  },
+  "FIRST_RUN": false,
+  "ASSISTANT_NAME": "Gaja",
+  "FUNCTION_CALLING_ENABLED": true,
+  "USE_OVERLAY": true
 }
 ```
 
@@ -309,14 +315,6 @@ Lists all available plugins and their status.
     "enabled": true,
     "description": "Wyszukuje informacje w internecie i podsumowuje wyniki."
   },
-  "deepseek_module": {
-    "enabled": false,
-    "description": "Wykonuje głębokie rozumowanie."
-  },
-  "see_screen_module": {
-    "enabled": true,
-    "description": "Wykonuje zrzut ekranu i analizuje zawartość."
-  },
   "api_module": {
     "enabled": true,
     "description": "Integruje się z zewnętrznymi API."
@@ -400,6 +398,53 @@ Downloads the complete log file as plain text.
 - Content-Type: text/plain
 - Content-Disposition: attachment; filename=assistant_logs.txt
 
+## Onboarding API
+
+### GET /api/onboarding/status
+
+Checks the current status of the onboarding process.
+
+**Response Body:**
+```json
+{
+  "completed": false,
+  "current_step": 2,
+  "total_steps": 5
+}
+```
+
+### POST /api/complete-onboarding
+
+Marks the onboarding process as complete.
+
+**Response Body:**
+```json
+{
+  "success": true,
+  "message": "Onboarding completed"
+}
+```
+
+### GET /api/audio-devices
+
+Lists available audio input and output devices for onboarding.
+
+**Response Body:**
+```json
+{
+  "input_devices": [
+    { "id": 0, "name": "Default Microphone" },
+    { "id": 1, "name": "Headset Microphone" },
+    { "id": 2, "name": "Built-in Microphone" }
+  ],
+  "output_devices": [
+    { "id": 0, "name": "Default Speakers" },
+    { "id": 1, "name": "Headset Speakers" },
+    { "id": 2, "name": "Built-in Speakers" }
+  ]
+}
+```
+
 ## Analytics
 
 ### GET /api/analytics
@@ -415,7 +460,6 @@ Retrieves usage statistics.
   "last_query_time": 1714743330,
   "plugin_usage": {
     "search_module": 45,
-    "deepseek_module": 12,
     "memory_module": 34
   }
 }
@@ -508,6 +552,113 @@ Updates user details (requires dev role).
 }
 ```
 
+## Function Calling System
+
+### GET /api/function-calling/status
+
+Retrieves the status of the function calling system.
+
+**Response Body:**
+```json
+{
+  "enabled": true,
+  "available_models": ["gpt-4", "gpt-3.5-turbo"],
+  "supported_providers": ["openai", "anthropic"],
+  "default_mode": "auto"
+}
+```
+
+### GET /api/function-calling/schemas
+
+Retrieves all available function schemas.
+
+**Response Body:**
+```json
+{
+  "search_module_main": {
+    "name": "search",
+    "description": "Search for information on the internet",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "Search query"
+        },
+        "language": {
+          "type": "string",
+          "enum": ["en", "pl"],
+          "description": "Language for search results"
+        }
+      },
+      "required": ["query"]
+    }
+  },
+  "weather_module_main": {
+    "name": "get_weather",
+    "description": "Get weather information for a location",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "location": {
+          "type": "string",
+          "description": "City name, e.g. 'Warsaw, PL'"
+        }
+      },
+      "required": ["location"]
+    }
+  }
+}
+```
+
+### POST /api/function-calling/toggle
+
+Enables or disables the function calling system.
+
+**Request Body:**
+```json
+{
+  "enabled": true,
+  "mode": "auto"
+}
+```
+
+**Response Body:**
+```json
+{
+  "success": true,
+  "status": "enabled",
+  "mode": "auto"
+}
+```
+
+**Notes:**
+- Mode options: "auto" (AI decides), "always" (force function calling), "never" (disable)
+
+### POST /api/function-calling/execute
+
+Manually executes a function with parameters.
+
+**Request Body:**
+```json
+{
+  "function_name": "search_module_main",
+  "parameters": {
+    "query": "latest news about AI",
+    "language": "en"
+  }
+}
+```
+
+**Response Body:**
+```json
+{
+  "success": true,
+  "result": "Here are the latest news about AI: [search results...]",
+  "execution_time": 1.23
+}
+```
+
 ## Health Check
 
 ### GET /health
@@ -518,6 +669,6 @@ Simple health check endpoint for monitoring.
 ```json
 {
   "status": "ok",
-  "version": "1.0.0"
+  "version": "1.2.0"
 }
 ```

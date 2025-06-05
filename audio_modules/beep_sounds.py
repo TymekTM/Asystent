@@ -3,8 +3,41 @@ import os
 import logging
 import sys  # Added sys import
 from config import BASE_DIR
-from .ffmpeg_installer import ensure_ffmpeg_installed
-import sounddevice as sd
+
+# Handle imports depending on execution context
+try:
+    from .ffmpeg_installer import ensure_ffmpeg_installed
+except ImportError:
+    # Fallback for direct execution or tests
+    try:
+        from ffmpeg_installer import ensure_ffmpeg_installed
+    except ImportError:
+        def ensure_ffmpeg_installed():
+            """Fallback function when ffmpeg_installer is not available"""
+            pass
+
+# Try to import sounddevice with dependency manager integration
+try:
+    from .sounddevice_loader import get_sounddevice, is_sounddevice_available
+except ImportError:
+    # Fallback for direct execution or tests
+    try:
+        from sounddevice_loader import get_sounddevice, is_sounddevice_available
+    except ImportError:
+        def get_sounddevice():
+            return None
+        def is_sounddevice_available():
+            return False
+    sd = get_sounddevice()
+    SOUNDDEVICE_AVAILABLE = is_sounddevice_available()
+    if SOUNDDEVICE_AVAILABLE:
+        logging.getLogger(__name__).info("sounddevice loaded successfully via loader")
+    else:
+        logging.getLogger(__name__).warning("sounddevice not available - will be installed on demand")
+except ImportError as e:
+    sd = None
+    SOUNDDEVICE_AVAILABLE = False
+    logging.getLogger(__name__).warning(f"Sounddevice loader not available: {e}")
 
 # Set logger to DEBUG globally
 logger = logging.getLogger(__name__)
@@ -115,8 +148,15 @@ def stop_beep(process: subprocess.Popen):
         logger.debug(f"Proces dźwięku (PID: {process.pid}) już zakończony.")
 
 def play_sound(data, samplerate, blocking=True):
-    logger.debug(f"play_sound called. MUTE={MUTE}. Default devices: In='{sd.default.device[0]}', Out='{sd.default.device[1]}'. Blocking={blocking}")
+    logger.debug(f"play_sound called. MUTE={MUTE}. Blocking={blocking}")
+    
     if MUTE:
         logger.debug("MUTE is active, skipping sound playback.")
         return
+        
+    if not SOUNDDEVICE_AVAILABLE:
+        logger.warning("Sounddevice not available, cannot play sound directly")
+        return
+    
+    logger.debug(f"Default devices: In='{sd.default.device[0]}', Out='{sd.default.device[1]}'")
     # ...existing playback code...

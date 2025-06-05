@@ -266,10 +266,9 @@ class DependencyManager:
             
             logger.info(f"📊 Zainstalowano: {success_count}/{len(missing_packages)}")
             print(f"📊 Zainstalowano: {success_count}/{len(missing_packages)}")
-            
-            # Jeśli openwakeword zostało zainstalowane, pobierz potrzebne modele
+              # Jeśli openwakeword zostało zainstalowane, skopiuj lokalne modele
             if "openwakeword" in missing_packages and success_count > 0:
-                self._download_openwakeword_models()
+                self._setup_local_openwakeword_models()
             
             return success_count > 0  # Sukces jeśli przynajmniej jeden pakiet się zainstalował
             

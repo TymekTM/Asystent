@@ -17,7 +17,7 @@ from typing import Generator
 
 logger = logging.getLogger(__name__)
 
-DB_PATH: Path = Path(__file__).with_name("assistant_memory.db")
+DB_PATH: Path = Path(__file__).with_name("gaja_memory.db")
 
 @contextmanager
 def get_connection() -> Generator[sqlite3.Connection, None, None]:

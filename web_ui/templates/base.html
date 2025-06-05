@@ -22,39 +22,39 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'documentation_main' or request.endpoint == 'documentation_section' or request.endpoint == 'docs_index' %}active{% endif %}" href="{{ url_for('documentation_main') }}">Documentation</a>
+                        <a class="nav-link {% if request.endpoint == 'documentation_main' or request.endpoint == 'documentation_section' or request.endpoint == 'docs_index' %}active{% endif %}" href="{{ url_for('documentation_main') }}">{{ _('Documentation') }}</a>
                     </li>
                     {% if session.username %}
                         {% if session.role == 'user' %}
                         <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'chat_page' %}active{% endif %}" href="{{ url_for('chat_page') }}">Chat</a>
+                            <a class="nav-link {% if request.endpoint == 'chat_page' %}active{% endif %}" href="{{ url_for('chat_page') }}">{{ _('Chat') }}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'personalization_page' %}active{% endif %}" href="{{ url_for('personalization_page') }}">Personalizacja</a>
+                            <a class="nav-link {% if request.endpoint == 'personalization_page' %}active{% endif %}" href="{{ url_for('personalization_page') }}">{{ _('Personalization') }}</a>
                         </li>
                         {% elif session.role == 'dev' %}
                         <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'index' %}active{% endif %}" href="{{ url_for('index') }}">Dashboard</a>
+                            <a class="nav-link {% if request.endpoint == 'index' %}active{% endif %}" href="{{ url_for('index') }}">{{ _('Dashboard') }}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'history_page' %}active{% endif %}" href="{{ url_for('history_page') }}">History</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'logs_page' %}active{% endif %}" href="{{ url_for('logs_page') }}">Logi</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'plugins_page' %}active{% endif %}" href="{{ url_for('plugins_page') }}">Pluginy</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'mcp_page' %}active{% endif %}" href="{{ url_for('mcp_page') }}">MCP</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'config_page' %}active{% endif %}" href="{{ url_for('config_page') }}">Configuration</a>
+                            <a class="nav-link {% if request.endpoint == 'history_page' %}active{% endif %}" href="{{ url_for('history_page') }}">{{ _('History') }}</a>
                         </li>                        <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'ltm_page' %}active{% endif %}" href="{{ url_for('ltm_page') }}">Long-Term Memory</a>
+                            <a class="nav-link {% if request.endpoint == 'logs_page' %}active{% endif %}" href="{{ url_for('logs_page') }}">{{ _('Logs') }}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'dev_list_users' or request.endpoint == 'dev_page' %}active{% endif %}" href="{{ url_for('dev_list_users') }}">Dev</a>
+                            <a class="nav-link {% if request.endpoint == 'plugins_page' %}active{% endif %}" href="{{ url_for('plugins_page') }}">{{ _('Plugins') }}</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'mcp_page' %}active{% endif %}" href="{{ url_for('mcp_page') }}">{{ _('MCP') }}</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'config' %}active{% endif %}" href="{{ url_for('config') }}">{{ _('Configuration') }}</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'ltm_page' %}active{% endif %}" href="{{ url_for('ltm_page') }}">{{ _('Long-Term Memory') }}</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'dev_list_users' or request.endpoint == 'dev_dashboard_page' %}active{% endif %}" href="{{ url_for('dev_list_users') }}">{{ _('Dev') }}</a>
                         </li>
                         {% endif %}
                     {% endif %}
@@ -80,14 +80,13 @@
                        <li class="nav-item dropdown">
                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                <i class="fas fa-user"></i> {{ session.username }} ({{ session.role }})
-                           </a>
-                           <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                               <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
+                           </a>                           <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                               <li><a class="dropdown-item" href="{{ url_for('logout') }}">{{ _('Logout') }}</a></li>
                            </ul>
                        </li>
                     {% else %}
                         <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'login' %}active{% endif %}" href="{{ url_for('login') }}">Login</a>
+                            <a class="nav-link {% if request.endpoint == 'login' %}active{% endif %}" href="{{ url_for('login') }}">{{ _('Login') }}</a>
                         </li>
                     {% endif %}
                 </ul>

@@ -1,42 +1,101 @@
-# Documentation Update Summary
+# Documentation Update Summary (June 2025)
 
 ## Overview of Changes
 
-I've updated the Asystent documentation to accurately reflect only the features that are actually implemented in the current codebase, removing references to planned but not yet implemented functionality. The updates ensure that users have accurate information about what they can expect from the system.
+The Gaja documentation has been comprehensively updated to reflect significant new features and improvements introduced in version 1.2.0. The documentation now accurately describes all current functionality including the new Function Calling System, enhanced Daily Briefing capabilities, comprehensive onboarding process, and expanded developer tools.
 
-## Main Changes
+## New Features Documented
 
-### User Guide (README.md)
+### 1. Function Calling System
 
-1. **System Configuration**:
-   - Updated to reflect the actual configuration options available
-   - Removed references to voice selection/customization that isn't fully implemented
-   - Clarified the available TTS functionality
+1. **Developer Documentation**:
+   - Added comprehensive Function Calling System documentation
+   - Included schema examples for module developers
+   - Updated module development guide with function schema patterns
+   - Documented parameter extraction and validation process
 
-2. **Plugins Section**:
-   - Updated the list of currently implemented plugins with accurate descriptions
-   - Confirmed the API Module is actually implemented but focused on weather queries
-   - Removed references to advanced features not yet implemented
+2. **API Documentation**:
+   - Added new endpoints for the Function Calling System
+   - Documented schema retrieval and execution endpoints
+   - Added configuration endpoints for enabling/disabling function calling
+   - Updated response formats for structured module output
 
-3. **Web UI Description**:
-   - Clarified features available on each page
-   - Updated dashboard description to match implemented functionality
-   - Corrected description of history archiving feature
+3. **User Guide**:
+   - Added Function Calling section to the plugins documentation
+   - Updated Web UI guide to include function calling configuration
+   - Added developer playground documentation for testing function calls
 
-### Voice Interaction Guide
+### 2. Daily Briefing Enhancement
 
-1. **Added specific examples** of implemented voice commands
-2. **Clarified STT options** (Vosk and Whisper) with their characteristics
-3. **Added troubleshooting section** with practical solutions
-4. **Removed references** to voice customization features not yet implemented
+1. **Comprehensive Documentation**:
+   - Added detailed configuration options documentation
+   - Documented AI-powered briefing generation
+   - Updated features list with all capabilities
+   - Added style variation and scheduling documentation
 
-### Web UI Guide
+2. **Technical Integration**:
+   - Documented memory integration with briefings
+   - Added weather API integration details
+   - Included holiday API integration information
+   - Documented fallback mechanisms
 
-1. **Dashboard**: Updated feature list to match implementation
-2. **Configuration Page**: Accurately described available settings
-3. **Long-Term Memory Page**: Detailed the implemented memory management features
-4. **Plugins Page**: Clarified how plugin management actually works
-5. **History Page**: Updated to reflect implemented archiving functionality
+### 3. Onboarding Experience
+
+1. **New Documentation**:
+   - Created new onboarding.md guide for first-time users
+   - Documented step-by-step onboarding process
+   - Added screenshots and visual guidance
+   - Included troubleshooting for common setup issues
+
+2. **API Documentation**:
+   - Added onboarding API endpoints documentation
+   - Documented state management for onboarding process
+   - Added audio device listing endpoints
+   - Included configuration application endpoints
+
+### 4. Developer Playground
+
+1. **New Documentation**:
+   - Added comprehensive playground documentation
+   - Documented plugin testing capabilities
+   - Added LLM testing documentation
+   - Included intention analysis documentation
+
+2. **Advanced Features**:
+   - Documented system status monitoring
+   - Added test history tracking information
+   - Included direct LLM testing options
+   - Documented function calling debugging tools
+
+### 5. Web UI Enhancements
+
+1. **Updated Interface Documentation**:
+   - Added new sidebar navigation documentation
+   - Updated dashboard components information
+   - Added documentation browser features
+   - Included theme customization options
+
+## Updated Architectural Documentation
+
+1. **AI System Architecture**:
+   - Added Function Calling System to the pipeline
+   - Updated data flow diagrams with new components
+   - Enhanced module integration documentation
+   - Added parameter extraction and validation documentation
+
+2. **Module Development Guide**:
+   - Comprehensive update with function calling schema examples
+   - Added new parameter types and validation
+   - Updated module registration documentation
+   - Enhanced sub-command documentation with function schemas
+
+## Overall Improvements
+
+1. **Consistency Check**: Ensured all documentation reflects current version 1.2.0 features
+2. **Cross-References**: Added links between related documentation sections
+3. **Examples**: Added practical examples for all new features
+4. **Troubleshooting**: Enhanced troubleshooting sections with common issues and solutions
+5. **Visual Elements**: Improved formatting and readability throughout all documentation
 
 ### Plugin Documentation
 

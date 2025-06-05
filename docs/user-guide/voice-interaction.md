@@ -4,7 +4,7 @@ This guide provides detailed instructions on using Asystent's voice interaction 
 
 ## Wake Word Detection
 
-Asystent listens for a specific wake word to activate. By default, this is set to "asystencie" but can be customized in the configuration.
+Asystent listens for a specific wake word to activate. By default, this is set to "gaja" but can be customized in the configuration.
 
 ### How Wake Word Detection Works
 

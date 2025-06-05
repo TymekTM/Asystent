@@ -38,6 +38,50 @@ def install_build_dependencies():
     print("✅ Zależności zainstalowane")
     return True
 
+def build_overlay():
+    """Buduje overlay Tauri"""
+    print("🖼️ Budowanie overlay...")
+    
+    overlay_dir = Path("overlay")
+    if not overlay_dir.exists():
+        print("⚠️ Folder overlay nie istnieje, pomijam budowanie overlay")
+        return True
+    
+    # Sprawdź czy overlay.exe już istnieje
+    overlay_exe = overlay_dir / "target" / "release" / "Gaja Overlay.exe"
+    if overlay_exe.exists():
+        print(f"✅ Overlay już zbudowany: {overlay_exe}")
+        return True
+    
+    # Instaluj npm dependencies
+    print("   📦 Instalowanie npm dependencies...")
+    result = subprocess.run([
+        "npm", "install"
+    ], cwd=overlay_dir, capture_output=True, text=True)
+    
+    if result.returncode != 0:
+        print(f"⚠️ Ostrzeżenie npm install: {result.stderr}")
+    
+    # Buduj overlay
+    print("   🔨 Kompilowanie overlay...")
+    result = subprocess.run([
+        "npm", "run", "tauri", "build"
+    ], cwd=overlay_dir, capture_output=True, text=True)
+    
+    if result.returncode != 0:
+        print(f"❌ Błąd kompilacji overlay: {result.stderr}")
+        return False
+    
+    # Sprawdź czy plik został utworzony
+    if overlay_exe.exists():
+        size_mb = overlay_exe.stat().st_size / (1024 * 1024)
+        print(f"✅ Overlay zbudowany: {overlay_exe}")
+        print(f"📏 Rozmiar overlay: {size_mb:.1f} MB")
+        return True
+    else:
+        print("❌ Plik overlay.exe nie został utworzony")
+        return False
+
 def build_exe():
     """Buduje pojedynczy plik EXE"""
     print("🔨 Budowanie pliku EXE...")
@@ -79,6 +123,17 @@ def create_release_package():
         shutil.copy2(exe_source, exe_dest)
         print(f"   Skopiowano: {exe_dest}")
     
+    # Skopiuj overlay jeśli istnieje
+    overlay_source = Path("overlay/target/release/Gaja Overlay.exe")
+    overlay_dest = release_dir / "overlay" / "Gaja Overlay.exe"
+    
+    if overlay_source.exists():
+        overlay_dest.parent.mkdir(exist_ok=True)
+        shutil.copy2(overlay_source, overlay_dest)
+        print(f"   Skopiowano: {overlay_dest}")
+    else:
+        print("⚠️ Overlay nie został znaleziony, aplikacja będzie działać bez overlay")
+    
     # Utwórz README dla użytkownika
     readme_content = """# Gaja - Asystent AI
 
@@ -96,11 +151,14 @@ def create_release_package():
 - **Automatyczne doinstalowanie**: Brakujące pakiety pobierają się do folderu `dependencies`
 - **Pierwsze uruchomienie**: 1-3 minuty (sprawdzanie + ewentualne pobieranie)
 - **Kolejne uruchomienia**: Szybkie (pakiety już dostępne)
+- **Overlay**: Opcjonalny wizualny overlay pokazujący status asystenta
 
 ## Struktura plików po pierwszym uruchomieniu
 
 ```
 Gaja.exe                     # Główna aplikacja
+overlay/                     # Folder z overlay (opcjonalny)
+├── Gaja Overlay.exe        # Wizualny overlay 
 dependencies/                # Folder z dodatkowymi pakietami (tworzy się automatycznie)
 ├── packages/               # Dodatkowe pakiety Python
 ├── cache/                  # Cache instalatora
@@ -154,12 +212,17 @@ def main():
             return False
         print()
         
-        # Krok 3: Kompilacja
+        # Krok 3: Budowanie overlay
+        if not build_overlay():
+            print("⚠️ Overlay nie został zbudowany, kontynuuję bez overlay")
+        print()
+        
+        # Krok 4: Kompilacja
         if not build_exe():
             return False
         print()
         
-        # Krok 4: Pakiet release
+        # Krok 5: Pakiet release
         create_release_package()
         print()
         

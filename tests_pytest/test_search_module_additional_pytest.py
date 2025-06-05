@@ -58,7 +58,9 @@ def test_search_handler_empty_param(monkeypatch):
 async def test_search_handler_no_results(monkeypatch):
     import modules.search_module as sm
     # monkeypatch duckduckgo search to return empty
-    monkeypatch.setattr(sm, '_search_duckduckgo', lambda query: [])
+    async def mock_search_duckduckgo(query):
+        return []
+    monkeypatch.setattr(sm, '_search_duckduckgo', mock_search_duckduckgo)
     res = await sm.search_handler("query", None)
     assert res == "Nie znaleziono wyników."
 
@@ -66,7 +68,9 @@ async def test_search_handler_no_results(monkeypatch):
 async def test_search_handler_fetch_and_summary(monkeypatch):
     import modules.search_module as sm
     # simulate duckduckgo returns list of urls
-    monkeypatch.setattr(sm, '_search_duckduckgo', lambda q: ["url1"])
+    async def mock_search_duckduckgo(q):
+        return ["url1"]
+    monkeypatch.setattr(sm, '_search_duckduckgo', mock_search_duckduckgo)
     # simulate httpx.AsyncClient context manager
     class DummyResp:
         def __init__(self, content):
