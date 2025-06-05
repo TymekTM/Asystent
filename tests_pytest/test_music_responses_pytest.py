@@ -95,14 +95,14 @@ async def test_music_responses_integration(mock_load_config, mock_assistant_clas
     mock_assistant_instance.process_query = AsyncMock(return_value=None) # MODIFIED: Use AsyncMock
 
     # Import after mocking
-    from assistant import Assistant
+    from assistant import get_assistant_instance
     import config
     
     # Load config
     config.load_config()
     
     # Initialize assistant
-    assistant = Assistant()
+    assistant = get_assistant_instance()
     
     # Test music queries
     test_queries = [

@@ -170,29 +170,40 @@ def stop_overlay():
 
 def run_assistant_process(queue: multiprocessing.Queue):
     """Target function to run the Assistant in its own process."""
-    logger.info("Starting Assistant process...")
+    import os
+    import sys
+    import asyncio
+    
+    # Check if another assistant process is already running by creating a lock file
+    lock_file = os.path.join(os.path.dirname(__file__), 'assistant_running.lock')
+    
+    if os.path.exists(lock_file):
+        logger.warning("Assistant process already running (lock file exists). Exiting.")
+        return
+        
     try:
-        # Ensure proper imports in the subprocess context
-        import sys
-        import os
+        # Create lock file
+        with open(lock_file, 'w') as f:
+            f.write(str(os.getpid()))
+        
+        logger.info("Starting Assistant process...")
         
         # Avoid importing assistant.py at module level in subprocess to prevent premature initialization
         # Only import when we're ready to create the instance
-        
         # Ensure config is loaded in this process
         from config import load_config
-        load_config()
+        load_config(silent=True)
         
-        # Add a small delay to prevent race conditions
+        # Add a small delay to prevent race conditions - reduced delay
         import time
-        time.sleep(1.0)  # Increased delay to prevent multiple initializations
+        time.sleep(0.5)  # Reduced delay to prevent multiple initializations
         
         # Import Assistant only after delay and setup - this prevents module-level initialization
         logger.info("Importing Assistant class in subprocess...")
-        from assistant import Assistant
+        from assistant import get_assistant_instance
         
         logger.info("Creating Assistant instance in subprocess...")
-        assistant = Assistant(command_queue=queue)
+        assistant = get_assistant_instance(command_queue=queue)
         
         logger.info("Starting Assistant main loop...")
         asyncio.run(assistant.run_async())
@@ -204,9 +215,12 @@ def run_assistant_process(queue: multiprocessing.Queue):
         import traceback
         traceback.print_exc()
     finally:
+        # Clean up lock file
+        if os.path.exists(lock_file):
+            os.remove(lock_file)
         logger.info("Assistant process finished.")
         if 'assistant' in locals() and hasattr(assistant, 'stop_active_window_tracker'):
-            assistant.stop_active_window_tracker() # Ensure tracker is stopped on exit
+            assistant.stop_active_window_tracker()  # Ensure tracker is stopped on exit
 
 def run_flask_thread(queue: multiprocessing.Queue):
     """Target function to run the Flask Web UI in its own thread."""
@@ -279,31 +293,31 @@ def main():
 
     config = load_config()
     exit_with_console = config.get('EXIT_WITH_CONSOLE', True)
-    
-    # Usuń stare pliki lock przy starcie, jeśli istnieją
+      # Usuń stare pliki lock przy starcie, jeśli istnieją
     stop_lock_path = os.path.join(os.path.dirname(__file__), 'assistant_stop.lock')
     restart_lock_path = os.path.join(os.path.dirname(__file__), 'assistant_restarting.lock')
+    assistant_running_lock_path = os.path.join(os.path.dirname(__file__), 'assistant_running.lock')
     if os.path.exists(stop_lock_path):
         os.remove(stop_lock_path)
     if os.path.exists(restart_lock_path):
         os.remove(restart_lock_path)
+    if os.path.exists(assistant_running_lock_path):
+        os.remove(assistant_running_lock_path)
         
     logger.info("Starting Flask thread...")
 
     # Start Flask in a thread first (to be ready for overlay)
     flask_thread = Thread(target=run_flask_thread, args=(command_queue,), daemon=True)
     flask_thread.start()
-    
-    # Wait longer for Flask to start properly
-    time.sleep(2.0)
+      # Wait for Flask to start properly - reduced delay
+    time.sleep(1.0)
     
     # --- Assistant Process ---
     logger.info("Starting Assistant process...")
     assistant_process = multiprocessing.Process(target=run_assistant_process, args=(command_queue,))
     assistant_process.start()
-    
-    # Wait for assistant to start before starting overlay
-    time.sleep(3.0)
+      # Wait for assistant to start before starting overlay - reduced delay
+    time.sleep(1.5)
     
     # --- Start Overlay with delay ---
     # Wait for Flask to be ready before starting overlay
@@ -414,12 +428,13 @@ def main():
         stop_overlay()
 
         # Flask thread will terminate when main process ends (daemon=True)
-        
-        # Clean up lock files on exit
+          # Clean up lock files on exit
         if os.path.exists(stop_lock_path):
             os.remove(stop_lock_path)
         if os.path.exists(restart_lock_path):
             os.remove(restart_lock_path)
+        if os.path.exists(assistant_running_lock_path):
+            os.remove(assistant_running_lock_path)
 
         logger.info("Application shut down.")
 

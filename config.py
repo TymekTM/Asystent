@@ -115,7 +115,7 @@ API_KEYS = DEFAULT_CONFIG["API_KEYS"].copy()
 daily_briefing = DEFAULT_CONFIG["daily_briefing"].copy() # Daily briefing configuration
 
 
-def load_config(path=CONFIG_FILE_PATH):
+def load_config(path=CONFIG_FILE_PATH, silent=False):
     global _config, ASSISTANT_NAME, USER_NAME, WAKE_WORD, WAKE_WORD_SENSITIVITY_THRESHOLD, LANGUAGE, \
            OPENAI_API_KEY, AZURE_SPEECH_KEY, AZURE_SPEECH_REGION, \
            STT_MODEL, MAIN_MODEL, PROVIDER, DEEP_MODEL, WHISPER_MODEL, \
@@ -130,17 +130,21 @@ def load_config(path=CONFIG_FILE_PATH):
         with open(path, 'r', encoding='utf-8') as f:
             loaded_file_data = json.load(f)
     except FileNotFoundError:
-        logger.warning(f"Config file '{path}' not found. Creating default config file with default settings.")
+        if not silent:
+            print(f"Config file '{path}' not found. Creating default config file with default settings.")
         # Load defaults and create the config file
         loaded_file_data = DEFAULT_CONFIG.copy()
         try:
             with open(path, 'w', encoding='utf-8') as f:
                 json.dump(loaded_file_data, f, indent=2, ensure_ascii=False)
-            logger.info(f"Created default config file at '{path}'.")
+            if not silent:
+                print(f"Created default config file at '{path}'.")
         except Exception as e_write:
-            logger.error(f"Failed to create default config file at '{path}': {e_write}")
+            if not silent:
+                print(f"Failed to create default config file at '{path}': {e_write}")
     except json.JSONDecodeError as e:
-        logger.error(f"Error decoding JSON from '{path}': {e}. Using default config in-memory.")
+        if not silent:
+            print(f"Error decoding JSON from '{path}': {e}. Using default config in-memory.")
         loaded_file_data = DEFAULT_CONFIG.copy()
         # Do not overwrite config file on JSON error to avoid unintended overwrites
     
@@ -217,9 +221,9 @@ def save_config(data_to_save=None, path=CONFIG_FILE_PATH):
     try:
         with open(path, 'w', encoding='utf-8') as f:
             json.dump(data_to_save, f, indent=2, ensure_ascii=False)
-        logger.info(f"Configuration saved successfully to '{path}'.")
+        print(f"Configuration saved successfully to '{path}'.")
     except Exception as e:
-        logger.error(f"Could not save configuration to '{path}': {e}")
+        print(f"Could not save configuration to '{path}': {e}")
 
 # Initial load of configuration when the module is imported.
 # Other modules can then import _config or the individual accessor variables.

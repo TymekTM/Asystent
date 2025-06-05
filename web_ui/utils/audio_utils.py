@@ -34,12 +34,19 @@ def get_assistant_instance():
     if '_assistant_instance' in globals() and _assistant_instance is not None:
         return _assistant_instance
     try:
+        # Lazy import to avoid module-level initialization
+        import sys
+        import os
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
         from assistant import Assistant
+        logger.info("Creating Web UI Assistant instance...")
         _assistant_instance = Assistant()
         return _assistant_instance
-    except Exception:
+    except Exception as e:
+        logger.warning(f"Could not create Assistant instance: {e}")
         class Dummy:
-            pass
+            def __getattr__(self, name):
+                return lambda *args, **kwargs: None
         _assistant_instance = Dummy()
         return _assistant_instance
 

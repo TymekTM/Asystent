@@ -327,11 +327,10 @@ class AssistantBenchmark:
             current_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
             if current_dir not in sys.path:
                 sys.path.insert(0, current_dir)
-                
-            from assistant import Assistant
+            from assistant import get_assistant_instance
             
             # Create assistant instance
-            assistant = Assistant()
+            assistant = get_assistant_instance()
             
             if hasattr(assistant, 'ai_module') and assistant.ai_module:
                 self.log("Testing AI response generation")

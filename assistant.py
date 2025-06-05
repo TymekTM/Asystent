@@ -72,6 +72,21 @@ def save_plugins_state(plugins):
         logger.error(f"Failed to save plugins state: {e}")
 
 
+# Add singleton pattern to prevent multiple instances
+_assistant_lock = threading.Lock()
+_assistant_instance = None
+
+def get_assistant_instance(mic_device_id: int = None, wake_word: str = None, stt_silence_threshold: int = None, command_queue: queue.Queue = None):
+    """Get singleton Assistant instance to prevent multiple initializations"""
+    global _assistant_instance
+    with _assistant_lock:
+        if _assistant_instance is None:
+            logger.info("Creating new Assistant instance...")
+            _assistant_instance = Assistant(mic_device_id, wake_word, stt_silence_threshold, command_queue)
+        else:
+            logger.info("Returning existing Assistant instance")
+        return _assistant_instance
+
 class Assistant:
     async def speak_and_maybe_listen(self, text, listen_after_tts: bool, TextMode: bool = False):
         """Helper: Speak text, and if listen_after_tts, trigger manual listen after TTS."""

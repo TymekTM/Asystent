@@ -14,8 +14,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 def real_modules():
     """Load real modules for testing."""
     try:
-        from assistant import Assistant
-        assistant = Assistant()
+        from assistant import get_assistant_instance
+        assistant = get_assistant_instance()
         assistant.load_plugins()
         return assistant.modules
     except Exception as e:
@@ -101,11 +101,10 @@ def test_function_descriptions_quality(real_modules):
             assert any(keyword in desc for keyword in keywords), \
                 f"Timer function {name} should mention timer keywords in description: {desc}"
 
-if __name__ == "__main__":
-    # Run basic test without pytest
+if __name__ == "__main__":    # Run basic test without pytest
     try:
-        from assistant import Assistant
-        assistant = Assistant()
+        from assistant import get_assistant_instance
+        assistant = get_assistant_instance()
         assistant.load_plugins()
         
         from function_calling_system import FunctionCallingSystem
