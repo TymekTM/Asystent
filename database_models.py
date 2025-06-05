@@ -334,7 +334,11 @@ def _row_to_memory(row) -> Memory:
                 # Handle error appropriately, e.g., set to None or raise, or use current time
                 data['timestamp'] = datetime.now() # Or None, depending on desired behavior
 
-    return Memory(**data)
+    # Filter only the fields that Memory class accepts
+    memory_fields = {'id', 'content', 'user', 'timestamp'}
+    filtered_data = {k: v for k, v in data.items() if k in memory_fields}
+    
+    return Memory(**filtered_data)
 
 def add_memory(content: str, user: str = "assistant") -> int:
     with get_connection() as conn:
