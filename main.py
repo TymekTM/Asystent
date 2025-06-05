@@ -6,6 +6,7 @@ import sys
 import os
 import time 
 import threading
+import subprocess
 from threading import Thread
 
 # Add current directory to Python path for PyInstaller
@@ -60,6 +61,94 @@ logging.basicConfig(
 )
 logging.getLogger().setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
+
+# --- Overlay Management ---
+
+# Global variable to track overlay process
+overlay_process = None
+
+def start_overlay_when_ready():
+    """Start overlay after ensuring Flask server is ready."""
+    import requests
+    from requests.exceptions import RequestException
+    
+    # Use correct port based on whether running from exe or development
+    port = 5000 if getattr(sys, 'frozen', False) else 5001
+    max_retries = 30
+    retry_delay = 1.0
+    
+    logger.info(f"Checking if Flask server is ready on port {port}...")
+    
+    for attempt in range(max_retries):
+        try:
+            # Test if Flask server is ready by checking the status endpoint
+            response = requests.get(f"http://localhost:{port}/api/status", timeout=2)
+            if response.status_code == 200:
+                logger.info(f"Flask server is ready on port {port} after {attempt+1} attempts")
+                # Start overlay now that Flask is ready
+                start_overlay()
+                return
+            else:
+                logger.debug(f"Flask server returned status code {response.status_code}")
+        except RequestException as e:
+            logger.debug(f"Flask server not ready yet: {e} (attempt {attempt+1})")
+
+        logger.debug(f"Flask server not ready yet, retrying in {retry_delay}s (attempt {attempt+1}/{max_retries})")
+        time.sleep(retry_delay)
+
+    logger.warning(f"Flask server not ready after {max_retries} attempts, starting overlay anyway")
+    start_overlay()
+
+def start_overlay():
+    """Start the Tauri overlay application if it exists."""
+    global overlay_process
+    try:
+        overlay_exe_path = os.path.join(script_dir, "overlay", "target", "release", "Gaja Overlay.exe")
+        
+        if os.path.exists(overlay_exe_path):
+            logger.info(f"Starting overlay from: {overlay_exe_path}")
+            
+            # Set environment variable for the correct port
+            env = os.environ.copy()
+            port = 5000 if getattr(sys, 'frozen', False) else 5001
+            env['GAJA_PORT'] = str(port)
+            
+            # Start overlay as a separate process and store reference
+            overlay_process = subprocess.Popen([overlay_exe_path], env=env, cwd=os.path.dirname(overlay_exe_path))
+            logger.info("Overlay started successfully")
+            return overlay_process
+            
+        else:
+            logger.warning(f"Overlay executable not found at: {overlay_exe_path}")
+            logger.info("To build overlay, run: cd overlay && npm run tauri build")
+            return None
+            
+    except Exception as e:
+        logger.error(f"Failed to start overlay: {e}", exc_info=True)
+        return None
+
+def stop_overlay():
+    """Stop the overlay process if it's running."""
+    global overlay_process
+    if overlay_process:
+        try:
+            logger.info("Stopping overlay process...")
+            overlay_process.terminate()
+            
+            # Wait for graceful termination
+            try:
+                overlay_process.wait(timeout=5)
+                logger.info("Overlay process terminated gracefully")
+            except subprocess.TimeoutExpired:
+                logger.warning("Overlay process did not terminate gracefully, killing...")
+                overlay_process.kill()
+                overlay_process.wait()
+                logger.info("Overlay process killed")
+                
+            overlay_process = None
+            
+        except Exception as e:
+            logger.error(f"Error stopping overlay: {e}", exc_info=True)
 
 # --- Process Target Functions ---
 
@@ -141,14 +230,12 @@ def main():
         init_schema()
         logger.info("Database schema initialized.")
     except Exception as e:
-        logger.error(f"Failed to initialize database schema: {e}", exc_info=True)
-
-    # Create a multiprocessing queue for IPC
+        logger.error(f"Failed to initialize database schema: {e}", exc_info=True)    # Create a multiprocessing queue for IPC
     command_queue = multiprocessing.Queue()
 
     config = load_config()
     exit_with_console = config.get('EXIT_WITH_CONSOLE', True)
-      # Usuń stare pliki lock przy starcie, jeśli istnieją
+    # Usuń stare pliki lock przy starcie, jeśli istnieją
     stop_lock_path = os.path.join(os.path.dirname(__file__), 'assistant_stop.lock')
     restart_lock_path = os.path.join(os.path.dirname(__file__), 'assistant_restarting.lock')
     if os.path.exists(stop_lock_path):
@@ -160,9 +247,15 @@ def main():
 
     # --- Assistant Process ---
     assistant_process = multiprocessing.Process(target=run_assistant_process, args=(command_queue,))
-    assistant_process.start()    # --- Flask Thread ---
+    assistant_process.start()
+      # --- Flask Thread ---
     flask_thread = Thread(target=run_flask_thread, args=(command_queue,), daemon=True)
     flask_thread.start()
+    
+    # --- Start Overlay with delay ---
+    # Wait for Flask to be ready before starting overlay
+    logger.info("Waiting for Flask server to be ready before starting overlay...")
+    Thread(target=start_overlay_when_ready, daemon=True).start()
     
     # Check if this is the first run and open onboarding if needed
     if config.get('FIRST_RUN', True):
@@ -216,6 +309,11 @@ def main():
                 flask_thread = Thread(target=run_flask_thread, args=(command_queue,), daemon=True)
                 flask_thread.start()
                 logger.info("Flask thread restarted.")
+              # Check if overlay process is still running
+            if overlay_process and overlay_process.poll() is not None:
+                logger.warning("Overlay process died. Attempting to restart...")
+                Thread(target=start_overlay_when_ready, daemon=True).start()
+                logger.info("Overlay restart initiated.")
             
             # Check for restart signal
             if os.path.exists(restart_lock_path):
@@ -226,6 +324,9 @@ def main():
                     assistant_process.join(timeout=5)
                 # Note: Flask thread will be terminated when main process ends
                 
+                # Stop overlay before restart
+                stop_overlay()
+                
                 # Remove restart lock
                 os.remove(restart_lock_path)
                 
@@ -234,6 +335,9 @@ def main():
                 assistant_process.start()
                 flask_thread = Thread(target=run_flask_thread, args=(command_queue,), daemon=True)
                 flask_thread.start()
+                  # Restart overlay
+                Thread(target=start_overlay_when_ready, daemon=True).start()
+                
                 logger.info("Processes restarted successfully.")
                 
             time.sleep(5)  # Check every 5 seconds
@@ -249,6 +353,9 @@ def main():
                 logger.warning("Assistant process did not terminate gracefully, killing.")
                 assistant_process.kill()
                 assistant_process.join()
+
+        # Stop overlay process
+        stop_overlay()
 
         # Flask thread will terminate when main process ends (daemon=True)
         

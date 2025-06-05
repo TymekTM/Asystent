@@ -112,12 +112,6 @@ fn get_state(state: tauri::State<Arc<Mutex<OverlayState>>>) -> Result<OverlaySta
     Ok(state.inner().lock().unwrap().clone())
 }
 
-#[tauri::command]
-fn open_devtools(window: Window) {
-    window.open_devtools();
-    println!("[Rust] Dev tools opened");
-}
-
 async fn poll_assistant_status(app_handle: AppHandle, state: Arc<Mutex<OverlayState>>) {
     let client = reqwest::Client::new();
     let ports = vec!["5000", "5001"]; // Try both ports
@@ -345,13 +339,11 @@ pub fn run() {
             });
 
             Ok(())
-        })
-        .invoke_handler(tauri::generate_handler![
+        })        .invoke_handler(tauri::generate_handler![
             show_overlay,
             hide_overlay,
             update_status,
-            get_state,
-            open_devtools // Added command here
+            get_state
         ])
         .on_window_event(|event| {
             match event.event() {
