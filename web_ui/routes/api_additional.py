@@ -17,6 +17,7 @@ from core.config import logger, load_main_config
 from utils.audio_utils import convert_audio, transcribe_audio, cleanup_files, get_assistant_instance
 from database_manager import get_db_connection
 from database_models import get_user_by_username, init_schema
+from utils.usage_tracker import record_usage
 
 def setup_additional_api_routes(app):
     """Setup additional API routes for chat, plugins, etc."""
@@ -179,7 +180,14 @@ def setup_additional_api_routes(app):
                 "INSERT INTO chat_history (role, content, user_id, timestamp) VALUES (?, ?, ?, ?)",
                 ('assistant', reply, None, datetime.utcnow())
             )
-        
+
+        # Log usage statistics
+        try:
+            used_tokens = len(message.split()) + len(str(reply).split())
+            record_usage('chat', used_tokens)
+        except Exception:
+            pass
+
         return jsonify({'reply': reply})
 
     @app.route('/api/chat/clear', methods=['POST'])
@@ -415,7 +423,22 @@ def setup_additional_api_routes(app):
                 'last_query_time': None,
                 'today_queries': 0,
                 'last_query': None
-            })    # --- Plugin Playground API ---
+            })
+
+    # --- Usage Stats API ---
+    @app.route('/api/usage_stats', methods=['GET'])
+    @login_required(role="dev")
+    def api_usage_stats():
+        """Return aggregated usage statistics for heatmap."""
+        try:
+            from utils.usage_tracker import aggregate_usage
+            data = aggregate_usage()
+            return jsonify(data)
+        except Exception as e:
+            logger.error(f"Failed to load usage stats: {e}", exc_info=True)
+            return jsonify({})
+
+    # --- Plugin Playground API ---
     @app.route('/api/playground/plugins', methods=['GET'])
     @login_required(role="dev")
     def api_playground_plugins():
@@ -641,7 +664,14 @@ def setup_additional_api_routes(app):
             except Exception as e:
                 error = f"Error executing plugin: {str(e)}"
                 logger.error(f"Plugin playground execution error: {e}", exc_info=True)
-            
+
+            # Log usage for analytics
+            try:
+                used_tokens = len(str(params).split())
+                record_usage(plugin_name, used_tokens)
+            except Exception:
+                pass
+
             return jsonify({
                 "success": error is None,
                 "result": result,
