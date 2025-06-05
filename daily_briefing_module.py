@@ -20,7 +20,7 @@ import threading
 logger = logging.getLogger(__name__)
 
 try:
-    from ai_module import generate_response, detect_language_async
+    from ai_module import generate_response
     AI_MODULE_AVAILABLE = True
 except ImportError:
     AI_MODULE_AVAILABLE = False
