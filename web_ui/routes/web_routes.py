@@ -154,7 +154,22 @@ def setup_web_routes(app):
         """Configuration management page."""
         current_config = load_main_config()
         default_api_keys = DEFAULT_CONFIG.get('API_KEYS', {})
-        audio_devices = get_audio_input_devices()
+        
+        # Ensure audio_devices is a list of tuples (name, index)
+        raw_audio_devices = get_audio_input_devices()
+        if isinstance(raw_audio_devices, dict):
+            # Convert dict to list of tuples if needed (e.g., {name: index})
+            audio_devices = list(raw_audio_devices.items())
+        elif isinstance(raw_audio_devices, list) and all(isinstance(item, dict) and 'name' in item and 'id' in item for item in raw_audio_devices):
+            # Convert list of dicts to list of tuples
+            audio_devices = [(device['name'], device['id']) for device in raw_audio_devices]
+        elif isinstance(raw_audio_devices, list) and all(isinstance(item, tuple) and len(item) == 2 for item in raw_audio_devices):
+            # Already in the correct format
+            audio_devices = raw_audio_devices
+        else:
+            logger.warning(f"audio_devices has an unexpected format: {raw_audio_devices}. Defaulting to empty list.")
+            audio_devices = [] # Default to empty list if format is unknown
+
         # Handle form submission
         if request.method == 'POST':
             int_fields = {

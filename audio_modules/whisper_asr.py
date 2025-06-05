@@ -60,11 +60,21 @@ else:
 
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-CACHE_DIR = ROOT / ".hf_cache"
-CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
-os.environ["HF_HOME"] = str(CACHE_DIR)
-os.environ["HF_HUB_DISABLE_SYMLINKS"] = "1"
+# Determine persistent cache directory for Hugging Face Hub
+# Replace temporary bundle cache with application-level cache
+if IS_BUNDLED:
+    from pathlib import Path
+    exe_dir = Path(sys.executable).parent
+    cache_root = exe_dir / 'user_data' / 'hf_cache'
+else:
+    cache_root = ROOT / '.hf_cache'
+
+# Create cache directory if needed
+cache_root.mkdir(parents=True, exist_ok=True)
+# Set HF_HOME to persistent cache
+os.environ['HF_HOME'] = str(cache_root)
+os.environ['HF_HUB_DISABLE_SYMLINKS'] = '1'
 
 # ────────────────────────────────────────────────────────────────
 # Logger – tylko warning i error, żeby nie blokować

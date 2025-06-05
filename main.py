@@ -31,8 +31,7 @@ if getattr(sys, 'frozen', False):
 
 # Dependency management for PyInstaller builds - moved to main() to avoid multiprocessing issues
 
-# Import main modules
-from assistant import Assistant
+# Import main modules - Assistant imported only in subprocess to avoid premature initialization
 from config import load_config
 
 # Import Flask app creation function at module level for multiprocessing
@@ -103,7 +102,18 @@ def start_overlay():
     """Start the Tauri overlay application if it exists."""
     global overlay_process
     try:
-        overlay_exe_path = os.path.join(script_dir, "overlay", "target", "release", "Gaja Overlay.exe")
+        # Determine overlay path based on runtime environment
+        if getattr(sys, 'frozen', False):
+            # Running from PyInstaller bundle
+            if hasattr(sys, '_MEIPASS'):
+                # Single file mode - overlay extracted to temp directory
+                overlay_exe_path = os.path.join(sys._MEIPASS, "overlay", "Gaja Overlay.exe")
+            else:
+                # Directory mode - overlay next to exe
+                overlay_exe_path = os.path.join(application_path, "overlay", "Gaja Overlay.exe")
+        else:
+            # Development mode
+            overlay_exe_path = os.path.join(script_dir, "overlay", "target", "release", "Gaja Overlay.exe")
         
         if os.path.exists(overlay_exe_path):
             logger.info(f"Starting overlay from: {overlay_exe_path}")
@@ -114,13 +124,19 @@ def start_overlay():
             env['GAJA_PORT'] = str(port)
             
             # Start overlay as a separate process and store reference
-            overlay_process = subprocess.Popen([overlay_exe_path], env=env, cwd=os.path.dirname(overlay_exe_path))
+            overlay_process = subprocess.Popen(
+                [overlay_exe_path], 
+                env=env, 
+                cwd=os.path.dirname(overlay_exe_path),
+                creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
+            )
             logger.info("Overlay started successfully")
             return overlay_process
             
         else:
             logger.warning(f"Overlay executable not found at: {overlay_exe_path}")
-            logger.info("To build overlay, run: cd overlay && npm run tauri build")
+            if not getattr(sys, 'frozen', False):
+                logger.info("To build overlay, run: cd overlay && npm run tauri build")
             return None
             
     except Exception as e:
@@ -156,16 +172,37 @@ def run_assistant_process(queue: multiprocessing.Queue):
     """Target function to run the Assistant in its own process."""
     logger.info("Starting Assistant process...")
     try:
+        # Ensure proper imports in the subprocess context
+        import sys
+        import os
+        
+        # Avoid importing assistant.py at module level in subprocess to prevent premature initialization
+        # Only import when we're ready to create the instance
+        
         # Ensure config is loaded in this process
         from config import load_config
         load_config()
         
+        # Add a small delay to prevent race conditions
+        import time
+        time.sleep(1.0)  # Increased delay to prevent multiple initializations
+        
+        # Import Assistant only after delay and setup - this prevents module-level initialization
+        logger.info("Importing Assistant class in subprocess...")
+        from assistant import Assistant
+        
+        logger.info("Creating Assistant instance in subprocess...")
         assistant = Assistant(command_queue=queue)
+        
+        logger.info("Starting Assistant main loop...")
         asyncio.run(assistant.run_async())
+        
     except KeyboardInterrupt:
         logger.info("Assistant process received KeyboardInterrupt. Exiting.")
     except Exception as e:
         logger.error(f"Critical error in Assistant process: {e}", exc_info=True)
+        import traceback
+        traceback.print_exc()
     finally:
         logger.info("Assistant process finished.")
         if 'assistant' in locals() and hasattr(assistant, 'stop_active_window_tracker'):
@@ -207,6 +244,11 @@ def main():
     if sys.platform == "win32":
         multiprocessing.set_start_method('spawn', force=True)
     
+    # Initialize logging first
+    logger.info("=== GAJA APPLICATION STARTING ===")
+    logger.info(f"Running from: {application_path}")
+    logger.info(f"Frozen mode: {getattr(sys, 'frozen', False)}")
+    
     # Dependency management for PyInstaller builds - only run in main process
     if getattr(sys, 'frozen', False):
         try:
@@ -230,11 +272,14 @@ def main():
         init_schema()
         logger.info("Database schema initialized.")
     except Exception as e:
-        logger.error(f"Failed to initialize database schema: {e}", exc_info=True)    # Create a multiprocessing queue for IPC
+        logger.error(f"Failed to initialize database schema: {e}", exc_info=True)    
+    
+    # Create a multiprocessing queue for IPC
     command_queue = multiprocessing.Queue()
 
     config = load_config()
     exit_with_console = config.get('EXIT_WITH_CONSOLE', True)
+    
     # Usuń stare pliki lock przy starcie, jeśli istnieją
     stop_lock_path = os.path.join(os.path.dirname(__file__), 'assistant_stop.lock')
     restart_lock_path = os.path.join(os.path.dirname(__file__), 'assistant_restarting.lock')
@@ -245,12 +290,20 @@ def main():
         
     logger.info("Starting Flask thread...")
 
-    # --- Assistant Process ---
-    assistant_process = multiprocessing.Process(target=run_assistant_process, args=(command_queue,))
-    assistant_process.start()
-      # --- Flask Thread ---
+    # Start Flask in a thread first (to be ready for overlay)
     flask_thread = Thread(target=run_flask_thread, args=(command_queue,), daemon=True)
     flask_thread.start()
+    
+    # Wait longer for Flask to start properly
+    time.sleep(2.0)
+    
+    # --- Assistant Process ---
+    logger.info("Starting Assistant process...")
+    assistant_process = multiprocessing.Process(target=run_assistant_process, args=(command_queue,))
+    assistant_process.start()
+    
+    # Wait for assistant to start before starting overlay
+    time.sleep(3.0)
     
     # --- Start Overlay with delay ---
     # Wait for Flask to be ready before starting overlay
@@ -298,8 +351,8 @@ def main():
             
             if not assistant_process.is_alive():
                 logger.warning("Assistant process died. Attempting to restart...")
-                # The 'assistant' instance from the dead process is out of scope here.
-                # Cleanup for that instance is handled in its own 'run_assistant_process' finally block.
+                # Wait before restarting to avoid rapid restarts
+                time.sleep(2.0)
                 assistant_process = multiprocessing.Process(target=run_assistant_process, args=(command_queue,))
                 assistant_process.start()
                 logger.info("Assistant process restarted.")
@@ -309,9 +362,12 @@ def main():
                 flask_thread = Thread(target=run_flask_thread, args=(command_queue,), daemon=True)
                 flask_thread.start()
                 logger.info("Flask thread restarted.")
-              # Check if overlay process is still running
+            
+            # Check if overlay process is still running
             if overlay_process and overlay_process.poll() is not None:
                 logger.warning("Overlay process died. Attempting to restart...")
+                # Wait a moment before restarting overlay
+                time.sleep(1.0)
                 Thread(target=start_overlay_when_ready, daemon=True).start()
                 logger.info("Overlay restart initiated.")
             
@@ -335,7 +391,7 @@ def main():
                 assistant_process.start()
                 flask_thread = Thread(target=run_flask_thread, args=(command_queue,), daemon=True)
                 flask_thread.start()
-                  # Restart overlay
+                # Restart overlay
                 Thread(target=start_overlay_when_ready, daemon=True).start()
                 
                 logger.info("Processes restarted successfully.")

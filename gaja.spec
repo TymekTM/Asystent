@@ -50,6 +50,26 @@ datas += [
 if os.path.exists('resources/sounds'):
     datas += collect_dir('resources/sounds', 'resources/sounds')
 
+# Include overlay executable if it exists
+overlay_dest_dir = 'overlay'  # Define destination directory for overlay files
+overlay_exe = 'overlay/target/release/Gaja Overlay.exe'
+if os.path.exists(overlay_exe):
+    datas.append((overlay_exe, overlay_dest_dir))
+    # Also include the webview2 loader if it exists
+    webview_loader_path = os.path.join(os.path.dirname(overlay_exe), 'WebView2Loader.dll')
+    if os.path.exists(webview_loader_path):
+        datas.append((webview_loader_path, overlay_dest_dir))
+        print(f"Overlay będzie bundled: {overlay_exe} oraz WebView2Loader.dll")
+    else:
+        print(f"Overlay będzie bundled: {overlay_exe}")
+        print(f"OSTRZEŻENIE: Nie znaleziono WebView2Loader.dll obok Gaja Overlay.exe. Upewnij się, że jest on zbędny lub dodaj go ręcznie.")
+
+else:
+    print(f"BŁĄD: Nie znaleziono pliku Gaja Overlay.exe w oczekiwanej lokalizacji: {overlay_exe}")
+    print("Upewnij się, że overlay został zbudowany przed uruchomieniem PyInstallera.")
+    # Możesz zdecydować, czy chcesz przerwać build, jeśli overlay jest krytyczny
+    # sys.exit(1)
+
 # Note: sounddevice will be handled by dependency manager - no bundling needed
 
 a = Analysis(
