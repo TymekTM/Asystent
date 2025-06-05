@@ -1,4 +1,4 @@
-__version__ = "1.1.0" # Updated version
+__version__ = "1.2.0" # Updated version
 
 import asyncio, json, logging, os, glob, importlib, time
 from watchdog.observers import Observer
@@ -326,7 +326,7 @@ class Assistant:
     def _init_daily_briefing(self):
         """Initialize the daily briefing module."""
         try:
-            from modules.daily_briefing_module import DailyBriefingModule
+            from daily_briefing_module import DailyBriefingModule
             from config import daily_briefing
             
             # Merge global daily_briefing config with user-specific settings

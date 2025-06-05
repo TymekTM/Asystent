@@ -8,7 +8,7 @@ import os
 # Add the parent directory to the Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from modules.daily_briefing_module import DailyBriefingModule
+from daily_briefing_module import DailyBriefingModule
 from config import _config, load_config
 
 async def test_ai_briefing():

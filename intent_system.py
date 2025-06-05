@@ -22,9 +22,7 @@ from modules.search_module import register as register_search_module_command
 
 
 from modules.api_module import register as register_api_command
-from modules.see_screen_module import register as register_screenshot_command
 from modules.memory_module import register as register_memory_command
-from modules.deepseek_module import register as register_deepseek_command
 from modules.core_module import register as register_core_command
 from modules.open_web_module import register as register_open_web_command
 from modules.weather_module import register as register_weather_command
@@ -40,12 +38,10 @@ INTENTS = [
     "general",
     "weather_query",
     "about_assistant",
-    "screenshot",
     "search",
     "memory_add",
     "memory_get",
     "memory_delete",
-    "deep_reasoning",
     "timer_set",
     "timer_view",
     "event_add",
@@ -73,11 +69,9 @@ LANGUAGES = ["Polish", "English"]
 COMMAND_REGISTRATION_FUNCTIONS: Dict[str, Callable[[], Dict[str, Any]]] = {
     'search': register_search_module_command,
     'weather_query': register_weather_command,  
-    'screenshot': register_screenshot_command,
     'memory_add': register_memory_command,
     'memory_get': register_memory_command,
     'memory_delete': register_memory_command,
-    'deep_reasoning': register_deepseek_command,
     # All core-related intents use register_core_command
     'timer_set': register_core_command,
     'timer_view': register_core_command,
@@ -145,7 +139,6 @@ HANDLERS: Dict[str, Callable[..., Union[Any, Awaitable[Any]]]] = {
     'general': lambda text, **kwargs: "Nie obsługuję jeszcze tej intencji.",
     'about_assistant': lambda text, **kwargs: "Jestem asystentem AI. Zapytaj mnie o coś!",
     'weather_query': _get_handler_from_module_register(register_weather_command),
-    'screenshot': _get_handler_from_module_register(register_screenshot_command),
     'search': _get_handler_from_module_register(register_search_module_command),
     'memory_add': _get_handler_from_module_register(register_memory_command, 'add'),
     # Custom handler for memory_get to always return all memories for AI
@@ -162,7 +155,6 @@ def _memory_get_with_full_memory(text, **kwargs):
 
 HANDLERS.update({
     'memory_delete': _get_handler_from_module_register(register_memory_command, 'delete'),
-    'deep_reasoning': _get_handler_from_module_register(register_deepseek_command),
     'timer_set': _get_handler_from_module_register(register_core_command, 'set_timer'),
     'timer_view': _get_handler_from_module_register(register_core_command, 'view_timers'),
     'event_add': _get_handler_from_module_register(register_core_command, 'add_event'),

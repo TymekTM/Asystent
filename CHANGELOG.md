@@ -14,3 +14,25 @@
 
 ### Fixed
 - Addressed various initial bugs and stability issues.
+
+## [1.1.0] - 2025-06-10
+
+### Added
+- Daily briefing module with scheduling support.
+
+### Changed
+- Improved plugin framework and configuration handling.
+
+### Fixed
+- Resolved minor memory management bugs.
+
+## [1.2.0] - 2025-07-20
+
+### Added
+- Web UI enhancements and extended API endpoints.
+
+### Changed
+- Documentation updates and internal cleanups.
+
+### Fixed
+- Improved error handling in search module.

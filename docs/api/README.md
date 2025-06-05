@@ -236,10 +236,6 @@ Lists all available plugins and their status.
     "enabled": true,
     "description": "Wyszukuje informacje w internecie i podsumowuje wyniki."
   },
-  "deepseek_module": {
-    "enabled": false,
-    "description": "Wykonuje głębokie rozumowanie."
-  }
 }
 ```
 

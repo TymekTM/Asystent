@@ -18,3 +18,7 @@ resources.zip
 /Gaja_test
 /overlay/node_modules
 /overlay/target
+config.json
+plugins_state.json
+*.db
+user_data/

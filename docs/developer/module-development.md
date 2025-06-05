@@ -251,8 +251,6 @@ Study these existing modules for reference:
 
 - **search_module.py**: Web search functionality
 - **memory_module.py**: Long-term storage operations
-- **deepseek_module.py**: Advanced reasoning capabilities
-- **see_screen_module.py**: Screen capture and analysis
 - **active_window_module.py**: Window context tracking
 
 ## Testing Your Module

@@ -124,12 +124,10 @@ gaja/
 │   ├── api_integrations_config.json # API configuration 
 │   ├── core_module.py      # Core system utilities
 │   ├── core_storage.json   # Core module data storage
-│   ├── deepseek_module.py  # Advanced reasoning
 │   ├── memory_module.py    # Long-term memory management
 │   ├── memory/             # Memory storage files 
 │   ├── open_web_module.py  # Web browser control
 │   ├── search_module.py    # Web search capability
-│   ├── see_screen_module.py # Screenshot and analysis
 │   └── weather_module.py   # Weather information
 ├── resources/              # Resource files
 │   ├── piper/                # Piper TTS voice models
@@ -146,11 +144,9 @@ gaja/
 │   ├── active_window_module.py  # Active window tracking
 │   ├── api_module.py      # External API integration
 │   ├── core_module.py     # Core system functions
-│   ├── deepseek_module.py # Advanced reasoning
 │   ├── memory_module.py   # Memory management
 │   ├── open_web_module.py # Web browser control
 │   ├── search_module.py   # Web search functionality
-│   ├── see_screen_module.py # Screen capture and analysis
 │   └── weather_module.py  # Weather information
 ├── resources/            # Static resources
 │   ├── piper/            # TTS voice models

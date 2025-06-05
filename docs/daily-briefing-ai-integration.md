@@ -158,8 +158,8 @@ na odświeżenie looku!
 
 ## Files Modified
 
-### Primary Implementation
-- `f:\Asystent\modules\daily_briefing_module.py` - Main module with AI integration (671 lines)
+-### Primary Implementation
+- `f:\Asystent\daily_briefing_module.py` - Main module with AI integration (671 lines)
 - `f:\Asystent\config.py` - Configuration updates for AI features
 
 ### Supporting Files
