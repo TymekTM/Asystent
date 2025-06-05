@@ -1,5 +1,4 @@
 # ✅ FIXY
-- Zweryfikować działanie innych rzeczy w core (timer działa)
 - When AI wants to activate listening and user does the same at the same time it just happens twice
 - Moduł od muzyki klucz spotify
 - Fix tooltip placement and width on smaller screens

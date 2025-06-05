@@ -22,3 +22,4 @@ config.json
 plugins_state.json
 *.db
 user_data/
+gaja_memory.db
