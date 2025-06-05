@@ -1,8 +1,6 @@
 # ✅ FIXY
 - When AI wants to activate listening and user does the same at the same time it just happens twice
 - Moduł od muzyki klucz spotify
-- Fix tooltip placement and width on smaller screens
-- Daily briefing pobiera prawdziwe dane o lokalizacji + prawdziwe dane użytkownika (imie itp.)
 
 # ⭐ WAŻNE (strategiczne / fundamenty)
 - Kompletny rework intencji AI [Każdy moduł swoje AI ]

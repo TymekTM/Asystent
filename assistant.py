@@ -130,6 +130,7 @@ class Assistant:
         self.mic_device_id = mic_device_id if mic_device_id is not None else _config.get('MIC_DEVICE_ID', MIC_DEVICE_ID)
         self.wake_word = wake_word if wake_word is not None else _config.get('WAKE_WORD', WAKE_WORD)
         self.stt_silence_threshold = stt_silence_threshold if stt_silence_threshold is not None else _config.get('STT_SILENCE_THRESHOLD', STT_SILENCE_THRESHOLD)
+        self.user_name = _config.get('USER_NAME', '')
         self.whisper_model = _config.get('WHISPER_MODEL', WHISPER_MODEL)
         self.max_history_length = _config.get('MAX_HISTORY_LENGTH', MAX_HISTORY_LENGTH)
         self.low_power_mode = _config.get('LOW_POWER_MODE', LOW_POWER_MODE)
@@ -369,10 +370,10 @@ class Assistant:
         """Reloads configuration values from the config module."""
         logger.info("Reloading configuration values in Assistant...")
         load_config() # Crucial: refreshes _config and global config variables
-
         self.mic_device_id = _config.get('MIC_DEVICE_ID', MIC_DEVICE_ID)
         self.wake_word = _config.get('WAKE_WORD', WAKE_WORD)
         self.stt_silence_threshold = _config.get('STT_SILENCE_THRESHOLD', STT_SILENCE_THRESHOLD)
+        self.user_name = _config.get('USER_NAME', '')
         
         new_whisper_model = _config.get('WHISPER_MODEL', WHISPER_MODEL)
         if self.whisper_model != new_whisper_model:
@@ -383,11 +384,13 @@ class Assistant:
                 if hasattr(self.whisper_asr, 'unload_model'): # Check if unload_model exists
                     self.whisper_asr.unload_model()
                 elif hasattr(self.whisper_asr, 'unload'): # Check for unload
-                     self.whisper_asr.unload()
+                    self.whisper_asr.unload()
                 self.whisper_asr = None # Force re-initialization
             
-            if self.use_whisper: # This will be true                 self.whisper_asr = WhisperASR(model_size=self.whisper_model)
-                 try:
+            if self.use_whisper: # This will be true
+                from audio_modules.whisper_asr import WhisperASR
+                self.whisper_asr = WhisperASR(model_size=self.whisper_model)
+                try:
                     import numpy as np  # Lazy import
                     logger.info(f"Warming up new Whisper ASR model: {self.whisper_model}")
                     sample_rate = 16000; duration = 1; num_samples = sample_rate * duration
@@ -395,7 +398,7 @@ class Assistant:
                     # Ensure correct parameters for transcribe, especially if language needs to be dynamic
                     self.whisper_asr.transcribe(dummy_audio_np, sample_rate=sample_rate, language=_config.get("LANGUAGE", "en")[:2])
                     logger.info("New Whisper ASR model warmed up.")
-                 except Exception as e:
+                except Exception as e:
                     logger.error(f"Error warming up new Whisper ASR model: {e}", exc_info=True)
 
         self.max_history_length = _config.get('MAX_HISTORY_LENGTH', MAX_HISTORY_LENGTH)

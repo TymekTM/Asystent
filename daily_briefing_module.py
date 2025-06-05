@@ -38,7 +38,7 @@ class DailyBriefingModule:
     
     def __init__(self, config: Dict[str, Any]):
         self.config = config
-        self.user_name = config.get('daily_briefing', {}).get('user_name', config.get('user_name', 'Tymek'))
+        self.user_name = config.get('USER_NAME') or config.get('daily_briefing', {}).get('user_name', 'Tymek')
         self.location = config.get('daily_briefing', {}).get('location', 'Warsaw,PL')
         self.enabled = config.get('daily_briefing', {}).get('enabled', True)
         self.briefing_time = config.get('daily_briefing', {}).get('briefing_time', '08:00')
@@ -52,6 +52,7 @@ class DailyBriefingModule:
         self.min_interval_hours = config.get('daily_briefing', {}).get('min_interval_hours', 12)
         self.briefing_style = config.get('daily_briefing', {}).get('briefing_style', 'normal')  # normal, funny, serious
         self.use_ai_generation = config.get('daily_briefing', {}).get('use_ai_generation', True) and AI_MODULE_AVAILABLE
+        self.use_dynamic_location = config.get('daily_briefing', {}).get('use_dynamic_location', True)
         
         # Session tracking
         self.session_file = Path('user_data') / 'daily_briefing_session.json'
@@ -193,10 +194,10 @@ class DailyBriefingModule:
         try:
             # Import weather module
             from modules.weather_module import handler as weather_handler
-            
-            # Get weather information
+              # Get weather information
+            current_location = self.get_current_location()
             weather_text = weather_handler(
-                {"location": self.location, "action": "current"},
+                {"location": current_location, "action": "current"},
                 conversation_history=None,
                 user=None
             )
@@ -204,7 +205,7 @@ class DailyBriefingModule:
             if weather_text and isinstance(weather_text, str):
                 return {
                     'current_text': weather_text,
-                    'location': self.location
+                    'location': current_location
                 }
         except Exception as e:
             logger.error(f"Could not get weather data: {e}")
@@ -404,11 +405,10 @@ class DailyBriefingModule:
         try:
             # Detect user language from previous interactions or use Polish as default
             user_language = 'Polish'  # Default for this assistant
-            
-            # Build context for AI generation
+              # Build context for AI generation
             briefing_context = {
                 'user_name': self.user_name,
-                'location': self.location,
+                'location': self.get_current_location(),
                 'date': content['date'],
                 'weather': content['weather'],
                 'holidays': content['holidays'],
@@ -417,15 +417,17 @@ class DailyBriefingModule:
                 'style': self.briefing_style,
                 'language': user_language
             }
+              # Create AI prompt for briefing generation
+            ai_prompt = self._build_ai_prompt(briefing_context)
             
-            # Create AI prompt for briefing generation
-            ai_prompt = self._build_ai_prompt(briefing_context)            # Generate response using AI
+            # Generate response using AI
             logger.info("Generating AI-powered daily briefing...")
             from collections import deque
             import json
             response_json = generate_response(
                 conversation_history=deque([{"role": "user", "content": ai_prompt}]),
-                detected_language="pl"
+                detected_language="pl",
+                user_name=self.user_name
             )
             
             # Parse the JSON response
@@ -594,6 +596,27 @@ Wygeneruj kompletny dzienny briefing (2-4 zdania) zawierający powitanie, inform
         except Exception as e:
             logger.error(f"Error delivering daily briefing: {e}", exc_info=True)
             return "Przepraszam, wystąpił błąd podczas przygotowywania dzisiejszego briefingu."
+
+    def get_location_from_ip(self):
+        """Get user location based on IP address."""
+        try:
+            import requests
+            response = requests.get('http://ip-api.com/json/', timeout=5)
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('status') == 'success':
+                    city = data.get('city', 'Warsaw')
+                    country_code = data.get('countryCode', 'PL')
+                    return f"{city},{country_code}"
+        except Exception as e:
+            logger.warning(f"Failed to get location from IP: {e}")
+        return "Warsaw,PL"  # Default fallback
+
+    def get_current_location(self) -> str:
+        """Get current location - either from config or dynamically from IP."""
+        if self.use_dynamic_location:
+            return self.get_location_from_ip()
+        return self.location
 
 # Handler function for integration with assistant
 async def handle_daily_briefing(query: str, params: Dict[str, Any]) -> Dict[str, Any]:

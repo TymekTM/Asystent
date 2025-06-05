@@ -67,6 +67,10 @@ def run_assistant_process(queue: multiprocessing.Queue):
     """Target function to run the Assistant in its own process."""
     logger.info("Starting Assistant process...")
     try:
+        # Ensure config is loaded in this process
+        from config import load_config
+        load_config()
+        
         assistant = Assistant(command_queue=queue)
         asyncio.run(assistant.run_async())
     except KeyboardInterrupt:

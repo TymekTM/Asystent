@@ -56,10 +56,34 @@
     .config-accordion .accordion-body {
         padding: 1.25rem;
     }
-    
-    .tooltip-inner {
+      .tooltip-inner {
         max-width: 300px;
         text-align: left;
+    }
+    
+    /* Responsive tooltip adjustments for smaller screens */
+    @media (max-width: 768px) {
+        .tooltip-inner {
+            max-width: 280px;
+            font-size: 0.875rem;
+            padding: 0.5rem 0.75rem;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .tooltip-inner {
+            max-width: 250px;
+            font-size: 0.8rem;
+            padding: 0.4rem 0.6rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .tooltip-inner {
+            max-width: 200px;
+            font-size: 0.75rem;
+            padding: 0.4rem 0.5rem;
+        }
     }
     
     .device-refresh-btn {
@@ -489,12 +513,132 @@
         const configForm = document.getElementById('config-form');
         const saveBtn = document.getElementById('save-config-btn');
         const provider = document.getElementById('PROVIDER');
-        const refreshMicBtn = document.getElementById('refresh-mic-devices-btn');
-        
-        // Initialize tooltips
+        const refreshMicBtn = document.getElementById('refresh-mic-devices-btn');        // Initialize tooltips with responsive configuration
         const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
         const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl)
+            // Determine placement based on screen size and element position
+            const getResponsivePlacement = () => {
+                const screenWidth = window.innerWidth;
+                const rect = tooltipTriggerEl.getBoundingClientRect();
+                const elementCenterX = rect.left + rect.width / 2;
+                const screenCenterX = screenWidth / 2;
+                
+                // For very small screens, always use top placement
+                if (screenWidth <= 480) {
+                    return 'top';
+                }
+                
+                // For small screens, use top/bottom based on vertical position
+                if (screenWidth <= 768) {
+                    const windowHeight = window.innerHeight;
+                    const elementCenterY = rect.top + rect.height / 2;
+                    return elementCenterY < windowHeight / 2 ? 'bottom' : 'top';
+                }
+                
+                // For larger screens, use left/right based on horizontal position
+                if (elementCenterX < screenCenterX) {
+                    return 'right';
+                } else {
+                    return 'left';
+                }
+            };
+            
+            return new bootstrap.Tooltip(tooltipTriggerEl, {
+                placement: getResponsivePlacement(),
+                boundary: 'viewport',
+                fallbackPlacements: ['top', 'bottom', 'left', 'right'],
+                sanitize: false,
+                popperConfig: {
+                    modifiers: [
+                        {
+                            name: 'preventOverflow',
+                            options: {
+                                boundary: 'viewport',
+                                padding: 8
+                            }
+                        },
+                        {
+                            name: 'flip',
+                            options: {
+                                fallbackPlacements: ['top', 'bottom', 'left', 'right']
+                            }
+                        },
+                        {
+                            name: 'offset',
+                            options: {
+                                offset: [0, 8]
+                            }
+                        }
+                    ]
+                }
+            });
+        });
+
+        // Reinitialize tooltips on window resize for responsive behavior
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(function() {
+                // Dispose existing tooltips
+                tooltipList.forEach(tooltip => tooltip.dispose());
+                
+                // Reinitialize with new responsive placement
+                const newTooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                newTooltipTriggerList.forEach(function (tooltipTriggerEl) {
+                    const getResponsivePlacement = () => {
+                        const screenWidth = window.innerWidth;
+                        const rect = tooltipTriggerEl.getBoundingClientRect();
+                        const elementCenterX = rect.left + rect.width / 2;
+                        const screenCenterX = screenWidth / 2;
+                        
+                        if (screenWidth <= 480) {
+                            return 'top';
+                        }
+                        
+                        if (screenWidth <= 768) {
+                            const windowHeight = window.innerHeight;
+                            const elementCenterY = rect.top + rect.height / 2;
+                            return elementCenterY < windowHeight / 2 ? 'bottom' : 'top';
+                        }
+                        
+                        if (elementCenterX < screenCenterX) {
+                            return 'right';
+                        } else {
+                            return 'left';
+                        }
+                    };
+                    
+                    new bootstrap.Tooltip(tooltipTriggerEl, {
+                        placement: getResponsivePlacement(),
+                        boundary: 'viewport',
+                        fallbackPlacements: ['top', 'bottom', 'left', 'right'],
+                        sanitize: false,
+                        popperConfig: {
+                            modifiers: [
+                                {
+                                    name: 'preventOverflow',
+                                    options: {
+                                        boundary: 'viewport',
+                                        padding: 8
+                                    }
+                                },
+                                {
+                                    name: 'flip',
+                                    options: {
+                                        fallbackPlacements: ['top', 'bottom', 'left', 'right']
+                                    }
+                                },
+                                {
+                                    name: 'offset',
+                                    options: {
+                                        offset: [0, 8]
+                                    }
+                                }
+                            ]
+                        }
+                    });
+                });
+            }, 250); // Debounce resize events
         });
         
         // Save config on form submit

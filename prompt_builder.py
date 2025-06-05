@@ -19,12 +19,18 @@ import datetime
 def get_current_date() -> str:
     return datetime.datetime.now().strftime("%Y-%m-%d")
 
-def build_system_prompt(name: str = "Jarvis", current_date: Optional[str] = None) -> str:
+def build_system_prompt(name: str = "Jarvis", current_date: Optional[str] = None, user_name: Optional[str] = None) -> str:
     """Build the main system prompt for the AI assistant."""
     if not current_date:
         current_date = get_current_date()
+    
+    # Add user context if user_name is provided
+    user_context = ""
+    if user_name and user_name.strip():
+        user_context = f" Rozmawiasz z {user_name}."
+    
     # SYSTEM_PROMPT may use {name} and {current_date} if formatted
-    return SYSTEM_PROMPT.format(name=name, current_date=current_date)
+    return SYSTEM_PROMPT.format(name=name, current_date=current_date) + user_context
 
 # --- Dynamic Prompt Builders ---
 def build_language_info_prompt(detected_language: Optional[str], language_confidence: Optional[float]) -> str:
@@ -60,10 +66,11 @@ def build_full_system_prompt(
     track_active_window_setting: bool, # Added to control inclusion
     module_result: Optional[str] = None, # Added for intent result
     # tool_suggestion removed to avoid forced module suggestions
-    tool_suggestion: Optional[str] = None
+    tool_suggestion: Optional[str] = None,
+    user_name: Optional[str] = None  # Added user name parameter
 ) -> str:
     """Builds the complete system prompt by assembling various components, with optional tool suggestion."""
-    base_prompt_content = system_prompt_override if system_prompt_override else build_system_prompt()
+    base_prompt_content = system_prompt_override if system_prompt_override else build_system_prompt(user_name=user_name)
     language_segment = build_language_info_prompt(detected_language, language_confidence)
     # Remove automatic tool suggestion to prevent core module over-suggestion
     suggestion_segment = ""

@@ -630,7 +630,8 @@ def generate_response(
     track_active_window_setting: bool = False,
     tool_suggestion: str = None,
     modules: Dict[str, Any] = None,
-    use_function_calling: bool = True
+    use_function_calling: bool = True,
+    user_name: str = None
 ) -> str:
     """
     Generates a response from the AI model based on conversation history and available tools.
@@ -669,8 +670,7 @@ def generate_response(
             function_calling_system = convert_module_system_to_function_calling(modules)
             functions = function_calling_system.convert_modules_to_functions()
             logger.info(f"Function calling enabled with {len(functions)} functions")
-            
-            # Use standard system prompt for function calling
+              # Use standard system prompt for function calling
             system_prompt = build_full_system_prompt(
                 system_prompt_override=system_prompt_override,
                 detected_language=detected_language,
@@ -678,10 +678,10 @@ def generate_response(
                 tools_description="",  # Functions are handled separately
                 active_window_title=active_window_title,
                 track_active_window_setting=track_active_window_setting,
-                tool_suggestion=tool_suggestion
+                tool_suggestion=tool_suggestion,
+                user_name=user_name
             )
-        else:
-            # Traditional prompt-based approach
+        else:            # Traditional prompt-based approach
             system_prompt = build_full_system_prompt(
                 system_prompt_override=system_prompt_override,
                 detected_language=detected_language,
@@ -689,7 +689,8 @@ def generate_response(
                 tools_description=tools_info,
                 active_window_title=active_window_title,
                 track_active_window_setting=track_active_window_setting,
-                tool_suggestion=tool_suggestion
+                tool_suggestion=tool_suggestion,
+                user_name=user_name
             )
         
         # --- PROMPT LOGGING ---

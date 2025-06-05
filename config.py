@@ -27,6 +27,7 @@ CONFIG_FILE = CONFIG_FILE_PATH  # Alias for compatibility in tests
 
 DEFAULT_CONFIG = {
   "ASSISTANT_NAME": "Gaja",
+  "USER_NAME": "",
   "WAKE_WORD": "gaja",
   "WAKE_WORD_SENSITIVITY_THRESHOLD": 0.35,
   "LANGUAGE": "pl-PL",
@@ -82,6 +83,7 @@ _config = {}
 
 # Global accessor variables, initialized with defaults or None
 ASSISTANT_NAME = DEFAULT_CONFIG["ASSISTANT_NAME"]
+USER_NAME = DEFAULT_CONFIG["USER_NAME"]
 WAKE_WORD = DEFAULT_CONFIG["WAKE_WORD"]
 WAKE_WORD_SENSITIVITY_THRESHOLD = DEFAULT_CONFIG["WAKE_WORD_SENSITIVITY_THRESHOLD"]
 LANGUAGE = DEFAULT_CONFIG["LANGUAGE"]
@@ -114,7 +116,7 @@ daily_briefing = DEFAULT_CONFIG["daily_briefing"].copy() # Daily briefing config
 
 
 def load_config(path=CONFIG_FILE_PATH):
-    global _config, ASSISTANT_NAME, WAKE_WORD, WAKE_WORD_SENSITIVITY_THRESHOLD, LANGUAGE, \
+    global _config, ASSISTANT_NAME, USER_NAME, WAKE_WORD, WAKE_WORD_SENSITIVITY_THRESHOLD, LANGUAGE, \
            OPENAI_API_KEY, AZURE_SPEECH_KEY, AZURE_SPEECH_REGION, \
            STT_MODEL, MAIN_MODEL, PROVIDER, DEEP_MODEL, WHISPER_MODEL, \
            MAX_HISTORY_LENGTH, LOW_POWER_MODE, EXIT_WITH_CONSOLE, DEV_MODE, \
@@ -159,12 +161,12 @@ def load_config(path=CONFIG_FILE_PATH):
         try:
             loaded_file_data['WAKE_WORD_SENSITIVITY_THRESHOLD'] = float(loaded_file_data['WAKE_WORD_SENSITIVITY_THRESHOLD'])
         except Exception:
-            pass
-    # Update in-memory config
+            pass    # Update in-memory config
     _config.clear()
     _config.update(loaded_file_data)
-
+    
     ASSISTANT_NAME = _config.get("ASSISTANT_NAME", DEFAULT_CONFIG["ASSISTANT_NAME"])
+    USER_NAME = _config.get("USER_NAME", DEFAULT_CONFIG["USER_NAME"])
     WAKE_WORD = _config.get("WAKE_WORD", DEFAULT_CONFIG["WAKE_WORD"])
     WAKE_WORD_SENSITIVITY_THRESHOLD = _config.get("WAKE_WORD_SENSITIVITY_THRESHOLD", DEFAULT_CONFIG["WAKE_WORD_SENSITIVITY_THRESHOLD"])
     LANGUAGE = _config.get("LANGUAGE", DEFAULT_CONFIG["LANGUAGE"])
