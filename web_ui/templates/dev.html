@@ -116,6 +116,8 @@
 </style>
   {# Gaja branding stylesheet #}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/gaja-branding.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix@1.1.0/dist/chartjs-chart-matrix.min.js"></script>
 {% endblock %}
 
 {% block content %}
@@ -268,6 +270,13 @@
                 </tbody>
             </table>
         </div>    </div>
+
+    <!-- Usage Heatmap Section -->
+    <div class="dev-section">
+        <h2><i class="fas fa-fire"></i> 🔥 Heatmap użycia</h2>
+        <canvas id="usageHeatmap" height="220"></canvas>
+        <div id="moduleUsage" class="mt-3"></div>
+    </div>
 
     <!-- Dev Playground Access Button -->
     <div class="dev-section">
@@ -1003,6 +1012,65 @@ function createGenericParameterInput(container) {
     container.appendChild(paramDiv);
 }
 
+// Usage heatmap rendering
+function renderUsageHeatmap(data) {
+    const ctx = document.getElementById('usageHeatmap').getContext('2d');
+    const days = Object.keys(data).sort();
+    const dataset = days.map((day, i) => ({ x: i, y: 0, v: data[day].requests }));
+    const maxVal = Math.max(...dataset.map(d => d.v), 1);
+    new Chart(ctx, {
+        type: 'matrix',
+        data: { datasets: [{
+            label: 'Requests',
+            data: dataset,
+            backgroundColor: ctx => {
+                const val = ctx.dataset.data[ctx.dataIndex].v / maxVal;
+                return `rgba(0,123,255,${val})`;
+            },
+            width: 20,
+            height: 20,
+        }]},
+        options: {
+            scales: {
+                x: { type: 'category', labels: days },
+                y: { display: false }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        title: ctx => days[ctx[0].dataIndex],
+                        label: ctx => {
+                            const d = days[ctx.dataIndex];
+                            const s = data[d];
+                            return [`Requests: ${s.requests}`, `Tokens: ${s.tokens}`];
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Render module usage list
+    const modCounts = {};
+    days.forEach(d => {
+        const mods = data[d].modules || {};
+        for (const m in mods) {
+            modCounts[m] = (modCounts[m] || 0) + mods[m];
+        }
+    });
+    const sorted = Object.entries(modCounts).sort((a,b) => b[1]-a[1]);
+    let html = '<ul class="list-group">';
+    sorted.forEach(([m,c]) => { html += `<li class="list-group-item d-flex justify-content-between"><span>${m}</span><span>${c}</span></li>`; });
+    html += '</ul>';
+    document.getElementById('moduleUsage').innerHTML = html;
+}
+
+function fetchUsageStats() {
+    fetch('/api/usage_stats')
+        .then(r => r.json())
+        .then(data => renderUsageHeatmap(data))
+        .catch(e => console.error('Usage stats error', e));
+}
 // Execute plugin
 document.getElementById('execute-plugin-btn').addEventListener('click', function() {
     const selectedPlugin = document.getElementById('plugin-select').value;
@@ -1154,6 +1222,7 @@ document.addEventListener('DOMContentLoaded', function() {
     fetchUsers();
     fetchTestHistory();
     fetchScheduleStatus();
+    fetchUsageStats();
 });
 </script>
 {% endblock %}
