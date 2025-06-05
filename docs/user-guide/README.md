@@ -111,8 +111,6 @@ Module management system:<br>
 
 Out of the box Gaja comes with those modules:<br>
 - Weather module with forecasting<br>
-- DeepSeek module for complex reasoning tasks - to be reworked<br>
-- Screen capture for visual analysis - broken<br>
 - Core utilities for timers and more<br>
 - Search module for web information access<br>
 - Screen capture module for visual context<br>

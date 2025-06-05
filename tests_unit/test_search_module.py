@@ -6,6 +6,7 @@ sys.path.insert(0, project_root)
 
 import unittest
 from unittest.mock import patch
+import asyncio
 import inspect
 
 from modules import search_module
@@ -30,8 +31,14 @@ class TestSearchModule(unittest.TestCase):
 
     @patch('modules.search_module.DDGS')
     def test_search_ddg_success(self, mock_ddgs):
-        # ...existing code for the test...
-        pass  # Replace with actual test code
+        mock_instance = mock_ddgs.return_value
+        mock_instance.text.return_value = [{'href': 'http://example.com'}]
+        search_module._ddgs = mock_instance
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        result = loop.run_until_complete(search_module._search_duckduckgo("hello"))
+        loop.close()
+        self.assertEqual(result, ['http://example.com'])
 
 if __name__ == '__main__':
     unittest.main()

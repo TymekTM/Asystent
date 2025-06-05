@@ -115,8 +115,12 @@ def setup_additional_api_routes(app):
                     reply = ai_text or ''
                     
                     # Dynamic tool handler loading
-                    tool_modules = ['modules.search_module', 'modules.memory_module', 'modules.api_module', 
-                                   'modules.deepseek_module', 'modules.see_screen_module', 'modules.open_web_module']
+                    tool_modules = [
+                        'modules.search_module',
+                        'modules.memory_module',
+                        'modules.api_module',
+                        'modules.open_web_module'
+                    ]
                     handler = None
                     for mod_name in tool_modules:
                         try:

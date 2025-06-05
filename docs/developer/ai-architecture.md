@@ -57,10 +57,8 @@ Located in `ai_module.py`:
 - **Core Modules**:
   - **API Integration**: External services in `modules/api_module.py`
   - **Web Search**: Internet lookup in `modules/search_module.py`
-  - **Deep Reasoning**: Enhanced thinking in `modules/deepseek_module.py`
-  - **Visual Analysis**: Screen capture in `modules/see_screen_module.py`
   - **Memory Management**: Long-term storage in `modules/memory_module.py`
-  - **Daily Briefing**: Personalized summaries in `modules/daily_briefing_module.py`
+  - **Daily Briefing**: Personalized summaries in `daily_briefing_module.py`
   - **Music Control**: Media playback in `modules/music_module.py`
   - **Web Navigation**: Browser control in `modules/open_web_module.py`
   - **Core Utilities**: Timers, reminders, and tasks in `modules/core_module.py`

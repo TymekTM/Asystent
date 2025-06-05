@@ -315,14 +315,6 @@ Lists all available plugins and their status.
     "enabled": true,
     "description": "Wyszukuje informacje w internecie i podsumowuje wyniki."
   },
-  "deepseek_module": {
-    "enabled": false,
-    "description": "Wykonuje głębokie rozumowanie."
-  },
-  "see_screen_module": {
-    "enabled": true,
-    "description": "Wykonuje zrzut ekranu i analizuje zawartość."
-  },
   "api_module": {
     "enabled": true,
     "description": "Integruje się z zewnętrznymi API."
@@ -468,7 +460,6 @@ Retrieves usage statistics.
   "last_query_time": 1714743330,
   "plugin_usage": {
     "search_module": 45,
-    "deepseek_module": 12,
     "memory_module": 34
   }
 }

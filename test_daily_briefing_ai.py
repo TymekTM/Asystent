@@ -5,10 +5,11 @@ import asyncio
 import sys
 import os
 
-# Add the parent directory to the Python path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Add the project root directory to the Python path
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, project_root)
 
-from modules.daily_briefing_module import DailyBriefingModule
+from daily_briefing_module import DailyBriefingModule
 from config import _config, load_config
 
 async def test_ai_briefing():
