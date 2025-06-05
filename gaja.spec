@@ -101,7 +101,6 @@ a = Analysis(
         'database_models',
         'assistant',
         'ai_module',
-        'intent_system',
         'performance_monitor',
         'prompt_builder',
         'prompts',
@@ -139,7 +138,6 @@ a = Analysis(
         'openwakeword',
         'whisper',
         'tqdm',
-        # 'joblib' removed from excludes - needed for intent_system
         
         # Audio packages - let dependency manager handle native libs
         'sounddevice',  # Added back to excludes - dependency manager handles it

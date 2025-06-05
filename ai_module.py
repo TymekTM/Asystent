@@ -7,8 +7,6 @@ from __future__ import annotations
 import json
 import os
 import re
-# Precompile word regex for performance
-WORD_PATTERN = re.compile(r"\b\w+\b")
 import importlib
 import logging
 from functools import lru_cache
@@ -31,12 +29,6 @@ def _load_pipeline():
                 "⚠️  transformers nie jest dostępny - będzie automatycznie doinstalowany przy pierwszym użyciu"
             )
     return pipeline
-
-# Language detection constants
-POLISH_DIACRITICS = set("ąćęłńóśźż")
-COMMON_POLISH_WORDS = {"nie","tak","jest","to","i","w","się","z","na","że","co","do","jak","po","za","od","dla"}
-COMMON_EN_WORDS = {"the","is","and","to","of","it","in","that","we","you","for","on","a","an"}
-
 
 from config import STT_MODEL, MAIN_MODEL, PROVIDER, _config, DEEP_MODEL, load_config # Added load_config import
 from prompt_builder import (
@@ -431,43 +423,6 @@ def extract_json(text: str) -> str:
     return text
 
 
-import langid  # Language detection library for broad language support
-# ---------------------------------------------------------------- language ---
-
-@measure_performance
-def detect_language(text: str) -> Tuple[str, float]:
-    """Fast heuristic language detection with diacritics and common word check, fallback to langid."""
-    text = text.strip()
-    if not text:
-        return "", 0.0
-    # Count Polish diacritics and common words
-    polish_dia = sum(text.count(ch) for ch in POLISH_DIACRITICS)
-    # Extract words using precompiled pattern
-    words = set(WORD_PATTERN.findall(text.lower()))
-    count_pl = sum(1 for w in words if w in COMMON_POLISH_WORDS)
-    count_en = sum(1 for w in words if w in COMMON_EN_WORDS)
-    total = len(words) or 1
-    # Decide based on diacritics and word lists
-    if polish_dia > 0 or count_pl > count_en:
-        confidence = min(1.0, (polish_dia + count_pl) / total)
-        return "pl", confidence
-    if count_en > 0:
-        confidence = min(1.0, count_en / total)
-        return "en", confidence
-    # Fallback to langid for other languages
-    try:
-        lang, score = langid.classify(text)
-        confidence = float(score)
-    except Exception:
-        lang, confidence = "", 0.0
-    return lang, confidence
-# --- Asynchronous variant for non-blocking language detection ---
-import asyncio
-
-async def detect_language_async(text: str) -> Tuple[str, float]:
-    """Execute detect_language in thread for async contexts."""
-    loop = asyncio.get_running_loop()
-    return await loop.run_in_executor(None, detect_language, text)
 
 
 # ---------------------------------------------------------------- refiner ----

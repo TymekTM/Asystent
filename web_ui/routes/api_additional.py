@@ -730,7 +730,6 @@ def setup_additional_api_routes(app):
         try:
             data = request.get_json()
             prompt = data.get('prompt', '')
-            intention = data.get('intention', '')
             plugin = data.get('plugin', '')
             style = data.get('style', 'normal')
             language = data.get('language', 'auto')
@@ -783,7 +782,6 @@ def setup_additional_api_routes(app):
                 'final_prompt': '',
                 'ai_response': '',
                 'used_plugin': None,
-                'intention_detected': None,
                 'provider_used': provider,
                 'tokens_in': 0,
                 'tokens_out': 0,
@@ -891,26 +889,14 @@ def setup_additional_api_routes(app):
                         else:
                             result_data['error'] = f"Plugin '{plugin}' nie został znaleziony"
                     else:
-                        # Let assistant process normally with intention detection
-                        if intention:
-                            # Manual intention override
-                            result_data['intention_detected'] = intention
-                            # Process with specific intention
-                            response = assistant.process_message(
-                                prompt, 
-                                conversation_history=conversation_history,
-                                force_intention=intention
-                            )
-                        else:
-                            # Normal processing with intention detection
-                            response = assistant.process_message(
-                                prompt, 
-                                conversation_history=conversation_history
-                            )
+                        # Let assistant process normally
+                        response = assistant.process_message(
+                            prompt,
+                            conversation_history=conversation_history
+                        )
                         
                         result_data['ai_response'] = response.get('message', str(response))
                         result_data['used_plugin'] = response.get('plugin_used')
-                        result_data['intention_detected'] = response.get('intention')
                 
                 # Calculate response time
                 end_time = datetime.utcnow()
@@ -1064,45 +1050,6 @@ def setup_additional_api_routes(app):
             logger.error(f"Error getting providers: {e}", exc_info=True)
             return jsonify({"error": f"Błąd pobierania providerów: {str(e)}"}), 500
 
-    @app.route('/api/playground/intentions', methods=['GET'])
-    @login_required(role="dev")
-    def api_playground_intentions():
-        """Get available intentions for testing."""
-        try:
-            # Get intentions from intent system
-            assistant = get_assistant_instance()
-            if not assistant or not hasattr(assistant, 'intent_system'):
-                return jsonify({"intentions": []})
-            
-            # Try to get intentions from the intent system
-            intentions = []
-            try:
-                if hasattr(assistant.intent_system, 'intentions'):
-                    for intention_name, intention_data in assistant.intent_system.intentions.items():
-                        intentions.append({
-                            'name': intention_name,
-                            'description': intention_data.get('description', 'Brak opisu'),
-                            'keywords': intention_data.get('keywords', [])
-                        })
-                else:
-                    # Fallback to common intentions
-                    intentions = [
-                        {'name': 'search', 'description': 'Wyszukiwanie informacji', 'keywords': ['szukaj', 'znajdź', 'sprawdź']},
-                        {'name': 'memory', 'description': 'Zarządzanie pamięcią', 'keywords': ['zapamiętaj', 'zapisz', 'przypomknij']},
-                        {'name': 'weather', 'description': 'Informacje o pogodzie', 'keywords': ['pogoda', 'temperatura', 'deszcz']},
-                        {'name': 'music', 'description': 'Odtwarzanie muzyki', 'keywords': ['muzyka', 'piosenka', 'zagraj']},
-                        {'name': 'chat', 'description': 'Rozmowa ogólna', 'keywords': ['rozmawiaj', 'opowiedz', 'wyjaśnij']}
-                    ]
-            except Exception as e:
-                logger.warning(f"Could not get intentions from intent system: {e}")
-                intentions = []
-            
-            return jsonify({"intentions": intentions})
-            
-        except Exception as e:
-            logger.error(f"Error getting intentions: {e}", exc_info=True)
-            return jsonify({"error": f"Błąd pobierania intencji: {str(e)}"}), 500
-
     # --- Plugin Testing API ---
     @app.route('/api/playground/plugin-test', methods=['POST'])
     @login_required(role="dev")
@@ -1203,113 +1150,6 @@ def setup_additional_api_routes(app):
             logger.error(f"Plugin test API error: {e}", exc_info=True)
             return jsonify({"error": f"API error: {str(e)}"}), 500
 
-    # --- Debug Intention API ---
-    @app.route('/api/playground/debug-intention', methods=['POST'])
-    @login_required(role="dev")
-    def api_playground_debug_intention():
-        """Debug intention detection for the enhanced playground."""
-        try:
-            data = request.get_json()
-            input_text = data.get('input', '')
-            
-            if not input_text:
-                return jsonify({"error": "Input text is required"}), 400
-
-            # Start timing
-            start_time = datetime.utcnow()
-            
-            result_data = {
-                'input': input_text,
-                'intention': None,
-                'confidence': 0,
-                'alternatives': [],
-                'reasoning': '',
-                'analysis': {},
-                'execution_time': 0,
-                'error': None,
-                'timestamp': start_time.isoformat()
-            }
-
-            try:
-                # Get assistant instance for intention detection
-                assistant = get_assistant_instance()
-                if not assistant:
-                    result_data['error'] = "Assistant instance not available"
-                    return jsonify(result_data), 503
-
-                # Analyze intention using the assistant's intention system
-                try:
-                    from intent_system import IntentSystem
-                    intent_system = IntentSystem()
-                    
-                    # Detect intention
-                    intention_result = intent_system.detect_intention(input_text)
-                    
-                    if intention_result:
-                        result_data['intention'] = intention_result.get('intention', 'unknown')
-                        result_data['confidence'] = intention_result.get('confidence', 0)
-                        result_data['alternatives'] = intention_result.get('alternatives', [])
-                        result_data['reasoning'] = intention_result.get('reasoning', '')
-                        result_data['analysis'] = {
-                            'keywords': intention_result.get('keywords', []),
-                            'context': intention_result.get('context', {}),
-                            'patterns': intention_result.get('patterns', [])
-                        }
-                    else:
-                        result_data['error'] = "No intention detected"
-
-                except ImportError:
-                    # Fallback to simple keyword-based detection
-                    keywords = {
-                        'weather': ['weather', 'pogoda', 'temperatura', 'rain', 'deszcz'],
-                        'search': ['search', 'szukaj', 'find', 'znajdź'],
-                        'music': ['music', 'muzyka', 'play', 'graj'],
-                        'time': ['time', 'czas', 'date', 'data'],
-                        'help': ['help', 'pomoc', 'how', 'jak']
-                    }
-                    
-                    input_lower = input_text.lower()
-                    detected_intentions = []
-                    
-                    for intention, words in keywords.items():
-                        matches = [word for word in words if word in input_lower]
-                        if matches:
-                            confidence = len(matches) / len(words) * 100
-                            detected_intentions.append({
-                                'intention': intention,
-                                'confidence': confidence,
-                                'matches': matches
-                            })
-                    
-                    if detected_intentions:
-                        detected_intentions.sort(key=lambda x: x['confidence'], reverse=True)
-                        best = detected_intentions[0]
-                        result_data['intention'] = best['intention']
-                        result_data['confidence'] = best['confidence']
-                        result_data['alternatives'] = detected_intentions[1:3]
-                        result_data['reasoning'] = f"Detected based on keywords: {', '.join(best['matches'])}"
-                        result_data['analysis'] = {
-                            'keywords': best['matches'],
-                            'all_matches': detected_intentions
-                        }
-                    else:
-                        result_data['intention'] = 'unknown'
-                        result_data['confidence'] = 0
-                        result_data['reasoning'] = 'No matching keywords found'
-
-            except Exception as e:
-                result_data['error'] = f"Intention detection error: {str(e)}"
-                logger.error(f"Debug intention error: {e}", exc_info=True)
-
-            # Calculate execution time
-            end_time = datetime.utcnow()
-            result_data['execution_time'] = int((end_time - start_time).total_seconds() * 1000)
-
-            return jsonify(result_data)
-
-        except Exception as e:
-            logger.error(f"Debug intention API error: {e}", exc_info=True)
-            return jsonify({"error": f"API error: {str(e)}"}), 500
 
     # --- System Status API ---
     @app.route('/api/playground/system-status', methods=['GET'])

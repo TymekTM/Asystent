@@ -18,8 +18,9 @@ from audio_modules.wakeword_detector import run_wakeword_detection
 # TTSModule and WhisperASR imported lazily when needed
 
 # Import funkcji AI z nowego modułu
-from ai_module import refine_query, generate_response, parse_response, remove_chain_of_thought, detect_language, detect_language_async
-from intent_system import classify_intent, handle_intent
+from ai_module import refine_query, generate_response, parse_response, remove_chain_of_thought
+
+from config import LANGUAGE
 """Removed database persistence here to avoid duplicate writes; persistence handled by web UI routes."""
 
 # Import performance monitor
@@ -151,7 +152,6 @@ class Assistant:
         self.use_whisper = True # Vosk is removed, Whisper is the STT
         self.whisper_asr = None # Initialized in self.initialize_components
 
-        self.intent_detector = None # Initialized later
         self.should_exit = threading.Event()
         self.is_listening = False
         self.is_processing = False
@@ -567,27 +567,16 @@ class Assistant:
         # Use global flag to control prompt refinement (disabled by default for new testing approach)
         query_refinement_enabled = QUERY_REFINEMENT_ENABLED
 
-        # 1. Language detection and query refinement
-        lang_code, lang_conf = await detect_language_async(text_input)
-        logger.info(f"Detected language: {lang_code} (confidence {lang_conf:.2f})")
+        # 1. Language handling and query refinement
+        lang_code = LANGUAGE.split("-")[0]
+        lang_conf = 1.0
         refined_query = refine_query(text_input, detected_language=lang_code) if query_refinement_enabled else text_input
         logger.info(f"Refined query: {refined_query}")
 
-        # 2. Intent detection and logging
-        import datetime
-        intent, confidence = classify_intent(refined_query)
-        logger.info(f"[INTENT] Interpreted intent: {intent} (confidence: {confidence:.2f}) for: '{refined_query}'")        
-        try:
-            with open("user_data/user_inputs_log.txt", "a", encoding="utf-8") as f:
-                f.write(f"{datetime.datetime.now().isoformat()} | {refined_query} | intent={intent} | conf={confidence:.2f}\n")
-        except Exception as log_exc:
-            logger.warning(f"[UserInputLog] Failed to log user input: {log_exc}")
         # Append user message to in-memory history and persist to DB
         self.conversation_history.append({
             "role": "user",
             "content": refined_query,
-            "intent": intent,
-            "confidence": confidence
         })
         try:
             from database_models import add_chat_message
@@ -598,18 +587,6 @@ class Assistant:
         # 3. Tool suggestion for LLM
         functions_info = ", ".join([f"{cmd} - {info['description']}" for cmd, info in self.modules.items()])
         tool_suggestion = None
-        if intent and intent != "none":
-            module_key = None
-            if intent in self.modules:
-                module_key = intent
-            else:
-                for k, info in self.modules.items():
-                    if "aliases" in info and intent in [a.lower() for a in info["aliases"]]:
-                        module_key = k
-                        break
-            if module_key:
-                mod = self.modules[module_key]
-                tool_suggestion = f"{module_key} - {mod.get('description','')}"        # 4. LLM response with function calling support
         # Check if function calling is enabled (default to True for OpenAI)
         use_function_calling = _config.get('USE_FUNCTION_CALLING', True)
         
@@ -812,9 +789,6 @@ class Assistant:
     def start_interactive_mode(self):
         """Starts the interactive mode of the assistant."""
         # Old SpeechRecognizer initialization is removed.
-        if not self.intent_detector: 
-            from intent_system import IntentDetector 
-            self.intent_detector = IntentDetector() 
         logger.info("Interactive mode started. Waiting for wake word or manual trigger...")
         # Wake word detection is started in run_async.
 
@@ -1006,7 +980,6 @@ class Assistant:
         self.conversation_history = None
         self.tts = None
         self.whisper_asr = None
-        self.intent_detector = None
         logger.info("Assistant resources cleared.")
         # Optionally, force garbage collection
         import gc
