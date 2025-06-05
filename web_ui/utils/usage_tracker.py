@@ -18,8 +18,8 @@ def record_usage(module: str = 'core', tokens: int = 0) -> None:
     try:
         with open(USAGE_FILE, 'a', encoding='utf-8') as f:
             f.write(json.dumps(entry) + '\n')
-    except Exception:
-        pass
+    except Exception as e:
+        logging.error("Failed to record usage entry: %s", e, exc_info=True)
 
 
 def aggregate_usage() -> dict:
