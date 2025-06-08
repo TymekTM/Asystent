@@ -21,7 +21,8 @@ body {
   justify-content: flex-start; /* Align content to the top */
   align-items: center; /* Center horizontally */
   background-color: transparent; /* Ensure root is also transparent */
-  padding-top: 3vh; /* Reduced space from the top of the screen */
+  /* Eliminate white bar at top when window is borderless */
+  padding-top: 0;
 }
 
 /* Styles for the overlay elements from App.jsx */
@@ -38,6 +39,33 @@ body {
   text-align: center;
   max-width: 1400px; /* Increased max width for better use of screen space */
   margin: 0 auto; /* Center the container horizontally */
+}
+
+/* Animated ball shown when overlay activates */
+.overlay-ball {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 60px;
+  height: 60px;
+  margin-top: -70px; /* start slightly above the screen */
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: var(--gaja-blue);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  animation: drop-from-top 0.6s ease-out forwards;
+  z-index: 10;
+}
+
+@keyframes drop-from-top {
+  from {
+    transform: translate(-50%, -100px);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
 }
 
 .status-indicator {
@@ -366,7 +394,7 @@ body {
   }
   
   #root {
-    padding-top: 2.5vh;
+    padding-top: 0;
   }
 }
 
@@ -390,7 +418,7 @@ body {
   }
   
   #root {
-    padding-top: 2vh;
+    padding-top: 0;
   }
 }
 
@@ -411,6 +439,6 @@ body {
   }
   
   #root {
-    padding-top: 4vh;
+    padding-top: 0;
   }
 }
