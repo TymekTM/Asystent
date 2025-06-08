@@ -258,25 +258,29 @@ class Assistant:
     def initialize_components(self):
         """Initializes components that require hardware access or network."""
         logger.info("Initializing components...")
-        
-        # Initialize WhisperASR
+          # Initialize WhisperASR
         if self.use_whisper: # This will always be true now
-            if not self.whisper_asr: 
+            if not self.whisper_asr:
                 logger.info(f"Initializing WhisperASR with model: {self.whisper_model}")
                 from audio_modules.whisper_asr import WhisperASR  # Lazy import
                 self.whisper_asr = WhisperASR(model_size=self.whisper_model)
             
             logger.info("Warming up Whisper ASR model...")
-            try:
-                import numpy as np  # Lazy import
-                sample_rate = 16000
-                duration = 1
-                num_samples = sample_rate * duration
-                dummy_audio_np = np.zeros(num_samples, dtype=np.float32)
-                self.whisper_asr.transcribe(dummy_audio_np, sample_rate=sample_rate) 
-                logger.info("Whisper ASR model warmed up with test data.")
-            except Exception as e:
-                logger.error(f"Error warming up Whisper ASR model: {e}", exc_info=True)
+            # Warm up in background thread to avoid blocking startup
+            def warm_up_whisper():
+                try:
+                    import numpy as np  # Lazy import
+                    sample_rate = 16000
+                    duration = 1
+                    num_samples = sample_rate * duration
+                    dummy_audio_np = np.zeros(num_samples, dtype=np.float32)
+                    self.whisper_asr.transcribe(dummy_audio_np, sample_rate=sample_rate) 
+                    logger.info("Whisper ASR model warmed up with test data.")
+                except Exception as e:
+                    logger.error(f"Error warming up Whisper ASR model: {e}", exc_info=True)
+            
+            # Start warm-up in background
+            threading.Thread(target=warm_up_whisper, daemon=True).start()
         else: # Should not happen if Vosk is removed
             logger.warning("use_whisper is false, but Vosk is removed. STT will not function.")
             if self.whisper_asr:

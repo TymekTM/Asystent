@@ -5,9 +5,8 @@
     "beforeDevCommand": "npm run dev",
     "devPath": "http://localhost:1420",
     "distDir": "./dist"
-  },
-  "package": {
-    "productName": "Gaja Overlay",
+  },  "package": {
+    "productName": "Asystent Overlay",
     "version": "0.1.0"
   },
   "tauri": {

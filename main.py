@@ -101,13 +101,13 @@ def start_overlay():
             # Running from PyInstaller bundle
             if hasattr(sys, '_MEIPASS'):
                 # Single file mode - overlay extracted to temp directory
-                overlay_exe_path = os.path.join(sys._MEIPASS, "overlay", "Gaja Overlay.exe")
+                overlay_exe_path = os.path.join(sys._MEIPASS, "overlay", "Asystent Overlay.exe")
             else:
                 # Directory mode - overlay next to exe
-                overlay_exe_path = os.path.join(application_path, "overlay", "Gaja Overlay.exe")
+                overlay_exe_path = os.path.join(application_path, "overlay", "Asystent Overlay.exe")
         else:
             # Development mode
-            overlay_exe_path = os.path.join(script_dir, "overlay", "target", "release", "Gaja Overlay.exe")
+            overlay_exe_path = os.path.join(script_dir, "overlay", "target", "release", "Asystent Overlay.exe")
         
         if os.path.exists(overlay_exe_path):
             logger.info(f"Starting overlay from: {overlay_exe_path}")

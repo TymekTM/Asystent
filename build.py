@@ -48,7 +48,7 @@ def build_overlay():
         return True
     
     # Sprawdź czy overlay.exe już istnieje
-    overlay_exe = overlay_dir / "target" / "release" / "Gaja Overlay.exe"
+    overlay_exe = overlay_dir / "target" / "release" / "Asystent Overlay.exe"
     if overlay_exe.exists():
         print(f"✅ Overlay już zbudowany: {overlay_exe}")
         return True
@@ -122,10 +122,9 @@ def create_release_package():
     if exe_source.exists():
         shutil.copy2(exe_source, exe_dest)
         print(f"   Skopiowano: {exe_dest}")
-    
-    # Skopiuj overlay jeśli istnieje
-    overlay_source = Path("overlay/target/release/Gaja Overlay.exe")
-    overlay_dest = release_dir / "overlay" / "Gaja Overlay.exe"
+      # Skopiuj overlay jeśli istnieje
+    overlay_source = Path("overlay/target/release/Asystent Overlay.exe")
+    overlay_dest = release_dir / "overlay" / "Asystent Overlay.exe"
     
     if overlay_source.exists():
         overlay_dest.parent.mkdir(exist_ok=True)
@@ -158,7 +157,7 @@ def create_release_package():
 ```
 Gaja.exe                     # Główna aplikacja
 overlay/                     # Folder z overlay (opcjonalny)
-├── Gaja Overlay.exe        # Wizualny overlay 
+├── Asystent Overlay.exe        # Wizualny overlay 
 dependencies/                # Folder z dodatkowymi pakietami (tworzy się automatycznie)
 ├── packages/               # Dodatkowe pakiety Python
 ├── cache/                  # Cache instalatora
