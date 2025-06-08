@@ -423,9 +423,7 @@ def setup_additional_api_routes(app):
                 'last_query_time': None,
                 'today_queries': 0,
                 'last_query': None
-            })
-
-    # --- Usage Stats API ---
+            })    # --- Usage Stats API ---
     @app.route('/api/usage_stats', methods=['GET'])
     @login_required(role="dev")
     def api_usage_stats():

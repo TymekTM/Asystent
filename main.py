@@ -48,55 +48,49 @@ log_format = "%(asctime)s - %(processName)s - %(name)s - %(levelname)s - %(messa
 
 # Use RotatingFileHandler for log rotation
 if not os.path.exists("user_data"):
-    os.makedirs("user_data", exist_ok=True)
+    os.makedirs("user_data")
+
+# Configure logger with file and console output
 rotating_handler = logging.handlers.RotatingFileHandler(
-    log_filename, maxBytes=5*1024*1024, backupCount=5, encoding='utf-8', mode='a'
+    log_filename, maxBytes=5*1024*1024, backupCount=5
 )
-stream_handler = logging.StreamHandler(sys.stdout)
-logging.basicConfig(
-    level=log_level,
-    format=log_format,
-    handlers=[rotating_handler, stream_handler]
-)
-logging.getLogger().setLevel(logging.WARNING)
-logger = logging.getLogger(__name__)
+rotating_handler.setLevel(log_level)
+rotating_handler.setFormatter(logging.Formatter(log_format))
 
-# --- Overlay Management ---
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+console_handler.setFormatter(logging.Formatter(log_format))
 
-# Global variable to track overlay process
+# Global logger instance
+logger = logging.getLogger('gaja')
+logger.setLevel(log_level)
+logger.addHandler(rotating_handler)
+logger.addHandler(console_handler)
+
+# Prevent duplicate log messages
+logger.propagate = False
+
+# --- Global Process Management ---
 overlay_process = None
 
-def start_overlay_when_ready():
-    """Start overlay after ensuring Flask server is ready."""
-    import requests
-    from requests.exceptions import RequestException
+# Import webdriver manager at module level to enable multiprocessing
+try:
+    from selenium import webdriver
+    from selenium.webdriver.chrome.service import Service
+    from webdriver_manager.chrome import ChromeDriverManager
     
-    # Use correct port based on whether running from exe or development
-    port = 5000 if getattr(sys, 'frozen', False) else 5001
-    max_retries = 30
-    retry_delay = 1.0
+    # Enable webdriver manager for all platforms
+    os.environ['WDM_LOG_LEVEL'] = '0'  # Disable webdriver manager verbose logging
     
-    logger.info(f"Checking if Flask server is ready on port {port}...")
-    
-    for attempt in range(max_retries):
-        try:
-            # Test if Flask server is ready by checking the status endpoint
-            response = requests.get(f"http://localhost:{port}/api/status", timeout=2)
-            if response.status_code == 200:
-                logger.info(f"Flask server is ready on port {port} after {attempt+1} attempts")
-                # Start overlay now that Flask is ready
-                start_overlay()
-                return
-            else:
-                logger.debug(f"Flask server returned status code {response.status_code}")
-        except RequestException as e:
-            logger.debug(f"Flask server not ready yet: {e} (attempt {attempt+1})")
-
-        logger.debug(f"Flask server not ready yet, retrying in {retry_delay}s (attempt {attempt+1}/{max_retries})")
-        time.sleep(retry_delay)
-
-    logger.warning(f"Flask server not ready after {max_retries} attempts, starting overlay anyway")
-    start_overlay()
+    # Pre-install chromedriver to avoid path issues in subprocess
+    try:
+        chrome_driver_path = ChromeDriverManager().install()
+        logger.debug(f"ChromeDriver path: {chrome_driver_path}")
+    except Exception as e:
+        logger.warning(f"Failed to pre-install ChromeDriver: {e}")
+        
+except ImportError as e:
+    logger.warning(f"Selenium webdriver not available: {e}")
 
 def start_overlay():
     """Start the Tauri overlay application if it exists."""
@@ -149,17 +143,19 @@ def stop_overlay():
     if overlay_process:
         try:
             logger.info("Stopping overlay process...")
-            overlay_process.terminate()
             
-            # Wait for graceful termination
-            try:
-                overlay_process.wait(timeout=5)
-                logger.info("Overlay process terminated gracefully")
-            except subprocess.TimeoutExpired:
-                logger.warning("Overlay process did not terminate gracefully, killing...")
-                overlay_process.kill()
-                overlay_process.wait()
-                logger.info("Overlay process killed")
+            if overlay_process.poll() is None:  # Process is still running
+                overlay_process.terminate()
+                
+                # Wait for graceful termination
+                try:
+                    overlay_process.wait(timeout=5)
+                    logger.info("Overlay process terminated gracefully")
+                except subprocess.TimeoutExpired:
+                    logger.warning("Overlay process did not terminate gracefully, forcing...")
+                    overlay_process.kill()
+                    overlay_process.wait()
+                    logger.info("Overlay process killed")
                 
             overlay_process = None
             
@@ -174,17 +170,43 @@ def run_assistant_process(queue: multiprocessing.Queue):
     import sys
     import asyncio
     
-    # Check if another assistant process is already running by creating a lock file
-    lock_file = os.path.join(os.path.dirname(__file__), 'assistant_running.lock')
+    # Import platform-specific modules
+    if sys.platform == "win32":
+        import msvcrt
+        fcntl = None
+    else:
+        import fcntl
+        msvcrt = None
     
-    if os.path.exists(lock_file):
-        logger.warning("Assistant process already running (lock file exists). Exiting.")
-        return
-        
+    # Use proper file locking to prevent multiple instances
+    lock_file = os.path.join(os.path.dirname(__file__), 'assistant_running.lock')
+    lock_fd = None
+    assistant = None
+    
     try:
-        # Create lock file
-        with open(lock_file, 'w') as f:
-            f.write(str(os.getpid()))
+        # Try to acquire exclusive lock
+        lock_fd = open(lock_file, 'w')
+        
+        if sys.platform == "win32":
+            # Windows file locking
+            try:
+                msvcrt.locking(lock_fd.fileno(), msvcrt.LK_NBLCK, 1)
+            except OSError:
+                logger.warning("Another Assistant process is already running. Exiting.")
+                lock_fd.close()
+                return
+        else:
+            # Unix file locking
+            try:
+                fcntl.flock(lock_fd.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except OSError:
+                logger.warning("Another Assistant process is already running. Exiting.")
+                lock_fd.close()
+                return
+        
+        # Write PID to lock file
+        lock_fd.write(str(os.getpid()))
+        lock_fd.flush()
         
         logger.info("Starting Assistant process...")
         
@@ -193,17 +215,16 @@ def run_assistant_process(queue: multiprocessing.Queue):
         # Ensure config is loaded in this process
         from config import load_config
         load_config(silent=True)
-        
         # Add a small delay to prevent race conditions - reduced delay
         import time
-        time.sleep(0.5)  # Reduced delay to prevent multiple initializations
-        
+        time.sleep(0.1)  # Minimal delay to prevent multiple initializations
         # Import Assistant only after delay and setup - this prevents module-level initialization
-        logger.info("Importing Assistant class in subprocess...")
-        from assistant import get_assistant_instance
+        logger.info("Creating new Assistant instance...")
+        from assistant import Assistant
         
-        logger.info("Creating Assistant instance in subprocess...")
-        assistant = get_assistant_instance(command_queue=queue)
+        # Create a single Assistant instance directly instead of using get_assistant_instance
+        # which might return a shared instance and cause multiple initializations
+        assistant = Assistant(command_queue=queue)
         
         logger.info("Starting Assistant main loop...")
         asyncio.run(assistant.run_async())
@@ -215,11 +236,23 @@ def run_assistant_process(queue: multiprocessing.Queue):
         import traceback
         traceback.print_exc()
     finally:
-        # Clean up lock file
+        # Clean up lock file and release file handle
+        if lock_fd:
+            try:
+                if sys.platform == "win32" and msvcrt:
+                    msvcrt.locking(lock_fd.fileno(), msvcrt.LK_UNLCK, 1)
+                elif fcntl:
+                    fcntl.flock(lock_fd.fileno(), fcntl.LOCK_UN)
+                lock_fd.close()
+            except:
+                pass
         if os.path.exists(lock_file):
-            os.remove(lock_file)
+            try:
+                os.remove(lock_file)
+            except:
+                pass
         logger.info("Assistant process finished.")
-        if 'assistant' in locals() and hasattr(assistant, 'stop_active_window_tracker'):
+        if assistant and hasattr(assistant, 'stop_active_window_tracker'):
             assistant.stop_active_window_tracker()  # Ensure tracker is stopped on exit
 
 def run_flask_thread(queue: multiprocessing.Queue):
@@ -260,184 +293,87 @@ def main():
     
     # Initialize logging first
     logger.info("=== GAJA APPLICATION STARTING ===")
-    logger.info(f"Running from: {application_path}")
-    logger.info(f"Frozen mode: {getattr(sys, 'frozen', False)}")
     
-    # Dependency management for PyInstaller builds - only run in main process
+    # Dependency management for PyInstaller builds
     if getattr(sys, 'frozen', False):
-        try:
-            from dependency_manager import ensure_dependencies
-            print("🔄 Sprawdzanie zależności...")
-            if not ensure_dependencies():
-                print("❌ Nie udało się zainicjalizować zależności!")
-                print("🔍 Sprawdź połączenie internetowe i spróbuj ponownie")
-                input("Naciśnij Enter aby zamknąć...")
-                sys.exit(1)
-            print("✅ Zależności gotowe")
-        except Exception as e:
-            print(f"⚠️  Ostrzeżenie menedżera zależności: {e}")
-            print("🔄 Kontynuuję bez automatycznego pobierania zależności...")
-            # Kontynuuj bez menedżera zależności - może działać z systemowym Python
-    
-    logger.info("Initializing application...")
-    # Ensure database schema is initialized (creates chat_history, memories, etc.)
-    try:
-        from database_models import init_schema
-        init_schema()
-        logger.info("Database schema initialized.")
-    except Exception as e:
-        logger.error(f"Failed to initialize database schema: {e}", exc_info=True)    
-    
-    # Create a multiprocessing queue for IPC
-    command_queue = multiprocessing.Queue()
-
-    config = load_config()
-    exit_with_console = config.get('EXIT_WITH_CONSOLE', True)
-      # Usuń stare pliki lock przy starcie, jeśli istnieją
-    stop_lock_path = os.path.join(os.path.dirname(__file__), 'assistant_stop.lock')
-    restart_lock_path = os.path.join(os.path.dirname(__file__), 'assistant_restarting.lock')
-    assistant_running_lock_path = os.path.join(os.path.dirname(__file__), 'assistant_running.lock')
-    if os.path.exists(stop_lock_path):
-        os.remove(stop_lock_path)
-    if os.path.exists(restart_lock_path):
-        os.remove(restart_lock_path)
-    if os.path.exists(assistant_running_lock_path):
-        os.remove(assistant_running_lock_path)
+        logger.info("Running in PyInstaller mode")
         
-    logger.info("Starting Flask thread...")
-
-    # Start Flask in a thread first (to be ready for overlay)
-    flask_thread = Thread(target=run_flask_thread, args=(command_queue,), daemon=True)
-    flask_thread.start()
-      # Wait for Flask to start properly - reduced delay
-    time.sleep(1.0)
+        # Get dependencies directory
+        deps_path = os.path.join(application_path, "dependencies", "packages")
+        
+        if os.path.exists(deps_path):
+            logger.info(f"Using dependencies from: {deps_path}")
+            # Add to sys.path if not already present
+            if deps_path not in sys.path:
+                sys.path.append(deps_path)
+                logger.info("Dependencies path added to sys.path")
+        else:
+            logger.warning(f"Dependencies directory not found: {deps_path}")
+            
+    else:
+        logger.info("Running in development mode")
+        
+        # Auto dependency management for development
+        try:
+            logger.info("Setting up development dependencies...")
+            from dependency_manager import setup_development_dependencies
+            setup_development_dependencies()
+        except ImportError:
+            logger.warning("Dependency manager not available - some features may not work")
     
-    # --- Assistant Process ---
-    logger.info("Starting Assistant process...")
-    assistant_process = multiprocessing.Process(target=run_assistant_process, args=(command_queue,))
-    assistant_process.start()
-      # Wait for assistant to start before starting overlay - reduced delay
-    time.sleep(1.5)
-    
-    # --- Start Overlay with delay ---
-    # Wait for Flask to be ready before starting overlay
-    logger.info("Waiting for Flask server to be ready before starting overlay...")
-    Thread(target=start_overlay_when_ready, daemon=True).start()
-    
-    # Check if this is the first run and open onboarding if needed
-    if config.get('FIRST_RUN', True):
-        logger.info("First run detected, preparing to launch onboarding...")
-        import webbrowser
-        import requests
-        from requests.exceptions import RequestException
-
-        def open_onboarding_with_retry(max_retries: int = 30, retry_delay: float = 1.0) -> bool:
-            """Open onboarding page with retry mechanism to ensure Flask is ready"""
-            # Use correct port based on whether running from exe or development
-            port = 5000 if getattr(sys, 'frozen', False) else 5001
-            for attempt in range(max_retries):
-                try:
-                    # Test if Flask server is ready by checking the onboarding endpoint
-                    response = requests.get(f"http://localhost:{port}/onboarding", timeout=2)
-                    if response.status_code == 200:
-                        # Server is ready, open the onboarding page
-                        webbrowser.open(f"http://localhost:{port}/onboarding")
-                        logger.info(f"Opened onboarding page in browser after {attempt+1} attempts")
-                        return True
-                    else:
-                        logger.warning(f"Onboarding endpoint returned status code {response.status_code}")
-                except RequestException:
-                    logger.debug(f"Server not ready yet (attempt {attempt+1})")
-
-                logger.info(f"Flask server not ready yet, retrying in {retry_delay}s (attempt {attempt+1}/{max_retries})")
-                time.sleep(retry_delay)
-
-            logger.error(f"Failed to open onboarding page after {max_retries} attempts")
-            return False        # Start a separate thread to handle the retries without blocking main execution
-        Thread(target=open_onboarding_with_retry, daemon=True).start()
-
     try:
-        while True:
-            # Check for stop signal (e.g., from web UI or other mechanism)
-            if os.path.exists(stop_lock_path):
-                logger.info("Stop signal detected. Terminating processes.")
-                break 
+        # Create a multiprocessing Queue for communication between processes
+        queue = multiprocessing.Queue()
+        
+        # Start the Flask Web UI in its own thread within the main process
+        flask_thread = Thread(target=run_flask_thread, args=(queue,), daemon=True)
+        flask_thread.start()
+        logger.info("Flask thread started")
+        
+        # Give Flask a moment to start up
+        time.sleep(2)
+        
+        # Start the Assistant in its own process
+        assistant_process = multiprocessing.Process(target=run_assistant_process, args=(queue,))
+        assistant_process.start()
+        logger.info("Assistant process started")
+        
+        # Start the overlay if available
+        overlay_proc = start_overlay()
+        
+        # Log startup completion
+        logger.info("=== ALL PROCESSES STARTED ===")
+        
+        try:
+            # Wait for Assistant process to complete
+            assistant_process.join()
+        except KeyboardInterrupt:
+            logger.info("Received keyboard interrupt in main process")
+        finally:
+            # Cleanup processes
+            logger.info("Cleaning up processes...")
             
-            if not assistant_process.is_alive():
-                logger.warning("Assistant process died. Attempting to restart...")
-                # Wait before restarting to avoid rapid restarts
-                time.sleep(2.0)
-                assistant_process = multiprocessing.Process(target=run_assistant_process, args=(command_queue,))
-                assistant_process.start()
-                logger.info("Assistant process restarted.")
+            # Stop overlay
+            stop_overlay()
             
-            if not flask_thread.is_alive():
-                logger.warning("Flask thread died. Attempting to restart...")
-                flask_thread = Thread(target=run_flask_thread, args=(command_queue,), daemon=True)
-                flask_thread.start()
-                logger.info("Flask thread restarted.")
-            
-            # Check if overlay process is still running
-            if overlay_process and overlay_process.poll() is not None:
-                logger.warning("Overlay process died. Attempting to restart...")
-                # Wait a moment before restarting overlay
-                time.sleep(1.0)
-                Thread(target=start_overlay_when_ready, daemon=True).start()
-                logger.info("Overlay restart initiated.")
-            
-            # Check for restart signal
-            if os.path.exists(restart_lock_path):
-                logger.info("Restart signal detected. Restarting processes...")
-                # Terminate existing processes
+            # Terminate Assistant process if still running
+            if assistant_process.is_alive():
+                logger.info("Terminating Assistant process...")
+                assistant_process.terminate()
+                assistant_process.join(timeout=5)
                 if assistant_process.is_alive():
-                    assistant_process.terminate()
-                    assistant_process.join(timeout=5)
-                # Note: Flask thread will be terminated when main process ends
-                
-                # Stop overlay before restart
-                stop_overlay()
-                
-                # Remove restart lock
-                os.remove(restart_lock_path)
-                
-                # Start new processes
-                assistant_process = multiprocessing.Process(target=run_assistant_process, args=(command_queue,))
-                assistant_process.start()
-                flask_thread = Thread(target=run_flask_thread, args=(command_queue,), daemon=True)
-                flask_thread.start()
-                # Restart overlay
-                Thread(target=start_overlay_when_ready, daemon=True).start()
-                
-                logger.info("Processes restarted successfully.")
-                
-            time.sleep(5)  # Check every 5 seconds
-
-    except KeyboardInterrupt:
-        logger.info("Main process received KeyboardInterrupt. Terminating child processes.")
+                    logger.warning("Force killing Assistant process...")
+                    assistant_process.kill()
+                    assistant_process.join()
+            
+            logger.info("All processes terminated")
+            
+    except Exception as e:
+        logger.error(f"Critical error in main process: {e}", exc_info=True)
+        import traceback
+        traceback.print_exc()
     finally:
-        logger.info("Terminating child processes...")
-        if assistant_process.is_alive():
-            assistant_process.terminate()
-            assistant_process.join(timeout=5)
-            if assistant_process.is_alive(): # Force kill if terminate failed
-                logger.warning("Assistant process did not terminate gracefully, killing.")
-                assistant_process.kill()
-                assistant_process.join()
-
-        # Stop overlay process
-        stop_overlay()
-
-        # Flask thread will terminate when main process ends (daemon=True)
-          # Clean up lock files on exit
-        if os.path.exists(stop_lock_path):
-            os.remove(stop_lock_path)
-        if os.path.exists(restart_lock_path):
-            os.remove(restart_lock_path)
-        if os.path.exists(assistant_running_lock_path):
-            os.remove(assistant_running_lock_path)
-
-        logger.info("Application shut down.")
+        logger.info("=== GAJA APPLICATION SHUTDOWN ===")
 
 if __name__ == "__main__":
-    multiprocessing.freeze_support() # Important for Windows
     main()

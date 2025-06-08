@@ -120,6 +120,9 @@
   {# Gaja branding stylesheet #}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/gaja-branding.css') }}">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix@2.0.1/dist/chartjs-chart-matrix.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix@1.1.0/dist/chartjs-chart-matrix.min.js"></script>
 {% endblock %}
 
@@ -272,14 +275,64 @@
                     <!-- Data loaded dynamically -->
                 </tbody>
             </table>
-        </div>    </div>
-
-    <!-- Usage Heatmap Section -->
+        </div>    </div>    <!-- Usage Heatmap Section -->
     <div class="dev-section">
-        <h2><i class="fas fa-fire"></i> 🔥 Heatmap użycia</h2>
-        <canvas id="usageHeatmap" height="220"></canvas>
-        <div id="moduleUsage" class="mt-3"></div>
-        <div class="mt-2 text-muted">Łącznie tokenów: <span id="tokenCount">0</span></div>
+        <h2><i class="fas fa-fire"></i> 🔥 Analiza użycia systemu</h2>
+        
+        <!-- Stats cards -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card bg-dark border-secondary">
+                    <div class="card-body text-center">
+                        <i class="fas fa-comments fa-2x text-primary mb-2"></i>
+                        <h5 class="card-title">Zapytania</h5>
+                        <h3 class="text-primary" id="totalRequests">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-dark border-secondary">
+                    <div class="card-body text-center">
+                        <i class="fas fa-microchip fa-2x text-info mb-2"></i>
+                        <h5 class="card-title">Tokeny</h5>
+                        <h3 class="text-info" id="tokenCount">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-dark border-secondary">
+                    <div class="card-body text-center">
+                        <i class="fas fa-puzzle-piece fa-2x text-success mb-2"></i>
+                        <h5 class="card-title">Aktywne moduły</h5>
+                        <h3 class="text-success" id="activeModules">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Charts row -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card bg-dark border-secondary mb-3">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Aktywność w czasie</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="usageHeatmap" height="220"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card bg-dark border-secondary mb-3">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-list me-2"></i>Najpopularniejsze moduły</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="moduleUsage"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Dev Playground Access Button -->
@@ -785,30 +838,12 @@ let currentPlugins = {};
 function loadPlugins() {
     fetch('/api/playground/plugins')
         .then(response => response.json())
-        .then(data => {
-            console.log('Loaded plugins from playground API:', data);
-            currentPlugins = data.plugins || {};
-            console.log('Current plugins object:', currentPlugins);
-            console.log('Plugin keys:', Object.keys(currentPlugins));
-            const pluginSelect = document.getElementById('plugin-select');
-            pluginSelect.innerHTML = '<option value="">-- Wybierz plugin --</option>';
-            
-            Object.keys(currentPlugins).forEach(pluginName => {
-                console.log('Processing plugin:', pluginName);
-                const option = document.createElement('option');
-                option.value = pluginName;
-                option.textContent = `${pluginName} (${currentPlugins[pluginName].sub_commands?.length || 0} podkomend)`;
-                pluginSelect.appendChild(option);
-            });
-        })
-        .catch(error => {
-            console.error('Error loading plugins:', error);
-            document.getElementById('plugin-result').textContent = `Błąd ładowania pluginów: ${error.message}`;
-        });
-}
-
-// Handle plugin selection
-document.getElementById('plugin-select').addEventListener('change', function() {
+        .then(data => {    
+    // Load usage stats
+    fetchUsageStats();
+    
+    // Refresh stats every 30 seconds  
+    setInterval(fetchUsageStats, 30000);
     const selectedPlugin = this.value;
     const subcommandSection = document.getElementById('subcommand-section');
     const subcommandSelect = document.getElementById('subcommand-select');
@@ -1016,93 +1051,164 @@ function createGenericParameterInput(container) {
     container.appendChild(paramDiv);
 }
 
-// Usage heatmap rendering
+// Usage heatmap rendering - fixed to use supported chart type
 function renderUsageHeatmap(data) {
+    console.log('renderUsageHeatmap called with data:', data);
+    
+    if (!data || Object.keys(data).length === 0) {
+        console.log('No data for heatmap rendering');
+        return;
+    }
+    
     const ctx = document.getElementById('usageHeatmap').getContext('2d');
     const days = Object.keys(data).sort();
-    const dataset = days.map((day, i) => ({ x: i, y: 0, v: data[day].requests }));
-    const maxVal = Math.max(...dataset.map(d => d.v), 1);
+    console.log('Processing days:', days);
+    
+    // Convert data to bar chart format since matrix type is not supported
+    const chartData = days.map(day => data[day].requests);
+    const chartLabels = days.map(day => {
+        const date = new Date(day);
+        return date.toLocaleDateString('pl-PL', { month: 'short', day: 'numeric' });
+    });
+    
     new Chart(ctx, {
-        type: 'matrix',
-        data: { datasets: [{
-            label: 'Requests',
-            data: dataset,
-            backgroundColor: ctx => {
-                const val = ctx.dataset.data[ctx.dataIndex].v / maxVal;
-                return `rgba(0,123,255,${val})`;
-            },
-            width: 22,
-            height: 22,
-        }]},
+        type: 'bar',
+        data: {
+            labels: chartLabels,
+            datasets: [{
+                label: 'Liczba zapytań',
+                data: chartData,
+                backgroundColor: 'rgba(0, 123, 255, 0.6)',
+                borderColor: 'rgba(0, 123, 255, 1)',
+                borderWidth: 1,
+                borderRadius: 4,
+            }]
+        },
         options: {
+            responsive: true,
+            maintainAspectRatio: false,
             scales: {
-                x: { type: 'category', labels: days },
-                y: { display: false }
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Data'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Liczba zapytań'
+                    }
+                }
             },
             plugins: {
                 tooltip: {
                     callbacks: {
-                        title: ctx => days[ctx[0].dataIndex],
-                        label: ctx => {
-                            const d = days[ctx.dataIndex];
-                            const s = data[d];
-                            return [`Requests: ${s.requests}`, `Tokens: ${s.tokens}`];
+                        title: (ctx) => {
+                            const dayKey = days[ctx[0].dataIndex];
+                            const date = new Date(dayKey);
+                            return date.toLocaleDateString('pl-PL', { 
+                                weekday: 'long', 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric' 
+                            });
+                        },
+                        label: (ctx) => {
+                            const dayKey = days[ctx.dataIndex];
+                            const dayData = data[dayKey];
+                            return [
+                                `Zapytania: ${dayData.requests}`,
+                                `Tokeny: ${dayData.tokens}`
+                            ];
                         }
-                    }
-                }
+                    }                }
             }
         }
     });
-
-    // Render module usage list
+}
+function renderModuleUsage(data) {
+    console.log('renderModuleUsage called with data:', data);
+    
+    const days = Object.keys(data).sort();
     const modCounts = {};
+    let totalRequests = 0;
+    let totalTokens = 0;
+    
     days.forEach(d => {
+        totalRequests += data[d].requests || 0;
+        totalTokens += data[d].tokens || 0;
         const mods = data[d].modules || {};
         for (const m in mods) {
             modCounts[m] = (modCounts[m] || 0) + mods[m];
         }
     });
+    
+    console.log('Module counts calculated:', modCounts);
+    console.log('Totals:', { totalRequests, totalTokens });
+    
     const sorted = Object.entries(modCounts).sort((a,b) => b[1]-a[1]);
-    let html = '<ul class="list-group">';
-    sorted.forEach(([m,c]) => { html += `<li class="list-group-item d-flex justify-content-between"><span>${m}</span><span>${c}</span></li>`; });
-    html += '</ul>';
+    let html = '<div class="list-group list-group-flush">';
+    sorted.slice(0, 8).forEach(([m,c]) => { 
+        const percentage = totalRequests > 0 ? Math.round((c / totalRequests) * 100) : 0;
+        html += `
+            <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-secondary">
+                <span class="text-light">${m}</span>
+                <div class="text-end">
+                    <span class="badge bg-primary rounded-pill">${c}</span>
+                    <small class="text-muted d-block">${percentage}%</small>
+                </div>
+            </div>
+        `; 
+    });
+    html += '</div>';
+    
+    if (sorted.length === 0) {
+        html = '<div class="text-muted text-center p-3">Brak danych o użyciu modułów</div>';
+    }
+    
     document.getElementById('moduleUsage').innerHTML = html;
-
-    const totalTokens = days.reduce((sum, d) => sum + (data[d].tokens || 0), 0);
+    
+    // Update stats cards
+    document.getElementById('totalRequests').textContent = totalRequests.toLocaleString();
     document.getElementById('tokenCount').textContent = totalTokens.toLocaleString();
+    document.getElementById('activeModules').textContent = Object.keys(modCounts).length;
 }
 
 function fetchUsageStats() {
+    console.log('Fetching usage stats...');
     fetch('/api/usage_stats')
-        .then(r => r.json())
-        .then(data => renderUsageHeatmap(data))
-        .catch(e => console.error('Usage stats error', e));
+        .then(r => {
+            console.log('Usage stats response status:', r.status);
+            console.log('Usage stats response headers:', r.headers.get('content-type'));
+            return r.json();
+        })
+        .then(data => {
+            console.log('Usage stats data received:', data);
+            renderUsageHeatmap(data);
+            renderModuleUsage(data);
+        })
+        .catch(e => {
+            console.error('Usage stats error:', e);
+            console.error('Error details:', e.message);
+        });
 }
-// Execute plugin
-document.getElementById('execute-plugin-btn').addEventListener('click', function() {
-    const selectedPlugin = document.getElementById('plugin-select').value;
-    const selectedSubcommand = document.getElementById('subcommand-select').value;
-    const useContext = document.getElementById('use-context').checked;
-    const statusDot = document.getElementById('plugin-status-dot');
-    const statusLabel = document.getElementById('plugin-status-label');
-    const resultDiv = document.getElementById('plugin-result');
+
+// Initialize all functionality when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize functionality
+    fetchPerfStats();
+    fetchUsers();
+    fetchTestHistory();
+    fetchScheduleStatus();
+    fetchUsageStats();
     
-    if (!selectedPlugin) {
-        alert('Wybierz plugin do wykonania');
-        return;
-    }
-    
-    // Collect parameters
-    let params = '';
-    const paramInputs = document.querySelectorAll('.param-input');
-    
-    if (paramInputs.length === 1 && paramInputs[0].name === 'param_value') {
-        // Single generic input
-        params = paramInputs[0].value;
-    } else if (paramInputs.length > 1) {
-        // Multiple specific inputs - create object or string
-        const paramObj = {};
-        let hasValues = false;
+    // Refresh usage stats every 30 seconds
+    setInterval(fetchUsageStats, 30000);
+});
+</script>
+{% endblock %}
         
         paramInputs.forEach(input => {
             if (input.type === 'checkbox') {
@@ -1222,14 +1328,13 @@ document.getElementById('view-source-btn').addEventListener('click', function() 
 
 // Call initialization
 document.addEventListener('DOMContentLoaded', function() {
-    loadPlugins(); // Initialize plugins for playground functionality
-    
-    // Initialize other functionality
+    // Initialize functionality
     fetchPerfStats();
     fetchUsers();
     fetchTestHistory();
     fetchScheduleStatus();
     fetchUsageStats();
+    
+    // Refresh usage stats every 30 seconds
+    setInterval(fetchUsageStats, 30000);
 });
-</script>
-{% endblock %}

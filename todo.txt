@@ -3,15 +3,12 @@
 - Moduł od muzyki klucz spotify
 
 # ⭐ WAŻNE (strategiczne / fundamenty)
-- Kompletny rework intencji AI [Każdy moduł swoje AI ]
 - Podzielenie na serwer i klient
 - Plug and play installation
 - Find real use case
 
 # 🔧 OPTYMALIZACJE
-- Entire app start speed
 - Add loading indicators for long-running operations in web UI
-- Heatmap użycia + śledzenie token useage
 
 # 🟢 ŁATWE (mały scope, max 1 dzień)
 - Wheel decide do robienia czego

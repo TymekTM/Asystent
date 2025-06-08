@@ -30,6 +30,14 @@ from performance_monitor import measure_performance
 # from config import Config # REMOVED
 from active_window_module import get_active_window_title
 
+# Import usage tracker for analytics (lazily imported to avoid circular dependencies)
+def lazy_import_usage_tracker():
+    try:
+        from web_ui.utils.usage_tracker import record_usage
+        return record_usage
+    except ImportError:
+        return None
+
 # Import specific config variables needed
 from config import (
     load_config,
@@ -273,33 +281,8 @@ class Assistant:
             logger.warning("use_whisper is false, but Vosk is removed. STT will not function.")
             if self.whisper_asr:
                 self.whisper_asr.unload()
-                self.whisper_asr = None
-
-        # Warm up TTS (existing logic)
-        if hasattr(self.tts, 'warm_up'):
-            try:
-                logger.info("Warming up TTS model...")
-                # If tts.warm_up() is an async function:
-                # asyncio.run(self.tts.warm_up())
-                # If it's synchronous, call directly:
-                # self.tts.warm_up() 
-                # Assuming it might be async based on previous logs, but needs confirmation.
-                # For now, let's assume it can be called, and if it's async, it should be run in an event loop.
-                # If called from __init__/initialize_components (sync context), it needs care.
-                # If TTS warm-up is simple/fast sync, it's fine. If it's complex async, it might need a temporary loop.
-                # Or, it's called from an async context later.
-                # For safety, let's assume it's a synchronous call or handled internally by TTSModule.
-                if inspect.iscoroutinefunction(self.tts.warm_up):
-                    asyncio.run(self.tts.warm_up()) # This is problematic if called from a running loop.
-                                                    # Better to ensure TTS warm-up is designed to be called from sync context
-                                                    # or called from an async context.
-                                                    # Let's call it directly and assume it's designed to be callable here.
-                    logger.info("TTS warm-up called (actual execution depends on its implementation).")
-
-
-                logger.info("TTS model warmed up (or warm-up process initiated).")
-            except Exception as e:
-                logger.error(f"Error warming up TTS model: {e}", exc_info=True)
+                self.whisper_asr = None        # TTS is ready to use (no warm-up needed)
+        logger.info("TTS module initialized and ready.")
         
         # Vosk model warm-up is removed.
         logger.info("Components initialized.")
@@ -770,9 +753,7 @@ class Assistant:
                     module_response_text = str(result[0]) if result[0] is not None else ""
                     module_listen_override = result[1]
                 elif result is not None:
-                    module_response_text = str(result)
-
-                # Prefer AI's natural response, only fallback to module response if AI didn't provide text
+                    module_response_text = str(result)                # Prefer AI's natural response, only fallback to module response if AI didn't provide text
                 text_to_speak = ai_response_text if ai_response_text and ai_response_text.strip() else (module_response_text if module_response_text is not None else "")
                 final_listen_after_tts = module_listen_override if module_listen_override is not None else listen_after_tts
                 
@@ -788,9 +769,17 @@ class Assistant:
                 logger.error(f"Error executing command {found_module_key}: {e}", exc_info=True)
                 err_msg = f"Przepraszam, wystąpił błąd podczas wykonywania komendy {found_module_key}."
                 await self.speak_and_maybe_listen(err_msg, listen_after_tts, TextMode) # Fallback to LLM's listen preference on error
-            return
-
-        # 7. No module/tool found: just speak AI's general response
+            
+            # Record usage for analytics
+            try:
+                record_usage_func = lazy_import_usage_tracker()
+                if record_usage_func:
+                    # Estimate tokens for analytics
+                    tokens = len(refined_query.split()) + len(str(text_to_speak or "").split()) if 'text_to_speak' in locals() else len(refined_query.split())
+                    record_usage_func(found_module_key, tokens)
+            except Exception:
+                pass  # Don't let analytics break the main functionality
+            return        # 7. No module/tool found: just speak AI's general response
         logger.info("No specific module executed. Speaking AI's general response.")
         if ai_response_text:
             await self.speak_and_maybe_listen(ai_response_text, listen_after_tts, TextMode)
@@ -799,6 +788,16 @@ class Assistant:
              self.is_processing = False
              self.is_listening = True
              self.manual_trigger_event.set()
+        
+        # Record usage for analytics (general AI response)
+        try:
+            record_usage_func = lazy_import_usage_tracker()
+            if record_usage_func:
+                # Estimate tokens for analytics
+                tokens = len(refined_query.split()) + len(str(ai_response_text or "").split())
+                record_usage_func('core', tokens)
+        except Exception:
+            pass  # Don't let analytics break the main functionality
         return
 
     def start_interactive_mode(self):
