@@ -83,7 +83,9 @@ class TTSModule:
                 self.current_process.terminate()
             except Exception as e:
                 logger.error("Error stopping TTS: %s", e)
-            self.current_process = None    @measure_performance
+            self.current_process = None
+
+    @measure_performance
     async def speak(self, text: str):
         # Start cleanup task on first use
         if not self._cleanup_task_started:
