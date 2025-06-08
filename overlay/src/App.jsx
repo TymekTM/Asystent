@@ -52,13 +52,13 @@ const App = () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
-
   // Trigger ball animation when overlay becomes active
   useEffect(() => {
     if (isListening || isSpeaking || wakeWordDetected) {
       setShowBall(true);
-      const t = setTimeout(() => setShowBall(false), 800);
-      return () => clearTimeout(t);
+    } else {
+      // Hide ball when activity ends
+      setShowBall(false);
     }
   }, [isListening, isSpeaking, wakeWordDetected]);
 
@@ -76,28 +76,44 @@ const App = () => {
     displayStatusText = 'Słucham po wake word...'; // More descriptive for wake word active state
     animationClass = 'wakeword-animation';
   }  // Render content always - Rust manages window visibility
-  // React only focuses on displaying the correct content based on state
+  // React only focuses on displaying the correct content based on state  // Helper function to get dynamic font size class based on text length
+  const getTextSizeClass = (text) => {
+    if (!text) return '';
+    const length = text.length;
+    
+    if (length <= 50) return 'short-text';
+    if (length <= 150) return 'medium-text';
+    if (length <= 300) return 'long-text';
+    return 'very-long-text';
+  };
+
   // Helper function to get icon based on status
   const getStatusIcon = () => {
     if (isSpeaking) return "🔊"; // Speaker icon
     if (isListening) return "🎤"; // Microphone icon
     if (wakeWordDetected) return "👂"; // Ear icon
     return "";
-  };
-  return (
+  };return (
     <div className={`overlay-container ${animationClass}`}>
+      {/* Gray gradient background when overlay is active */}
+      {(isListening || isSpeaking || wakeWordDetected) && (
+        <div className="overlay-background"></div>
+      )}      {/* Animated Gaja ball */}
+      <div className={`gaja-ball ${showBall ? 'active' : 'hidden'}`}>
+        <div className="gaja-ball-inner">
+          {/* Ball has animated waves from CSS - no smile needed */}
+        </div>
+      </div>
 
-      {showBall && <div className="overlay-ball"></div>}
-
+      {/* Status text below the ball */}
       {(isListening || isSpeaking || wakeWordDetected) && displayStatusText && (
-        <div className={`status-indicator ${isSpeaking ? 'speaking' : isListening ? 'listening' : 'wakeword'}`}>
-          <span className="status-icon">{getStatusIcon()}</span>
-          <span className="status-text">{displayStatusText}</span>
+        <div className="gaja-status-text">
+          {displayStatusText}
         </div>
       )}
-      
+        {/* Response text with dynamic font size */}
       {text && (
-        <div className="text-display">
+        <div className={`gaja-response-text ${getTextSizeClass(text)}`}>
           <p>{text}</p>
         </div>
       )}

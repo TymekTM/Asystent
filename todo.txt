@@ -29,5 +29,4 @@
 - Wykrywanie rozmówcy za pomocą speechbrain
 - RAG (retrieval-augmented generation)
 - Routines learner (AI wykrywające powtarzalność dnia)
-- Uruchamianie aplikacji na PC (launchery, exec z poziomu pluginu + overlay bezpieczeństwa)
 - Tryb podsumowywania (co dzisiaj/wczoraj się wydarzyło + AI narracja)
