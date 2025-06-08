@@ -332,7 +332,8 @@ pub fn run() {
             
             // Force show window for debugging
             main_window.show().unwrap_or_else(|e| eprintln!("Failed to show window: {}", e));
-            main_window.set_focus().unwrap_or_else(|e| eprintln!("Failed to focus window: {}", e));
+            // Remove focus call to prevent window from stealing focus
+            // main_window.set_focus().unwrap_or_else(|e| eprintln!("Failed to focus window: {}", e));
 
             tauri::async_runtime::spawn(async move {
                 poll_assistant_status(app_handle, state_clone_for_poll).await;

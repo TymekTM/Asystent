@@ -74,7 +74,7 @@
       "active": false
     },    "windows": [
       {
-        "fullscreen": true,
+        "fullscreen": false,
         "height": 1080,
         "resizable": false,
         "title": "Gaja Overlay",
@@ -84,10 +84,12 @@
         "alwaysOnTop": true,
         "skipTaskbar": true,
         "focus": false,
-        "maximized": false,
+        "maximized": true,
         "visible": true,
         "center": false,
-        "label": "main"
+        "label": "main",
+        "x": 0,
+        "y": 0
       }
     ]
   }
