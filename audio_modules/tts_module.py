@@ -1,8 +1,8 @@
 import asyncio, logging, os, subprocess, uuid, threading
 try:
-    from edge_tts import Communicate
-except Exception:  # edge_tts not installed
-    Communicate = None
+    from openai import OpenAI  # type: ignore
+except Exception:  # openai not installed
+    OpenAI = None
 from performance_monitor import measure_performance
 
 # Handle relative imports
@@ -80,33 +80,54 @@ class TTSModule:
         if getattr(self, 'mute', False):
             return
         logger.info("TTS: %s", text)
-        if Communicate is None:
-            logger.error("edge_tts library is not available")
+        if OpenAI is None:
+            logger.error("openai library is not available")
             return
-        tts = Communicate(text, "pl-PL-MarekNeural")
-        temp_filename = f"temp_tts_{uuid.uuid4().hex}.mp3"
-        temp_path = os.path.join("resources", "sounds", temp_filename)
+
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            try:
+                from config import _config
+                api_key = _config.get("API_KEYS", {}).get("OPENAI_API_KEY")
+            except Exception:
+                api_key = None
+        if not api_key:
+            logger.error("OpenAI API key not provided")
+            return
+
+        client = OpenAI(api_key=api_key)
         self._last_activity = time.time()
-        try:
-            await tts.save(temp_path)
-            self.cancel()
-            # Ensure ffplay is available for playback
+
+        async def _stream_and_play() -> None:
             ensure_ffmpeg_installed()
-            self.current_process = subprocess.Popen(
-                ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", temp_path]
-            )
-            await asyncio.to_thread(self.current_process.wait)
-        except Exception as e:
-            logger.error("TTS error: %s", e)
-        finally:
-            if os.path.exists(temp_path):
-                try:
-                    os.remove(temp_path)
-                except PermissionError:
-                    logger.warning(f"Nie można usunąć pliku {temp_path}, jest używany przez inny proces.")
-                except Exception as e:
-                    logger.error(f"Błąd przy usuwaniu pliku {temp_path}: {e}")
-            self.current_process = None
+            try:
+                with client.audio.speech.with_streaming_response.create(
+                    model="tts-1",
+                    voice="sage",
+                    input=text,
+                    response_format="opus",
+                ) as response:
+                    self.cancel()
+                    self.current_process = subprocess.Popen(
+                        ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", "-i", "-"] ,
+                        stdin=subprocess.PIPE,
+                    )
+                    for chunk in response.iter_bytes():
+                        if self.current_process.stdin:
+                            try:
+                                self.current_process.stdin.write(chunk)
+                                self.current_process.stdin.flush()
+                            except BrokenPipeError:
+                                break
+                    if self.current_process.stdin:
+                        self.current_process.stdin.close()
+                    self.current_process.wait()
+            except Exception as e:
+                logger.error("TTS error: %s", e)
+            finally:
+                self.current_process = None
+
+        await asyncio.to_thread(_stream_and_play)
 
 # Create a global instance of TTSModule
 _tts_module_instance = TTSModule()
