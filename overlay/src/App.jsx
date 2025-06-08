@@ -10,6 +10,7 @@ const App = () => {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [wakeWordDetected, setWakeWordDetected] = useState(false);
+  const [showBall, setShowBall] = useState(false);
 
   useEffect(() => {
     console.log('[React] App starting, setting up state and listeners');
@@ -52,6 +53,15 @@ const App = () => {
     };
   }, []);
 
+  // Trigger ball animation when overlay becomes active
+  useEffect(() => {
+    if (isListening || isSpeaking || wakeWordDetected) {
+      setShowBall(true);
+      const t = setTimeout(() => setShowBall(false), 800);
+      return () => clearTimeout(t);
+    }
+  }, [isListening, isSpeaking, wakeWordDetected]);
+
   // Determine current display status string for UI
   let displayStatusText = '';
   let animationClass = '';
@@ -76,7 +86,9 @@ const App = () => {
   };
   return (
     <div className={`overlay-container ${animationClass}`}>
-      
+
+      {showBall && <div className="overlay-ball"></div>}
+
       {(isListening || isSpeaking || wakeWordDetected) && displayStatusText && (
         <div className={`status-indicator ${isSpeaking ? 'speaking' : isListening ? 'listening' : 'wakeword'}`}>
           <span className="status-icon">{getStatusIcon()}</span>
