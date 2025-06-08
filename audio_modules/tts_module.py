@@ -16,6 +16,12 @@ except ImportError:
             """Fallback function when ffmpeg_installer is not available"""
             pass
 
+# Import TTS prompt
+try:
+    from prompts import TTS_VOICE_PROMPT
+except ImportError:
+    TTS_VOICE_PROMPT = "Speak naturally and conversationally."
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
@@ -27,12 +33,17 @@ class TTSModule:
     CLEANUP_INTERVAL = 10  # seconds
     INACTIVITY_THRESHOLD = 30  # seconds
 
-    def __init__(self):        # Mute flag to disable TTS in text/chat mode
+    def __init__(self):        
+        # Mute flag to disable TTS in text/chat mode
         self.mute = False
         self.current_process = None
         self._last_activity = time.time()
-        self._cleanup_task_started = False
-        self._start_cleanup_task()
+        self._cleanup_task_started = False        # TTS configuration
+        self.volume = 200  # ffplay volume (200% for louder audio)
+        self.voice = "sage"  # OpenAI voice
+        self.model = "gpt-4o-mini-tts"  # OpenAI TTS model (correct model name)
+        # Defer cleanup task start to first use to avoid blocking initialization
+        # self._start_cleanup_task()
 
     def _start_cleanup_task(self):
         if not self._cleanup_task_started:
@@ -72,10 +83,12 @@ class TTSModule:
                 self.current_process.terminate()
             except Exception as e:
                 logger.error("Error stopping TTS: %s", e)
-            self.current_process = None
-
-    @measure_performance
+            self.current_process = None    @measure_performance
     async def speak(self, text: str):
+        # Start cleanup task on first use
+        if not self._cleanup_task_started:
+            self._start_cleanup_task()
+            
         # Skip speaking if muted (e.g., in text/chat mode)
         if getattr(self, 'mute', False):
             return
@@ -98,18 +111,18 @@ class TTSModule:
         client = OpenAI(api_key=api_key)
         self._last_activity = time.time()
 
-        async def _stream_and_play() -> None:
+        def _stream_and_play() -> None:
             ensure_ffmpeg_installed()
             try:
                 with client.audio.speech.with_streaming_response.create(
-                    model="tts-1",
-                    voice="sage",
+                    model=self.model,
+                    voice=self.voice,
                     input=text,
                     response_format="opus",
                 ) as response:
                     self.cancel()
                     self.current_process = subprocess.Popen(
-                        ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", "-i", "-"] ,
+                        ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", "-volume", str(self.volume), "-i", "-"] ,
                         stdin=subprocess.PIPE,
                     )
                     for chunk in response.iter_bytes():

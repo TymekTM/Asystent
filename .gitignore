@@ -24,3 +24,4 @@ plugins_state.json
 user_data/
 gaja_memory.db
 commits_all.txt
+/overlay/dist
