@@ -3,9 +3,7 @@
 - Moduł od muzyki klucz spotify
 
 # ⭐ WAŻNE (strategiczne / fundamenty)
-- Podzielenie na serwer i klient
 - Plug and play installation
-- Find real use case
 
 # 🔧 OPTYMALIZACJE
 - Add loading indicators for long-running operations in web UI
