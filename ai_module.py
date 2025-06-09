@@ -611,7 +611,7 @@ def generate_response(
         config = load_config() # Use imported load_config
         api_keys = config.get("API_KEYS", {}) # Get the nested API_KEYS dictionary
         api_key = api_keys.get("OPENAI_API_KEY") # Get the OpenAI API key from the nested dictionary
-        model_name = config.get("OPENAI_MODEL", "gpt-4-turbo")
+        model_name = config.get("OPENAI_MODEL", "gpt-4.1-nano")
 
         if not api_key:
             logger.error("OpenAI API key not found in configuration.")

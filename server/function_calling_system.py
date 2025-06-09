@@ -22,28 +22,50 @@ class FunctionCallingSystem:
     
     async def initialize(self):
         """Asynchroniczna inicjalizacja systemu funkcji."""
-        # Tutaj można załadować podstawowe moduły
-        logger.info("Function calling system initialized")
+        # Tutaj można załadować podstawowe moduły        logger.info("Function calling system initialized")
         pass
 
     def convert_modules_to_functions(self) -> List[Dict[str, Any]]:
-        """Convert modules to OpenAI function calling format."""
+        """Convert plugin manager modules to OpenAI function calling format."""
+        from plugin_manager import plugin_manager
+        
         functions = []
         
-        for module_name, module_info in self.modules.items():
-            # Create main function for the module
-            main_function = self._create_main_function(module_name, module_info)
-            if main_function:
-                functions.append(main_function)
-                
-            # Create functions for sub-commands
-            sub_commands = module_info.get('sub_commands', {})
-            for sub_name, sub_info in sub_commands.items():
-                if isinstance(sub_info, dict) and 'function' in sub_info:
-                    sub_function = self._create_sub_function(module_name, sub_name, sub_info)
-                    if sub_function:
-                        functions.append(sub_function)
+        # Get functions from plugin manager's function registry
+        for full_func_name, func_info in plugin_manager.function_registry.items():
+            try:
+                # Parse plugin.function format
+                if '.' in full_func_name:
+                    plugin_name, func_name = full_func_name.split('.', 1)
+                    
+                    # Create OpenAI function format
+                    openai_function = {
+                        "type": "function",
+                        "function": {
+                            "name": full_func_name.replace('.', '_'),  # OpenAI doesn't like dots
+                            "description": func_info.get('description', f'{func_name} function from {plugin_name}'),
+                            "parameters": func_info.get('parameters', {
+                                "type": "object",
+                                "properties": {},
+                                "required": []
+                            })
+                        }
+                    }
+                    
+                    functions.append(openai_function)
+                    
+                    # Store handler for later execution
+                    self.function_handlers[full_func_name.replace('.', '_')] = {
+                        'plugin_name': plugin_name,
+                        'function_name': func_name,
+                        'original_name': full_func_name
+                    }
+                    
+            except Exception as e:
+                logger.error(f"Error converting function {full_func_name}: {e}")
+                continue
         
+        logger.info(f"Converted {len(functions)} functions for OpenAI")
         return functions
     
     def _create_main_function(self, module_name: str, module_info: Dict[str, Any]) -> Optional[Dict[str, Any]]:
@@ -313,6 +335,44 @@ class FunctionCallingSystem:
             logger.error(f"Error executing function {function_name}: {e}", exc_info=True)
             return f"Error executing {function_name}: {str(e)}"
 
+    def execute_function(self, function_name: str, arguments: Dict[str, Any], conversation_history=None):
+        """Execute a function call through the plugin manager."""
+        try:
+            from plugin_manager import plugin_manager
+            
+            # Get handler info
+            handler_info = self.function_handlers.get(function_name)
+            if not handler_info:
+                return f"Function {function_name} not found"
+            
+            plugin_name = handler_info['plugin_name']
+            func_name = handler_info['function_name']
+            original_name = handler_info['original_name']
+            
+            # Get the plugin
+            plugin_info = plugin_manager.plugins.get(plugin_name)
+            if not plugin_info or not plugin_info.loaded:
+                return f"Plugin {plugin_name} not loaded"
+            
+            # Get the function from the plugin module
+            if hasattr(plugin_info.module, 'execute_function'):
+                # Use the plugin's execute_function method
+                result = plugin_info.module.execute_function(func_name, arguments, user_id=1)
+                return result
+            elif hasattr(plugin_info.module, func_name):
+                # Call the function directly
+                func = getattr(plugin_info.module, func_name)
+                if callable(func):
+                    result = func(**arguments)
+                    return result
+                else:
+                    return f"Function {func_name} is not callable"
+            else:
+                return f"Function {func_name} not found in plugin {plugin_name}"
+                
+        except Exception as e:
+            logger.error(f"Error executing function {function_name}: {e}")
+            return f"Error executing function: {str(e)}"
 
 def convert_module_system_to_function_calling(modules: Dict[str, Any]) -> FunctionCallingSystem:
     """Convert the entire module system to function calling format."""

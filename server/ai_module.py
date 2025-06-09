@@ -12,6 +12,7 @@ import logging
 from functools import lru_cache
 from typing import Any, Dict, List, Optional, Tuple, Callable
 from collections import deque
+from function_calling_system import FunctionCallingSystem
 
 import requests  # Added requests import
 # Lazy import for transformers to speed up startup
@@ -55,11 +56,9 @@ class AIProviders:
 
         # Cached clients to avoid reinitialization overhead
         self._openai_client = None
-        self._deepseek_client = None
-
-        # Dynamiczny import modułów – brakujące biblioteki ≠ twardy crash
+        self._deepseek_client = None        # Dynamiczny import modułów – brakujące biblioteki ≠ twardy crash
         self._modules: Dict[str, Any] = {
-            mod: self._safe_import(mod) for mod in ("ollama", "openai", "anthropic")
+            mod: AIProviders._safe_import(mod) for mod in ("ollama", "openai", "anthropic")
         }
 
         self.providers: Dict[
@@ -99,14 +98,15 @@ class AIProviders:
 
     # ---------------------------------------------------------------------
     # Helpery
-    # ---------------------------------------------------------------------
-    @staticmethod
+    # ---------------------------------------------------------------------    @staticmethod
     def _safe_import(module_name: str) -> Optional[Any]:
         try:
             return importlib.import_module(module_name)
         except ImportError:
             logger.debug("Moduł %s nie został znaleziony – pomijam.", module_name)
-            return None    @staticmethod
+            return None
+
+    @staticmethod
     def _key_ok(env_var: str, cfg_key: str) -> bool:
         key = os.getenv(env_var) or _config.get("api_keys", {}).get(cfg_key.lower())
         return bool(key and not key.startswith("YOUR_"))
@@ -120,8 +120,7 @@ class AIProviders:
     # Check‑i (zwracają bool, nic nie rzucają)
     # ---------------------------------------------------------------------
     def check_ollama(self) -> bool:
-        try:
-            return (
+        try:            return (
                 requests.get("http://localhost:11434", timeout=5).status_code == 200
             )
         except requests.RequestException:
@@ -131,14 +130,17 @@ class AIProviders:
         try:
             url = _config.get("LMSTUDIO_URL", "http://localhost:1234/v1/models")
             return self._lmstudio_session.get(url, timeout=5).status_code == 200
-        except requests.RequestException:            return False    def check_openai(self) -> bool:
+        except requests.RequestException:
+            return False
+
+    def check_openai(self) -> bool:
         return AIProviders._key_ok("OPENAI_API_KEY", "openai")
 
     def check_deepseek(self) -> bool:
-        return self._key_ok("DEEPSEEK_API_KEY", "DEEPSEEK_API_KEY")
+        return AIProviders._key_ok("DEEPSEEK_API_KEY", "deepseek")
 
     def check_anthropic(self) -> bool:
-        return self._key_ok("ANTHROPIC_API_KEY", "ANTHROPIC_API_KEY")
+        return AIProviders._key_ok("ANTHROPIC_API_KEY", "anthropic")
 
     # ---------------------------------------------------------------------
     # Chat‑y
@@ -202,7 +204,7 @@ class AIProviders:
         max_tokens: Optional[int] = None,
     ) -> Optional[Dict[str, Any]]:
         try:
-            api_key = os.getenv("OPENAI_API_KEY") or _config["API_KEYS"]["OPENAI_API_KEY"]
+            api_key = os.getenv("OPENAI_API_KEY") or _config["api_keys"]["openai"]
             if not api_key:
                 raise ValueError("Brak OPENAI_API_KEY.")
 
@@ -298,7 +300,7 @@ class AIProviders:
         try:
             api_key = (
                 os.getenv("DEEPSEEK_API_KEY")
-                or _config["API_KEYS"]["DEEPSEEK_API_KEY"]
+                or _config["api_keys"]["deepseek"]
             )
             if not api_key:
                 raise ValueError("Brak DEEPSEEK_API_KEY.")
@@ -333,7 +335,7 @@ class AIProviders:
         try:
             api_key = (
                 os.getenv("ANTHROPIC_API_KEY")
-                or _config["API_KEYS"]["ANTHROPIC_API_KEY"]
+                or _config["api_keys"]["anthropic"]
             )
             if not api_key:
                 raise ValueError("Brak ANTHROPIC_API_KEY.")
@@ -604,14 +606,15 @@ def generate_response(
     import datetime
     try:
         config = load_config() # Use imported load_config
-        api_keys = config.get("API_KEYS", {}) # Get the nested API_KEYS dictionary
-        api_key = api_keys.get("OPENAI_API_KEY") # Get the OpenAI API key from the nested dictionary
-        model_name = config.get("OPENAI_MODEL", "gpt-4-turbo")
+        api_keys = config.get("api_keys", {}) # Get the nested api_keys dictionary
+        api_key = api_keys.get("openai") # Get the OpenAI API key from the nested dictionary
+        model_name = config.get("OPENAI_MODEL", "gpt-4.1-nano")
 
         if not api_key:
             logger.error("OpenAI API key not found in configuration.")
             return '{"text": "Błąd: Klucz API OpenAI nie został skonfigurowany.", "command": "", "params": {}}'
-          # Initialize function calling system if enabled and modules provided
+
+        # Initialize function calling system if enabled and modules provided
         function_calling_system = None
         functions = None
         
@@ -620,7 +623,8 @@ def generate_response(
             function_calling_system = convert_module_system_to_function_calling(modules)
             functions = function_calling_system.convert_modules_to_functions()
             logger.info(f"Function calling enabled with {len(functions)} functions")
-              # Use standard system prompt for function calling
+
+            # Use standard system prompt for function calling
             system_prompt = build_full_system_prompt(
                 system_prompt_override=system_prompt_override,
                 detected_language=detected_language,
@@ -631,7 +635,8 @@ def generate_response(
                 tool_suggestion=tool_suggestion,
                 user_name=user_name
             )
-        else:            # Traditional prompt-based approach
+        else:
+            # Traditional prompt-based approach
             system_prompt = build_full_system_prompt(
                 system_prompt_override=system_prompt_override,
                 detected_language=detected_language,
@@ -836,17 +841,17 @@ def generate_response(
 
         if not api_key:
             logger.error("OpenAI API key not found in configuration.")
-            return '{"text": "Błąd: Klucz API OpenAI nie został skonfigurowany.", "command": "", "params": {}}'
-          # Initialize function calling system if enabled and modules provided
+            return '{"text": "Błąd: Klucz API OpenAI nie został skonfigurowany.", "command": "", "params": {}}'        # Initialize function calling system if enabled and modules provided
         function_calling_system = None
         functions = None
         
         if use_function_calling and modules and config.get("ai", {}).get("provider", "openai").lower() == "openai":
-            from function_calling_system import convert_module_system_to_function_calling
-            function_calling_system = convert_module_system_to_function_calling(modules)
+            # Initialize function calling system directly
+            function_calling_system = FunctionCallingSystem()
             functions = function_calling_system.convert_modules_to_functions()
             logger.info(f"Function calling enabled with {len(functions)} functions")
-              # Use standard system prompt for function calling
+
+            # Use standard system prompt for function calling
             system_prompt = build_full_system_prompt(
                 system_prompt_override=system_prompt_override,
                 detected_language=detected_language,
@@ -857,7 +862,8 @@ def generate_response(
                 tool_suggestion=tool_suggestion,
                 user_name=user_name
             )
-        else:            # Traditional prompt-based approach
+        else:
+            # Traditional prompt-based approach
             system_prompt = build_full_system_prompt(
                 system_prompt_override=system_prompt_override,
                 detected_language=detected_language,
@@ -1002,16 +1008,16 @@ class AIModule:
             tools_info = ""
             if available_plugins:
                 tools_info = f"Dostępne pluginy: {', '.join(available_plugins)}"
-            
-            # Use the same generate_response function as in main ai_module.py
+              # Use the same generate_response function as in main ai_module.py
             response = generate_response(
                 conversation_history=conversation_history,
                 tools_info=tools_info,
                 detected_language="pl",
                 language_confidence=1.0,
                 modules=modules,
-                use_function_calling=False,
-                user_name=context.get('user_name', 'User')            )
+                use_function_calling=True,  # Enable function calling
+                user_name=context.get('user_name', 'User')
+            )
             
             return response
             

@@ -58,10 +58,9 @@ def create_default_config() -> Dict[str, Any]:
         "database": {
             "url": "sqlite:///./server_data.db",
             "echo": False
-        },
-        "ai": {
+        },        "ai": {
             "provider": "openai",
-            "model": "gpt-3.5-turbo",
+            "model": "gpt-4.1-nano",
             "temperature": 0.7,
             "max_tokens": 1000
         },
@@ -82,6 +81,6 @@ def create_default_config() -> Dict[str, Any]:
 # Stare zmienne dla kompatybilności
 _config = load_config()
 STT_MODEL = _config.get("ai", {}).get("stt_model", "base")
-MAIN_MODEL = _config.get("ai", {}).get("model", "gpt-3.5-turbo")
+MAIN_MODEL = _config.get("ai", {}).get("model", "gpt-4.1-nano")
 PROVIDER = _config.get("ai", {}).get("provider", "openai")
-DEEP_MODEL = _config.get("ai", {}).get("deep_model", "gpt-4")
+DEEP_MODEL = _config.get("ai", {}).get("deep_model", "gpt-4.1-nano")

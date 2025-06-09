@@ -21,7 +21,8 @@ class SimpleClientApp:
     def __init__(self):
         self.config = self.load_client_config()
         self.websocket = None
-        self.user_id = self.config.get('user_id', '1')        self.server_url = self.config.get('server_url', 'ws://localhost:8001')
+        self.user_id = self.config.get('user_id', '1')        
+        self.server_url = self.config.get('server_url', 'ws://localhost:8001')
         self.running = False
 
     def load_client_config(self) -> Dict:

@@ -26,7 +26,8 @@ class DatabaseManager:
         self._lock = threading.Lock()
         self._local = threading.local()
         
-        # Inicjalizuj bazę danych        self._init_database()
+        # Inicjalizuj bazę danych
+        self._init_database()
         logger.info(f"DatabaseManager initialized with database: {self.db_path}")
 
     def _get_connection(self) -> sqlite3.Connection:
@@ -528,25 +529,35 @@ class DatabaseManager:
                     'role': row['role'],
                     'content': row['content'],
                     'metadata': json.loads(row['metadata'] or '{}'),
-                    'timestamp': row['created_at']
-                })
+                    'timestamp': row['created_at']                })
             
             return list(reversed(history))  # Odwróć żeby najstarsze były pierwsze
     
     async def save_interaction(self, user_id: str, query: str, response: str):
         """Zapisuje interakcję użytkownika z AI."""
+        # Convert string user_id to integer for database
+        # For now, use a simple mapping: "client1" -> 1, "client2" -> 2, etc.
+        try:
+            if user_id.startswith("client"):
+                db_user_id = int(user_id.replace("client", ""))
+            else:
+                db_user_id = int(user_id)
+        except ValueError:
+            # If conversion fails, use 1 as default
+            db_user_id = 1
+            
         with self.get_db_connection() as conn:
             # Zapisz zapytanie użytkownika
             conn.execute('''
                 INSERT INTO messages (user_id, role, content, metadata)
                 VALUES (?, 'user', ?, '{}')
-            ''', (int(user_id), query))
+            ''', (db_user_id, query))
             
             # Zapisz odpowiedź asystenta
             conn.execute('''
                 INSERT INTO messages (user_id, role, content, metadata)
                 VALUES (?, 'assistant', ?, '{}')
-            ''', (int(user_id), response))
+            ''', (db_user_id, response))
     
     async def update_user_plugins(self, user_id: str, plugin_name: str, enabled: bool):
         """Aktualizuje ustawienia pluginów użytkownika."""
@@ -682,46 +693,77 @@ class DatabaseManager:
                 # Usuń klucz jeśli istnieje
                 if provider in api_keys:
                     del api_keys[provider]
-                      # Zapisz z powrotem
+                    
+                    # Zapisz z powrotem
                     cursor.execute(
                         "UPDATE users SET api_keys = ? WHERE id = ?",
                         (json.dumps(api_keys), user_id)
                     )
                     conn.commit()
                     logger.info(f"Removed API key for user {user_id}, provider {provider}")
+                    return True
                 
-                return True
+                return True  # Klucz nie istniał, ale można uznać to za sukces
         except Exception as e:
             logger.error(f"Error removing API key for user {user_id}, provider {provider}: {e}")
             return False
     
-    def get_user_api_keys(self, user_id: int) -> Dict[str, str]:
-        """
-        Pobiera wszystkie klucze API użytkownika.
-        
-        Args:
-            user_id: ID użytkownika
+    async def update_user_plugin_status(self, user_id: str, plugin_name: str, enabled: bool):
+        """Updates plugin status for a user in the database."""
+        try:
+            # Convert string user_id to integer for database
+            if user_id.startswith("client"):
+                db_user_id = int(user_id.replace("client", ""))
+            else:
+                db_user_id = int(user_id)
+        except ValueError:
+            # If conversion fails, use 1 as default
+            db_user_id = 1
             
-        Returns:
-            Słownik z kluczami API {provider: key}
-        """
         try:
             with self.get_db_connection() as conn:
-                cursor = conn.cursor()
-                cursor.execute(
-                    "SELECT api_keys FROM users WHERE id = ?",
-                    (user_id,)
-                )
+                # Check if user exists, create if not
+                cursor = conn.execute('SELECT id FROM users WHERE id = ?', (db_user_id,))
+                if not cursor.fetchone():
+                    # Create user
+                    conn.execute('''
+                        INSERT INTO users (id, username, settings, api_keys)
+                        VALUES (?, ?, '{}', '{}')
+                    ''', (db_user_id, f"user_{db_user_id}"))
+                
+                # Get current enabled plugins
+                cursor = conn.execute('''
+                    SELECT value FROM user_preferences
+                    WHERE user_id = ? AND category = 'plugins' AND key_name = 'enabled'
+                ''', (db_user_id,))
                 
                 row = cursor.fetchone()
-                if row and row['api_keys']:
-                    return json.loads(row['api_keys'])
+                if row:
+                    try:
+                        enabled_plugins = json.loads(row['value'])
+                    except json.JSONDecodeError:
+                        enabled_plugins = []
+                else:
+                    enabled_plugins = []
                 
-                return {}
+                # Update plugin list
+                if enabled and plugin_name not in enabled_plugins:
+                    enabled_plugins.append(plugin_name)
+                elif not enabled and plugin_name in enabled_plugins:
+                    enabled_plugins.remove(plugin_name)
                 
+                # Save updated settings
+                conn.execute('''
+                    INSERT OR REPLACE INTO user_preferences
+                    (user_id, category, key_name, value, updated_at)
+                    VALUES (?, 'plugins', 'enabled', ?, CURRENT_TIMESTAMP)
+                ''', (db_user_id, json.dumps(enabled_plugins)))
+                
+                logger.info(f"Updated plugin {plugin_name} status for user {user_id}: {enabled}")
+                return True
         except Exception as e:
-            logger.error(f"Error getting API keys for user {user_id}: {e}")
-            return {}
+            logger.error(f"Error updating plugin status for user {user_id}, plugin {plugin_name}: {e}")
+            return False
 
 
 # Global database manager instance

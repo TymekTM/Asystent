@@ -1,32 +1,42 @@
 {
-    "server": {
-        "host": "0.0.0.0",
-        "port": 8001,
-        "debug": false
-    },
-    "database": {
-        "url": "sqlite:///./server_data.db",
-        "echo": false
-    },    "ai": {
-        "provider": "openai",
-        "model": "gpt-4.1-nano",
-        "temperature": 0.7,
-        "max_tokens": 1500
-    },    "api_keys": {
-        "openai": "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",
-        "anthropic": "YOUR_ANTHROPIC_API_KEY_HERE",
-        "deepseek": "YOUR_DEEPSEEK_API_KEY_HERE"
-    },
-    "plugins": {
-        "auto_load": true,
-        "default_enabled": ["weather_module", "search_module"]
-    },
-    "security": {
-        "cors_origins": ["*"],
-        "max_connections_per_user": 5
-    },
-    "logging": {
-        "level": "INFO",
-        "file": "logs/server_{time:YYYY-MM-DD}.log"
-    }
+  "server": {
+    "host": "0.0.0.0",
+    "port": 8001,
+    "debug": false
+  },
+  "database": {
+    "url": "sqlite:///./server_data.db",
+    "echo": false
+  },
+  "ai": {
+    "provider": "openai",
+    "model": "gpt-4.1-nano",
+    "temperature": 0.7,
+    "max_tokens": 1500
+  },
+  "api_keys": {
+    "openai": "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",
+    "anthropic": "YOUR_ANTHROPIC_API_KEY_HERE",
+    "deepseek": "YOUR_DEEPSEEK_API_KEY_HERE"
+  },
+  "plugins": {
+    "auto_load": true,
+    "default_enabled": [
+      "weather_module",
+      "search_module"
+    ]
+  },
+  "security": {
+    "cors_origins": [
+      "*"
+    ],
+    "max_connections_per_user": 5
+  },
+  "logging": {
+    "level": "INFO",
+    "file": "logs/server_{time:YYYY-MM-DD}.log"
+  },
+  "openai_api_key": "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",
+  "host": "localhost",
+  "port": 8000
 }

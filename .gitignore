@@ -25,3 +25,4 @@ user_data/
 gaja_memory.db
 commits_all.txt
 /overlay/dist
+/client/.hf_cache

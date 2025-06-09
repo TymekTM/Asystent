@@ -215,7 +215,7 @@ class APIModule:
     
     async def call_openai_api(self, user_id: int, user_api_key: str,
                              messages: List[Dict[str, str]],
-                             model: str = "gpt-3.5-turbo",
+                             model: str = "gpt-4.1-nano",
                              **kwargs) -> Dict[str, Any]:
         """
         Wywołuje OpenAI API.
