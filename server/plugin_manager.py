@@ -283,6 +283,19 @@ class PluginManager:
         
         return available_functions
     
+    def get_modules_for_user(self, user_id: str) -> Dict[str, Any]:
+        """Get loaded modules for a user for function calling."""
+        user_plugins = self.get_user_plugins(user_id)
+        modules = {}
+        
+        for plugin_name, enabled in user_plugins.items():
+            if enabled and plugin_name in self.plugins:
+                plugin_info = self.plugins[plugin_name]
+                if plugin_info.loaded and plugin_info.module:
+                    modules[plugin_name] = plugin_info.module
+        
+        return modules
+    
     async def execute_function(self, user_id: str, function_name: str, **kwargs) -> Any:
         """Execute a function if available for user."""
         available_functions = self.get_available_functions(user_id)
@@ -371,7 +384,5 @@ class PluginManager:
         
         logger.info(f"Plugin {plugin_name} reloaded successfully")
         return True
-
-
-# Global plugin manager instance
+  # Global plugin manager instance
 plugin_manager = PluginManager()

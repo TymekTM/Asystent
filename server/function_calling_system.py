@@ -316,4 +316,6 @@ class FunctionCallingSystem:
 
 def convert_module_system_to_function_calling(modules: Dict[str, Any]) -> FunctionCallingSystem:
     """Convert the entire module system to function calling format."""
-    return FunctionCallingSystem(modules)
+    system = FunctionCallingSystem()
+    system.modules = modules
+    return system

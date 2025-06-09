@@ -1,6 +1,6 @@
 {
     "user_id": "1",
-    "server_url": "ws://localhost:8000",
+    "server_url": "ws://localhost:8001",
     "client_version": "1.0.0",
     "wakeword": {
         "enabled": true,

@@ -106,11 +106,9 @@ class AIProviders:
             return importlib.import_module(module_name)
         except ImportError:
             logger.debug("Moduł %s nie został znaleziony – pomijam.", module_name)
-            return None
-
-    @staticmethod
+            return None    @staticmethod
     def _key_ok(env_var: str, cfg_key: str) -> bool:
-        key = os.getenv(env_var) or _config.get("API_KEYS", {}).get(cfg_key)
+        key = os.getenv(env_var) or _config.get("api_keys", {}).get(cfg_key.lower())
         return bool(key and not key.startswith("YOUR_"))
 
     @staticmethod
@@ -133,11 +131,8 @@ class AIProviders:
         try:
             url = _config.get("LMSTUDIO_URL", "http://localhost:1234/v1/models")
             return self._lmstudio_session.get(url, timeout=5).status_code == 200
-        except requests.RequestException:
-            return False
-
-    def check_openai(self) -> bool:
-        return self._key_ok("OPENAI_API_KEY", "OPENAI_API_KEY")
+        except requests.RequestException:            return False    def check_openai(self) -> bool:
+        return AIProviders._key_ok("OPENAI_API_KEY", "openai")
 
     def check_deepseek(self) -> bool:
         return self._key_ok("DEEPSEEK_API_KEY", "DEEPSEEK_API_KEY")
@@ -799,6 +794,177 @@ def parse_response(response_text: str) -> Dict[str, Any]:
     # Default error response or if parsing completely fails
     return {"text": "Nieprawidłowa odpowiedź AI", "command": "", "params": {}, "listen_after_tts": False} # ADDED listen_after_tts
 
+
+@measure_performance
+def generate_response(
+    conversation_history: deque,
+    tools_info: str = "",
+    system_prompt_override: str = None,
+    detected_language: str = "en",
+    language_confidence: float = 1.0,
+    active_window_title: str = None, 
+    track_active_window_setting: bool = False,
+    tool_suggestion: str = None,
+    modules: Dict[str, Any] = None,
+    use_function_calling: bool = True,
+    user_name: str = None
+) -> str:
+    """
+    Generates a response from the AI model based on conversation history and available tools.
+    Can use either traditional prompt-based approach or OpenAI Function Calling.
+
+    Args:
+        conversation_history: A deque of previous messages.
+        tools_info: A string describing available tools/plugins.
+        system_prompt_override: An optional string to override the default system prompt.
+        detected_language: The detected language code (e.g., "en", "pl").
+        language_confidence: The confidence score for the detected language.
+        active_window_title: The title of the currently active window.
+        track_active_window_setting: Boolean indicating if active window tracking is enabled.
+        modules: Dictionary of available modules for function calling.
+        use_function_calling: Whether to use OpenAI Function Calling or traditional approach.
+
+    Returns:
+        A string containing the AI's response, potentially in JSON format for commands.
+    """
+    import datetime
+    try:
+        config = load_config() # Use imported load_config
+        api_keys = config.get("api_keys", {}) # Get the nested api_keys dictionary  
+        api_key = api_keys.get("openai") # Get the OpenAI API key from the nested dictionary
+        model_name = config.get("ai", {}).get("model", "gpt-4.1-nano")
+
+        if not api_key:
+            logger.error("OpenAI API key not found in configuration.")
+            return '{"text": "Błąd: Klucz API OpenAI nie został skonfigurowany.", "command": "", "params": {}}'
+          # Initialize function calling system if enabled and modules provided
+        function_calling_system = None
+        functions = None
+        
+        if use_function_calling and modules and config.get("ai", {}).get("provider", "openai").lower() == "openai":
+            from function_calling_system import convert_module_system_to_function_calling
+            function_calling_system = convert_module_system_to_function_calling(modules)
+            functions = function_calling_system.convert_modules_to_functions()
+            logger.info(f"Function calling enabled with {len(functions)} functions")
+              # Use standard system prompt for function calling
+            system_prompt = build_full_system_prompt(
+                system_prompt_override=system_prompt_override,
+                detected_language=detected_language,
+                language_confidence=language_confidence,
+                tools_description="",  # Functions are handled separately
+                active_window_title=active_window_title,
+                track_active_window_setting=track_active_window_setting,
+                tool_suggestion=tool_suggestion,
+                user_name=user_name
+            )
+        else:            # Traditional prompt-based approach
+            system_prompt = build_full_system_prompt(
+                system_prompt_override=system_prompt_override,
+                detected_language=detected_language,
+                language_confidence=language_confidence,
+                tools_description=tools_info,
+                active_window_title=active_window_title,
+                track_active_window_setting=track_active_window_setting,
+                tool_suggestion=tool_suggestion,
+                user_name=user_name
+            )
+        
+        # --- PROMPT LOGGING ---
+        try:
+            import json
+            timestamp = datetime.datetime.now().isoformat()
+            
+            # Ensure user_data directory exists
+            import os
+            os.makedirs("user_data", exist_ok=True)
+            
+            with open("user_data/prompts_log.txt", "a", encoding="utf-8") as f:
+                # Log the system prompt
+                system_prompt_msg = {"role": "system", "content": system_prompt}
+                f.write(f"{timestamp} | {json.dumps(system_prompt_msg, ensure_ascii=False)}\n")
+                
+                # Log conversation history
+                for msg in list(conversation_history):
+                    if msg.get("role") != "system":
+                        f.write(f"{timestamp} | {json.dumps(msg, ensure_ascii=False)}\n")
+                
+                # Log available functions if using function calling
+                if functions:
+                    functions_msg = {"role": "system", "content": f"Available functions: {len(functions)}"}
+                    f.write(f"{timestamp} | {json.dumps(functions_msg, ensure_ascii=False)}\n")
+        except Exception as log_exc:
+            logger.warning(f"[PromptLog] Failed to log prompt: {log_exc}")
+
+        # Convert deque to list for slicing and modification
+        messages = list(conversation_history)
+        if messages and messages[0]["role"] == "system":
+            messages[0]["content"] = system_prompt
+        else:
+            messages.insert(0, {"role": "system", "content": system_prompt})
+
+        # Make API call with or without functions
+        resp = chat_with_providers(
+            model_name, 
+            messages, 
+            functions=functions,
+            function_calling_system=function_calling_system
+        )
+        
+        # --- RAW API RESPONSE LOGGING ---
+        try:
+            raw_content = resp.get("message", {}).get("content", "").strip() if resp else ""
+            import json
+            import datetime
+            with open("user_data/prompts_log.txt", "a", encoding="utf-8") as f:
+                raw_api_msg = {"role": "assistant_api_raw", "content": raw_content}
+                f.write(f"{datetime.datetime.now().isoformat()} | {json.dumps(raw_api_msg, ensure_ascii=False)}\n")
+                
+                # Log if function calls were executed
+                if resp and resp.get("tool_calls_executed"):
+                    tool_calls_msg = {"role": "system", "content": f"Tool calls executed: {resp['tool_calls_executed']}"}
+                    f.write(f"{datetime.datetime.now().isoformat()} | {json.dumps(tool_calls_msg, ensure_ascii=False)}\n")
+        except Exception as log_exc:
+            logger.warning(f"[RawAPI Log] Failed to log raw API response: {log_exc}")
+        
+        content = resp["message"]["content"].strip() if resp else ""
+        if not content:
+            raise ValueError("Empty response.")
+
+        # If using function calling, return the content directly as it should be a natural response
+        if use_function_calling and functions and resp.get("tool_calls_executed"):
+            return json.dumps({
+                "text": content,
+                "command": "",
+                "params": {},
+                "function_calls_executed": True
+            }, ensure_ascii=False)
+
+        # Traditional JSON parsing for non-function calling responses
+        parsed = extract_json(content)
+        try:
+            result = json.loads(parsed)
+            if isinstance(result, dict) and "text" in result:
+                return json.dumps(result, ensure_ascii=False)
+        except Exception:
+            pass
+
+        # fallback: zawinąć surowy tekst
+        return json.dumps({
+            "text": content,
+            "command": "",
+            "params": {}
+        }, ensure_ascii=False)
+    except Exception as exc:  # pragma: no cover
+        logger.error("generate_response error: %s", exc, exc_info=True)
+        return json.dumps(
+            {
+                "text": "Przepraszam, wystąpił błąd podczas generowania odpowiedzi.",
+                "command": "",
+                "params": {},
+            },
+            ensure_ascii=False,
+        )
+
 # -----------------------------------------------------------------------------
 # Klasa AIModule
 # -----------------------------------------------------------------------------
@@ -808,7 +974,7 @@ class AIModule:
     
     def __init__(self, config: Dict):
         self.config = config
-        self.providers = AIProviders()
+        self.providers = get_ai_providers()
         self._conversation_history = {}
     
     async def process_query(self, query: str, context: Dict) -> str:
@@ -817,135 +983,42 @@ class AIModule:
             user_id = context.get('user_id', 'anonymous')
             history = context.get('history', [])
             available_plugins = context.get('available_plugins', [])
+            modules = context.get('modules', {})
             
-            # Przygotuj kontekst dla AI
-            system_prompt = self._build_system_prompt(available_plugins)
+            # Convert history to deque format for generate_response
+            conversation_history = deque()
             
-            # Przygotuj historię konwersacji
-            messages = [{"role": "system", "content": system_prompt}]
-            
-            # Dodaj historię z bazy danych
-            for msg in history[-10:]:  # Ostatnie 10 wiadomości
-                messages.append({
+            # Add history from database
+            for msg in history[-10:]:  # Last 10 messages
+                conversation_history.append({
                     "role": msg['role'],
                     "content": msg['content']
                 })
-              # Dodaj aktualne zapytanie
-            messages.append({"role": "user", "content": query})
             
-            # Wybierz providera i model
-            provider = self.config.get('ai', {}).get('provider', 'openai')
-            model = self.config.get('ai', {}).get('model', 'gpt-3.5-turbo')
+            # Add current query
+            conversation_history.append({"role": "user", "content": query})
             
-            logger.info(f"Using AI provider: {provider}, model: {model}")
+            # Build tools description
+            tools_info = ""
+            if available_plugins:
+                tools_info = f"Dostępne pluginy: {', '.join(available_plugins)}"
             
-            # Wykonaj zapytanie do AI
-            response = await self._query_ai(provider, model, messages)
+            # Use the same generate_response function as in main ai_module.py
+            response = generate_response(
+                conversation_history=conversation_history,
+                tools_info=tools_info,
+                detected_language="pl",
+                language_confidence=1.0,
+                modules=modules,
+                use_function_calling=False,
+                user_name=context.get('user_name', 'User')            )
             
             return response
             
         except Exception as e:
             logger.error(f"Error processing AI query: {e}")
-            return f"Przepraszam, wystąpił błąd podczas przetwarzania zapytania: {str(e)}"
-    
-    def _build_system_prompt(self, available_plugins: List[str]) -> str:
-        """Buduje system prompt z dostępnymi pluginami."""
-        base_prompt = """Jesteś GAJA - inteligentnym asystentem AI. 
-        Pomagasz użytkownikom w różnych zadaniach, odpowiadasz na pytania i wykonujesz polecenia.
-        """
-        
-        if available_plugins:
-            plugin_info = f"\n\nDostępne pluginy: {', '.join(available_plugins)}"
-            base_prompt += plugin_info
-        
-        return base_prompt
-    
-    async def _query_ai(self, provider: str, model: str, messages: List[Dict]) -> str:
-        """Wykonuje zapytanie do wybranego providera AI."""
-        try:
-            logger.info(f"Querying AI with provider: {provider}, model: {model}")
-            
-            if provider == "openai":
-                return await self._query_openai(model, messages)
-            elif provider == "anthropic":
-                return await self._query_anthropic(model, messages)
-            elif provider == "ollama":
-                return await self._query_ollama(model, messages)
-            else:
-                raise ValueError(f"Unsupported AI provider: {provider}")
-                
-        except Exception as e:
-            logger.error(f"AI query failed for provider {provider}: {e}")
-            raise
-    
-    async def _query_openai(self, model: str, messages: List[Dict]) -> str:
-        """Zapytanie do OpenAI API."""
-        try:
-            if not self.providers._openai_client:
-                import openai
-                api_key = self.config.get('api_keys', {}).get('openai')
-                if not api_key:
-                    raise ValueError("OpenAI API key not configured")
-                self.providers._openai_client = openai.OpenAI(api_key=api_key)
-            
-            response = self.providers._openai_client.chat.completions.create(
-                model=model,
-                messages=messages,
-                temperature=0.7,
-                max_tokens=1000
-            )
-            
-            return response.choices[0].message.content
-            
-        except Exception as e:
-            logger.error(f"OpenAI query error: {e}")
-            raise
-    
-    async def _query_anthropic(self, model: str, messages: List[Dict]) -> str:
-        """Zapytanie do Anthropic API."""
-        try:
-            import anthropic
-            api_key = self.config.get('api_keys', {}).get('anthropic')
-            if not api_key:
-                raise ValueError("Anthropic API key not configured")
-                
-            client = anthropic.Anthropic(api_key=api_key)
-            
-            # Anthropic wymaga innego formatu
-            system_prompt = ""
-            user_messages = []
-            
-            for msg in messages:
-                if msg['role'] == 'system':
-                    system_prompt = msg['content']
-                else:
-                    user_messages.append(msg)
-            
-            response = client.messages.create(
-                model=model,
-                max_tokens=1000,
-                system=system_prompt,
-                messages=user_messages
-            )
-            
-            return response.content[0].text
-            
-        except Exception as e:
-            logger.error(f"Anthropic query error: {e}")
-            raise
-    
-    async def _query_ollama(self, model: str, messages: List[Dict]) -> str:
-        """Zapytanie do Ollama."""
-        try:
-            import ollama
-            
-            response = ollama.chat(
-                model=model,
-                messages=messages
-            )
-            
-            return response['message']['content']
-            
-        except Exception as e:
-            logger.error(f"Ollama query error: {e}")
-            raise
+            return json.dumps({
+                "text": f"Przepraszam, wystąpił błąd podczas przetwarzania zapytania: {str(e)}",
+                "command": "",
+                "params": {}
+            }, ensure_ascii=False)

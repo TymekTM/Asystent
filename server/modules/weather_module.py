@@ -27,6 +27,11 @@ def get_functions() -> List[Dict[str, Any]]:
                         "description": "Provider pogodowy (openweather, weatherapi)",
                         "enum": ["openweather", "weatherapi"],
                         "default": "openweather"
+                    },
+                    "test_mode": {
+                        "type": "boolean",
+                        "description": "Tryb testowy (używa mock danych)",
+                        "default": False
                     }
                 },
                 "required": ["location"]
@@ -48,6 +53,11 @@ def get_functions() -> List[Dict[str, Any]]:
                         "default": 3,
                         "minimum": 1,
                         "maximum": 7
+                    },
+                    "test_mode": {
+                        "type": "boolean",
+                        "description": "Tryb testowy (używa mock danych)",
+                        "default": False
                     }
                 },
                 "required": ["location"]
@@ -64,14 +74,18 @@ async def execute_function(function_name: str, parameters: Dict[str, Any], user_
         if function_name == "get_weather":
             location = parameters.get("location")
             provider = parameters.get("provider", "openweather")
+            test_mode = parameters.get("test_mode", False)
             
-            # Pobierz API key z konfiguracji użytkownika
+            # Sprawdź czy jest tryb testowy lub brak klucza API
             api_key = await weather_module._get_user_api_key(user_id, provider)
-            if not api_key:
+            if not api_key or test_mode:
+                # Zwróć mock dane
+                mock_data = weather_module._get_mock_weather_data(location)
                 return {
-                    "success": False,
-                    "error": f"Brak klucza API dla providera {provider}. Skonfiguruj klucz w ustawieniach.",
-                    "help": f"Potrzebny klucz API dla {provider}"
+                    "success": True,
+                    "data": mock_data,
+                    "message": f"Pobrano dane pogodowe dla {location} (tryb testowy)",
+                    "test_mode": True
                 }
             
             result = await weather_module.get_weather(user_id, location, api_key, provider)
@@ -84,14 +98,18 @@ async def execute_function(function_name: str, parameters: Dict[str, Any], user_
         elif function_name == "get_forecast":
             location = parameters.get("location")
             days = parameters.get("days", 3)
+            test_mode = parameters.get("test_mode", False)
             
-            # Pobierz API key z konfiguracji użytkownika  
+            # Sprawdź czy jest tryb testowy lub brak klucza API
             api_key = await weather_module._get_user_api_key(user_id, "openweather")
-            if not api_key:
+            if not api_key or test_mode:
+                # Zwróć mock dane
+                mock_data = weather_module._get_mock_forecast_data(location, days)
                 return {
-                    "success": False,
-                    "error": "Brak klucza API dla OpenWeatherMap. Skonfiguruj klucz w ustawieniach.",
-                    "help": "Potrzebny klucz API dla OpenWeatherMap"
+                    "success": True,
+                    "data": mock_data,
+                    "message": f"Pobrano prognozę pogody dla {location} na {days} dni (tryb testowy)",
+                    "test_mode": True
                 }
             
             result = await weather_module.get_forecast(user_id, location, api_key, days)
@@ -600,6 +618,105 @@ class WeatherModule:
             logger.error(f"Error getting API key for user {user_id}, provider {provider}: {e}")
             return None
 
+    def _get_mock_weather_data(self, location: str) -> Dict[str, Any]:
+        """Zwraca przykładowe dane pogodowe (mock) dla testów."""
+        return {
+            'location': {
+                'name': location,
+                'country': 'PL',
+                'latitude': 52.2297,
+                'longitude': 21.0122
+            },
+            'current': {
+                'temperature': 10,
+                'feels_like': 8,
+                'humidity': 80,
+                'pressure': 1013,
+                'description': 'Częściowe zachmurzenie',
+                'icon': '04d',
+                'wind_speed': 3,
+                'wind_direction': 180,
+                'cloudiness': 75,
+                'visibility': 10,
+                'sunrise': '06:00',
+                'sunset': '18:00'
+            },
+            'forecast': [
+                {
+                    'date': '2023-10-01',
+                    'day_name': 'Poniedziałek',
+                    'min_temp': 8,
+                    'max_temp': 12,
+                    'avg_temp': 10,
+                    'description': 'Zachmurzenie',
+                    'avg_humidity': 75,
+                    'avg_wind_speed': 3,
+                    'hourly': [
+                        {'time': '06:00', 'temperature': 8, 'description': 'Zachmurzenie', 'icon': '04n', 'humidity': 85, 'wind_speed': 2},
+                        {'time': '12:00', 'temperature': 10, 'description': 'Częściowe zachmurzenie', 'icon': '03d', 'humidity': 70, 'wind_speed': 3},
+                        {'time': '18:00', 'temperature': 9, 'description': 'Zachmurzenie', 'icon': '04d', 'humidity': 80, 'wind_speed': 4}
+                    ]
+                },
+                {
+                    'date': '2023-10-02',
+                    'day_name': 'Wtorek',
+                    'min_temp': 9,
+                    'max_temp': 13,
+                    'avg_temp': 11,
+                    'description': 'Słonecznie',
+                    'avg_humidity': 70,
+                    'avg_wind_speed': 2,
+                    'hourly': [
+                        {'time': '06:00', 'temperature': 9, 'description': 'Słonecznie', 'icon': '01n', 'humidity': 80, 'wind_speed': 2},
+                        {'time': '12:00', 'temperature': 12, 'description': 'Czyste niebo', 'icon': '01d', 'humidity': 60, 'wind_speed': 3},
+                        {'time': '18:00', 'temperature': 10, 'description': 'Słonecznie', 'icon': '01d', 'humidity': 75, 'wind_speed': 2}
+                    ]
+                }
+            ],
+            'units': {
+                'temperature': '°C',
+                'wind_speed': 'm/s',
+                'pressure': 'hPa',
+                'visibility': 'km'
+            }
+        }
+
+    def _get_mock_forecast_data(self, location: str, days: int) -> Dict[str, Any]:
+        """Zwraca przykładowe dane prognozy (mock) dla testów."""
+        forecast = []
+        for i in range(days):
+            date = datetime.now() + timedelta(days=i)
+            forecast.append({
+                'date': date.strftime('%Y-%m-%d'),
+                'day_name': date.strftime('%A'),
+                'min_temp': 5 + i,
+                'max_temp': 10 + i,
+                'avg_temp': 7 + i,
+                'description': 'Przykładowy opis pogody',
+                'avg_humidity': 70 + i * 5,
+                'avg_wind_speed': 3 + i * 0.5,
+                'hourly': [
+                    {'time': date.replace(hour=6, minute=0).strftime('%H:%M'), 'temperature': 6 + i, 'description': 'Przykładowy opis', 'icon': '01n', 'humidity': 80, 'wind_speed': 2},
+                    {'time': date.replace(hour=12, minute=0).strftime('%H:%M'), 'temperature': 9 + i, 'description': 'Przykładowy opis', 'icon': '01d', 'humidity': 60, 'wind_speed': 3},
+                    {'time': date.replace(hour=18, minute=0).strftime('%H:%M'), 'temperature': 8 + i, 'description': 'Przykładowy opis', 'icon': '01d', 'humidity': 75, 'wind_speed': 2}
+                ]
+            })
+        
+        return {
+            'location': {
+                'name': location,
+                'country': 'PL',
+                'latitude': 52.2297,
+                'longitude': 21.0122
+            },
+            'forecast': forecast,
+            'units': {
+                'temperature': '°C',
+                'wind_speed': 'm/s',
+                'precipitation': 'mm'
+            }
+        }
+    
 
 # Globalna instancja
 _weather_module = None

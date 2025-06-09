@@ -13,6 +13,7 @@ from typing import Dict, List, Optional, Any
 import uvicorn
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from contextlib import asynccontextmanager
 from loguru import logger
 
@@ -20,7 +21,7 @@ from loguru import logger
 sys.path.insert(0, str(Path(__file__).parent))
 
 from config_loader import load_config
-from database_manager import DatabaseManager
+from database_manager import DatabaseManager, initialize_database_manager
 from ai_module import AIModule
 from function_calling_system import FunctionCallingSystem
 from plugin_manager import plugin_manager
@@ -70,6 +71,17 @@ class ConnectionManager:
             except Exception as e:
                 logger.error(f"Error broadcasting to {user_id}: {e}")
                 self.disconnect(user_id)
+    
+    def update_user_status(self, user_id: str, status: str, message: str = ""):
+        """Aktualizuj status użytkownika."""
+        if user_id in self.user_sessions:
+            self.user_sessions[user_id]["status"] = status
+            self.user_sessions[user_id]["last_message"] = message
+            logger.debug(f"Updated status for {user_id}: {status}")
+    
+    def get_user_status(self, user_id: str) -> Dict[str, Any]:
+        """Pobierz status użytkownika."""
+        return self.user_sessions.get(user_id, {})
 
 
 class ServerApp:
@@ -89,9 +101,8 @@ class ServerApp:
             # Załaduj konfigurację
             self.config = load_config("server_config.json")
             logger.info("Configuration loaded")
-            
-            # Inicjalizuj bazę danych
-            self.db_manager = DatabaseManager()
+              # Inicjalizuj bazę danych
+            self.db_manager = initialize_database_manager("server_data.db")
             await self.db_manager.initialize()
             logger.info("Database initialized")
               # Inicjalizuj AI module
@@ -173,6 +184,8 @@ class ServerApp:
                 return await self.handle_plugin_toggle(user_id, request_data)
             elif request_type == 'plugin_list':
                 return await self.handle_plugin_list(user_id)
+            elif request_type == 'status_update':
+                return await self.handle_status_update(user_id, request_data)
             else:
                 return {
                     'type': 'error',
@@ -193,12 +206,16 @@ class ServerApp:
             context = request_data.get('context', {})
             
             # Pobierz historię użytkownika z bazy
-            user_history = await self.db_manager.get_user_history(user_id)
-              # Przygotuj kontekst dla AI
+            user_history = await self.db_manager.get_user_history(user_id)              # Przygotuj kontekst dla AI
+            available_plugins = list(plugin_manager.get_available_functions(user_id).keys())
+            modules = plugin_manager.get_modules_for_user(user_id)
+            
             ai_context = {
                 'user_id': user_id,
                 'history': user_history,
-                'available_functions': list(plugin_manager.get_available_functions(user_id).keys()),
+                'available_plugins': available_plugins,
+                'modules': modules,
+                'user_name': context.get('user_name', 'User'),
                 **context
             }
             
@@ -370,6 +387,28 @@ class ServerApp:
                 'type': 'error',
                 'message': f'Failed to get plugin list: {str(e)}'
             }
+    
+    async def handle_status_update(self, user_id: str, request_data: dict):
+        """Obsłuż aktualizację statusu użytkownika."""
+        try:
+            status = request_data.get('status', 'unknown')
+            message = request_data.get('message', '')
+            
+            # Aktualizuj status w connection manager
+            self.connection_manager.update_user_status(user_id, status, message)
+            
+            return {
+                'type': 'status_updated',
+                'status': status,
+                'message': 'Status updated successfully'
+            }
+            
+        except Exception as e:
+            logger.error(f"Error updating status for user {user_id}: {e}")
+            return {
+                'type': 'error',
+                'message': f'Status update failed: {str(e)}'
+            }
 
 
 # Globalna instancja serwera
@@ -453,6 +492,40 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
         server_app.connection_manager.disconnect(user_id)
 
 
+@app.get("/webui")
+async def webui():
+    """Serwuj webui."""
+    return FileResponse("webui.html", media_type="text/html")
+
+
+@app.get("/api/status")
+async def api_status():
+    """Endpoint dla overlay - status serwera i aktywnych użytkowników."""
+    try:
+        active_users = list(server_app.connection_manager.active_connections.keys())
+        user_status = {}
+        
+        for user_id in active_users:
+            session = server_app.connection_manager.user_sessions.get(user_id, {})
+            user_status[user_id] = {
+                "is_listening": session.get("status") == "listening",
+                "is_speaking": session.get("status") == "speaking", 
+                "is_processing": session.get("status") == "processing",
+                "text": session.get("last_message", ""),
+                "connected_at": session.get("connected_at", 0)
+            }
+        
+        return {
+            "server_status": "running",
+            "active_users": len(active_users),
+            "users": user_status,
+            "timestamp": asyncio.get_event_loop().time()
+        }
+    except Exception as e:
+        logger.error(f"Error getting API status: {e}")
+        return {"error": str(e)}
+
+
 if __name__ == "__main__":
     """Uruchom serwer."""
     # Konfiguracja logowania
@@ -475,11 +548,14 @@ if __name__ == "__main__":
     
     logger.info("Starting GAJA Assistant Server...")
     
+    # Load configuration
+    config = load_config()
+    
     # Uruchom serwer
     uvicorn.run(
         "server_main:app",
-        host="0.0.0.0",
-        port=8000,
+        host=config.get('server', {}).get('host', '0.0.0.0'),
+        port=config.get('server', {}).get('port', 8001),
         log_level="info",
         reload=False  # W produkcji wyłącz reload
     )

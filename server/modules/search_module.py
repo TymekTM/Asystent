@@ -12,8 +12,7 @@ logger = logging.getLogger(__name__)
 # Required plugin functions
 def get_functions() -> List[Dict[str, Any]]:
     """Zwraca listę dostępnych funkcji w pluginie."""
-    return [
-        {
+    return [        {
             "name": "search",
             "description": "Wyszukuje informacje w internecie",
             "parameters": {
@@ -35,6 +34,11 @@ def get_functions() -> List[Dict[str, Any]]:
                         "default": 10,
                         "minimum": 1,
                         "maximum": 50
+                    },
+                    "test_mode": {
+                        "type": "boolean",
+                        "description": "Tryb testowy (używa mock danych)",
+                        "default": False
                     }
                 },
                 "required": ["query"]
@@ -61,6 +65,11 @@ def get_functions() -> List[Dict[str, Any]]:
                         "default": 5,
                         "minimum": 1,
                         "maximum": 20
+                    },
+                    "test_mode": {
+                        "type": "boolean",
+                        "description": "Tryb testowy (używa mock danych)",
+                        "default": False
                     }
                 },
                 "required": ["query"]
@@ -78,6 +87,17 @@ async def execute_function(function_name: str, parameters: Dict[str, Any], user_
             query = parameters.get("query")
             engine = parameters.get("engine", "duckduckgo")
             max_results = parameters.get("max_results", 10)
+            test_mode = parameters.get("test_mode", False)
+            
+            if test_mode:
+                # Zwróć mock dane
+                mock_data = search_module._get_mock_search_data(query, max_results)
+                return {
+                    "success": True,
+                    "data": mock_data,
+                    "message": f"Wyszukano informacje dla: {query} (tryb testowy)",
+                    "test_mode": True
+                }
             
             result = await search_module.search(user_id, query, engine, max_results=max_results)
             return {
@@ -90,14 +110,18 @@ async def execute_function(function_name: str, parameters: Dict[str, Any], user_
             query = parameters.get("query")
             language = parameters.get("language", "pl")
             max_results = parameters.get("max_results", 5)
+            test_mode = parameters.get("test_mode", False)
             
-            # Pobierz API key z konfiguracji użytkownika
+            # Sprawdź czy jest tryb testowy lub brak klucza API
             api_key = await search_module._get_user_api_key(user_id, "newsapi")
-            if not api_key:
+            if not api_key or test_mode:
+                # Zwróć mock dane
+                mock_data = search_module._get_mock_news_data(query, max_results)
                 return {
-                    "success": False,
-                    "error": "Brak klucza API dla NewsAPI. Skonfiguruj klucz w ustawieniach.",
-                    "help": "Potrzebny klucz API z https://newsapi.org"
+                    "success": True,
+                    "data": mock_data,
+                    "message": f"Znaleziono najnowsze wiadomości dla: {query} (tryb testowy)",
+                    "test_mode": True
                 }
             
             result = await search_module.search_news(user_id, query, language, max_results, api_key)
@@ -119,6 +143,9 @@ async def execute_function(function_name: str, parameters: Dict[str, Any], user_
             "success": False,
             "error": str(e)
         }
+    finally:
+        # Ensure cleanup
+        await search_module.cleanup()
 
 class SearchModule:
     """Moduł wyszukiwania informacji w internecie."""
@@ -582,8 +609,100 @@ class SearchModule:
         except Exception as e:
             logger.error(f"Error getting API key for user {user_id}, provider {provider}: {e}")
             return None
-       
 
+    async def cleanup(self):
+        """Cleanup resources."""
+        if hasattr(self, 'session') and self.session:
+            await self.session.close()
+            self.session = None
+        logger.debug("SearchModule cleanup completed")
+
+    def _get_mock_search_data(self, query: str, max_results: int) -> Dict[str, Any]:
+        """Zwraca przykładowe wyniki wyszukiwania (mock) dla testów."""
+        return {
+            'query': query,
+            'results': [
+                {
+                    'title': f'Przykładowy wynik 1 dla "{query}"',
+                    'url': 'https://example.com/result1',
+                    'snippet': f'To jest przykładowy opis wyników wyszukiwania dla zapytania "{query}". Zawiera różne informacje związane z tym tematem.',
+                    'displayed_url': 'example.com/result1',
+                    'rank': 1
+                },
+                {
+                    'title': f'Informacje o {query} - Wikipedia',
+                    'url': 'https://pl.wikipedia.org/wiki/example',
+                    'snippet': f'Artykuł z Wikipedii o {query}. Zawiera szczegółowe informacje, historię i najnowsze dane.',
+                    'displayed_url': 'pl.wikipedia.org/wiki/example',
+                    'rank': 2
+                },
+                {
+                    'title': f'Najnowsze informacje o {query}',
+                    'url': 'https://news.example.com/latest',
+                    'snippet': f'Najnowsze wiadomości i aktualizacje dotyczące {query}. Regularnie aktualizowane informacje.',
+                    'displayed_url': 'news.example.com/latest',
+                    'rank': 3
+                }
+            ][:max_results],  # Ogranicz do żądanej liczby wyników
+            'total_results': max_results,
+            'search_time': 0.15,
+            'engine': 'duckduckgo_mock',
+            'test_mode': True
+        }
+
+    def _get_mock_news_data(self, query: str, max_results: int) -> Dict[str, Any]:
+        """Zwraca przykładowe wyniki wiadomości (mock) dla testów."""
+        from datetime import datetime, timedelta
+        
+        # Generuj przykładowe daty
+        now = datetime.now()
+        dates = [(now - timedelta(hours=i)).strftime('%Y-%m-%d %H:%M:%S') for i in range(max_results)]
+        
+        return {
+            'query': query,
+            'articles': [
+                {
+                    'title': f'Ważne wiadomości o {query}',
+                    'description': f'Najnowsze informacje dotyczące {query}. To jest przykładowy opis artykułu prasowego.',
+                    'url': 'https://news.example.com/article1',
+                    'published_at': dates[0] if dates else now.strftime('%Y-%m-%d %H:%M:%S'),
+                    'source': {
+                        'name': 'Example News',
+                        'url': 'https://news.example.com'
+                    },
+                    'author': 'Jan Kowalski',
+                    'category': 'general'
+                },
+                {
+                    'title': f'Analiza sytuacji związanej z {query}',
+                    'description': f'Szczegółowa analiza i komentarz ekspertów na temat {query}.',
+                    'url': 'https://analysis.example.com/article2',
+                    'published_at': dates[1] if len(dates) > 1 else now.strftime('%Y-%m-%d %H:%M:%S'),
+                    'source': {
+                        'name': 'Expert Analysis',
+                        'url': 'https://analysis.example.com'
+                    },
+                    'author': 'Anna Nowak',
+                    'category': 'business'
+                },
+                {
+                    'title': f'Wydarzenia związane z {query}',
+                    'description': f'Relacja z ostatnich wydarzeń i ich wpływ na {query}.',
+                    'url': 'https://events.example.com/article3',
+                    'published_at': dates[2] if len(dates) > 2 else now.strftime('%Y-%m-%d %H:%M:%S'),
+                    'source': {
+                        'name': 'Event Reporter',
+                        'url': 'https://events.example.com'
+                    },
+                    'author': 'Piotr Wiśniewski',
+                    'category': 'politics'
+                }
+            ][:max_results],  # Ogranicz do żądanej liczby wyników
+            'total_results': max_results,
+            'language': 'pl',
+            'test_mode': True
+        }
+        
 # Globalna instancja
 _search_module = None
 

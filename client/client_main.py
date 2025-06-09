@@ -15,6 +15,7 @@ from typing import Dict, Optional, Any
 import websockets
 from loguru import logger
 import threading # Added import
+import subprocess
 
 # Dodaj ścieżkę klienta do PYTHONPATH
 sys.path.insert(0, str(Path(__file__).parent))
@@ -33,12 +34,11 @@ class ClientApp:
         self.websocket = None
         self.user_id = self.config.get('user_id', '1')
         self.server_url = self.config.get('server_url', 'ws://localhost:8000')
-        self.running = False
-          # Audio components
+        self.running = False        # Audio components
         self.wakeword_detector = None
         self.whisper_asr = None
         self.audio_recorder = None
-        self.overlay = None
+        self.overlay_process = None  # External Tauri overlay process
         
         # State management
         self.listening_for_wakeword = False
@@ -80,11 +80,9 @@ class ClientApp:
     async def initialize_components(self):
         """Inicjalizuj komponenty audio i overlay."""
         try:
-            # Initialize overlay
+            # Start external Tauri overlay
             if self.config.get('overlay', {}).get('enabled', True):
-                self.overlay = create_overlay(self.config['overlay'])
-                self.overlay.start()
-                logger.info("Overlay initialized")
+                await self.start_overlay()
             
             # Initialize wakeword detector
             if self.config.get('wakeword', {}).get('enabled', True):
@@ -101,7 +99,8 @@ class ClientApp:
             
             # Initialize audio recorder
             sample_rate = self.config.get('audio', {}).get('sample_rate', 16000)
-            self.audio_recorder = create_audio_recorder(sample_rate)
+            device_id = self.config.get('audio', {}).get('input_device')
+            self.audio_recorder = create_audio_recorder(sample_rate, device_id)
             logger.info("Audio recorder initialized")
             
             return True
@@ -169,40 +168,26 @@ class ClientApp:
         if message_type == 'ai_response':
             response = data.get('response', '')
             logger.info(f"AI Response: {response}")
-            
-            if self.overlay:
-                self.overlay.add_message(response, "ai")
-                self.overlay.update_status("Ready")
+            await self.update_overlay_status("Ready")
             
         elif message_type == 'function_result':
             function_name = data.get('function')
             result = data.get('result')
             logger.info(f"Function {function_name} result: {result}")
             
-            if self.overlay:
-                self.overlay.add_message(f"Function {function_name}: {result}", "system")
-            
         elif message_type == 'plugin_toggled':
             plugin = data.get('plugin')
             status = data.get('status')
             logger.info(f"Plugin {plugin} {status}")
             
-            if self.overlay:
-                self.overlay.add_message(f"Plugin {plugin} {status}", "system")
-            
         elif message_type == 'error':
             error_message = data.get('message', 'Unknown error')
             logger.error(f"Server error: {error_message}")
             
-            if self.overlay:
-                self.overlay.add_message(error_message, "error")
-                self.overlay.update_status("Error")
+            await self.update_overlay_status("Error")
             
         else:
             logger.warning(f"Unknown message type: {message_type}")
-            
-            if self.overlay:
-                self.overlay.add_message(f"Unknown message: {message_type}", "system")
     
     async def simulate_user_input(self):
         """Symuluj interakcję użytkownika (do testów)."""
@@ -226,8 +211,7 @@ class ClientApp:
                     "plugin": plugin_name,
                     "action": "enable"
                 }
-            else:
-                # AI query
+            else:                # AI query
                 message = {
                     "type": "ai_query",
                     "query": query,
@@ -244,9 +228,11 @@ class ClientApp:
         try:
             # Initialize components first
             logger.info("Initializing client components...")
-            if not await self.initialize_components(): # This still needs to be async for ASR init
+            if not await self.initialize_components():
                 logger.error("Failed to initialize components")
                 return
+            
+            logger.info("Client components initialized successfully")
             
             # Połącz się z serwerem
             await self.connect_to_server()
@@ -254,24 +240,15 @@ class ClientApp:
             # Start wakeword detection
             await self.start_wakeword_detection()
             
-            # Uruchom zadania w tle (asyncio part)
-            # These will run in the asyncio event loop managed by the new thread
+            # Uruchom zadania w tle
             asyncio.create_task(self.listen_for_messages())
             asyncio.create_task(self.simulate_user_input())  # Tylko do testów
             
-            logger.info("Client asyncio tasks started")
+            logger.info("Client started successfully - listening for commands...")
             
-            if self.overlay and hasattr(self.overlay, 'window') and self.overlay.window: # Check if overlay is Tkinter based
-                logger.info("Starting Tkinter mainloop for overlay...")
-                # This will block the main thread, as required by Tkinter
-                # The asyncio loop will continue running in its own thread
-                self.overlay.window.mainloop() 
-            else:
-                # If no Tkinter overlay, just keep the asyncio tasks running
-                # This part might need adjustment if console overlay also needs main thread focus
-                # For now, assume console overlay is fine with asyncio's default behavior
-                while self.running: # Keep main thread alive for asyncio tasks if no Tkinter
-                    await asyncio.sleep(1)
+            # Keep client running
+            while self.running:
+                await asyncio.sleep(1)
 
         except KeyboardInterrupt:
             logger.info("Client stopped by user")
@@ -411,13 +388,53 @@ class ClientApp:
             
             if self.overlay:
                 self.overlay.update_status("Ready")
+    
+    async def start_overlay(self):
+        """Uruchom zewnętrzny overlay Tauri."""
+        try:
+            overlay_path = Path("../overlay/target/release/Asystent Overlay.exe")
+            if overlay_path.exists():
+                self.overlay_process = subprocess.Popen([str(overlay_path)])
+                logger.info("External Tauri overlay started")
+                return True
+            else:
+                logger.warning(f"Overlay not found at {overlay_path}")
+                return False
+        except Exception as e:
+            logger.error(f"Failed to start overlay: {e}")
+            return False
+    
+    async def stop_overlay(self):
+        """Zatrzymaj zewnętrzny overlay."""
+        if self.overlay_process:
+            try:
+                self.overlay_process.terminate()
+                self.overlay_process.wait(timeout=5)
+                logger.info("External overlay stopped")
+            except subprocess.TimeoutExpired:
+                self.overlay_process.kill()
+                logger.warning("External overlay force killed")
+            except Exception as e:
+                logger.error(f"Error stopping overlay: {e}")
+            finally:
+                self.overlay_process = None
+
+    async def update_overlay_status(self, status: str):
+        """Zaktualizuj status w overlay przez API serwera."""
+        # Overlay pobiera status z endpointu /api/status serwera
+        # Więc wyślemy informację do serwera żeby zaktualizował status
+        try:
+            message = {
+                "type": "status_update",
+                "status": status,
+                "client_id": self.user_id
+            }
+            await self.send_message(message)
+        except Exception as e:
+            logger.error(f"Error updating overlay status: {e}")
 
 
-async def main_async(client: ClientApp):
-    """Asynchronous part of the client startup."""
-    await client.start()
-
-def main(): # Renamed from async def main()
+def main():
     """Główna funkcja klienta."""
     # Konfiguracja logowania
     logger.remove()
@@ -441,71 +458,14 @@ def main(): # Renamed from async def main()
     
     # Uruchom klienta
     client = ClientApp()
+    
+    try:
+        asyncio.run(client.start())
+    except KeyboardInterrupt:
+        logger.info("Client stopped by user")
+    except Exception as e:
+        logger.error(f"Client error: {e}")
 
-    # Create and start a new thread for the asyncio event loop
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-
-    def run_asyncio_loop():
-        try:
-            loop.run_until_complete(main_async(client))
-        except KeyboardInterrupt:
-            logger.info("Asyncio loop interrupted.")
-        finally:
-            logger.info("Closing asyncio loop.")
-            # Gracefully stop all tasks and close the loop
-            for task in asyncio.all_tasks(loop):
-                task.cancel()
-            # Wait for tasks to cancel
-            # loop.run_until_complete(asyncio.gather(*asyncio.all_tasks(loop), return_exceptions=True))
-            loop.run_until_complete(loop.shutdown_asyncgens())
-            loop.close()
-            logger.info("Asyncio loop closed.")
-
-
-    asyncio_thread = threading.Thread(target=run_asyncio_loop, daemon=True)
-    asyncio_thread.start()
-
-    # Initialize components that need the main thread (like Tkinter)
-    # The overlay.start() which might create Tkinter window should be called here
-    # or ensure its Tkinter parts are managed by the main thread.
-    # For now, client.start() is called within the asyncio thread, which then
-    # tries to run overlay.window.mainloop() if it's Tkinter.
-    # This structure means main_async will run, and if it hits mainloop(),
-    # it will block that asyncio_thread. This is not what we want.
-
-    # Revised approach:
-    # 1. Initialize client (non-async parts)
-    # 2. Start asyncio loop in a separate thread for network, wakeword, ASR.
-    # 3. If Tkinter overlay is used, run its mainloop in the main thread.
-
-    # Let's adjust ClientApp.start() and main()
-
-    # The main thread will now be responsible for the Tkinter mainloop if it exists.
-    # The asyncio tasks will run in asyncio_thread.
-
-    # The current ClientApp.start() tries to run overlay.window.mainloop()
-    # This needs to be separated.
-
-    # Let's assume initialize_components (which calls overlay.start()) is called from main thread
-    # before starting the asyncio thread.
-
-    # Simpler approach for now:
-    # The `client.start()` method is complex. Let's try to run the Tkinter mainloop
-    # directly in the main thread after the asyncio thread has been started.
-    # The `client.start()` method will be run in the asyncio thread and should NOT call mainloop.
-
-    # The `overlay.start()` method in `initialize_components` already starts its own thread for mainloop.
-    # The error "Calling Tcl from different apartment" suggests that Tkinter objects are being
-    # created or manipulated across thread boundaries in an unsafe way.
-    # Tkinter generally requires all its UI operations to happen in the thread where its mainloop runs.
-
-    # We need to use `self.window.after(0, lambda: actual_ui_update_function)` for calls from other threads.
-
-    # Let's keep client_main.py as it was for now and first try to fix overlay.py
-
-    # Reverting client_main.py changes for now, will focus on overlay.py
 
 if __name__ == "__main__":
-    # asyncio.run(main()) # Original
-    main() # Changed to run the new main()
+    main()

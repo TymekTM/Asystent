@@ -7,6 +7,8 @@ import asyncio
 import json
 import os
 import sys
+import threading
+import time
 from typing import Optional, Dict, Any, Callable
 from loguru import logger
 
@@ -21,7 +23,7 @@ except ImportError:
 
 
 class SimpleOverlay:
-    """Simple overlay using tkinter."""
+    """Simple overlay using tkinter in a separate thread."""
     
     def __init__(self, config: dict):
         self.config = config
@@ -34,6 +36,12 @@ class SimpleOverlay:
         self.status_label = None
         self.running = False
         self.hide_timer = None
+        self.gui_thread = None
+        
+        # Thread-safe message queue
+        self.message_queue = []
+        self.status_queue = []
+        self.queue_lock = threading.Lock()
         
         if not TKINTER_AVAILABLE:
             self.enabled = False
@@ -303,8 +311,7 @@ class SimpleOverlay:
                 self.text_widget.config(state=tk.NORMAL)
                 self.text_widget.delete(1.0, tk.END)
                 self.text_widget.config(state=tk.DISABLED)
-                
-                logger.debug("Text cleared")
+                  logger.debug("Text cleared")
                 
             except Exception as e:
                 logger.error(f"Error clearing text: {e}")
@@ -325,7 +332,6 @@ class SimpleOverlay:
                 except Exception as e:
                     logger.warning(f"Could not cancel hide_timer: {e}")
                 self.hide_timer = None
-            
             # Set new timer
             self.hide_timer = self.window.after(
                 self.auto_hide_delay * 1000,
@@ -335,42 +341,49 @@ class SimpleOverlay:
             self.window.after(0, _task)
     
     def start(self):
-        """Start overlay (non-blocking)."""
+        """Start overlay in separate thread."""
         if not self.enabled:
             logger.info("Overlay disabled")
             return
         
+        if not TKINTER_AVAILABLE:
+            logger.warning("Tkinter not available - using console overlay fallback")
+            return
+            
         self.running = True
-        self.create_window()
         
-        if self.window:
-            # Run in separate thread to avoid blocking
-            import threading
-            
-            def run_mainloop():
-                try:
-                    # Ensure Tk() is created in this thread if not already
-                    if not self.window:
-                         logger.error("Window not created before starting mainloop thread.")
-                         # Attempt to create it here, though ideally it's done before starting thread
-                         # self.create_window() # This might be problematic if create_window expects main thread
-                         return
-
+        def run_gui():
+            """Run GUI in separate thread."""
+            try:
+                logger.info("Starting overlay GUI thread")
+                
+                # Create window in GUI thread
+                self.create_window()
+                
+                if self.window:
+                    # Start processing queued messages
+                    self._process_queues()
+                    
+                    # Run mainloop
+                    logger.info("Starting Tkinter mainloop")
                     self.window.mainloop()
-                except RuntimeError as e: # Catch specific Tcl errors
-                    if "main thread is not in main loop" in str(e):
-                        logger.warning(f"Tkinter mainloop issue: {e}. Overlay may not function correctly.")
-                    else:
-                        logger.error(f"Overlay mainloop error: {e}")
-                except Exception as e:
-                    logger.error(f"Overlay mainloop error: {e}")
-                finally:
-                    self.running = False
-            
-            thread = threading.Thread(target=run_mainloop, daemon=True)
-            thread.start()
-            
-            logger.info("Overlay started")
+                else:
+                    logger.error("Failed to create overlay window")
+                    
+            except Exception as e:
+                logger.error(f"Overlay GUI thread error: {e}")
+            finally:
+                self.running = False
+                logger.info("Overlay GUI thread ended")
+        
+        # Start GUI thread
+        self.gui_thread = threading.Thread(target=run_gui, daemon=True)
+        self.gui_thread.start()
+        
+        # Give thread time to start
+        time.sleep(0.5)
+        
+        logger.info("Overlay started in separate thread")
     
     def stop(self):
         """Stop overlay."""

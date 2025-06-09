@@ -26,8 +26,7 @@ class DatabaseManager:
         self._lock = threading.Lock()
         self._local = threading.local()
         
-        # Inicjalizuj bazę danych
-        self._init_database()
+        # Inicjalizuj bazę danych        self._init_database()
         logger.info(f"DatabaseManager initialized with database: {self.db_path}")
 
     def _get_connection(self) -> sqlite3.Connection:
@@ -39,14 +38,17 @@ class DatabaseManager:
                 timeout=30.0
             )
             self._local.connection.row_factory = sqlite3.Row
-            # Włącz foreign keys
+            # Włącz foreign keys - WAŻNE: to musi być zawsze włączone
             self._local.connection.execute("PRAGMA foreign_keys = ON")
+            self._local.connection.commit()
         return self._local.connection
 
     @contextmanager
     def get_db_connection(self):
         """Context manager dla połączenia z bazą danych."""
         conn = self._get_connection()
+        # Upewnij się, że foreign keys są włączone
+        conn.execute("PRAGMA foreign_keys = ON")
         try:
             yield conn
         except Exception as e:
@@ -571,8 +573,7 @@ class DatabaseManager:
                 enabled_plugins.remove(plugin_name)
             
             # Zapisz zaktualizowane ustawienia
-            conn.execute('''
-                INSERT OR REPLACE INTO user_preferences
+            conn.execute('''                INSERT OR REPLACE INTO user_preferences
                 (user_id, category, key_name, value, updated_at)
                 VALUES (?, 'plugins', 'enabled', ?, CURRENT_TIMESTAMP)
             ''', (int(user_id), json.dumps(enabled_plugins)))
@@ -586,10 +587,9 @@ class DatabaseManager:
             provider: Nazwa providera (np. 'openweather', 'newsapi', 'google_search')
             
         Returns:
-            Klucz API lub None jeśli nie istnieje
-        """
+            Klucz API lub None jeśli nie istnieje        """
         try:
-            with self.get_connection() as conn:
+            with self.get_db_connection() as conn:
                 cursor = conn.cursor()
                 cursor.execute(
                     "SELECT api_keys FROM users WHERE id = ?",
@@ -602,7 +602,6 @@ class DatabaseManager:
                     return api_keys.get(provider)
                 
                 return None
-                
         except Exception as e:
             logger.error(f"Error getting API key for user {user_id}, provider {provider}: {e}")
             return None
@@ -620,7 +619,7 @@ class DatabaseManager:
             True jeśli zapisano pomyślnie
         """
         try:
-            with self.get_connection() as conn:
+            with self.get_db_connection() as conn:
                 cursor = conn.cursor()
                 
                 # Pobierz aktualne klucze API
@@ -644,12 +643,10 @@ class DatabaseManager:
                 cursor.execute(
                     "UPDATE users SET api_keys = ? WHERE id = ?",
                     (json.dumps(api_keys), user_id)
-                )
-                
+                )                
                 conn.commit()
                 logger.info(f"Set API key for user {user_id}, provider {provider}")
                 return True
-                
         except Exception as e:
             logger.error(f"Error setting API key for user {user_id}, provider {provider}: {e}")
             return False
@@ -666,7 +663,7 @@ class DatabaseManager:
             True jeśli usunięto pomyślnie
         """
         try:
-            with self.get_connection() as conn:
+            with self.get_db_connection() as conn:
                 cursor = conn.cursor()
                 
                 # Pobierz aktualne klucze API
@@ -685,18 +682,15 @@ class DatabaseManager:
                 # Usuń klucz jeśli istnieje
                 if provider in api_keys:
                     del api_keys[provider]
-                    
-                    # Zapisz z powrotem
+                      # Zapisz z powrotem
                     cursor.execute(
                         "UPDATE users SET api_keys = ? WHERE id = ?",
                         (json.dumps(api_keys), user_id)
                     )
-                    
                     conn.commit()
                     logger.info(f"Removed API key for user {user_id}, provider {provider}")
                 
                 return True
-                
         except Exception as e:
             logger.error(f"Error removing API key for user {user_id}, provider {provider}: {e}")
             return False
@@ -712,7 +706,7 @@ class DatabaseManager:
             Słownik z kluczami API {provider: key}
         """
         try:
-            with self.get_connection() as conn:
+            with self.get_db_connection() as conn:
                 cursor = conn.cursor()
                 cursor.execute(
                     "SELECT api_keys FROM users WHERE id = ?",

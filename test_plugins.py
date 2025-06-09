@@ -8,10 +8,14 @@ sys.path.insert(0, str(Path(__file__).parent / "server"))
 
 import asyncio
 from plugin_manager import PluginManager
+from database_manager import initialize_database_manager
 
 async def test_all_plugins():
     """Test all plugins and their functions."""
     print("🧪 Testing Plugin System...")
+    
+    # Initialize database manager first
+    db_manager = initialize_database_manager("server/server_data.db")
     
     # Initialize plugin manager with correct path
     plugin_manager = PluginManager("server/modules")

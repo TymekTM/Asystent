@@ -84,10 +84,17 @@ async def execute_function(function_name: str, parameters: Dict[str, Any], user_
     
     try:
         if function_name == "save_memory":
-            memory_type = parameters.get("memory_type")
+            # Support both 'content' and 'value' for backward compatibility
+            memory_type = parameters.get("memory_type", "general")  # Default type
             key = parameters.get("key")
-            value = parameters.get("value")
+            value = parameters.get("value") or parameters.get("content")  # Support both
             metadata = parameters.get("metadata", {})
+            
+            if not key or not value:
+                return {
+                    "success": False,
+                    "error": "Brak wymaganych parametrów: key i value/content"
+                }
             
             success = memory_module.save_memory(user_id, memory_type, key, value, metadata)
             
@@ -107,8 +114,14 @@ async def execute_function(function_name: str, parameters: Dict[str, Any], user_
                 }
                 
         elif function_name == "get_memory":
-            memory_type = parameters.get("memory_type")
+            memory_type = parameters.get("memory_type", "general")  # Default type
             key = parameters.get("key")
+            
+            if not key:
+                return {
+                    "success": False,
+                    "error": "Brak wymaganego parametru: key"
+                }
             
             result = memory_module.get_memory(user_id, memory_type, key)
             
