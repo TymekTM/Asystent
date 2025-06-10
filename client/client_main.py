@@ -16,6 +16,9 @@ import websockets
 from loguru import logger
 import threading
 import subprocess
+from http.server import HTTPServer, BaseHTTPRequestHandler
+from urllib.parse import urlparse, parse_qs
+import time
 from active_window_module import get_active_window_title
 
 # Dodaj ścieżkę klienta do PYTHONPATH
@@ -36,14 +39,25 @@ class ClientApp:
         self.user_id = self.config.get('user_id', '1')
         self.server_url = self.config.get('server_url', 'ws://localhost:8001/ws/client1')
         self.running = False
-          # Audio components
+        
+        # Audio components
         self.wakeword_detector = None
         self.whisper_asr = None
         self.audio_recorder = None
         self.tts = None
-        self.overlay_process = None  # External Tauri overlay process# State management
-        self.listening_for_wakeword = False
+        self.overlay_process = None  # External Tauri overlay process
+          # State management
+        self.monitoring_wakeword = False    # Whether wakeword monitoring is active
+        self.wake_word_detected = False     # Whether wakeword was just detected
         self.recording_command = False
+        self.tts_playing = False
+        self.last_tts_text = ""
+        self.current_status = "Starting..."
+        
+        # HTTP server for overlay
+        self.http_server = None
+        self.http_thread = None
+        self.sse_clients = []
     
     def load_client_config(self) -> Dict:
         """Załaduj konfigurację klienta."""
@@ -82,13 +96,16 @@ class ClientApp:
             },
             "audio": {
                 "sample_rate": 16000,
-                "record_duration": 5.0
-            }
+                "record_duration": 5.0            }
         }
     
     async def initialize_components(self):
         """Inicjalizuj komponenty audio i overlay."""
         try:
+            # Start HTTP server for overlay first
+            self.start_http_server()
+            self.update_status("Initializing...")
+            
             # Initialize external Tauri overlay only
             if self.config.get('overlay', {}).get('enabled', True):
                 await self.start_overlay()
@@ -181,7 +198,8 @@ class ClientApp:
                         logger.error(f"Invalid JSON from server: {e}")
                 else:
                     await asyncio.sleep(0.1)
-        except Exception as e:            logger.error(f"Error listening for messages: {e}")
+        except Exception as e:
+            logger.error(f"Error listening for messages: {e}")
 
     async def handle_server_message(self, data: Dict):
         """Obsłuż wiadomość od serwera."""
@@ -203,20 +221,24 @@ class ClientApp:
                     logger.info(f"AI text response: {text}")
                     
                     # Update overlay with AI response
-                    await self.update_overlay_status(f"Response: {text[:50]}...")
-                      # Play TTS response
+                    self.last_tts_text = text
+                    self.update_status(f"Response: {text[:50]}...")                    # Play TTS response
                     if self.tts:
                         try:
+                            self.tts_playing = True
+                            self.update_status("Speaking...")
                             await self.tts.speak(text)
                             logger.info("TTS response played")
                         except Exception as tts_e:
                             logger.error(f"TTS error: {tts_e}")
+                        finally:
+                            self.tts_playing = False
+                            self.wake_word_detected = False  # Reset wakeword flag after speaking
+                            self.update_status("Listening...")  # Return to listening immediately
                     else:
                         logger.warning("TTS not available")
-                        
-                    # Reset overlay status after a delay
-                    await asyncio.sleep(3)
-                    await self.update_overlay_status("Listening...")
+                        self.wake_word_detected = False
+                        self.update_status("Listening...")  # Return to listening even without TTS
                 else:
                     logger.warning("No text in AI response")
                         
@@ -226,20 +248,27 @@ class ClientApp:
                 if isinstance(response, str) and response.strip():
                     text = response.strip()
                     logger.info(f"Using response as plain text: {text}")
+                      # Update overlay
+                    self.last_tts_text = text
+                    self.update_status(f"Response: {text[:50]}...")
                     
-                    # Update overlay
-                    await self.update_overlay_status(f"Response: {text[:50]}...")
-                      # Play TTS
+                    # Play TTS
                     if self.tts:
                         try:
+                            self.tts_playing = True
+                            self.update_status("Speaking...")
                             await self.tts.speak(text)
                             logger.info("TTS response played (plain text)")
                         except Exception as tts_e:
                             logger.error(f"TTS error: {tts_e}")
-                    
-                    # Reset overlay status
-                    await asyncio.sleep(3)
-                    await self.update_overlay_status("Listening...")
+                        finally:
+                            self.tts_playing = False
+                            self.wake_word_detected = False  # Reset wakeword flag after speaking (fallback)
+                            self.update_status("Listening...")  # Return to listening immediately
+                    else:
+                        logger.warning("TTS not available")
+                        self.wake_word_detected = False
+                        self.update_status("Listening...")  # Return to listening even without TTS
             
         elif message_type == 'function_result':
             function_name = data.get('function')
@@ -258,7 +287,7 @@ class ClientApp:
         elif message_type == 'error':
             error = data.get('error', 'Unknown error')
             logger.error(f"Server error: {error}")
-            await self.update_overlay_status("Error")
+            self.update_status("Error")
             
         else:
             logger.warning(f"Unknown message type: {message_type}")
@@ -269,14 +298,19 @@ class ClientApp:
             # We already have transcribed text from wakeword detector
             logger.info(f"Wakeword detected with query: {query}")
             
+            # Set wake word detection flag for overlay
+            self.wake_word_detected = True
+            self.update_status("Wake word detected!")
+            
             if self.recording_command:
                 logger.warning("Already processing command")
                 return
                 
             try:
                 self.recording_command = True
-                await self.update_overlay_status("Processing...")
-                  # Send transcribed query to server
+                self.update_status("Processing...")
+                
+                # Send transcribed query to server
                 active_title = get_active_window_title()
                 message = {
                     "type": "ai_query",
@@ -293,32 +327,137 @@ class ClientApp:
                 
             except Exception as e:
                 logger.error(f"Error processing voice command: {e}")
-                await self.update_overlay_status("Error")
-            finally:                self.recording_command = False
+                self.update_status("Error")
+                # Reset flags on error
+                self.wake_word_detected = False
+                self.recording_command = False
+                # Return to listening state
+                await asyncio.sleep(1)
+                self.update_status("Listening...")
+            finally:
+                # Note: recording_command and wake_word_detected are reset in TTS completion
+                pass
         else:
             # Legacy support - wakeword detected without transcription
             logger.info("Wakeword detected! Recording and transcription handled by wakeword detector.")
-            await self.update_overlay_status("Listening...")
+            self.wake_word_detected = True
+            self.update_status("Listening...")
 
     async def update_overlay_status(self, status: str):
         """Zaktualizuj status w overlay."""
         logger.debug(f"Overlay status: {status}")
         # Overlay is external process - status updates would need IPC
 
+    def get_current_status(self) -> str:
+        """Zwróć aktualny status klienta."""
+        return self.current_status
+    
+    def update_status(self, status: str):
+        """Zaktualizuj status i powiadom overlay."""
+        self.current_status = status
+        self.notify_sse_clients()
+    
+    def add_sse_client(self, client):
+        """Dodaj klienta SSE."""
+        self.sse_clients.append(client)
+        
+    def remove_sse_client(self, client):
+        """Usuń klienta SSE."""
+        if client in self.sse_clients:
+            self.sse_clients.remove(client)
+    
+    def notify_sse_clients(self):
+        """Powiadom wszystkich klientów SSE o zmianie statusu."""
+        status_data = {
+            "status": self.current_status,
+            "text": self.last_tts_text,
+            "is_listening": self.recording_command,
+            "is_speaking": self.tts_playing,
+            "wake_word_detected": self.wake_word_detected
+        }
+        
+        message = f"data: {json.dumps(status_data)}\n\n"
+        
+        # Send to all connected SSE clients
+        for client in self.sse_clients[:]:  # Copy list to avoid modification during iteration
+            try:
+                client.wfile.write(message.encode())
+                client.wfile.flush()
+            except Exception as e:
+                logger.debug(f"SSE client disconnected: {e}")
+                self.remove_sse_client(client)
+    
+    def start_http_server(self):
+        """Uruchom HTTP serwer dla overlay."""
+        try:
+            # Try port 5001 first (debug), then 5000 (release)
+            ports = [5001, 5000]
+            
+            for port in ports:
+                try:
+                    # Create handler with reference to client app
+                    handler = lambda *args, **kwargs: StatusHTTPHandler(self, *args, **kwargs)
+                    self.http_server = HTTPServer(('localhost', port), handler)
+                    
+                    # Start server in separate thread
+                    self.http_thread = threading.Thread(
+                        target=self.http_server.serve_forever,
+                        daemon=True
+                    )
+                    self.http_thread.start()
+                    
+                    logger.info(f"HTTP server started on port {port} for overlay")
+                    break
+                    
+                except OSError as e:
+                    logger.warning(f"Port {port} unavailable: {e}")
+                    continue
+            else:
+                logger.error("Could not start HTTP server on any port")
+                
+        except Exception as e:
+            logger.error(f"Error starting HTTP server: {e}")
+    
+    def stop_http_server(self):
+        """Zatrzymaj HTTP serwer."""
+        if self.http_server:
+            try:
+                self.http_server.shutdown()
+                self.http_server.server_close()
+                logger.info("HTTP server stopped")
+            except Exception as e:
+                logger.error(f"Error stopping HTTP server: {e}")
+
     async def run(self):
         """Uruchom główną pętlę klienta."""
         try:
             self.running = True
             
-            # Initialize components
+            # Initialize components (includes HTTP server)
             await self.initialize_components()
             
-            # Connect to server
-            await self.connect_to_server()            # Start wakeword monitoring
+            # Try to connect to server (but don't fail if can't connect)
+            try:
+                await self.connect_to_server()
+                logger.info("Connected to server successfully")
+            except Exception as e:
+                logger.warning(f"Could not connect to server: {e}")
+                logger.warning("Running in standalone mode - overlay and local features will work")
+            
+            # Start wakeword monitoring
             await self.start_wakeword_monitoring()
             
-            # Listen for server messages
-            await self.listen_for_messages()
+            # Set status to ready
+            self.update_status("Listening...")
+            
+            # Listen for server messages (or just keep running if no server)
+            if self.websocket:
+                await self.listen_for_messages()
+            else:
+                # Standalone mode - just keep running with wakeword detection
+                logger.info("Running in standalone mode - use Ctrl+C to stop")
+                while self.running:
+                    await asyncio.sleep(1)
             
         except KeyboardInterrupt:
             logger.info("Client interrupted by user")
@@ -330,7 +469,7 @@ class ClientApp:
     async def start_wakeword_monitoring(self):
         """Uruchom monitoring słowa aktywującego w tle."""
         if self.wakeword_detector:
-            self.listening_for_wakeword = True
+            self.monitoring_wakeword = True
             # Start wakeword detection in separate thread
             wakeword_thread = threading.Thread(target=self.wakeword_detector.start_detection, daemon=True)
             wakeword_thread.start()
@@ -340,6 +479,9 @@ class ClientApp:
         """Wyczyść zasoby przed zamknięciem."""
         try:
             self.running = False
+            
+            # Stop HTTP server
+            self.stop_http_server()
             
             # Stop wakeword detection
             if self.wakeword_detector:
@@ -383,6 +525,58 @@ class ClientApp:
             
         except Exception as e:
             logger.error(f"Error during cleanup: {e}")
+
+class StatusHTTPHandler(BaseHTTPRequestHandler):
+    """HTTP handler dla overlay status API."""
+    
+    def __init__(self, client_app, *args, **kwargs):
+        self.client_app = client_app
+        super().__init__(*args, **kwargs)
+    
+    def do_GET(self):
+        """Obsługa GET requests."""
+        try:
+            path = urlparse(self.path).path
+            
+            if path == '/api/status':
+                # Zwróć aktualny status
+                status_data = {
+                    "status": self.client_app.get_current_status(),
+                    "text": self.client_app.last_tts_text,
+                    "is_listening": self.client_app.recording_command,
+                    "is_speaking": self.client_app.tts_playing if hasattr(self.client_app, 'tts_playing') else False,
+                    "wake_word_detected": self.client_app.wake_word_detected
+                }
+                
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps(status_data).encode())
+                
+            elif path == '/status/stream':
+                # SSE endpoint for real-time updates
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/event-stream')
+                self.send_header('Cache-Control', 'no-cache')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                
+                # Keep connection alive and send updates
+                self.client_app.add_sse_client(self)
+                
+            else:
+                self.send_response(404)
+                self.end_headers()
+                
+        except Exception as e:
+            logger.error(f"HTTP handler error: {e}")
+            self.send_response(500)
+            self.end_headers()
+    
+    def log_message(self, format, *args):
+        """Log HTTP requests for debugging."""
+        logger.debug(f"HTTP: {format % args}")
 
 
 async def main():

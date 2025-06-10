@@ -996,3 +996,213 @@ def search_memories_advanced(query: str = "", user: str = None,
     except Exception as e:
         logger.error(f"Failed to search advanced memories: {e}")
         return "Wystąpił błąd przy przeszukiwaniu pamięci.", False
+
+# Global functions for function calling system
+async def store_advanced_memory(user_id: str, key: str, content: str, 
+                               category: str = "general", importance: int = 1) -> Dict[str, Any]:
+    """Zapisz wpis do zaawansowanej pamięci długoterminowej."""
+    try:
+        manager = get_memory_manager()
+        
+        # Convert importance to memory type
+        memory_type = MemoryType.LONG_TERM if importance >= 3 else MemoryType.MID_TERM
+        
+        # Create context with category and key
+        context = {
+            "category": category,
+            "key": key,
+            "importance": importance,
+            "user_id": user_id
+        }
+        
+        entry = manager.add_memory(content, user_id, memory_type=memory_type, context=context)
+        
+        return {
+            "success": True,
+            "entry_id": entry.id,
+            "key": key,
+            "category": category,
+            "memory_type": entry.memory_type.value,
+            "message": f"Zapamiętałem: {key}"
+        }
+    except Exception as e:
+        logger.error(f"Error in store_advanced_memory: {e}")
+        return {"success": False, "error": str(e)}
+
+async def search_advanced_memory(user_id: str, query: str, 
+                                category: str = None, limit: int = 10) -> Dict[str, Any]:
+    """Wyszukaj wpisy w zaawansowanej pamięci."""
+    try:
+        manager = get_memory_manager()
+        result = manager.get_memories(query=query, user=user_id, limit=limit)
+        
+        # Filter by category if specified
+        filtered_memories = []
+        for memory in result.memories:
+            if category and memory.context.get("category") != category:
+                continue
+            filtered_memories.append({
+                "id": memory.id,
+                "content": memory.content,
+                "key": memory.context.get("key", ""),
+                "category": memory.context.get("category", "general"),
+                "importance": memory.context.get("importance", 1),
+                "memory_type": memory.memory_type.value,
+                "created_at": memory.timestamp.isoformat(),
+                "relevance_score": getattr(memory, 'relevance_score', 0)
+            })
+        
+        return {
+            "success": True,
+            "results": filtered_memories[:limit],
+            "query": query,
+            "total": len(filtered_memories)
+        }
+    except Exception as e:
+        logger.error(f"Error in search_advanced_memory: {e}")
+        return {"success": False, "error": str(e)}
+
+async def get_memory_statistics(user_id: str = "1") -> Dict[str, Any]:
+    """Pobierz statystyki pamięci użytkownika."""
+    try:
+        manager = get_memory_manager()
+        
+        # Get all memories for user
+        result = manager.get_memories(user=user_id, limit=1000)
+        memories = result.memories
+        
+        # Calculate statistics
+        total_memories = len(memories)
+        categories = set()
+        memory_types = defaultdict(int)
+        importance_dist = defaultdict(int)
+        
+        for memory in memories:
+            category = memory.context.get("category", "general")
+            importance = memory.context.get("importance", 1)
+            
+            categories.add(category)
+            memory_types[memory.memory_type.value] += 1
+            importance_dist[importance] += 1
+        
+        # Get analytics summary
+        analytics_summary = manager.get_analytics_summary()
+        
+        return {
+            "success": True,
+            "general": {
+                "total_entries": total_memories,
+                "categories": len(categories),
+                "avg_importance": sum(memory.context.get("importance", 1) for memory in memories) / max(total_memories, 1),
+                "memory_types": dict(memory_types)
+            },
+            "categories": list(categories),
+            "importance_distribution": dict(importance_dist),
+            "analytics": analytics_summary,
+            "recent_entries": [
+                {
+                    "content": memory.content[:100] + "..." if len(memory.content) > 100 else memory.content,
+                    "category": memory.context.get("category", "general"),
+                    "created_at": memory.timestamp.isoformat()
+                } for memory in memories[:10]
+            ]
+        }
+    except Exception as e:
+        logger.error(f"Error in get_memory_statistics: {e}")
+        return {"success": False, "error": str(e)}
+
+async def get_advanced_memory(user_id: str, key: str = None, 
+                             category: str = None, limit: int = 10) -> Dict[str, Any]:
+    """Pobierz wpisy z zaawansowanej pamięci."""
+    try:
+        manager = get_memory_manager()
+        result = manager.get_memories(user=user_id, limit=100)
+        
+        # Filter by key and/or category
+        filtered_memories = []
+        for memory in result.memories:
+            memory_key = memory.context.get("key", "")
+            memory_category = memory.context.get("category", "general")
+            
+            if key and memory_key != key:
+                continue
+            if category and memory_category != category:
+                continue
+                
+            filtered_memories.append({
+                "id": memory.id,
+                "content": memory.content,
+                "key": memory_key,
+                "category": memory_category,
+                "importance": memory.context.get("importance", 1),
+                "memory_type": memory.memory_type.value,
+                "created_at": memory.timestamp.isoformat()
+            })
+        
+        return {
+            "success": True,
+            "memories": filtered_memories[:limit],
+            "total": len(filtered_memories)
+        }
+    except Exception as e:
+        logger.error(f"Error in get_advanced_memory: {e}")
+        return {"success": False, "error": str(e)}
+
+def get_functions():
+    """Zwróć listę funkcji dostępnych w zaawansowanym systemie pamięci."""
+    return [
+        {
+            "name": "store_advanced_memory",
+            "description": "Zapisz informację do zaawansowanej pamięci długoterminowej z kategoriami i poziomami ważności",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "user_id": {"type": "string", "description": "ID użytkownika"},
+                    "key": {"type": "string", "description": "Klucz/nazwa wpisu do łatwego odnalezienia"},
+                    "content": {"type": "string", "description": "Treść do zapamiętania"},
+                    "category": {"type": "string", "description": "Kategoria (personal, work, preferences, facts, etc.)", "default": "general"},
+                    "importance": {"type": "integer", "description": "Poziom ważności 1-5 (3+ trafia do pamięci długoterminowej)", "default": 1}
+                },
+                "required": ["user_id", "key", "content"]
+            }
+        },
+        {
+            "name": "search_advanced_memory",
+            "description": "Wyszukaj informacje w zaawansowanej pamięci długoterminowej używając inteligentnego wyszukiwania",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "user_id": {"type": "string", "description": "ID użytkownika"},
+                    "query": {"type": "string", "description": "Zapytanie wyszukiwania (słowa kluczowe, frazy)"},
+                    "category": {"type": "string", "description": "Kategoria do przeszukania (opcjonalne)"},
+                    "limit": {"type": "integer", "description": "Maksymalna liczba wyników", "default": 10}
+                },
+                "required": ["user_id", "query"]
+            }
+        },
+        {
+            "name": "get_memory_statistics",
+            "description": "Pobierz szczegółowe statystyki pamięci użytkownika (liczba wpisów, kategorie, analityki)",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "user_id": {"type": "string", "description": "ID użytkownika", "default": "1"}
+                },
+                "required": []
+            }
+        },
+        {
+            "name": "get_advanced_memory",
+            "description": "Pobierz konkretne wpisy z zaawansowanej pamięci według klucza lub kategorii",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "user_id": {"type": "string", "description": "ID użytkownika"},
+                    "key": {"type": "string", "description": "Konkretny klucz wpisu (opcjonalne)"},
+                    "category": {"type": "string", "description": "Kategoria wpisów (opcjonalne)"},
+                    "limit": {"type": "integer", "description": "Maksymalna liczba wyników", "default": 10}
+                },
+                "required": ["user_id"]
+            }
+        }
+    ]

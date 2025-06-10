@@ -1,6 +1,6 @@
 {
   "user_id": "1",
-  "server_url": "ws://localhost:8000/ws/1",
+  "server_url": "ws://localhost:8001/ws/client1",
   "client_version": "1.0.0",
   "api_keys": {
     "openai": "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"

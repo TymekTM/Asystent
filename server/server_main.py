@@ -25,6 +25,9 @@ from database_manager import DatabaseManager, initialize_database_manager
 from ai_module import AIModule
 from function_calling_system import FunctionCallingSystem
 from plugin_manager import plugin_manager
+from onboarding_module import OnboardingModule
+from plugin_monitor import plugin_monitor
+from extended_webui import ExtendedWebUI
 
 
 class ConnectionManager:
@@ -94,10 +97,19 @@ class ServerApp:
         self.function_system = None
         self.connection_manager = ConnectionManager()
         self.user_plugins: Dict[str, Dict[str, Any]] = {}
+        
+        # New modules
+        self.onboarding_module = None
+        self.plugin_monitor = plugin_monitor
+        self.web_ui = None
+        self.start_time = None
     
     async def initialize(self):
         """Inicjalizuj wszystkie komponenty serwera."""
         try:
+            from datetime import datetime
+            self.start_time = datetime.now()
+            
             # Załaduj konfigurację
             self.config = load_config("server_config.json")
             logger.info("Configuration loaded")
@@ -105,7 +117,19 @@ class ServerApp:
             self.db_manager = initialize_database_manager("server_data.db")
             await self.db_manager.initialize()
             logger.info("Database initialized")
-              # Inicjalizuj AI module
+            
+            # Inicjalizuj moduły konfiguracji i onboarding
+            from config_loader import ConfigLoader
+            config_loader = ConfigLoader("server_config.json")
+            self.onboarding_module = OnboardingModule(config_loader, self.db_manager)
+            logger.info("Onboarding module initialized")
+            
+            # Inicjalizuj Web UI
+            self.web_ui = ExtendedWebUI(config_loader, self.db_manager)
+            self.web_ui.set_server_app(self)
+            logger.info("Extended Web UI initialized")
+            
+            # Inicjalizuj AI module
             self.ai_module = AIModule(self.config)
             logger.info("AI module initialized")
             
@@ -118,6 +142,10 @@ class ServerApp:
             await plugin_manager.discover_plugins()
             await self.load_all_user_plugins()
             logger.info("Plugin manager initialized")
+            
+            # Inicjalizuj monitorowanie pluginów
+            await self.plugin_monitor.start_monitoring()
+            logger.info("Plugin monitoring started")
             
             logger.success("Server initialization completed")
             

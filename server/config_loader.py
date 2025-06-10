@@ -78,6 +78,44 @@ def create_default_config() -> Dict[str, Any]:
         }
     }
 
+class ConfigLoader:
+    """Klasa do zarządzania konfiguracją serwera."""
+    
+    def __init__(self, config_file: str = "server_config.json"):
+        self.config_file = config_file
+        self._config = None
+        self.load()
+    
+    def load(self) -> Dict[str, Any]:
+        """Załaduj konfigurację z pliku."""
+        self._config = load_config(self.config_file)
+        return self._config
+    
+    def get_config(self) -> Dict[str, Any]:
+        """Pobierz aktualną konfigurację."""
+        if self._config is None:
+            self.load()
+        return self._config
+    
+    def save_config(self, config: Dict[str, Any] = None):
+        """Zapisz konfigurację."""
+        if config is not None:
+            self._config = config
+        save_config(self._config, self.config_file)
+    
+    def update_config(self, updates: Dict[str, Any]):
+        """Aktualizuj konfigurację."""
+        if self._config is None:
+            self.load()
+        self._config.update(updates)
+        self.save_config()
+    
+    def get(self, key: str, default: Any = None):
+        """Pobierz wartość z konfiguracji."""
+        if self._config is None:
+            self.load()
+        return self._config.get(key, default)
+
 # Stare zmienne dla kompatybilności
 _config = load_config()
 STT_MODEL = _config.get("ai", {}).get("stt_model", "base")

@@ -1,12 +1,21 @@
-# ✅ FIXY
+# ✅ FIXY - COMPLETED OVERLAY REFACTORING! ✅
+- ✅ FIXED: Overlay status management and client-server-overlay integration
+- ✅ FIXED: Client can run in standalone mode for testing  
+- ✅ FIXED: HTTP API for overlay working correctly
+- ✅ FIXED: Status flag management (tts_playing, wake_word_detected, etc.)
 - When AI wants to activate listening and user does the same at the same time it just happens twice
 - Moduł od muzyki klucz spotify
 
-# ⭐ WAŻNE (strategiczne / fundamenty)
+# ⭐ WAŻNE (strategiczne / fundamenty) - OVERLAY DONE, NOW THESE!
 - Plug and play installation
+- ✨ Poor man mode - tts bing, whisper lokalnie(dynamiczny dobór rozmiaru) [NEXT PRIORITY]
+- ✨ Paid user mode - whisper i tts po api openai [NEXT PRIORITY] 
+- ✨ Advanced user authentication and role management [NEXT PRIORITY]
+- Test 100, 200, 1000 and 10000 concurent users at the same time (openai limits 500 rpm, no tts, just handle data transfer and monitor memory and cpu usage)
 
 # 🔧 OPTYMALIZACJE
 - Add loading indicators for long-running operations in web UI
+- Reduce latency
 
 # 🟢 ŁATWE (mały scope, max 1 dzień)
 - Wheel decide do robienia czego
@@ -16,7 +25,6 @@
 - Instalator z GUI
 - API integrations: weather, calendar, IoT – MCP
 - Desktop/mobile version (Tauri)
-- Advanced user authentication and role management
 - Interakcje z przeglądarką (prosty Puppeteer / Pyppeteer)
 - Day summary (do obserwacji nawyków, przygotowanie działania)
 - Podstawowa nauka zachowań użytkownika (np. przez zapis do JSON)
