@@ -1,101 +1,183 @@
-# Gaja - Advanced AI Assistant System (v1.2.0)
+# 🤖 GAJA Assistant
 
-Gaja is a powerful AI assistant system that provides interactive natural language processing through text, voice, and web interfaces. It's designed to be modular, extensible, and adaptable to various usage scenarios. With its new Daily Briefing capability and enhanced API, version 1.2.0 brings even more functionality to users.
+**Advanced AI-powered voice assistant with user mode system and real-time overlay interface.**
 
-## Features
+## 🚀 Quick Start
 
-- **Multi-modal interaction:** Communicate via text chat, voice commands, or web UI
-- **Wake word detection:** Activate voice interaction with a customizable trigger phrase
-- **Multiple LLM support:** Compatible with OpenAI, Ollama, DeepSeek, and Anthropic models
-- **Voice capabilities:** Advanced speech-to-text (STT) and text-to-speech (TTS)
-- **Long-term memory:** Persistent storage of conversation history and important information
-- **Modular plugin system:** Easily extend functionality with custom plugins
-- **Tool integration:** Built-in tools for web search, API connections, screen analysis, and more
-- **Web control panel:** Configure, monitor, and interact with the system via browser
-- **Daily Briefings:** AI-generated personalized daily summaries with weather and memory integration
-- **RESTful API:** Comprehensive API for external system integration
-- **Documentation Integration:** Web UI integrated documentation viewer
-
-## Installation
-
-### Prerequisites
-
-- Python 3.10 or higher
-- pip package manager
-- Git (for cloning the repository)
-
-### Setup
-
-1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/gaja.git
-cd gaja
+# Start client (voice assistant)
+cd client && python client_main.py
+
+# Start server (AI processing) 
+cd server && python server_main.py
+
+# Start web UI (configuration)
+cd web_ui && python app.py
 ```
 
-2. Install the required packages:
+## 📁 Project Structure
+
+```
+f:\Asystent\
+├── 🎙️ client/              # Voice assistant client
+├── 🧠 server/              # AI processing server  
+├── 🌐 web_ui/              # Web configuration interface
+├── 🎨 overlay/             # Visual status overlay
+├── 🔊 audio_modules/       # TTS, STT, wake word detection
+├── 🧩 modules/             # Feature modules (weather, music, etc.)
+├── 🧪 tests/               # Testing utilities
+│   ├── performance/        # Load and performance tests
+│   ├── integration/        # Component integration tests
+│   └── debug/              # Debug and diagnostic tools
+├── 🎭 demos/               # Feature demonstration scripts
+├── 📊 reports/             # Test reports and documentation
+├── ⚙️ configs/             # Configuration files
+└── 📚 docs/                # Documentation
+```
+
+## ✨ Key Features
+
+### 🎯 User Mode System
+- **Poor Man Mode**: Free Edge TTS + Local Whisper
+- **Paid User Mode**: OpenAI TTS + OpenAI Whisper  
+- **Enterprise Mode**: Azure TTS + Azure Whisper
+
+### 🎙️ Voice Capabilities
+- Wake word detection ("Gaja")
+- Real-time speech recognition
+- Natural language processing
+- Text-to-speech responses
+
+### 🖥️ Interface Options
+- Voice-only interaction
+- Visual overlay with status
+- Web UI for configuration
+- Desktop notifications
+
+### 🧠 AI Features
+- Context-aware conversations
+- Memory system with persistence
+- Function calling (weather, music, web search)
+- Advanced prompt engineering
+
+## 🛠️ Installation
+
+### 1. Clone Repository
 ```bash
+git clone <repository-url>
+cd GAJA-Assistant
+```
+
+### 2. Install Dependencies
+```bash
+# Core dependencies
 pip install -r requirements.txt
+
+# Client dependencies
+pip install -r client/requirements_client.txt
+
+# Server dependencies  
+pip install -r server/requirements_server.txt
+
+# Demo dependencies (optional)
+pip install -r demos/requirements_user_modes.txt
 ```
 
-3. Configure your settings:
-   - Create a `config.json` file from `dummy_config.json`
-   - Add your API keys and customize settings
-   - Or configure via the web interface after first run
-
-4. Run the application:
+### 3. Configuration
 ```bash
-python main.py
+# Copy and edit configuration
+cp dummy_config.json config.json
+
+# Add your API keys
+nano config.json
 ```
 
-5. Build an executable (optional):
+### 4. First Run
 ```bash
-python build.py
+# Run setup wizard
+python setup_wizard.py
+
+# Or quick start
+python quick_start.py
 ```
-   See [README_BUILD.md](README_BUILD.md) for detailed build instructions.
 
-## Usage
+## 🧪 Testing
 
-### Web Interface
+### Performance Testing
+```bash
+cd tests/performance
+python concurrent_users_test.py    # Full load testing (100-10k users)
+python quick_perf_test.py          # Quick performance check
+```
 
-Access the control panel by navigating to http://localhost:5000 in your browser after starting the application. Default login credentials are:
-- Username: `dev` or `user`
-- Password: `devpassword` or `password`
+### Integration Testing
+```bash
+cd tests/integration  
+python test_client_integration.py  # Client compatibility test
+```
 
-### Voice Interaction
+### Feature Demos
+```bash
+cd demos
+python demo_user_modes.py          # User mode system demo
+python demo_enhanced_tts.py        # TTS providers demo
+```
 
-1. Start the application with voice support enabled
-2. Use the wake word (default: "gaja") to begin voice interaction
-3. Speak your command or question
-4. Or click the "Activate" button in the web UI to listen without a wake word
+## 📊 Performance
 
-### API Integration
+**Tested with concurrent users:**
+- ✅ **200 users**: 100% success, <1s response time
+- ⚠️ **1000 users**: 54.5% success (API rate limited)
+- 🚀 **Peak throughput**: 323.8 requests/second
 
-Gaja provides REST API endpoints for programmatic interaction. See the [API documentation](docs/api/README.md) for details.
+## 🔧 Development
 
-## Documentation
+### Core Modules
+- `user_modes.py` - User mode management system
+- `audio_modules/enhanced_tts_module.py` - Multi-provider TTS
+- `audio_modules/enhanced_whisper_asr.py` - Dynamic ASR  
+- `auth_system.py` - Authentication and roles
+- `mode_integrator.py` - System integration layer
 
-Comprehensive documentation is available in the following sections:
+### Architecture
+- **Client-Server Architecture**: Scalable AI processing
+- **Modular Design**: Easy to extend and customize
+- **Async Processing**: High performance concurrent handling
+- **Fallback Systems**: Graceful degradation on failures
 
-- [User Guide](docs/user-guide/README.md) - How to use Gaja
-- [Developer Guide](docs/developer/README.md) - Technical information and setup instructions
-- [API Documentation](docs/api/README.md) - API reference and integration guides
+## 📈 Deployment
 
-## Development
+### Local Development
+- Suitable for development and testing
+- 200 concurrent users maximum
+- Home internet limitations
 
-To contribute to Gaja:
+### Production Server  
+- 5-25x higher capacity (1000-5000 users)
+- 2-3x faster response times
+- Enterprise-grade reliability
+- Professional monitoring
+
+## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
 
-## License
+## 📝 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Acknowledgements
+## 🙏 Acknowledgments
 
-- OpenAI, Ollama, DeepSeek, and Anthropic for their language models
-- Flask for the web framework
-- All contributors who have helped build and improve Gaja
+- OpenAI for GPT and Whisper APIs
+- Microsoft for Edge TTS
+- All contributors and testers
+
+---
+
+**Status: ✅ Production Ready**  
+**Last Updated: June 10, 2025**  
+**Version: 2.0 (User Modes + Performance Tested)**
