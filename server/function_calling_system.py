@@ -22,7 +22,8 @@ class FunctionCallingSystem:
     
     async def initialize(self):
         """Asynchroniczna inicjalizacja systemu funkcji."""
-        # Tutaj można załadować podstawowe moduły        logger.info("Function calling system initialized")
+        # Tutaj można załadować podstawowe moduły        
+        logger.info("Function calling system initialized")
         pass
 
     def convert_modules_to_functions(self) -> List[Dict[str, Any]]:
@@ -31,36 +32,47 @@ class FunctionCallingSystem:
         
         functions = []
         
+        # Check if plugin manager has functions registered
+        if not plugin_manager.function_registry:
+            logger.warning("Plugin manager function_registry is empty. Ensure plugins are loaded before calling this method.")
+            return functions
+        
         # Get functions from plugin manager's function registry
         for full_func_name, func_info in plugin_manager.function_registry.items():
             try:
-                # Parse plugin.function format
-                if '.' in full_func_name:
-                    plugin_name, func_name = full_func_name.split('.', 1)
-                    
-                    # Create OpenAI function format
-                    openai_function = {
-                        "type": "function",
-                        "function": {
-                            "name": full_func_name.replace('.', '_'),  # OpenAI doesn't like dots
-                            "description": func_info.get('description', f'{func_name} function from {plugin_name}'),
-                            "parameters": func_info.get('parameters', {
-                                "type": "object",
-                                "properties": {},
-                                "required": []
-                            })
-                        }
+                # Parse plugin name and function name
+                parts = full_func_name.split('.')
+                if len(parts) != 2:
+                    logger.warning(f"Skipping function with invalid name format: {full_func_name}")
+                    continue
+                
+                plugin_name, func_name = parts
+                
+                # Create OpenAI function format
+                openai_function = {
+                    "type": "function",
+                    "function": {
+                        "name": full_func_name.replace('.', '_'),  # OpenAI doesn't like dots
+                        "description": func_info.get('description', f'Function {full_func_name}'),
+                        "parameters": func_info.get('parameters', {
+                            "type": "object",
+                            "properties": {},
+                            "required": []
+                        })
                     }
-                    
-                    functions.append(openai_function)
-                    
-                    # Store handler for later execution
-                    self.function_handlers[full_func_name.replace('.', '_')] = {
-                        'plugin_name': plugin_name,
-                        'function_name': func_name,
-                        'original_name': full_func_name
-                    }
-                    
+                }
+                
+                functions.append(openai_function)
+                logger.debug(f"Converted function: {full_func_name} -> {openai_function['function']['name']}")
+                
+                # Store handler info for later execution
+                handler_name = full_func_name.replace('.', '_')
+                self.function_handlers[handler_name] = {
+                    'original_name': full_func_name,
+                    'plugin_name': plugin_name,
+                    'function_name': func_name
+                }
+                
             except Exception as e:
                 logger.error(f"Error converting function {full_func_name}: {e}")
                 continue
@@ -246,96 +258,10 @@ class FunctionCallingSystem:
         }
         
         if param_name in param_descriptions:
-            return param_descriptions[param_name]
-        
+            return param_descriptions[param_name]        
         return f"The {param_name} parameter for {sub_name} command"
 
-    def execute_function(self, function_name: str, arguments: Dict[str, Any], 
-                        conversation_history: Optional[deque] = None,
-                        user: Optional[str] = None,
-                        assistant = None) -> Any:
-        """Execute a function call."""
-        if function_name not in self.function_handlers:
-            logger.error(f"Function {function_name} not found in handlers")
-            return f"Error: Function {function_name} not found"
-        
-        handler = self.function_handlers[function_name]
-        
-        try:
-            # Prepare arguments for the handler
-            kwargs = {}
-            
-            # Handle different argument patterns based on function naming
-            if function_name.endswith('_main'):
-                # Main module handler - check if it has action parameter
-                if 'action' in arguments:
-                    # For main handlers with action/sub-command selection
-                    kwargs['params'] = {
-                        'action': arguments['action'],
-                        **{k: v for k, v in arguments.items() if k != 'action'}
-                    }
-                elif 'params' in arguments:
-                    kwargs['params'] = arguments['params']
-                else:
-                    # Pass all arguments as params
-                    kwargs['params'] = arguments if len(arguments) > 1 else (list(arguments.values())[0] if arguments else "")
-            else:
-                # Sub-command handler - handle structured parameters
-                if 'params' in arguments:
-                    # Generic params field
-                    kwargs['params'] = arguments['params']
-                elif len(arguments) == 1:
-                    # Single parameter - pass directly
-                    kwargs['params'] = list(arguments.values())[0]
-                elif len(arguments) == 0:
-                    kwargs['params'] = ""
-                else:
-                    # Multiple named parameters - try to construct appropriate format
-                    # Check if function expects structured parameters
-                    import inspect
-                    handler_sig = inspect.signature(handler)
-                    params_param = handler_sig.parameters.get('params')
-                    
-                    if params_param and params_param.annotation in (str, inspect.Parameter.empty):
-                        # Handler expects string params - join them
-                        if all(isinstance(v, (str, int, float)) for v in arguments.values()):
-                            kwargs['params'] = ' '.join(str(v) for v in arguments.values())
-                        else:
-                            kwargs['params'] = str(arguments)
-                    else:
-                        # Handler might accept dict params
-                        kwargs['params'] = arguments
-            
-            # Add additional context if handler supports it
-            import inspect
-            sig = inspect.signature(handler)
-            if 'conversation_history' in sig.parameters:
-                kwargs['conversation_history'] = conversation_history
-            if 'user' in sig.parameters:
-                kwargs['user'] = user
-            if 'assistant' in sig.parameters and assistant:
-                kwargs['assistant'] = assistant
-            
-            # Execute the handler
-            result = handler(**kwargs)
-            
-            # Handle async results
-            import asyncio
-            if asyncio.iscoroutine(result):
-                # This is async but we're in sync context - need to handle this properly
-                # For now, we'll need to refactor the calling code to be async
-                logger.warning(f"Function {function_name} returned async result but we're in sync context")
-                # Return a placeholder - this needs proper async handling
-                return "Async function execution initiated"
-            
-            logger.info(f"Function {function_name} executed successfully")
-            return result
-            
-        except Exception as e:
-            logger.error(f"Error executing function {function_name}: {e}", exc_info=True)
-            return f"Error executing {function_name}: {str(e)}"
-
-    def execute_function(self, function_name: str, arguments: Dict[str, Any], conversation_history=None):
+    async def execute_function(self, function_name: str, arguments: Dict[str, Any], conversation_history=None):
         """Execute a function call through the plugin manager."""
         try:
             from plugin_manager import plugin_manager
@@ -356,14 +282,19 @@ class FunctionCallingSystem:
             
             # Get the function from the plugin module
             if hasattr(plugin_info.module, 'execute_function'):
-                # Use the plugin's execute_function method
-                result = plugin_info.module.execute_function(func_name, arguments, user_id=1)
+                # Use the plugin's execute_function method (async)
+                result = await plugin_info.module.execute_function(func_name, arguments, user_id=1)
                 return result
             elif hasattr(plugin_info.module, func_name):
                 # Call the function directly
                 func = getattr(plugin_info.module, func_name)
                 if callable(func):
-                    result = func(**arguments)
+                    # Check if function is async
+                    import asyncio
+                    if asyncio.iscoroutinefunction(func):
+                        result = await func(**arguments)
+                    else:
+                        result = func(**arguments)
                     return result
                 else:
                     return f"Function {func_name} is not callable"

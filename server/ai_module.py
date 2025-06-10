@@ -196,7 +196,7 @@ class AIProviders:
                 "message": {"content": f"LM Studio error: {exc}"}
             }
 
-    def chat_openai(
+    async def chat_openai(
         self,
         model: str,
         messages: List[dict],
@@ -232,16 +232,16 @@ class AIProviders:
                 params["tool_choice"] = "auto"
             
             resp = client.chat.completions.create(**params)
-            
-            # Handle function calls
-            if resp.choices[0].message.tool_calls:                # Execute function calls and collect results
+              # Handle function calls
+            if resp.choices[0].message.tool_calls:
+                # Execute function calls and collect results
                 tool_results = []
                 for tool_call in resp.choices[0].message.tool_calls:
                     function_name = tool_call.function.name
                     function_args = json.loads(tool_call.function.arguments)
                     
                     if function_calling_system:
-                        result = function_calling_system.execute_function(
+                        result = await function_calling_system.execute_function(
                             function_name, function_args, 
                             conversation_history=deque(messages[-10:]) if messages else None  # Pass recent conversation
                         )
@@ -429,10 +429,10 @@ def extract_json(text: str) -> str:
 
 @lru_cache(maxsize=256)
 @measure_performance
-def refine_query(query: str, detected_language: str = "Polish") -> str:
+async def refine_query(query: str, detected_language: str = "Polish") -> str:
     try:
         prompt = build_convert_query_prompt(detected_language)
-        resp = chat_with_providers(
+        resp = await chat_with_providers(
             model=MAIN_MODEL,
             messages=[
                 {"role": "system", "content": prompt},
@@ -453,7 +453,7 @@ def refine_query(query: str, detected_language: str = "Polish") -> str:
 
 
 @measure_performance
-def chat_with_providers(
+async def chat_with_providers(
     model: str,
     messages: List[dict],
     images: Optional[List[str]] = None,
@@ -470,8 +470,8 @@ def chat_with_providers(
     logger.info(f"🔧 AI Request: model={model}, provider={selected}, provider_override={provider_override}")
     logger.info(f"🔧 Available providers: {list(providers.providers.keys())}")
     logger.info(f"🔧 Selected provider config exists: {provider_cfg is not None}")
-
-    def _try(provider_name: str) -> Optional[Dict[str, Any]]:
+    
+    async def _try(provider_name: str) -> Optional[Dict[str, Any]]:
         prov = providers.providers[provider_name]
         logger.info(f"🔧 Trying provider: {provider_name}")
         try:
@@ -479,7 +479,7 @@ def chat_with_providers(
                 logger.info(f"✅ Provider {provider_name} check passed")
                 # Only pass functions to OpenAI provider for now
                 if provider_name == "openai" and functions:
-                    result = prov["chat"](
+                    result = await prov["chat"](
                         model,
                         messages,
                         images,
@@ -491,13 +491,24 @@ def chat_with_providers(
                     logger.info(f"✅ Provider {provider_name} returned result")
                     return result
                 else:
-                    result = prov["chat"](
-                        model,
-                        messages,
-                        images,
-                        temperature=temperature,
-                        max_tokens=max_tokens,
-                    )
+                    # Handle non-async providers
+                    chat_func = prov["chat"]
+                    if provider_name in ["openai"]:  # async providers
+                        result = await chat_func(
+                            model,
+                            messages,
+                            images,
+                            temperature=temperature,
+                            max_tokens=max_tokens,
+                        )
+                    else:  # sync providers
+                        result = chat_func(
+                            model,
+                            messages,
+                            images,
+                            temperature=temperature,
+                            max_tokens=max_tokens,
+                        )
                     logger.info(f"✅ Provider {provider_name} returned result")
                     return result
             else:
@@ -508,17 +519,19 @@ def chat_with_providers(
 
     # najpierw preferowany
     if provider_cfg:
-        resp = _try(selected)
+        resp = await _try(selected)
         if resp:
             logger.info(f"✅ Using preferred provider: {selected}")
             return resp
     else:
-        logger.warning(f"❌ Selected provider {selected} not found in providers")    # fallback‑i
+        logger.warning(f"❌ Selected provider {selected} not found in providers")
+
+    # fallback‑i
     logger.warning(f"⚠️ Preferred provider {selected} failed, trying fallbacks...")
     for name in providers.providers:
         if name == selected:
             continue
-        resp = _try(name)
+        resp = await _try(name)
         if resp:
             logger.info("✅ Fallback provider %s zadziałał.", name)
             return resp
@@ -540,7 +553,7 @@ def chat_with_providers(
 
 
 @measure_performance
-def generate_response_logic(
+async def generate_response_logic(
     provider_name: str,
     model_name: str,
     messages: List[Dict[str, Any]],
@@ -570,10 +583,8 @@ def generate_response_logic(
     if messages_list and messages_list[0]["role"] == "system":
         messages_list[0]["content"] = system_message_content
     else:
-        messages_list.insert(0, {"role": "system", "content": system_message_content})
-
-    # Send the modified messages to the AI provider
-    response = chat_with_providers(
+        messages_list.insert(0, {"role": "system", "content": system_message_content})    # Send the modified messages to the AI provider
+    response = await chat_with_providers(
         model=model_name,
         messages=messages_list,
         images=images,  # Pass images to the provider
@@ -589,7 +600,7 @@ def generate_response_logic(
 
 
 @measure_performance
-def generate_response(
+async def generate_response(
     conversation_history: deque,
     tools_info: str = "",
     system_prompt_override: str = None,
@@ -692,10 +703,8 @@ def generate_response(
         if messages and messages[0]["role"] == "system":
             messages[0]["content"] = system_prompt
         else:
-            messages.insert(0, {"role": "system", "content": system_prompt})
-
-        # Make API call with or without functions
-        resp = chat_with_providers(
+            messages.insert(0, {"role": "system", "content": system_prompt})        # Make API call with or without functions
+        resp = await chat_with_providers(
             MAIN_MODEL, 
             messages, 
             functions=functions,
@@ -816,9 +825,8 @@ class AIModule:
             # Build tools description
             tools_info = ""
             if available_plugins:
-                tools_info = f"Dostępne pluginy: {', '.join(available_plugins)}"
-              # Use the same generate_response function as in main ai_module.py
-            response = generate_response(
+                tools_info = f"Dostępne pluginy: {', '.join(available_plugins)}"            # Use the same generate_response function as in main ai_module.py
+            response = await generate_response(
                 conversation_history=conversation_history,
                 tools_info=tools_info,
                 detected_language="pl",
