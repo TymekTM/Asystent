@@ -206,9 +206,13 @@ class ServerApp:
             context = request_data.get('context', {})
             
             # Pobierz historię użytkownika z bazy
-            user_history = await self.db_manager.get_user_history(user_id)              # Przygotuj kontekst dla AI
+            user_history = await self.db_manager.get_user_history(user_id)            # Przygotuj kontekst dla AI
             available_plugins = list(plugin_manager.get_available_functions(user_id).keys())
             modules = plugin_manager.get_modules_for_user(user_id)
+            
+            logger.info(f"DEBUG: available_plugins = {available_plugins}")
+            logger.info(f"DEBUG: modules keys = {list(modules.keys()) if modules else 'None'}")
+            logger.info(f"DEBUG: modules = {modules}")
             
             ai_context = {
                 'user_id': user_id,
@@ -219,7 +223,9 @@ class ServerApp:
                 **context
             }
             
-            logger.info(f"Processing AI query for user {user_id}: {query[:50]}...")
+            logger.info(f"Processing AI query for user {user_id}: FULL_QUERY=[{query}]")
+            logger.info(f"Request data received: {request_data}")
+            logger.info(f"Context received: {context}")
             
             # Przetwórz zapytanie przez AI
             response = await self.ai_module.process_query(query, ai_context)
@@ -462,7 +468,14 @@ async def health_check():
 @app.websocket("/ws/{user_id}")
 async def websocket_endpoint(websocket: WebSocket, user_id: str):
     """WebSocket endpoint dla komunikacji z klientami."""
-    await server_app.connection_manager.connect(websocket, user_id)
+    logger.info(f"WebSocket connection attempt for user: {user_id}")
+    
+    try:
+        await server_app.connection_manager.connect(websocket, user_id)
+        logger.info(f"WebSocket connected for user: {user_id}")
+    except Exception as e:
+        logger.error(f"Failed to connect WebSocket for user {user_id}: {e}")
+        return
     
     try:
         while True:
@@ -551,9 +564,16 @@ if __name__ == "__main__":
     # Load configuration
     config = load_config()
     
+    # Debug: show config values
+    server_config = config.get('server', {})
+    host = server_config.get('host', '0.0.0.0')
+    port = server_config.get('port', 8001)
+    logger.info(f"Server config: host={host}, port={port}")
+    logger.info(f"Full server config: {server_config}")
+    
     # Uruchom serwer
     uvicorn.run(
-        "server_main:app",
+        app,
         host=config.get('server', {}).get('host', '0.0.0.0'),
         port=config.get('server', {}).get('port', 8001),
         log_level="info",

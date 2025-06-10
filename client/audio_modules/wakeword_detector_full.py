@@ -294,15 +294,49 @@ def run_wakeword_detection(
     def sd_callback(indata, frames, time_info, status_flags):
         if status_flags:
             logger.warning(f"sounddevice InputStream status: {status_flags}")
-        audio_data_queue.put(indata.copy())
-
-    # Determine the correct chunk size for openWakeWord
-    oww_chunk_size = getattr(wakeword_model_instance, 'expected_frame_length', None)
-    if oww_chunk_size is None:
-        logger.warning("Could not determine expected_frame_length from oww model. Defaulting to 1280 samples (80ms @ 16kHz).")
-        oww_chunk_size = 1280 # A common default for oww
+        audio_data_queue.put(indata.copy())    # Determine the correct chunk size for openWakeWord
+    oww_chunk_size = None
+    
+    # Try multiple methods to get frame length with detailed logging
+    frame_attrs = [
+        ('expected_frame_length', 'expected_frame_length'),
+        ('frame_len', 'frame_len'), 
+        ('audio_len', 'audio_len'),
+        ('n_samples', 'n_samples'),
+        ('chunk_size', 'chunk_size')
+    ]
+    
+    for attr_name, desc in frame_attrs:
+        if hasattr(wakeword_model_instance, attr_name):
+            oww_chunk_size = getattr(wakeword_model_instance, attr_name)
+            logger.info(f"Found openWakeWord frame length via {desc}: {oww_chunk_size} samples")
+            break
+    
+    # Try to get from melspec model if direct attributes don't work
+    if oww_chunk_size is None and hasattr(wakeword_model_instance, 'melspec_model'):
+        melspec = wakeword_model_instance.melspec_model
+        if hasattr(melspec, 'get_input_requirements'):
+            try:
+                requirements = melspec.get_input_requirements()
+                if 'frame_length' in requirements:
+                    oww_chunk_size = requirements['frame_length']
+                    logger.info(f"Found openWakeWord frame length via melspec requirements: {oww_chunk_size} samples")
+                elif 'input_shape' in requirements:
+                    # Sometimes frame length is in input shape
+                    input_shape = requirements['input_shape']
+                    if isinstance(input_shape, (list, tuple)) and len(input_shape) > 0:
+                        oww_chunk_size = input_shape[-1]  # Usually last dimension
+                        logger.info(f"Inferred openWakeWord frame length from input shape: {oww_chunk_size} samples")
+            except Exception as e:
+                logger.debug(f"Could not extract frame length from melspec model: {e}")
+    
+    # Standard fallback for openWakeWord
+    if oww_chunk_size is None or oww_chunk_size <= 0:
+        oww_chunk_size = 1280  # 80ms @ 16kHz - standard for openWakeWord
+        logger.info("Using standard openWakeWord frame length: 1280 samples (80ms @ 16kHz)")
     else:
-        logger.info(f"Using openWakeWord expected_frame_length for audio chunks: {oww_chunk_size} samples.")
+        duration_ms = oww_chunk_size / SAMPLE_RATE * 1000
+        logger.info(f"Using openWakeWord frame length: {oww_chunk_size} samples ({duration_ms:.1f}ms @ {SAMPLE_RATE}Hz)")
 
     audio_stream = None # Initialize to None for finally block
     try:

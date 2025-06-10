@@ -121,20 +121,23 @@ class AIProviders:
     # ---------------------------------------------------------------------
     def check_ollama(self) -> bool:
         try:            return (
-                requests.get("http://localhost:11434", timeout=5).status_code == 200
-            )
+                requests.get("http://localhost:11434", timeout=5).status_code == 200            )
         except requests.RequestException:
             return False
 
     def check_lmstudio(self) -> bool:
-        try:
-            url = _config.get("LMSTUDIO_URL", "http://localhost:1234/v1/models")
-            return self._lmstudio_session.get(url, timeout=5).status_code == 200
-        except requests.RequestException:
-            return False
+        # Force disable LMStudio to use OpenAI instead
+        return False
+        # try:
+        #     url = _config.get("LMSTUDIO_URL", "http://localhost:1234/v1/models")
+        #     return self._lmstudio_session.get(url, timeout=5).status_code == 200
+        # except requests.RequestException:
+        #     return False
 
     def check_openai(self) -> bool:
-        return AIProviders._key_ok("OPENAI_API_KEY", "openai")
+        key_valid = AIProviders._key_ok("OPENAI_API_KEY", "openai")
+        logger.info(f"🔧 OpenAI check: key_valid={key_valid}")
+        return key_valid
 
     def check_deepseek(self) -> bool:
         return AIProviders._key_ok("DEEPSEEK_API_KEY", "deepseek")
@@ -463,14 +466,20 @@ def chat_with_providers(
     providers = get_ai_providers()
     selected = (provider_override or PROVIDER).lower()
     provider_cfg = providers.providers.get(selected)
+    
+    logger.info(f"🔧 AI Request: model={model}, provider={selected}, provider_override={provider_override}")
+    logger.info(f"🔧 Available providers: {list(providers.providers.keys())}")
+    logger.info(f"🔧 Selected provider config exists: {provider_cfg is not None}")
 
     def _try(provider_name: str) -> Optional[Dict[str, Any]]:
         prov = providers.providers[provider_name]
+        logger.info(f"🔧 Trying provider: {provider_name}")
         try:
             if prov["check"]():
+                logger.info(f"✅ Provider {provider_name} check passed")
                 # Only pass functions to OpenAI provider for now
                 if provider_name == "openai" and functions:
-                    return prov["chat"](
+                    result = prov["chat"](
                         model,
                         messages,
                         images,
@@ -479,35 +488,43 @@ def chat_with_providers(
                         temperature=temperature,
                         max_tokens=max_tokens,
                     )
+                    logger.info(f"✅ Provider {provider_name} returned result")
+                    return result
                 else:
-                    return prov["chat"](
+                    result = prov["chat"](
                         model,
                         messages,
                         images,
                         temperature=temperature,
                         max_tokens=max_tokens,
                     )
+                    logger.info(f"✅ Provider {provider_name} returned result")
+                    return result
+            else:
+                logger.warning(f"❌ Provider {provider_name} check failed")
         except Exception as exc:  # pragma: no cover
-            logger.error("Provider %s failed: %s", provider_name, exc)
+            logger.error("❌ Provider %s failed: %s", provider_name, exc)
         return None
 
     # najpierw preferowany
     if provider_cfg:
         resp = _try(selected)
         if resp:
+            logger.info(f"✅ Using preferred provider: {selected}")
             return resp
-
-    # fallback‑i
+    else:
+        logger.warning(f"❌ Selected provider {selected} not found in providers")    # fallback‑i
+    logger.warning(f"⚠️ Preferred provider {selected} failed, trying fallbacks...")
     for name in providers.providers:
         if name == selected:
             continue
         resp = _try(name)
         if resp:
-            logger.info("Fallback provider %s zadziałał.", name)
+            logger.info("✅ Fallback provider %s zadziałał.", name)
             return resp
 
     # total failure
-    logger.error("Wszyscy providerzy zawiedli.")
+    logger.error("❌ Wszyscy providerzy zawiedli.")
     error_payload = json.dumps(
         {
             "command": "",
@@ -707,243 +724,30 @@ def generate_response(
 
         # If using function calling, return the content directly as it should be a natural response
         if use_function_calling and functions and resp.get("tool_calls_executed"):
-            return json.dumps({
-                "text": content,
-                "command": "",
-                "params": {},
-                "function_calls_executed": True
-            }, ensure_ascii=False)
-
-        # Traditional JSON parsing for non-function calling responses
-        parsed = extract_json(content)
-        try:
-            result = json.loads(parsed)
-            if isinstance(result, dict) and "text" in result:
-                return json.dumps(result, ensure_ascii=False)
-        except Exception:
-            pass
-
-        # fallback: zawinąć surowy tekst
-        return json.dumps({
-            "text": content,
-            "command": "",
-            "params": {}
-        }, ensure_ascii=False)
-    except Exception as exc:  # pragma: no cover
-        logger.error("generate_response error: %s", exc, exc_info=True)
-        return json.dumps(
-            {
-                "text": "Przepraszam, wystąpił błąd podczas generowania odpowiedzi.",
-                "command": "",
-                "params": {},
-            },
-            ensure_ascii=False,
-        )
-
-
-@measure_performance
-def parse_response(response_text: str) -> Dict[str, Any]:
-    def try_parse(val):
-        try:
-            return json.loads(extract_json(val))
-        except Exception:
-            return val
-
-    def ensure_dict(val):
-        if isinstance(val, dict):
-            return val
-        if isinstance(val, str):
+            # Content is already a natural language response from function calling
+            # Check if it's already JSON formatted, if not wrap it
             try:
-                parsed = json.loads(val)
-                if isinstance(parsed, dict):
-                    return parsed
-            except Exception:
-                pass
-        return {}
-
-    try:
-        parsed = try_parse(response_text)
-        # Recursively parse if 'text' is a JSON string
-        max_depth = 3
-        depth = 0
-        while isinstance(parsed, dict) and isinstance(parsed.get("text"), str):
-            inner = parsed["text"].strip()
-            # Heuristic: try to parse if it looks like JSON
-            if (inner.startswith("{") and inner.endswith("}")) or (inner.startswith("\"") and inner.endswith("\"")):
-                next_parsed = try_parse(inner)
-                if isinstance(next_parsed, dict) and ("text" in next_parsed or "command" in next_parsed or "params" in next_parsed):
-                    parsed = next_parsed
-                    depth += 1
-                    if depth >= max_depth:
-                        break
+                # Try to parse as JSON to see if it's already formatted
+                parsed_content = json.loads(content)
+                if isinstance(parsed_content, dict) and "text" in parsed_content:
+                    # It's already a proper JSON response, return as is
+                    return content
                 else:
-                    break
-            else:
-                break
-        if isinstance(parsed, dict):
-            # Always ensure params is a dict
-            params = parsed.get("params", {})
-            params = ensure_dict(params)
-            return {
-                "text": parsed.get("text", ""),
-                "command": parsed.get("command", ""),
-                "params": params,
-                "listen_after_tts": parsed.get("listen_after_tts", False) # ADDED
-            }
-        if isinstance(parsed, str):
-            return {"text": parsed, "command": "", "params": {}, "listen_after_tts": False} # ADDED listen_after_tts
-    except Exception as e: # pragma: no cover
-        logger.error(f"Error parsing AI response: {response_text}, Error: {e}", exc_info=True) # Log the problematic response and error
-        pass  # Fallthrough to default error response
-
-    # Default error response or if parsing completely fails
-    return {"text": "Nieprawidłowa odpowiedź AI", "command": "", "params": {}, "listen_after_tts": False} # ADDED listen_after_tts
-
-
-@measure_performance
-def generate_response(
-    conversation_history: deque,
-    tools_info: str = "",
-    system_prompt_override: str = None,
-    detected_language: str = "en",
-    language_confidence: float = 1.0,
-    active_window_title: str = None, 
-    track_active_window_setting: bool = False,
-    tool_suggestion: str = None,
-    modules: Dict[str, Any] = None,
-    use_function_calling: bool = True,
-    user_name: str = None
-) -> str:
-    """
-    Generates a response from the AI model based on conversation history and available tools.
-    Can use either traditional prompt-based approach or OpenAI Function Calling.
-
-    Args:
-        conversation_history: A deque of previous messages.
-        tools_info: A string describing available tools/plugins.
-        system_prompt_override: An optional string to override the default system prompt.
-        detected_language: The detected language code (e.g., "en", "pl").
-        language_confidence: The confidence score for the detected language.
-        active_window_title: The title of the currently active window.
-        track_active_window_setting: Boolean indicating if active window tracking is enabled.
-        modules: Dictionary of available modules for function calling.
-        use_function_calling: Whether to use OpenAI Function Calling or traditional approach.
-
-    Returns:
-        A string containing the AI's response, potentially in JSON format for commands.
-    """
-    import datetime
-    try:
-        config = load_config() # Use imported load_config
-        api_keys = config.get("api_keys", {}) # Get the nested api_keys dictionary  
-        api_key = api_keys.get("openai") # Get the OpenAI API key from the nested dictionary
-        model_name = config.get("ai", {}).get("model", "gpt-4.1-nano")
-
-        if not api_key:
-            logger.error("OpenAI API key not found in configuration.")
-            return '{"text": "Błąd: Klucz API OpenAI nie został skonfigurowany.", "command": "", "params": {}}'        # Initialize function calling system if enabled and modules provided
-        function_calling_system = None
-        functions = None
-        
-        if use_function_calling and modules and config.get("ai", {}).get("provider", "openai").lower() == "openai":
-            # Initialize function calling system directly
-            function_calling_system = FunctionCallingSystem()
-            functions = function_calling_system.convert_modules_to_functions()
-            logger.info(f"Function calling enabled with {len(functions)} functions")
-
-            # Use standard system prompt for function calling
-            system_prompt = build_full_system_prompt(
-                system_prompt_override=system_prompt_override,
-                detected_language=detected_language,
-                language_confidence=language_confidence,
-                tools_description="",  # Functions are handled separately
-                active_window_title=active_window_title,
-                track_active_window_setting=track_active_window_setting,
-                tool_suggestion=tool_suggestion,
-                user_name=user_name
-            )
-        else:
-            # Traditional prompt-based approach
-            system_prompt = build_full_system_prompt(
-                system_prompt_override=system_prompt_override,
-                detected_language=detected_language,
-                language_confidence=language_confidence,
-                tools_description=tools_info,
-                active_window_title=active_window_title,
-                track_active_window_setting=track_active_window_setting,
-                tool_suggestion=tool_suggestion,
-                user_name=user_name
-            )
-        
-        # --- PROMPT LOGGING ---
-        try:
-            import json
-            timestamp = datetime.datetime.now().isoformat()
-            
-            # Ensure user_data directory exists
-            import os
-            os.makedirs("user_data", exist_ok=True)
-            
-            with open("user_data/prompts_log.txt", "a", encoding="utf-8") as f:
-                # Log the system prompt
-                system_prompt_msg = {"role": "system", "content": system_prompt}
-                f.write(f"{timestamp} | {json.dumps(system_prompt_msg, ensure_ascii=False)}\n")
-                
-                # Log conversation history
-                for msg in list(conversation_history):
-                    if msg.get("role") != "system":
-                        f.write(f"{timestamp} | {json.dumps(msg, ensure_ascii=False)}\n")
-                
-                # Log available functions if using function calling
-                if functions:
-                    functions_msg = {"role": "system", "content": f"Available functions: {len(functions)}"}
-                    f.write(f"{timestamp} | {json.dumps(functions_msg, ensure_ascii=False)}\n")
-        except Exception as log_exc:
-            logger.warning(f"[PromptLog] Failed to log prompt: {log_exc}")
-
-        # Convert deque to list for slicing and modification
-        messages = list(conversation_history)
-        if messages and messages[0]["role"] == "system":
-            messages[0]["content"] = system_prompt
-        else:
-            messages.insert(0, {"role": "system", "content": system_prompt})
-
-        # Make API call with or without functions
-        resp = chat_with_providers(
-            model_name, 
-            messages, 
-            functions=functions,
-            function_calling_system=function_calling_system
-        )
-        
-        # --- RAW API RESPONSE LOGGING ---
-        try:
-            raw_content = resp.get("message", {}).get("content", "").strip() if resp else ""
-            import json
-            import datetime
-            with open("user_data/prompts_log.txt", "a", encoding="utf-8") as f:
-                raw_api_msg = {"role": "assistant_api_raw", "content": raw_content}
-                f.write(f"{datetime.datetime.now().isoformat()} | {json.dumps(raw_api_msg, ensure_ascii=False)}\n")
-                
-                # Log if function calls were executed
-                if resp and resp.get("tool_calls_executed"):
-                    tool_calls_msg = {"role": "system", "content": f"Tool calls executed: {resp['tool_calls_executed']}"}
-                    f.write(f"{datetime.datetime.now().isoformat()} | {json.dumps(tool_calls_msg, ensure_ascii=False)}\n")
-        except Exception as log_exc:
-            logger.warning(f"[RawAPI Log] Failed to log raw API response: {log_exc}")
-        
-        content = resp["message"]["content"].strip() if resp else ""
-        if not content:
-            raise ValueError("Empty response.")
-
-        # If using function calling, return the content directly as it should be a natural response
-        if use_function_calling and functions and resp.get("tool_calls_executed"):
-            return json.dumps({
-                "text": content,
-                "command": "",
-                "params": {},
-                "function_calls_executed": True
-            }, ensure_ascii=False)
+                    # It's JSON but not in our expected format, wrap it
+                    return json.dumps({
+                        "text": content,
+                        "command": "",
+                        "params": {},
+                        "function_calls_executed": True
+                    }, ensure_ascii=False)
+            except json.JSONDecodeError:
+                # Content is plain text, wrap it in JSON
+                return json.dumps({
+                    "text": content,
+                    "command": "",
+                    "params": {},
+                    "function_calls_executed": True
+                }, ensure_ascii=False)
 
         # Traditional JSON parsing for non-function calling responses
         parsed = extract_json(content)
@@ -990,6 +794,11 @@ class AIModule:
             history = context.get('history', [])
             available_plugins = context.get('available_plugins', [])
             modules = context.get('modules', {})
+            
+            logger.info(f"AI Context - user_id: {user_id}")
+            logger.info(f"AI Context - available_plugins: {available_plugins}")
+            logger.info(f"AI Context - modules: {list(modules.keys()) if modules else 'None'}")
+            logger.info(f"AI Context - modules content: {modules}")
             
             # Convert history to deque format for generate_response
             conversation_history = deque()

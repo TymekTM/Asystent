@@ -216,7 +216,9 @@ class WhisperASR:
                 except Exception as e:
                     log.warning(f"✗ FastWhisper failed {repo}: {type(e).__name__}: {e}")
         except ImportError:
-            log.warning("⚠️ faster_whisper not installed, skipping FastWhisper load")        # If no model loaded, disable ASR feature
+            log.warning("⚠️ faster_whisper not installed, skipping FastWhisper load")
+
+        # If no model loaded, disable ASR feature
         if self.model is None:
             log.error("WhisperASR disabled: could not load any FastWhisper model.")
             self.available = False
@@ -226,56 +228,14 @@ class WhisperASR:
     def transcribe(
         self,
         audio: str | any,
-        beam_size: int = 8,  # Wyższy beam size dla jeszcze lepszej jakości
+        beam_size: int = 1,
         sample_rate: int | None = None,
-        language: str = "pl",  # Polski język
     ) -> str:
         """
-        Transcribe audio with optimized parameters for Polish language.
+        Transcribe audio; greedy decoding (beam_size=1) dla szybkości.
         """
-        try:
-            # Optymalne parametry dla polskiego języka i wysokiej jakości
-            segments, info = self.model.transcribe(
-                audio, 
-                beam_size=beam_size,
-                language=language,
-                condition_on_previous_text=False,  # Lepsze dla krótkich fragmentów
-                temperature=0.0,  # Deterministyczne wyniki
-                vad_filter=True,  # Voice Activity Detection
-                vad_parameters=dict(
-                    min_silence_duration_ms=300,  # Krótsze pauzy dla lepszej responsywności
-                    speech_pad_ms=400,  # Większy padding dla bezpieczeństwa
-                    threshold=0.5  # Próg VAD
-                ),
-                no_speech_threshold=0.5,  # Niższy próg dla lepszej detekcji mowy
-                log_prob_threshold=-1.2,  # Bardziej restrykcyjny próg
-                compression_ratio_threshold=2.2,  # Lżejsza kompresja
-                repetition_penalty=1.1,  # Kara za powtórzenia
-                length_penalty=1.0,  # Neutralna kara za długość
-                patience=2  # Cierpliwość beam search
-            )
-            
-            # Łączenie segmentów z zachowaniem interpunkcji i czyszczenie
-            text_parts = []
-            for segment in segments:
-                if segment.text.strip():
-                    # Usuwanie nadmiarowych spacji i normalizacja
-                    clean_text = " ".join(segment.text.strip().split())
-                    text_parts.append(clean_text)
-            
-            result = " ".join(text_parts).strip()
-            log.info(f"Transcribed: '{result}' (confidence: {getattr(info, 'language_probability', 'N/A')})")
-            return result
-            
-        except Exception as e:
-            log.error(f"Error during transcription: {e}")
-            # Fallback do prostszej transkrypcji
-            try:
-                segments, _ = self.model.transcribe(audio, beam_size=1, language="pl")
-                return " ".join(s.text.strip() for s in segments if s.text.strip())
-            except Exception as fallback_e:
-                log.error(f"Fallback transcription also failed: {fallback_e}")
-                return ""
+        segments, _ = self.model.transcribe(audio, beam_size=beam_size)
+        return "".join(s.text for s in segments)
 
     def unload(self) -> None:
         if hasattr(self, "model"):

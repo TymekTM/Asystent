@@ -46,8 +46,7 @@ class PluginManager:
         """Discover all available plugins."""
         discovered = []
         
-        try:
-            # Scan modules directory
+        try:            # Scan modules directory
             for file_path in self.plugins_directory.glob("*.py"):
                 if file_path.name.startswith("__"):
                     continue
@@ -69,34 +68,53 @@ class PluginManager:
         try:
             module_name = file_path.stem
             
-            # Load module spec
-            spec = importlib.util.spec_from_file_location(module_name, file_path)
-            if not spec or not spec.loader:
-                return None
-            
-            # Load module temporarily to analyze
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
-            
-            # Extract metadata
-            name = getattr(module, 'PLUGIN_NAME', module_name)
-            description = getattr(module, 'PLUGIN_DESCRIPTION', 'No description')
-            version = getattr(module, 'PLUGIN_VERSION', '1.0.0')
-            author = getattr(module, 'PLUGIN_AUTHOR', 'Unknown')
-            dependencies = getattr(module, 'PLUGIN_DEPENDENCIES', [])
-            
-            # Find available functions
-            functions = []
-            if hasattr(module, 'get_functions'):
+            # Try to load module temporarily to analyze
+            try:
+                spec = importlib.util.spec_from_file_location(module_name, file_path)
+                if not spec or not spec.loader:
+                    return None
+                
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                
+                # Extract metadata
+                name = getattr(module, 'PLUGIN_NAME', module_name)
+                description = getattr(module, 'PLUGIN_DESCRIPTION', 'No description')
+                version = getattr(module, 'PLUGIN_VERSION', '1.0.0')
+                author = getattr(module, 'PLUGIN_AUTHOR', 'Unknown')
+                dependencies = getattr(module, 'PLUGIN_DEPENDENCIES', [])
+                
+                # Find available functions
+                functions = []
+                if hasattr(module, 'get_functions'):
+                    try:
+                        available_functions = module.get_functions()
+                        if isinstance(available_functions, list):
+                            functions = [func.get('name', f'function_{i}') for i, func in enumerate(available_functions)]
+                        else:
+                            functions = list(available_functions.keys())
+                    except Exception as e:
+                        logger.warning(f"Error getting functions from {name}: {e}")
+                        
+            except Exception as e:
+                logger.warning(f"Could not import plugin {module_name} (dependencies missing): {e}")
+                # Fallback: Use basic file analysis
+                name = module_name
+                description = f"Plugin {module_name} (import failed)"
+                version = '1.0.0'
+                author = 'Unknown'
+                dependencies = []
+                functions = []
+                
+                # Try to detect functions by reading file text
                 try:
-                    available_functions = module.get_functions()
-                    # get_functions() returns a list of function dictionaries
-                    if isinstance(available_functions, list):
-                        functions = [func.get('name', f'function_{i}') for i, func in enumerate(available_functions)]
-                    else:
-                        functions = list(available_functions.keys())
-                except Exception as e:
-                    logger.warning(f"Error getting functions from {name}: {e}")
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                        # Look for get_functions definition
+                        if 'def get_functions(' in content:
+                            functions = ['get_functions_detected']
+                except Exception:
+                    pass
             
             # Create plugin info
             plugin_info = PluginInfo(

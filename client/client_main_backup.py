@@ -23,7 +23,6 @@ sys.path.insert(0, str(Path(__file__).parent))
 # Import local modules
 from audio_modules.advanced_wakeword_detector import create_wakeword_detector
 from audio_modules.whisper_asr import create_whisper_asr, create_audio_recorder
-from audio_modules.tts_module import TTSModule
 
 
 class ClientApp:
@@ -35,40 +34,34 @@ class ClientApp:
         self.user_id = self.config.get('user_id', '1')
         self.server_url = self.config.get('server_url', 'ws://localhost:8001/ws/client1')
         self.running = False
-          # Audio components
+        
+        # Audio components
         self.wakeword_detector = None
         self.whisper_asr = None
         self.audio_recorder = None
-        self.tts = None
-        self.overlay_process = None  # External Tauri overlay process# State management
+        self.overlay_process = None  # External Tauri overlay process
+        
+        # State management
         self.listening_for_wakeword = False
         self.recording_command = False
     
     def load_client_config(self) -> Dict:
         """Załaduj konfigurację klienta."""
-        # Config file should be in the same directory as this script
-        config_path = Path(__file__).parent / "client_config.json"
-        
-        logger.info(f"🔧 Looking for config at: {config_path.absolute()}")
+        config_path = Path("client_config.json")
         
         if config_path.exists():
-            logger.info("📁 Config file found, loading...")
             with open(config_path, 'r', encoding='utf-8') as f:
-                config = json.load(f)
-                logger.info(f"✅ Config loaded: server_url={config.get('server_url')}")
-                return config
+                return json.load(f)
         
-        logger.warning("⚠️ Config file not found, using defaults")
         # Default config
         return {
             "server_url": "ws://localhost:8001/ws/client1",
             "user_id": "1",
             "wakeword": {
                 "enabled": True,
-                "keyword": "gaja",
-                "sensitivity": 0.6,
-                "device_id": None,
-                "stt_silence_threshold_ms": 2000
+                "model": "alexa_v0.1",
+                "threshold": 0.5,
+                "inference_framework": "onnx"
             },
             "whisper": {
                 "model": "base",
@@ -96,22 +89,18 @@ class ClientApp:
             wakeword_config = self.config.get('wakeword', {})
             if wakeword_config.get('enabled', True):
                 self.wakeword_detector = create_wakeword_detector(
-                    config=wakeword_config,
-                    callback=self.on_wakeword_detected
+                    callback=self.on_wakeword_detected,
+                    config=wakeword_config
                 )
                 logger.info("Wakeword detector initialized")
-                
-            # Initialize Whisper ASR
+              # Initialize Whisper ASR
             whisper_config = self.config.get('whisper', {})
             self.whisper_asr = create_whisper_asr(whisper_config)
             self.audio_recorder = create_audio_recorder(
                 sample_rate=self.config.get('audio', {}).get('sample_rate', 16000),
-                duration=self.config.get('audio', {}).get('record_duration', 5.0)            )
+                duration=self.config.get('audio', {}).get('record_duration', 5.0)
+            )
             logger.info("Whisper ASR initialized")
-            
-            # Initialize TTS
-            self.tts = TTSModule()
-            logger.info("TTS module initialized")
             
             # Set whisper ASR for wakeword detector
             if self.wakeword_detector:
@@ -138,27 +127,25 @@ class ClientApp:
             else:
                 logger.warning(f"Overlay executable not found: {overlay_path}")
                 
-        except Exception as e:            logger.error(f"Error starting overlay: {e}")
+        except Exception as e:
+            logger.error(f"Error starting overlay: {e}")
 
     async def connect_to_server(self):
         """Nawiąż połączenie z serwerem."""
         try:
-            logger.info(f"Attempting to connect to: {self.server_url}")
             self.websocket = await websockets.connect(self.server_url)
             logger.info(f"Connected to server: {self.server_url}")
             
+            # Connection established - ready to listen for wakeword
+            
         except Exception as e:
             logger.error(f"Failed to connect to server: {e}")
-            logger.error(f"Server URL was: {self.server_url}")
-            import traceback
-            logger.error(f"Traceback: {traceback.format_exc()}")
             raise
 
     async def send_message(self, message: Dict):
         """Wyślij wiadomość do serwera."""
         if self.websocket:
             try:
-                logger.info(f"Sending message to server: {message}")
                 await self.websocket.send(json.dumps(message))
                 logger.debug(f"Sent message: {message['type']}")
             except Exception as e:
@@ -180,7 +167,8 @@ class ClientApp:
                         logger.error(f"Invalid JSON from server: {e}")
                 else:
                     await asyncio.sleep(0.1)
-        except Exception as e:            logger.error(f"Error listening for messages: {e}")
+        except Exception as e:
+            logger.error(f"Error listening for messages: {e}")
 
     async def handle_server_message(self, data: Dict):
         """Obsłuż wiadomość od serwera."""
@@ -188,64 +176,14 @@ class ClientApp:
         
         if message_type == 'ai_response':
             response = data.get('response', '')
-            logger.info(f"AI Response received: {response}")
-            
-            # Response is already a JSON string from the server
-            try:
-                if isinstance(response, str):
-                    response_data = json.loads(response)
-                else:
-                    response_data = response
-                
-                text = response_data.get('text', '')
-                if text:
-                    logger.info(f"AI text response: {text}")
-                    
-                    # Update overlay with AI response
-                    await self.update_overlay_status(f"Response: {text[:50]}...")
-                      # Play TTS response
-                    if self.tts:
-                        try:
-                            await self.tts.speak(text)
-                            logger.info("TTS response played")
-                        except Exception as tts_e:
-                            logger.error(f"TTS error: {tts_e}")
-                    else:
-                        logger.warning("TTS not available")
-                        
-                    # Reset overlay status after a delay
-                    await asyncio.sleep(3)
-                    await self.update_overlay_status("Listening...")
-                else:
-                    logger.warning("No text in AI response")
-                        
-            except (json.JSONDecodeError, KeyError) as e:
-                logger.error(f"Error parsing AI response: {e}")
-                # Fallback: treat response as plain text
-                if isinstance(response, str) and response.strip():
-                    text = response.strip()
-                    logger.info(f"Using response as plain text: {text}")
-                    
-                    # Update overlay
-                    await self.update_overlay_status(f"Response: {text[:50]}...")
-                      # Play TTS
-                    if self.tts:
-                        try:
-                            await self.tts.speak(text)
-                            logger.info("TTS response played (plain text)")
-                        except Exception as tts_e:
-                            logger.error(f"TTS error: {tts_e}")
-                    
-                    # Reset overlay status
-                    await asyncio.sleep(3)
-                    await self.update_overlay_status("Listening...")
+            logger.info(f"AI Response: {response}")
+            await self.update_overlay_status("Ready")
             
         elif message_type == 'function_result':
             function_name = data.get('function')
             result = data.get('result')
             logger.info(f"Function {function_name} result: {result}")
-            
-        elif message_type == 'plugin_toggled':
+              elif message_type == 'plugin_toggled':
             plugin = data.get('plugin')
             status = data.get('status')
             logger.info(f"Plugin {plugin} {status}")
@@ -275,13 +213,16 @@ class ClientApp:
             try:
                 self.recording_command = True
                 await self.update_overlay_status("Processing...")
-                  # Send transcribed query to server
+                
+                # Send transcribed query to server
                 message = {
                     "type": "ai_query",
-                    "query": query,
-                    "context": {
-                        "source": "voice",
-                        "user_name": "Voice User"
+                    "data": {
+                        "query": query,
+                        "context": {
+                            "source": "voice",
+                            "user_name": "Voice User"
+                        }
                     }
                 }
                 
@@ -290,7 +231,8 @@ class ClientApp:
             except Exception as e:
                 logger.error(f"Error processing voice command: {e}")
                 await self.update_overlay_status("Error")
-            finally:                self.recording_command = False
+            finally:
+                self.recording_command = False
         else:
             # Legacy support - wakeword detected without transcription
             logger.info("Wakeword detected! Recording and transcription handled by wakeword detector.")
@@ -310,7 +252,9 @@ class ClientApp:
             await self.initialize_components()
             
             # Connect to server
-            await self.connect_to_server()            # Start wakeword monitoring
+            await self.connect_to_server()
+            
+            # Start wakeword monitoring
             await self.start_wakeword_monitoring()
             
             # Listen for server messages
@@ -341,34 +285,11 @@ class ClientApp:
             if self.wakeword_detector:
                 self.wakeword_detector.stop_detection()
                 
-            # Close overlay process with improved termination
+            # Close overlay process
             if self.overlay_process and self.overlay_process.poll() is None:
-                logger.info(f"Terminating overlay process (PID: {self.overlay_process.pid})...")
-                
-                try:
-                    # Try graceful termination first
-                    self.overlay_process.terminate()
-                    self.overlay_process.wait(timeout=3)
-                    logger.info("Overlay process terminated gracefully")
-                except subprocess.TimeoutExpired:
-                    logger.warning("Overlay process didn't terminate gracefully, trying forceful kill...")
-                    try:
-                        self.overlay_process.kill()
-                        self.overlay_process.wait(timeout=2)
-                        logger.info("Overlay process killed forcefully")
-                    except subprocess.TimeoutExpired:
-                        logger.error("Failed to kill overlay process - it may remain in memory")
-                        
-                        # Last resort: try Windows taskkill
-                        try:
-                            import os
-                            os.system(f"taskkill /PID {self.overlay_process.pid} /F >nul 2>&1")
-                            logger.info("Attempted taskkill as last resort")
-                        except Exception as taskkill_e:
-                            logger.error(f"Taskkill failed: {taskkill_e}")
-                            
-                except Exception as term_e:
-                    logger.error(f"Error terminating overlay process: {term_e}")
+                self.overlay_process.terminate()
+                self.overlay_process.wait(timeout=5)
+                logger.info("Overlay process terminated")
                 
             # Close WebSocket connection
             if self.websocket:
