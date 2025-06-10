@@ -1,9 +1,11 @@
 """
-database_models.py – definicja schematu oraz CRUD dla users, memories i user_configs.
+database_models.py – definicja schematu oraz CRUD dla users, memories i user_configs.
 """
 
 from __future__ import annotations
 
+import hashlib
+import secrets
 import json
 import logging
 from dataclasses import dataclass
@@ -13,6 +15,45 @@ from typing import Iterable, List, Optional
 from database_manager import get_connection
 
 logger = logging.getLogger(__name__)
+
+def _hash_password(password: str, salt: str = None) -> tuple[str, str]:
+    """
+    Securely hash a password using PBKDF2.
+    
+    Args:
+        password: The password to hash
+        salt: Optional salt, will be generated if not provided
+        
+    Returns:
+        Tuple of (password_hash, salt)
+    """
+    if salt is None:
+        salt = secrets.token_hex(32)
+    
+    # Use PBKDF2 for secure password hashing
+    password_hash = hashlib.pbkdf2_hmac(
+        'sha256',
+        password.encode('utf-8'),
+        salt.encode('utf-8'),
+        100000  # iterations
+    ).hex()
+    
+    return password_hash, salt
+
+def _verify_password(password: str, stored_hash: str, salt: str) -> bool:
+    """
+    Verify a password against a stored hash.
+    
+    Args:
+        password: The password to verify
+        stored_hash: The stored password hash
+        salt: The salt used for hashing
+        
+    Returns:
+        True if password matches, False otherwise
+    """
+    computed_hash, _ = _hash_password(password, salt)
+    return secrets.compare_digest(computed_hash, stored_hash)
 
 # -----------------------------------------------------------------------------
 # Dataclasses – wygodne mapowanie wierszy → obiekty
@@ -94,11 +135,11 @@ def init_schema(seed_dev: bool = True) -> None:
     with get_connection() as conn:
         # First create tables with IF NOT EXISTS
         conn.executescript(
-            """
-            CREATE TABLE IF NOT EXISTS users (
+            """            CREATE TABLE IF NOT EXISTS users (
                 id            INTEGER PRIMARY KEY AUTOINCREMENT,
                 username      TEXT UNIQUE NOT NULL,
                 password      TEXT NOT NULL,
+                salt          TEXT,
                 role          TEXT NOT NULL DEFAULT 'user',
                 display_name  TEXT,
                 ai_persona    TEXT,
@@ -213,8 +254,7 @@ def _migrate_database(conn):
         # Get current column names for memories table
         cursor.execute("PRAGMA table_info(memories)")
         columns = [row[1] for row in cursor.fetchall()]
-        
-        # Add missing columns to memories table
+          # Add missing columns to memories table
         if 'importance_score' not in columns:
             cursor.execute("ALTER TABLE memories ADD COLUMN importance_score REAL DEFAULT 0.0")
         
@@ -229,6 +269,15 @@ def _migrate_database(conn):
             
         if 'access_count' not in columns:
             cursor.execute("ALTER TABLE memories ADD COLUMN access_count INTEGER DEFAULT 0")
+        
+        # Add salt column to users table for secure password storage
+        cursor.execute("PRAGMA table_info(users)")
+        user_columns = [row[1] for row in cursor.fetchall()]
+        
+        if 'salt' not in user_columns:
+            cursor.execute("ALTER TABLE users ADD COLUMN salt TEXT")
+            # For existing users without salt, we'll need to prompt them to reset their password
+            logger.warning("Added salt column to users table. Existing users will need to reset their passwords.")
         
         conn.commit()
         
@@ -254,13 +303,15 @@ def add_user_if_absent(
     personalization: str | None = None,
 ) -> bool:
     with get_connection() as conn:
-        try:
+        try:            # Hash the password before storing
+            password_hash, salt = _hash_password(password)
+            
             conn.execute(
                 """
-                INSERT INTO users (username, password, role, display_name, ai_persona, personalization)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO users (username, password, salt, role, display_name, ai_persona, personalization)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
-                (username, password, role, display_name, ai_persona, personalization),
+                (username, password_hash, salt, role, display_name, ai_persona, personalization),
             )
             return True
         except Exception:  # likely UNIQUE
@@ -279,13 +330,43 @@ def get_user_by_username(username: str) -> User | None:
     return _row_to_user(row) if row else None
 
 
-def get_user_password_hash(username: str) -> str | None:
-    """Fetches only the password hash for a given username."""
+def get_user_password_hash(username: str) -> tuple[str, str] | None:
+    """
+    Fetches the password hash and salt for a given username.
+    
+    Returns:
+        Tuple of (password_hash, salt) or None if user not found
+    """
     with get_connection() as conn:
         row = conn.execute(
-            "SELECT password FROM users WHERE username = ?", (username,)
+            "SELECT password, salt FROM users WHERE username = ?", (username,)
         ).fetchone()
-    return row['password'] if row else None
+    if row:
+        return (row['password'], row['salt']) if row['salt'] else None
+    return None
+
+def verify_user_password(username: str, password: str) -> bool:
+    """
+    Verify a user's password against the stored hash.
+    
+    Args:
+        username: The username to check
+        password: The plain text password to verify
+        
+    Returns:
+        True if password is correct, False otherwise
+    """
+    password_data = get_user_password_hash(username)
+    if not password_data:
+        return False
+    
+    password_hash, salt = password_data
+    if not salt:
+        # Legacy user without salt - they need to reset their password
+        logger.warning(f"User {username} has legacy password without salt - password reset required")
+        return False
+    
+    return _verify_password(password, password_hash, salt)
 
 
 def list_users() -> List[User]:
@@ -308,6 +389,31 @@ def delete_user(username: str) -> None:
     with get_connection() as conn:
         conn.execute("DELETE FROM users WHERE username = ?", (username,))
 
+
+def update_user_password(username: str, new_password: str) -> bool:
+    """
+    Update a user's password with secure hashing.
+    
+    Args:
+        username: The username to update
+        new_password: The new plain text password
+        
+    Returns:
+        True if password was updated, False if user not found
+    """
+    password_hash, salt = _hash_password(new_password)
+    
+    with get_connection() as conn:
+        cursor = conn.execute(
+            "UPDATE users SET password = ?, salt = ? WHERE username = ?",
+            (password_hash, salt, username)
+        )
+        success = cursor.rowcount > 0
+        if success:
+            logger.info(f"Password updated for user '{username}'")
+        else:
+            logger.warning(f"Failed to update password - user '{username}' not found")
+        return success
 
 # -----------------------------------------------------------------------------
 # Memories  (assistant‑level, nie user‑level)

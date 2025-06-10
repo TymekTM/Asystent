@@ -120,12 +120,14 @@ class TTSModule:
                     model=self.model,
                     voice=self.voice,
                     input=text,
-                    response_format="opus",
-                ) as response:
+                    response_format="opus",                ) as response:
                     self.cancel()
                     self.current_process = subprocess.Popen(
                         ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", "-volume", str(self.volume), "-i", "-"] ,
                         stdin=subprocess.PIPE,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                        start_new_session=True  # Prevent signal propagation
                     )
                     for chunk in response.iter_bytes():
                         if self.current_process.stdin:

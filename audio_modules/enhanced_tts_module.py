@@ -171,8 +171,7 @@ class EnhancedTTSModule:
                 logger.info("Falling back to Edge TTS")
                 try:
                     await self._edge_tts_speak(text, config.tts_config)
-                except Exception as fallback_e:
-                    logger.error(f"Fallback TTS also failed: {fallback_e}")
+                except Exception as fallback_e:                    logger.error(f"Fallback TTS also failed: {fallback_e}")
     
     async def _edge_tts_speak(self, text: str, config: Dict[str, Any]):
         """Edge TTS implementation (Poor Man Mode)."""
@@ -215,10 +214,15 @@ class EnhancedTTSModule:
             # Ensure ffplay is available
             ensure_ffmpeg_installed()
             
-            # Play the audio
+            # Play the audio with security measures
             self.current_process = subprocess.Popen([
                 "ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", temp_path
-            ])
+            ], 
+            stdout=subprocess.DEVNULL, 
+            stderr=subprocess.DEVNULL,
+            stdin=subprocess.DEVNULL,  # Prevent input injection
+            start_new_session=True     # Prevent signal propagation
+            )
             
             # Wait for playback to complete
             await asyncio.to_thread(self.current_process.wait)

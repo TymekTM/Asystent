@@ -1,26 +1,9 @@
-# ✅ FIXY - COMPLETED OVERLAY + USER MODES + LEGACY INTEGRATION! ✅
-- ✅ FIXED: Overlay status management and client-server-overlay integration
-- ✅ FIXED: Client can run in standalone mode for testing  
-- ✅ FIXED: HTTP API for overlay working correctly
-- ✅ FIXED: Status flag management (tts_playing, wake_word_detected, etc.)
-- ✅ IMPLEMENTED: Complete User Mode System with Poor Man, Paid User, Enterprise modes
-- ✅ IMPLEMENTED: Enhanced TTS Module with Edge TTS, OpenAI TTS, Azure TTS support
-- ✅ IMPLEMENTED: Enhanced Whisper ASR with dynamic model selection for Poor Man mode
-- ✅ IMPLEMENTED: Advanced user authentication and role management system
-- ✅ IMPLEMENTED: User Mode Integrator connecting all systems
-- ✅ IMPLEMENTED: API endpoints for Web UI user mode management
-- ✅ IMPLEMENTED: Demo script showcasing all new features
-- ✅ INTEGRATED: Legacy TTS code for optimal OpenAI TTS streaming performance
-- ✅ TESTED: All user modes, fallback mechanisms, mute functionality working perfectly
+# ✅ FIXY 
 - When AI wants to activate listening and user does the same at the same time it just happens twice
 - Moduł od muzyki klucz spotify
 
 # ⭐ WAŻNE (strategiczne / fundamenty) - MAJOR PROGRESS! 🚀
 - Plug and play installation
-- ✅ Poor man mode - tts bing, whisper lokalnie(dynamiczny dobór rozmiaru) [COMPLETED!]
-- ✅ Paid user mode - whisper i tts po api openai [COMPLETED!] 
-- ✅ Advanced user authentication and role management [COMPLETED!]
-- ✅ Test 100, 200, 1000 and 10000 concurent users at the same time (openai limits 500 rpm, no tts, just handle data transfer and monitor memory and cpu usage) [COMPLETED! 100-200 users: 100% success, 1000+ rate limited but system stable]
 
 # 🔧 OPTYMALIZACJE
 - Add loading indicators for long-running operations in web UI

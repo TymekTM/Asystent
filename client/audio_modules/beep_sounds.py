@@ -2,6 +2,7 @@ import subprocess
 import os
 import logging
 import sys
+import shutil
 
 # Global mute flag to disable beeps (e.g., in chat/text mode)
 MUTE = False
@@ -46,12 +47,18 @@ def play_beep(sound_type: str = "keyword", loop: bool = False) -> subprocess.Pop
                  Domyślnie False (dla pojedynczego odtwarzania).
     :return: Obiekt subprocess.Popen lub None.
     """
+    # Validate ffplay availability and safety
+    if not _validate_ffplay_available():
+        logger.error("ffplay validation failed - cannot play sound")
+        return None
+    
     # If muted, skip playing sounds
     if MUTE:
+        logger.debug("Audio muted - skipping sound playback")
         return None
     
     base_dir = get_base_path()
-    logger.info(f"[Debug] base_dir for beeps: {base_dir}")
+    logger.debug(f"Base directory for beeps: {base_dir}")
     rel_path = BEEP_SOUNDS.get(sound_type)
     
     if not rel_path:  # If sound_type is not in BEEP_SOUNDS
@@ -62,34 +69,40 @@ def play_beep(sound_type: str = "keyword", loop: bool = False) -> subprocess.Pop
         logger.error(f"Default beep sound ('keyword') not found in BEEP_SOUNDS. Cannot play sound for type: {sound_type}")
         return None
 
-    # Build list of roots to search for the sound file
-    # Determine absolute path to the sound file under resources
-    beep_file = os.path.join(get_base_path(), rel_path)
-    logger.info(f"[Debug] Using beep_file: {beep_file}")
-    if not os.path.isfile(beep_file):
-        logger.warning(f"Beep file not found: {beep_file}")
+    # Build absolute path to the sound file
+    beep_file = os.path.join(base_dir, rel_path)
+    
+    # Validate the audio file path for security
+    if not _validate_audio_file_path(beep_file):
+        logger.error(f"Audio file validation failed: {beep_file}")
         return None
     
-    if os.path.exists(beep_file):
-        try:
-            logger.info(f"Odtwarzam dźwięk '{sound_type}' z pliku: {beep_file} (Loop: {loop})")
-            # Use -loop 0 for infinite loop, remove it for single play
-            cmd = ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet"]
-            if loop:
-                cmd.extend(["-loop", "0"])
-            cmd.append(beep_file)
+    try:
+        logger.info(f"Playing sound '{sound_type}' from file: {beep_file} (Loop: {loop})")
+        
+        # Build command with security considerations
+        cmd = ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet"]
+        if loop:
+            cmd.extend(["-loop", "0"])
+        cmd.append(beep_file)
 
-            process = subprocess.Popen(cmd,
-                                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)  # Suppress ffplay output
-            return process
-        except FileNotFoundError:
-             logger.error(f"Błąd przy odtwarzaniu dźwięku '{sound_type}': Polecenie 'ffplay' nie znalezione. Upewnij się, że FFmpeg jest zainstalowany i w PATH.")
-             return None
-        except Exception as e:
-            logger.error(f"Błąd przy odtwarzaniu dźwięku '{sound_type}': {e}")
-            return None
-    else:
-        logger.warning(f"Plik dźwiękowy nie został znaleziony: {beep_file}")
+        # Execute with security measures
+        process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.DEVNULL, 
+            stderr=subprocess.DEVNULL,
+            stdin=subprocess.DEVNULL,  # Prevent input injection
+            start_new_session=True     # Prevent signal propagation
+        )
+        
+        logger.debug(f"Started audio playback process (PID: {process.pid})")
+        return process
+        
+    except FileNotFoundError:
+        logger.error(f"Error playing sound '{sound_type}': 'ffplay' command not found. Ensure FFmpeg is installed and in PATH.")
+        return None
+    except Exception as e:
+        logger.error(f"Error playing sound '{sound_type}': {e}")
         return None
 
 def stop_beep(process: subprocess.Popen):
@@ -108,3 +121,85 @@ def stop_beep(process: subprocess.Popen):
             logger.error(f"Błąd podczas zatrzymywania dźwięku (PID: {process.pid}): {e}")
     elif process:
         logger.debug(f"Proces dźwięku (PID: {process.pid}) już zakończony.")
+
+def _validate_ffplay_available() -> bool:
+    """
+    Validate that ffplay is available and safe to use.
+    
+    Returns:
+        True if ffplay is available and safe to use, False otherwise
+    """
+    try:
+        # Check if ffplay is available in PATH
+        ffplay_path = shutil.which("ffplay")
+        if not ffplay_path:
+            logger.error("ffplay not found in PATH. Please install FFmpeg.")
+            return False
+        
+        # Additional security: ensure it's actually ffplay
+        try:
+            result = subprocess.run(
+                [ffplay_path, "-version"], 
+                capture_output=True, 
+                text=True, 
+                timeout=5
+            )
+            if "ffplay" not in result.stderr.lower():
+                logger.error("ffplay binary validation failed")
+                return False
+        except (subprocess.TimeoutExpired, subprocess.SubprocessError) as e:
+            logger.error(f"ffplay validation error: {e}")
+            return False
+        
+        logger.debug(f"ffplay validated: {ffplay_path}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Error validating ffplay: {e}")
+        return False
+
+def _validate_audio_file_path(file_path: str) -> bool:
+    """
+    Validate that the audio file path is safe and within expected directories.
+    
+    Args:
+        file_path: Path to the audio file
+        
+    Returns:
+        True if path is safe, False otherwise
+    """
+    try:
+        # Convert to absolute path and resolve any symlinks
+        abs_path = os.path.abspath(file_path)
+        
+        # Get the base directory (project root)
+        base_dir = get_base_path()
+        
+        # Ensure the file is within the project directory
+        if not abs_path.startswith(os.path.abspath(base_dir)):
+            logger.error(f"Audio file outside project directory: {abs_path}")
+            return False
+        
+        # Check file extension (only allow audio files)
+        allowed_extensions = {'.mp3', '.wav', '.ogg', '.m4a', '.flac'}
+        file_ext = os.path.splitext(abs_path)[1].lower()
+        if file_ext not in allowed_extensions:
+            logger.error(f"Invalid audio file extension: {file_ext}")
+            return False
+        
+        # Check file exists and is readable
+        if not os.path.isfile(abs_path):
+            logger.error(f"Audio file not found: {abs_path}")
+            return False
+        
+        # Check file size (prevent DoS attacks with huge files)
+        file_size = os.path.getsize(abs_path)
+        if file_size > 50 * 1024 * 1024:  # 50MB limit
+            logger.error(f"Audio file too large: {file_size} bytes")
+            return False
+        
+        return True
+        
+    except Exception as e:
+        logger.error(f"Error validating audio file path: {e}")
+        return False

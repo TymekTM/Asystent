@@ -279,8 +279,7 @@ class AuthenticationManager:
             }
             
             with open(self.config_path, 'w', encoding='utf-8') as f:
-                json.dump(data, f, indent=2, ensure_ascii=False)
-                
+                json.dump(data, f, indent=2, ensure_ascii=False)            
         except Exception as e:
             logger.error(f"Error saving auth config: {e}")
     
@@ -290,7 +289,10 @@ class AuthenticationManager:
         
         if not admin_exists:
             admin_id = "admin_" + secrets.token_hex(8)
-            password_hash, salt = self._hash_password("admin123")  # TODO: Change default password
+            
+            # Generate a secure random password instead of using a default
+            secure_password = secrets.token_urlsafe(16)  # 128-bit security
+            password_hash, salt = self._hash_password(secure_password)
             
             admin = User(
                 user_id=admin_id,
@@ -305,8 +307,29 @@ class AuthenticationManager:
             self.users[admin_id] = admin
             self._save_config()
             
-            logger.warning(f"Created default admin user (username: admin, password: admin123)")
-            logger.warning("Please change the default password immediately!")
+            logger.critical("="*80)
+            logger.critical("DEFAULT ADMIN ACCOUNT CREATED")
+            logger.critical(f"Username: admin")
+            logger.critical(f"Password: {secure_password}")
+            logger.critical("SAVE THIS PASSWORD IMMEDIATELY!")
+            logger.critical("This password will not be shown again.")
+            logger.critical("="*80)
+            
+            # Also save to a secure file that only admin can read
+            try:
+                admin_creds_file = Path("admin_credentials.txt")
+                admin_creds_file.write_text(
+                    f"GAJA Assistant - Default Admin Credentials\n"
+                    f"Created: {datetime.now().isoformat()}\n"
+                    f"Username: admin\n"
+                    f"Password: {secure_password}\n\n"
+                    f"IMPORTANT: Change this password immediately after first login!\n"
+                    f"Delete this file after saving the credentials securely.\n"
+                )
+                admin_creds_file.chmod(0o600)  # Read only for owner
+                logger.critical(f"Credentials also saved to: {admin_creds_file.absolute()}")
+            except Exception as e:
+                logger.error(f"Failed to save admin credentials to file: {e}")
     
     def create_user(self, username: str, email: str, password: str, role: UserRole = UserRole.USER) -> Optional[str]:
         """Tworzy nowego użytkownika."""

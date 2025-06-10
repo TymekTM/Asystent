@@ -113,7 +113,8 @@ class ServerApp:
             # Załaduj konfigurację
             self.config = load_config("server_config.json")
             logger.info("Configuration loaded")
-              # Inicjalizuj bazę danych
+            
+            # Inicjalizuj bazę danych
             self.db_manager = initialize_database_manager("server_data.db")
             await self.db_manager.initialize()
             logger.info("Database initialized")
@@ -174,25 +175,58 @@ class ServerApp:
             logger.error(f"Failed to load user plugins: {e}")
     
     async def load_plugin(self, plugin_name: str):
-        """Dynamicznie załaduj plugin."""
+        """
+        Dynamicznie załaduj plugin z walidacją bezpieczeństwa.
+        
+        Args:
+            plugin_name: Nazwa pluginu (tylko alfanumeryczne znaki i podkreślenia)
+        """
         try:
-            # Sprawdź czy plugin istnieje w modules/
-            plugin_path = Path(f"modules/{plugin_name}.py")
+            # Walidacja nazwy pluginu - zapobieganie path traversal
+            if not plugin_name.replace('_', '').replace('-', '').isalnum():
+                logger.error(f"Invalid plugin name: {plugin_name}. Only alphanumeric characters, hyphens and underscores allowed.")
+                return None
+            
+            # Dodatkowa walidacja - nie pozwalaj na ../  lub inne niebezpieczne znaki
+            if '..' in plugin_name or '/' in plugin_name or '\\' in plugin_name:
+                logger.error(f"Plugin name contains prohibited characters: {plugin_name}")
+                return None
+            
+            # Sprawdź czy plugin istnieje w modules/ (używaj bezpiecznej konstrukcji ścieżki)
+            modules_dir = Path("modules").resolve()  # Resolve to absolute path
+            plugin_path = modules_dir / f"{plugin_name}.py"
+            
+            # Upewnij się, że ścieżka jest wewnątrz katalogu modules
+            if not str(plugin_path.resolve()).startswith(str(modules_dir)):
+                logger.error(f"Plugin path outside modules directory: {plugin_path}")
+                return None
+            
             if not plugin_path.exists():
-                logger.warning(f"Plugin {plugin_name} not found")
+                logger.warning(f"Plugin {plugin_name} not found at {plugin_path}")
+                return None
+            
+            # Sprawdź, czy plik nie jest za duży (zapobieganie atakom DoS)
+            file_size = plugin_path.stat().st_size
+            if file_size > 1024 * 1024:  # 1MB limit
+                logger.error(f"Plugin file too large: {file_size} bytes (max 1MB)")
                 return None
             
             # Dynamiczny import modułu
             import importlib.util
             spec = importlib.util.spec_from_file_location(plugin_name, plugin_path)
+            if not spec or not spec.loader:
+                logger.error(f"Could not create module spec for {plugin_name}")
+                return None
+                
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
             
             # Sprawdź czy moduł ma wymagane funkcje
             if hasattr(module, 'execute_function') and hasattr(module, 'get_functions'):
+                logger.info(f"Successfully loaded plugin: {plugin_name}")
                 return module
             else:
-                logger.warning(f"Plugin {plugin_name} missing required functions")
+                logger.warning(f"Plugin {plugin_name} missing required functions (execute_function, get_functions)")
                 return None
                 
         except Exception as e:
