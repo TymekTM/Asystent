@@ -28,7 +28,7 @@ except ImportError:
     logger.warning("AI module not available - falling back to template-based briefings")
 
 try:
-    from modules.memory_module import retrieve_memories
+    from modules.memory_module import search_memories
     MEMORY_MODULE_AVAILABLE = True
 except ImportError:
     MEMORY_MODULE_AVAILABLE = False
@@ -195,19 +195,18 @@ class DailyBriefingModule:
             return None
             
         try:
-            # Import weather module
-            from modules.weather_module import handler as weather_handler
-              # Get weather information
+            from modules.weather_module import WeatherModule
+
+            weather_module = WeatherModule()
+            await weather_module.initialize()
+
             current_location = self.get_current_location()
-            weather_text = weather_handler(
-                {"location": current_location, "action": "current"},
-                conversation_history=None,
-                user=None
-            )
-            
-            if weather_text and isinstance(weather_text, str):
+            api_key = self.config.get("api_keys", {}).get("openweather", "")
+            result = await weather_module.get_weather(0, current_location, api_key)
+            if result and "current" in result:
+                text = result["current"]["description"]
                 return {
-                    'current_text': weather_text,
+                    'current_text': text,
                     'location': current_location
                 }
         except Exception as e:
@@ -271,41 +270,22 @@ class DailyBriefingModule:
             memories = []
             
             # Get recent memories (last 30 days)
-            recent_memories_result = retrieve_memories(
-                query="", 
-                limit=10,
-                user=None  # Get memories from all users
-            )
-            
-            if len(recent_memories_result) >= 2 and recent_memories_result[1]:  # success
-                memories_text = recent_memories_result[0]
-                if memories_text and "Nie znaleziono" not in memories_text:
-                    # Parse the memories text to extract individual memories
-                    memory_lines = memories_text.split('\n')
-                    for line in memory_lines:
-                        if line.strip() and not line.startswith("Znalezione"):
-                            memories.append({
-                                'content': line.strip(),
-                                'type': 'recent_memory'
-                            })
+            recent = await search_memories("0", "")
+            if recent.get("success"):
+                for item in recent.get("results", [])[:10]:
+                    memories.append({
+                        'content': item.get('content', ''),
+                        'type': 'recent_memory'
+                    })
             
             # Get memories related to daily briefings
-            briefing_memories_result = retrieve_memories(
-                query="briefing dzień dobry pogoda",
-                limit=5,
-                user=None
-            )
-            
-            if len(briefing_memories_result) >= 2 and briefing_memories_result[1]:  # success
-                briefing_text = briefing_memories_result[0]
-                if briefing_text and "Nie znaleziono" not in briefing_text:
-                    memory_lines = briefing_text.split('\n')
-                    for line in memory_lines:
-                        if line.strip() and not line.startswith("Znalezione"):
-                            memories.append({
-                                'content': line.strip(),
-                                'type': 'briefing_memory'
-                            })
+            briefing = await search_memories("0", "briefing dzień dobry pogoda")
+            if briefing.get("success"):
+                for item in briefing.get("results", [])[:5]:
+                    memories.append({
+                        'content': item.get('content', ''),
+                        'type': 'briefing_memory'
+                    })
             
             return memories[:5]  # Limit to 5 most relevant memories
             
@@ -422,7 +402,7 @@ class DailyBriefingModule:
         if isinstance(quote, Exception):
             logger.error(f"Quote data error: {quote}")
             quote = None
-
+        
         # Build briefing content
         content = {
             'greeting': f"Hej {self.user_name}",
@@ -523,7 +503,7 @@ Informacje do uwzględnienia:
         
         if context['events']:
             prompt += f"- Wydarzenia: {context['events']}\n"
-
+        
         if context['memories'] and len(context['memories']) > 0:
             prompt += "- Wspomnienia/historie:\n"
             for memory in context['memories'][:3]:  # Limit to top 3
@@ -742,7 +722,28 @@ async def test_template_briefing():
     result = await briefing.deliver_briefing(force_delivery=True)
     print(f"Template Briefing: {result}")
 
+def register():
+    """Register the daily briefing plugin."""
+    return {
+        "command": "briefing",
+        "aliases": ["brief", "podsumowanie", "dzien"],
+        "description": "Generuje codzienne podsumowanie dnia",
+        "handler": lambda params=None, **kwargs: asyncio.run(handle_daily_briefing("", {"config": kwargs.get("config", {})}))
+    }
+
+def get_functions() -> List[Dict[str, Any]]:
+    return [{
+        "name": "daily_briefing",
+        "description": "Return a daily briefing text",
+        "parameters": {"type": "object", "properties": {}},
+    }]
+
+async def execute_function(function_name: str, parameters: Dict[str, Any], user_id: int) -> Dict[str, Any]:
+    if function_name == "daily_briefing":
+        result = await handle_daily_briefing("", {"config": {}})
+        return {"success": True, "message": result.get("message", "")}
+    return {"success": False, "error": "Unknown function"}
+
 if __name__ == "__main__":
-    # Test the daily briefing module
     asyncio.run(test_ai_briefing())
     asyncio.run(test_template_briefing())

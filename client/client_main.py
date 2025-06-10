@@ -16,6 +16,7 @@ import websockets
 from loguru import logger
 import threading
 import subprocess
+from active_window_module import get_active_window_title
 
 # Dodaj ścieżkę klienta do PYTHONPATH
 sys.path.insert(0, str(Path(__file__).parent))
@@ -276,12 +277,15 @@ class ClientApp:
                 self.recording_command = True
                 await self.update_overlay_status("Processing...")
                   # Send transcribed query to server
+                active_title = get_active_window_title()
                 message = {
                     "type": "ai_query",
                     "query": query,
                     "context": {
                         "source": "voice",
-                        "user_name": "Voice User"
+                        "user_name": "Voice User",
+                        "active_window_title": active_title,
+                        "track_active_window_setting": True
                     }
                 }
                 
