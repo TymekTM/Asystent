@@ -21,13 +21,38 @@ from urllib.parse import urlparse, parse_qs
 import time
 from active_window_module import get_active_window_title
 
-# Dodaj ścieżkę klienta do PYTHONPATH
+# Dodaj ścieżkę główną projektu do PYTHONPATH
+sys.path.insert(0, str(Path(__file__).parent.parent))
 sys.path.insert(0, str(Path(__file__).parent))
 
 # Import local modules
 from audio_modules.advanced_wakeword_detector import create_wakeword_detector
 from audio_modules.whisper_asr import create_whisper_asr, create_audio_recorder
-from audio_modules.tts_module import TTSModule
+
+# Import enhanced modules if available, fallback to legacy
+try:
+    from audio_modules.enhanced_tts_module import EnhancedTTSModule as TTSModule
+    logger.info("Using Enhanced TTS Module")
+except ImportError:
+    from audio_modules.tts_module import TTSModule
+    logger.info("Using Legacy TTS Module")
+
+try:
+    from audio_modules.enhanced_whisper_asr import EnhancedWhisperASR as WhisperASR
+    logger.info("Using Enhanced Whisper ASR")
+except ImportError:
+    from audio_modules.whisper_asr import create_whisper_asr
+    WhisperASR = None
+    logger.info("Using Legacy Whisper ASR")
+
+# Import user mode system if available
+try:
+    from mode_integrator import user_integrator
+    USER_MODE_AVAILABLE = True
+    logger.info("User Mode System available")
+except ImportError:
+    USER_MODE_AVAILABLE = False
+    logger.info("User Mode System not available - using legacy mode")
 
 
 class ClientApp:
@@ -93,12 +118,12 @@ class ClientApp:
                 "enabled": True,
                 "position": "top-right",
                 "auto_hide_delay": 10
-            },
-            "audio": {
+            },            "audio": {
                 "sample_rate": 16000,
-                "record_duration": 5.0            }
+                "record_duration": 5.0
+            }
         }
-    
+
     async def initialize_components(self):
         """Inicjalizuj komponenty audio i overlay."""
         try:
@@ -119,17 +144,32 @@ class ClientApp:
                 )
                 logger.info("Wakeword detector initialized")
                 
-            # Initialize Whisper ASR
+            # Initialize Whisper ASR - Enhanced or Legacy
             whisper_config = self.config.get('whisper', {})
-            self.whisper_asr = create_whisper_asr(whisper_config)
+            if WhisperASR and USER_MODE_AVAILABLE:
+                # Use Enhanced Whisper ASR with User Mode support
+                self.whisper_asr = WhisperASR()
+                logger.info("Enhanced Whisper ASR initialized")
+            else:
+                # Use Legacy Whisper ASR
+                self.whisper_asr = create_whisper_asr(whisper_config)
+                logger.info("Legacy Whisper ASR initialized")
+                
+            # Always create audio recorder for wakeword detection
             self.audio_recorder = create_audio_recorder(
                 sample_rate=self.config.get('audio', {}).get('sample_rate', 16000),
-                duration=self.config.get('audio', {}).get('record_duration', 5.0)            )
-            logger.info("Whisper ASR initialized")
+                duration=self.config.get('audio', {}).get('record_duration', 5.0)
+            )
             
-            # Initialize TTS
-            self.tts = TTSModule()
-            logger.info("TTS module initialized")
+            # Initialize TTS - Enhanced or Legacy
+            if USER_MODE_AVAILABLE:
+                # Enhanced TTS will be managed by user_integrator
+                self.tts = user_integrator.tts_module
+                logger.info("Enhanced TTS module initialized via User Mode Integrator")
+            else:
+                # Use Legacy TTS
+                self.tts = TTSModule()
+                logger.info("Legacy TTS module initialized")
             
             # Set whisper ASR for wakeword detector
             if self.wakeword_detector:

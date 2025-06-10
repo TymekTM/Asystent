@@ -1,0 +1,26 @@
+# Requirements for Concurrent Users Performance Testing
+# ===================================================
+
+# Core dependencies for performance testing
+aiohttp>=3.8.0         # Async HTTP client for OpenAI API calls
+psutil>=5.9.0          # System monitoring (CPU, memory, network)
+openai>=1.70.0         # OpenAI API client (for API key validation)
+
+# Optional dependencies for enhanced monitoring
+# memory-profiler>=0.60.0  # Detailed memory profiling
+# py-spy>=0.3.14          # CPU profiling
+# httpx>=0.24.0           # Alternative HTTP client
+
+# Standard library modules used:
+# - asyncio (built-in)
+# - time (built-in)  
+# - logging (built-in)
+# - json (built-in)
+# - statistics (built-in)
+# - dataclasses (built-in)
+# - typing (built-in)
+# - concurrent.futures (built-in)
+# - threading (built-in)
+# - os (built-in)
+# - datetime (built-in)
+# - sys (built-in)
