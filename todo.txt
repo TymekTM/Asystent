@@ -6,7 +6,8 @@
 - Plug and play installation
 - Listen after finished speaking (jako funkcja dla ai)
 - Test poorman and richman mode 
-
+- Dostosowywanie tts w zależności od pory dnia i "święta"
+- Limiter zapytań w zależności od poziomu użytkownika(różne poziomy, free, plus, pro czy coś takiego)
 
 # 🔧 OPTYMALIZACJE
 - Add loading indicators for long-running operations in web UI
@@ -26,3 +27,16 @@
 - TTS and voice personalization (głos, język, szybkość, test)
 - Wykrywanie rozmówcy za pomocą speechbrain
 - RAG (retrieval-augmented generation)
+
+
+Najważniejsze rzeczy do poprawy / dodać
+Priorytet	Temat	Co się dzieje / co poprawić
+🔴	Importy przez sys.path.insert	W wielu plikach dodajesz katalogi ręcznie zamiast zrobić z /server prawdziwy pakiet Pythona (src/gaja_server/..., __init__.py, pyproject.toml). To psuje IDE, testy i bundling.
+🔴	Brak Dockerfile + docker-compose	Serwer ma zależności (SQLite, pliki audio, modele). Wrzuć Dockerfile (oparty na python:3.12-slim) i plik docker-compose.yml z usługą db oraz opcjonalnie klientem. Ułatwi CI i deploy.
+🔴	Encoding requirements.txt	Plik jest zapisany w UTF-16 LE – pip na Linuksach pluje się przy pip -r. Zmień na UTF-8.
+🟠	CI / lint	Nie widzę .github/workflows. Dodaj job: lint (ruff/black) + mypy + pytest. Wykryje sporo drobnych błędów zanim przejdą dalej.
+🟠	Type hints / Pydantic v2	Część plików ma typowanie, część nie. przy FastAPI użyj Pydantic v2 + strict mode; w pluginach → typing.Protocol zamiast Any.
+🟠	Sekrety	Klucze OpenAI/Anthropic ładowane z env? Super, ale w repo widzę placeholdery w .env.example – dobrze. Upewnij się, że żadne realne tokeny nie trafiają do logów (loguru domyślnie nie maskuje).
+🟡	Struktura repo	Masz sporo plików w root (mode_integrator.py, overlay/, web_ui/). Rozważ podział: gaja_core/, gaja_server/, gaja_client/. Łatwiej będzie budować wheel/installer.
+🟡	Pliki audio i modele	Wymagasz pip-install „dużych” paczek (faster-whisper, piper). Rozważ lazy-download przy pierwszym uruchomieniu + progres bar (masz pseudo-mechanizm w requirements_build, ale warto dorobić)
+🟡	Dokumentacja API	FastAPI generuje swagger, ale fajnie byłoby dodać krótki diagram sekwencji (np. w README) jak klient ↔ serwer ↔ AI provider ↔ plugin przebiega przy pojedynczej komendzie.
