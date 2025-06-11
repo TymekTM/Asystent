@@ -251,11 +251,12 @@ async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, sta
     let is_listening = data.get("is_listening").and_then(|v| v.as_bool()).unwrap_or(false);
     let is_speaking = data.get("is_speaking").and_then(|v| v.as_bool()).unwrap_or(false);
     let wake_word_detected = data.get("wake_word_detected").and_then(|v| v.as_bool()).unwrap_or(false);
+    let overlay_visible = data.get("overlay_visible").and_then(|v| v.as_bool()).unwrap_or(false);
 
-    // More generous visibility logic - keep overlay visible if there's any activity or recent text
+    // Enhanced visibility logic - show overlay when there's activity OR when explicitly set visible
     let has_activity = wake_word_detected || is_speaking || is_listening;
-    let has_content = !current_text.is_empty();
-    let should_be_visible = has_activity || has_content;
+    let has_meaningful_content = !current_text.is_empty() && current_text != "Listening..." && current_text != "Offline";
+    let should_be_visible = has_activity || has_meaningful_content || overlay_visible;
 
     let mut changed = false;
     if state_guard.text != current_text ||
@@ -268,8 +269,8 @@ async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, sta
     }
 
     if changed {
-        println!("[Rust] Status update: listening={}, speaking={}, wake_word={}, text='{}', visible={}", 
-                is_listening, is_speaking, wake_word_detected, current_text, should_be_visible);
+        println!("[Rust] Status update: listening={}, speaking={}, wake_word={}, text='{}', visible={}, overlay_visible_flag={}", 
+                is_listening, is_speaking, wake_word_detected, current_text, should_be_visible, overlay_visible);
         
         state_guard.status = status.clone();
         state_guard.text = current_text.clone();
@@ -277,11 +278,18 @@ async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, sta
         state_guard.is_speaking = is_speaking;
         state_guard.wake_word_detected = wake_word_detected;
 
+        // Show/hide window based on calculated visibility
         if should_be_visible && !state_guard.visible {
+            println!("[Rust] Showing overlay window");
             window.show().unwrap_or_else(|e| eprintln!("Failed to show window: {}", e));
             state_guard.visible = true;
+        } else if !should_be_visible && state_guard.visible {
+            println!("[Rust] Hiding overlay window");
+            window.hide().unwrap_or_else(|e| eprintln!("Failed to hide window: {}", e));
+            state_guard.visible = false;
         }
-        state_guard.visible = should_be_visible;        // Emit status update to frontend
+        
+        // Emit status update to frontend
         let payload = StatusUpdate {
             status: status.clone(),
             text: state_guard.text.clone(),
@@ -293,9 +301,11 @@ async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, sta
             eprintln!("Failed to emit status-update: {}", e);
         });
         state_guard.last_activity_time = Instant::now();
-    }    // Auto-hide logic - only hide after longer period and when truly inactive
+    }
+    
+    // Auto-hide logic - only hide after longer period and when truly inactive
     if state_guard.visible && state_guard.last_activity_time.elapsed() > Duration::from_secs(30) 
-        && current_text.is_empty() && !is_listening && !is_speaking && !wake_word_detected {
+        && current_text.is_empty() && !is_listening && !is_speaking && !wake_word_detected && !overlay_visible {
         if window.is_visible().unwrap_or(false) {
             println!("[Rust] Auto-hiding window due to prolonged inactivity and no relevant status.");
             window.hide().unwrap_or_else(|e| eprintln!("Failed to hide window: {}", e));
@@ -330,10 +340,9 @@ pub fn run() {
                 }
             }            set_click_through(&main_window, true);
             
-            // Force show window for debugging
-            main_window.show().unwrap_or_else(|e| eprintln!("Failed to show window: {}", e));
-            // Remove focus call to prevent window from stealing focus
-            // main_window.set_focus().unwrap_or_else(|e| eprintln!("Failed to focus window: {}", e));
+            // Start overlay hidden initially - will be shown when client sends status
+            main_window.hide().unwrap_or_else(|e| eprintln!("Failed to hide window initially: {}", e));
+            println!("[Rust] Overlay started and hidden, waiting for client status updates");
 
             tauri::async_runtime::spawn(async move {
                 poll_assistant_status(app_handle, state_clone_for_poll).await;
@@ -359,14 +368,14 @@ pub fn run() {
                 }
                 _ => {}
             }
-        })
-        .build(tauri::generate_context!());
+        })        .build(tauri::generate_context!());
 
     match app_result {
         Ok(app) => {
             app.run(|_app_handle, event| match event {
                 tauri::RunEvent::ExitRequested { api, .. } => {
-                    api.prevent_exit();
+                    // Allow normal exit when client closes - don't prevent it
+                    println!("[Rust] Exit requested, shutting down overlay...");
                 }
                 _ => {}
             });

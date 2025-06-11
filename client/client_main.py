@@ -173,8 +173,7 @@ class ClientApp:
                 # Use Legacy TTS
                 self.tts = TTSModule()
                 logger.info("Legacy TTS module initialized")
-            
-            # Set whisper ASR for wakeword detector
+              # Set whisper ASR for wakeword detector
             if self.wakeword_detector:
                 self.wakeword_detector.set_whisper_asr(self.whisper_asr)
                 logger.info("Whisper ASR set for wakeword detector")
@@ -188,18 +187,39 @@ class ClientApp:
     async def start_overlay(self):
         """Uruchom zewnętrzny overlay Tauri."""
         try:
-            overlay_path = Path(__file__).parent / "overlay" / "target" / "release" / "gaja-overlay.exe"
+            # Możliwe ścieżki do overlay exe
+            overlay_paths = [
+                Path(__file__).parent / "overlay" / "target" / "release" / "gaja-overlay.exe",
+                Path(__file__).parent.parent / "overlay" / "target" / "release" / "gaja-overlay.exe",
+                Path(__file__).parent / ".." / "overlay" / "target" / "release" / "gaja-overlay.exe",
+            ]
             
-            if overlay_path.exists():
+            overlay_path = None
+            for path in overlay_paths:
+                if path.exists():
+                    overlay_path = path
+                    break
+            
+            if overlay_path:
+                # Start overlay process
                 self.overlay_process = subprocess.Popen(
                     [str(overlay_path)],
-                    cwd=overlay_path.parent.parent
+                    cwd=overlay_path.parent.parent,
+                    creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if hasattr(subprocess, 'CREATE_NEW_PROCESS_GROUP') else 0
                 )
-                logger.info(f"Started Tauri overlay process: {self.overlay_process.pid}")
-            else:
-                logger.warning(f"Overlay executable not found: {overlay_path}")
+                logger.info(f"Started Tauri overlay process: {self.overlay_process.pid} from {overlay_path}")
                 
-        except Exception as e:            logger.error(f"Error starting overlay: {e}")
+                # Wait a moment for overlay to start
+                await asyncio.sleep(1)
+                
+            else:
+                logger.warning("Overlay executable not found in any expected location")
+                logger.info("Checked paths:")
+                for path in overlay_paths:
+                    logger.info(f"  - {path}")
+                
+        except Exception as e:
+            logger.error(f"Error starting overlay: {e}")
 
     async def connect_to_server(self):
         """Nawiąż połączenie z serwerem."""
@@ -289,12 +309,12 @@ class ClientApp:
                     logger.warning("No text in AI response")
                         
             except (json.JSONDecodeError, KeyError) as e:
-                logger.error(f"Error parsing AI response: {e}")
-                # Fallback: treat response as plain text
+                logger.error(f"Error parsing AI response: {e}")                # Fallback: treat response as plain text
                 if isinstance(response, str) and response.strip():
                     text = response.strip()
                     logger.info(f"Using response as plain text: {text}")
-                      # Update overlay
+                    
+                    # Update overlay
                     self.last_tts_text = text
                     self.update_status(f"Response: {text[:50]}...")
                     
@@ -346,9 +366,13 @@ class ClientApp:
         if query:
             # We already have transcribed text from wakeword detector
             logger.info(f"Wakeword detected with query: {query}")
-              # Set wake word detection flag for overlay
+            
+            # Set wake word detection flag for overlay and show immediately
             self.wake_word_detected = True
-            self.update_status("Wake word detected!")
+            self.update_status("Przetwarzam...")
+            
+            # Show overlay immediately when wake word is detected
+            await self.show_overlay()
             
             if self.recording_command:
                 logger.warning("Already processing command")
@@ -356,25 +380,40 @@ class ClientApp:
                 
             try:
                 self.recording_command = True
-                self.update_status("Processing...")
                 
-                # Show overlay when processing starts
-                await self.show_overlay()
-                
-                # Send transcribed query to server
-                active_title = get_active_window_title()
-                message = {
-                    "type": "ai_query",
-                    "query": query,
-                    "context": {
-                        "source": "voice",
-                        "user_name": "Voice User",
-                        "active_window_title": active_title,
-                        "track_active_window_setting": True
+                # If server is available, send query
+                if self.websocket:
+                    active_title = get_active_window_title()
+                    message = {
+                        "type": "ai_query",
+                        "query": query,
+                        "context": {
+                            "source": "voice",
+                            "user_name": "Voice User",
+                            "active_window_title": active_title,
+                            "track_active_window_setting": True
+                        }
                     }
-                }
-                
-                await self.send_message(message)
+                    await self.send_message(message)
+                else:
+                    # Standalone mode - simulate processing and response
+                    logger.info("Standalone mode - simulating processing")
+                    await asyncio.sleep(1)  # Simulate thinking time
+                    
+                    # Show that we heard the command but can't process it
+                    response_text = f"Wykryto polecenie: '{query}'. Serwer AI niedostępny."
+                    self.last_tts_text = response_text
+                    self.update_status("Odpowiadam...")
+                    
+                    # Simulate TTS
+                    self.tts_playing = True
+                    await asyncio.sleep(2)  # Simulate speech time
+                    self.tts_playing = False
+                    
+                    # Reset flags and hide overlay
+                    self.wake_word_detected = False
+                    self.recording_command = False
+                    await self.hide_overlay()
                 
             except Exception as e:
                 logger.error(f"Error processing voice command: {e}")
@@ -389,28 +428,28 @@ class ClientApp:
                 # Note: recording_command and wake_word_detected are reset in TTS completion
                 pass
         else:
-            # Legacy support - wakeword detected without transcription
-            logger.info("Wakeword detected! Recording and transcription handled by wakeword detector.")
+            # Legacy support - wakeword detected without transcription            logger.info("Wakeword detected! Recording and transcription handled by wakeword detector.")
             self.wake_word_detected = True
             self.update_status("Listening...")
 
     async def show_overlay(self):
         """Pokaż overlay."""
         try:
-            # Set overlay visible flag and update status to something overlay might recognize
+            # Set overlay visible flag and update status
             self.overlay_visible = True
-            self.update_status("Processing...")  # Use original status
-            logger.info("Overlay shown - status updated to Processing...")
+            logger.info("Overlay shown - status updated to visible")
+            # Notify SSE clients about the change
+            self.notify_sse_clients()
         except Exception as e:
             logger.error(f"Error showing overlay: {e}")
 
     async def hide_overlay(self):
         """Ukryj overlay."""
-        try:
-            # Set overlay hidden flag and update status  
+        try:            # Set overlay hidden flag and update status  
             self.overlay_visible = False
-            self.update_status("Listening...")
-            logger.info("Overlay hidden - status updated to Listening...")
+            logger.info("Overlay hidden - status updated to hidden")
+            # Notify SSE clients about the change
+            self.notify_sse_clients()
         except Exception as e:
             logger.error(f"Error hiding overlay: {e}")
 
@@ -431,7 +470,7 @@ class ClientApp:
     def add_sse_client(self, client):
         """Dodaj klienta SSE."""
         self.sse_clients.append(client)
-        
+    
     def remove_sse_client(self, client):
         """Usuń klienta SSE."""
         if client in self.sse_clients:
@@ -444,7 +483,8 @@ class ClientApp:
             "text": self.last_tts_text,
             "is_listening": self.recording_command,
             "is_speaking": self.tts_playing,
-            "wake_word_detected": self.wake_word_detected
+            "wake_word_detected": self.wake_word_detected,
+            "overlay_visible": self.overlay_visible
         }
         
         message = f"data: {json.dumps(status_data)}\n\n"
@@ -590,44 +630,71 @@ class ClientApp:
             # Stop wakeword detection
             if self.wakeword_detector:
                 self.wakeword_detector.stop_detection()
-                
-            # Close overlay process with improved termination
+                  # Close overlay process with improved termination
             if self.overlay_process and self.overlay_process.poll() is None:
                 logger.info(f"Terminating overlay process (PID: {self.overlay_process.pid})...")
                 
                 try:
-                    # Try graceful termination first
-                    self.overlay_process.terminate()
-                    self.overlay_process.wait(timeout=3)
-                    logger.info("Overlay process terminated gracefully")
-                except subprocess.TimeoutExpired:
-                    logger.warning("Overlay process didn't terminate gracefully, trying forceful kill...")
+                    # On Windows, try direct termination first
+                    import os
+                    import signal
+                    
+                    # Send CTRL_C_EVENT to gracefully close the overlay
                     try:
-                        self.overlay_process.kill()
+                        os.kill(self.overlay_process.pid, signal.CTRL_C_EVENT)
+                        # Wait for graceful shutdown
                         self.overlay_process.wait(timeout=2)
-                        logger.info("Overlay process killed forcefully")
-                    except subprocess.TimeoutExpired:
-                        logger.error("Failed to kill overlay process - it may remain in memory")
-                          # Last resort: try Windows taskkill
+                        logger.info("Overlay process terminated gracefully with CTRL_C")
+                    except (subprocess.TimeoutExpired, OSError):
+                        # If CTRL_C doesn't work, try SIGTERM
                         try:
-                            import subprocess
-                            result = subprocess.run(
-                                ["taskkill", "/PID", str(self.overlay_process.pid), "/F"],
-                                capture_output=True,
-                                text=True,
-                                timeout=5
-                            )
-                            if result.returncode == 0:
-                                logger.info("Successfully killed process with taskkill")
-                            else:
-                                logger.warning(f"Taskkill returned non-zero exit code: {result.returncode}")
+                            self.overlay_process.terminate()
+                            self.overlay_process.wait(timeout=3)
+                            logger.info("Overlay process terminated gracefully with SIGTERM")
                         except subprocess.TimeoutExpired:
-                            logger.error("Taskkill command timed out")
-                        except Exception as taskkill_e:
-                            logger.error(f"Taskkill failed: {taskkill_e}")
+                            logger.warning("Overlay process didn't terminate gracefully, trying forceful kill...")
+                            try:
+                                self.overlay_process.kill()
+                                self.overlay_process.wait(timeout=2)
+                                logger.info("Overlay process killed forcefully")
+                            except subprocess.TimeoutExpired:
+                                logger.error("Failed to kill overlay process with standard methods")
+                                
+                                # Last resort: try Windows taskkill for overlay exe specifically
+                                try:
+                                    import subprocess
+                                    result = subprocess.run(
+                                        ["taskkill", "/IM", "gaja-overlay.exe", "/F"],
+                                        capture_output=True,
+                                        text=True,
+                                        timeout=5
+                                    )
+                                    if result.returncode == 0:
+                                        logger.info("Successfully killed overlay process with taskkill by name")
+                                    else:
+                                        logger.warning(f"Taskkill by name returned non-zero exit code: {result.returncode}")
+                                        
+                                        # Try by PID as final fallback
+                                        result = subprocess.run(
+                                            ["taskkill", "/PID", str(self.overlay_process.pid), "/F"],
+                                            capture_output=True,
+                                            text=True,
+                                            timeout=5
+                                        )
+                                        if result.returncode == 0:
+                                            logger.info("Successfully killed process with taskkill by PID")
+                                        else:
+                                            logger.warning(f"Taskkill by PID returned non-zero exit code: {result.returncode}")
+                                except subprocess.TimeoutExpired:
+                                    logger.error("Taskkill command timed out")
+                                except Exception as taskkill_e:
+                                    logger.error(f"Taskkill failed: {taskkill_e}")
                             
                 except Exception as term_e:
                     logger.error(f"Error terminating overlay process: {term_e}")
+                    
+                # Set process to None to indicate it's been handled
+                self.overlay_process = None
                 
             # Close WebSocket connection
             if self.websocket:

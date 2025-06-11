@@ -33,18 +33,30 @@ const App = () => {
       setIsListening(initialState.is_listening);
       setIsSpeaking(initialState.is_speaking);
       setWakeWordDetected(initialState.wake_word_detected);
-    });
-
-    const unlisten = listen('status-update', (event) => {
+    });    const unlisten = listen('status-update', (event) => {
       console.log('[React] Status update received:', event.payload);
       const payload = event.payload;
-      // setStatus(payload.status); // The specific booleans are more useful for UI state
+      
       setText(payload.text);
       setIsListening(payload.is_listening);
       setIsSpeaking(payload.is_speaking);
-      setWakeWordDetected(payload.wake_word_detected);      // Visibility logic primarily handled by Rust.
-      // React focuses on rendering the correct content based on state.
-      setIsVisible(payload.is_listening || payload.is_speaking || payload.wake_word_detected || payload.text !== '');
+      setWakeWordDetected(payload.wake_word_detected);
+      
+      // Enhanced visibility logic - show if any activity or meaningful content
+      const hasActivity = payload.is_listening || payload.is_speaking || payload.wake_word_detected;
+      const hasMeaningfulContent = payload.text && payload.text !== '' && 
+                                  payload.text !== 'Listening...' && 
+                                  payload.text !== 'Offline';
+      const shouldBeVisible = hasActivity || hasMeaningfulContent;
+      
+      console.log('[React] Visibility calculation:', {
+        hasActivity,
+        hasMeaningfulContent,
+        shouldBeVisible,
+        text: payload.text
+      });
+      
+      setIsVisible(shouldBeVisible);
     });
 
     return () => {
@@ -61,21 +73,20 @@ const App = () => {
       setShowBall(false);
     }
   }, [isListening, isSpeaking, wakeWordDetected]);
-
   // Determine current display status string for UI
   let displayStatusText = '';
   let animationClass = '';
 
   if (isSpeaking) {
-    displayStatusText = 'Mówię...';
+    displayStatusText = 'Odpowiadam...';
     animationClass = 'speaking-animation';
   } else if (isListening) {
     displayStatusText = 'Słucham...';
     animationClass = 'listening-animation';
   } else if (wakeWordDetected) {
-    displayStatusText = 'Słucham po wake word...'; // More descriptive for wake word active state
+    displayStatusText = 'Przetwarzam...';
     animationClass = 'wakeword-animation';
-  }  // Render content always - Rust manages window visibility
+  }// Render content always - Rust manages window visibility
   // React only focuses on displaying the correct content based on state  // Helper function to get dynamic font size class based on text length
   const getTextSizeClass = (text) => {
     if (!text) return '';
