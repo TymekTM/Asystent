@@ -1,10 +1,12 @@
 # ✅ FIXY 
-- When AI wants to activate listening and user does the same at the same time it just happens twice
+- When AI wants to activate listening and user does the same time it just happens twice
 - Moduł od muzyki klucz spotify
 
 # ⭐ WAŻNE (strategiczne / fundamenty) - MAJOR PROGRESS! 🚀
 - Plug and play installation
 - Listen after finished speaking (jako funkcja dla ai)
+- Test poorman and richman mode 
+
 
 # 🔧 OPTYMALIZACJE
 - Add loading indicators for long-running operations in web UI
@@ -19,13 +21,8 @@
 - API integrations: weather, calendar, IoT – MCP
 - Desktop/mobile version (Tauri)
 - Interakcje z przeglądarką (prosty Puppeteer / Pyppeteer)
-- Day summary (do obserwacji nawyków, przygotowanie działania)
-- Podstawowa nauka zachowań użytkownika (np. przez zapis do JSON)
-- Home Assistant (music, weather, notes)
 
 # 🔴 TRUDNE (większe systemy, AI/ML, duży zakres)
 - TTS and voice personalization (głos, język, szybkość, test)
 - Wykrywanie rozmówcy za pomocą speechbrain
 - RAG (retrieval-augmented generation)
-- Routines learner (AI wykrywające powtarzalność dnia)
-- Tryb podsumowywania (co dzisiaj/wczoraj się wydarzyło + AI narracja)

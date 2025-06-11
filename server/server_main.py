@@ -35,6 +35,12 @@ import onboarding_module as server_onboarding
 OnboardingModule = server_onboarding.OnboardingModule
 from plugin_monitor import plugin_monitor
 from extended_webui import ExtendedWebUI
+from daily_briefing_module import DailyBriefingModule
+from day_summary_module import DaySummaryModule
+from user_behavior_module import UserBehaviorModule
+from routines_learner_module import RoutinesLearnerModule
+from day_narrative_module import DayNarrativeModule
+from proactive_assistant_simple import get_proactive_assistant
 
 
 class ConnectionManager:
@@ -110,6 +116,14 @@ class ServerApp:
         self.plugin_monitor = plugin_monitor
         self.web_ui = None
         self.start_time = None
+        
+        # Daily briefing and proactive modules
+        self.daily_briefing = None
+        self.day_summary = None
+        self.user_behavior = None
+        self.routines_learner = None
+        self.day_narrative = None
+        self.proactive_assistant = None
     
     async def initialize(self):
         """Inicjalizuj wszystkie komponenty serwera."""
@@ -156,7 +170,17 @@ class ServerApp:
             
             # Inicjalizuj monitorowanie pluginów
             await self.plugin_monitor.start_monitoring()
-            logger.info("Plugin monitoring started")
+            logger.info("Plugin monitoring started")            # Inicjalizuj moduły daily briefing
+            self.daily_briefing = DailyBriefingModule(self.config.get('daily_briefing', {}))
+            self.day_summary = DaySummaryModule(self.config, self.db_manager)
+            self.user_behavior = UserBehaviorModule(self.config, self.db_manager)
+            self.routines_learner = RoutinesLearnerModule(self.config, self.db_manager)
+            self.day_narrative = DayNarrativeModule(self.config, self.db_manager)
+            logger.info("Daily briefing modules initialized")
+              # Inicjalizuj proaktywnego asystenta
+            self.proactive_assistant = get_proactive_assistant()
+            self.proactive_assistant.start()
+            logger.info("Proactive assistant started")
             
             logger.success("Server initialization completed")
             
@@ -321,6 +345,16 @@ class ServerApp:
                 return await self.handle_plugin_list(user_id)
             elif request_type == 'status_update':
                 return await self.handle_status_update(user_id, request_data)
+            elif request_type == 'startup_briefing':
+                return await self.handle_startup_briefing_request(user_id)
+            elif request_type == 'day_summary':
+                return await self.handle_day_summary_request(user_id, request_data)
+            elif request_type == 'get_proactive_notifications':
+                return await self.handle_proactive_notifications(user_id)
+            elif request_type == 'dismiss_notification':
+                return await self.handle_dismiss_notification(user_id, request_data)
+            elif request_type == 'update_user_context':
+                return await self.handle_update_user_context(user_id, request_data)
             else:
                 return {
                     'type': 'error',
@@ -551,6 +585,166 @@ class ServerApp:
                 'message': f'Status update failed: {str(e)}'
             }
     
+    async def handle_startup_briefing_request(self, user_id: str):
+        """Obsłuż request briefingu startowego."""
+        try:
+            if not self.daily_briefing:
+                return {
+                    'type': 'error',
+                    'message': 'Daily briefing module not available'
+                }
+            
+            briefing = await self.daily_briefing.generate_daily_briefing(user_id)
+            
+            return {
+                'type': 'startup_briefing',
+                'briefing': briefing
+            }
+            
+        except Exception as e:
+            logger.error(f"Error generating startup briefing for user {user_id}: {e}")
+            return {
+                'type': 'error',
+                'message': f'Startup briefing failed: {str(e)}'
+            }
+    
+    async def handle_day_summary_request(self, user_id: str, request_data: dict):
+        """Obsłuż request podsumowania dnia."""
+        try:
+            if not self.day_summary:
+                return {
+                    'type': 'error',
+                    'message': 'Day summary module not available'
+                }
+            
+            summary_type = request_data.get('summary_type', 'default')
+            date_filter = request_data.get('date', None)
+            
+            summary = await self.day_summary.generate_summary(user_id, summary_type, date_filter)
+            
+            return {
+                'type': 'day_summary',
+                'summary': summary
+            }
+            
+        except Exception as e:
+            logger.error(f"Error generating day summary for user {user_id}: {e}")
+            return {
+                'type': 'error',
+                'message': f'Day summary failed: {str(e)}'
+            }
+    
+    async def handle_proactive_notifications(self, user_id: str):
+        """Obsłuż request proaktywnych powiadomień."""
+        try:
+            if not self.proactive_assistant:
+                return {
+                    'type': 'error',
+                    'message': 'Proactive assistant not available'
+                }
+            
+            notifications = await self.proactive_assistant.get_notifications(user_id)
+            
+            return {
+                'type': 'proactive_notifications',
+                'notifications': notifications
+            }
+            
+        except Exception as e:
+            logger.error(f"Error getting proactive notifications for user {user_id}: {e}")
+            return {
+                'type': 'error',
+                'message': f'Getting notifications failed: {str(e)}'
+            }
+    
+    async def handle_dismiss_notification(self, user_id: str, request_data: dict):
+        """Obsłuż odrzucenie powiadomienia."""
+        try:
+            if not self.proactive_assistant:
+                return {
+                    'type': 'error',
+                    'message': 'Proactive assistant not available'
+                }
+            
+            notification_id = request_data.get('notification_id')
+            if not notification_id:
+                return {
+                    'type': 'error',
+                    'message': 'Notification ID required'
+                }
+            
+            success = await self.proactive_assistant.dismiss_notification(user_id, notification_id)
+            
+            return {
+                'type': 'notification_dismissed',
+                'success': success,
+                'notification_id': notification_id
+            }
+            
+        except Exception as e:
+            logger.error(f"Error dismissing notification for user {user_id}: {e}")
+            return {
+                'type': 'error',
+                'message': f'Dismissing notification failed: {str(e)}'
+            }
+    
+    async def handle_update_user_context(self, user_id: str, request_data: dict):
+        """Obsłuż aktualizację kontekstu użytkownika."""
+        try:
+            if not self.proactive_assistant:
+                return {
+                    'type': 'error',
+                    'message': 'Proactive assistant not available'
+                }
+            
+            context_data = request_data.get('context', {})
+            
+            await self.proactive_assistant.update_user_context(user_id, context_data)
+            
+            return {
+                'type': 'context_updated',
+                'message': 'User context updated successfully'
+            }
+            
+        except Exception as e:
+            logger.error(f"Error updating user context for user {user_id}: {e}")
+            return {
+                'type': 'error',
+                'message': f'Context update failed: {str(e)}'
+            }
+    
+    async def send_proactive_notifications_to_clients(self, user_id: str = None):
+        """Wyślij proaktywne powiadomienia do klientów."""
+        try:
+            if not self.proactive_assistant:
+                return
+            
+            # Jeśli nie podano user_id, wyślij do wszystkich
+            if user_id is None:
+                for uid in self.connection_manager.active_connections.keys():
+                    await self._send_notifications_to_user(uid)
+            else:
+                await self._send_notifications_to_user(user_id)
+                
+        except Exception as e:
+            logger.error(f"Error sending proactive notifications: {e}")
+    
+    async def _send_notifications_to_user(self, user_id: str):
+        """Wyślij powiadomienia do konkretnego użytkownika."""
+        try:
+            notifications = await self.proactive_assistant.get_notifications(user_id)
+            
+            if notifications:
+                message = {
+                    'type': 'proactive_notifications',
+                    'notifications': notifications
+                }
+                
+                await self.connection_manager.send_personal_message(message, user_id)
+                
+        except Exception as e:
+            logger.error(f"Error sending notifications to user {user_id}: {e}")
+            
     def _configure_cors_middleware(self):
         """Konfiguruje CORS middleware z bezpiecznymi ustawieniami."""
         cors_origins = self.config.get('security', {}).get('cors_origins', ["http://localhost:3000", "http://localhost:8080"])
@@ -559,15 +753,13 @@ class ServerApp:
         if "*" in cors_origins:
             logger.warning("CORS is configured to allow all origins (*). This is not recommended for production!")
             if not self.config.get('server', {}).get('debug', False):
-                logger.error("Wildcard CORS is only allowed in debug mode!")
+                logger.error("Wildcard CORS is only allowed in debug mode! Using safe defaults.")
                 cors_origins = ["http://localhost:3000", "http://localhost:8080"]
-        
+    
         # Import app z modułu globalnego - to może być problematyczne
         # Lepiej będzie to zrobić w main()
         logger.info(f"Configuring CORS for origins: {cors_origins}")
     
-    # ...existing code...
-
 # Globalna instancja serwera
 server_app = ServerApp()
 

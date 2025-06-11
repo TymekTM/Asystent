@@ -228,12 +228,122 @@ class ClientApp:
             self.websocket = await websockets.connect(self.server_url)
             logger.info(f"Connected to server: {self.server_url}")
             
+            # Sprawdź czy to pierwszy start dnia i poproś o briefing
+            await self.request_startup_briefing()
+            
         except Exception as e:
             logger.error(f"Failed to connect to server: {e}")
             logger.error(f"Server URL was: {self.server_url}")
             import traceback
             logger.error(f"Traceback: {traceback.format_exc()}")
             raise
+    
+    async def request_startup_briefing(self):
+        """Poproś serwer o briefing startowy."""
+        try:
+            logger.info("Requesting startup briefing...")
+            await self.send_message({
+                'type': 'startup_briefing'
+            })
+        except Exception as e:
+            logger.error(f"Error requesting startup briefing: {e}")
+    
+    async def handle_summary_response(self, data: Dict):
+        """Obsłuż odpowiedź z podsumowaniem."""
+        try:
+            message_type = data.get('type')
+            summary_data = data.get('data', {})
+            
+            logger.info(f"Summary response received: {message_type}")
+            
+            # Update overlay with summary type
+            self.update_status(f"Summary: {message_type}")
+            await self.show_overlay()
+            
+            # Generate summary text for TTS
+            summary_text = self._format_summary_for_speech(message_type, summary_data)
+            
+            if summary_text and self.tts:
+                try:
+                    self.tts_playing = True
+                    await self.tts.speak(summary_text)
+                    logger.info(f"Summary spoken: {message_type}")
+                except Exception as e:
+                    logger.error(f"Error speaking summary: {e}")
+                finally:
+                    self.tts_playing = False
+                    await self.hide_overlay()
+                    self.update_status("Listening...")
+            else:
+                logger.info("No summary text to speak or TTS not available")
+                await self.hide_overlay()
+                self.update_status("Listening...")
+                
+        except Exception as e:
+            logger.error(f"Error handling summary response: {e}")
+    
+    def _format_summary_for_speech(self, summary_type: str, summary_data: Dict) -> str:
+        """Sformatuj podsumowanie do mowy."""
+        try:
+            if summary_type == 'day_summary':
+                if summary_data.get('success'):
+                    stats = summary_data.get('statistics', {})
+                    active_time = stats.get('total_active_time_hours', 0)
+                    interactions = stats.get('total_interactions', 0)
+                    productivity = stats.get('productivity_score', 0)
+                    
+                    return (f"Podsumowanie dnia: pracowałeś {active_time:.1f} godzin, "
+                           f"miałeś {interactions} interakcji, "
+                           f"produktywność {productivity:.0%}.")
+                
+            elif summary_type == 'week_summary':
+                if summary_data.get('success'):
+                    total_stats = summary_data.get('total_statistics', {})
+                    total_time = total_stats.get('total_active_time', 0)
+                    avg_productivity = total_stats.get('average_productivity', 0)
+                    
+                    return (f"Podsumowanie tygodnia: łącznie {total_time:.1f} godzin pracy, "
+                           f"średnia produktywność {avg_productivity:.0%}.")
+                
+            elif summary_type == 'day_narrative':
+                if summary_data.get('success'):
+                    narrative = summary_data.get('narrative', '')
+                    return narrative
+                
+            elif summary_type == 'behavior_insights':
+                if summary_data.get('success'):
+                    recommendations = summary_data.get('insights', {}).get('recommendations', [])
+                    if recommendations:
+                        return f"Wglądy w zachowania: {recommendations[0]}"
+                    else:
+                        return "Analiza zachowań została zakończona."
+                
+            elif summary_type == 'routine_insights':
+                if summary_data.get('success'):
+                    recommendations = summary_data.get('insights', {}).get('recommendations', [])
+                    if recommendations:
+                        return f"Analiza rutyn: {recommendations[0]}"
+                    else:
+                        return "Analiza rutyn została zakończona."
+            
+            return f"Otrzymano {summary_type}, ale nie mogę go odczytać."
+            
+        except Exception as e:
+            logger.error(f"Error formatting summary for speech: {e}")
+            return "Wystąpił błąd podczas formatowania podsumowania."
+    
+    async def request_day_summary(self, summary_type: str = 'day', date: str = None, style: str = 'friendly'):
+        """Poproś serwer o podsumowanie dnia."""
+        try:
+            logger.info(f"Requesting day summary: type={summary_type}")
+            await self.send_message({
+                'type': 'day_summary',
+                'summary_type': summary_type,
+                'date': date,
+                'style': style
+            })
+        except Exception as e:
+            logger.error(f"Error requesting day summary: {e}")
 
     async def send_message(self, message: Dict):
         """Wyślij wiadomość do serwera."""
@@ -277,7 +387,48 @@ class ClientApp:
         """Obsłuż wiadomość od serwera."""
         message_type = data.get('type')
         
-        if message_type == 'ai_response':
+        if message_type == 'daily_briefing':
+            # Obsłuż daily briefing
+            briefing_text = data.get('text', '')
+            logger.info(f"Daily briefing received: {briefing_text[:100]}...")
+            
+            if briefing_text:
+                # Update overlay with briefing
+                self.update_status("Daily Briefing")
+                await self.show_overlay()
+                
+                # Speak the briefing
+                if self.tts:
+                    try:
+                        self.tts_playing = True
+                        await self.tts.speak(briefing_text)
+                        logger.info("Daily briefing spoken")
+                    except Exception as e:
+                        logger.error(f"Error speaking daily briefing: {e}")
+                    finally:
+                        self.tts_playing = False
+                        await self.hide_overlay()
+                        self.update_status("Listening...")
+                        
+        elif message_type == 'briefing_skipped':
+            logger.info("Daily briefing skipped - already delivered today")
+            self.update_status("Ready - Briefing skipped")
+            
+        elif message_type == 'proactive_notifications':
+            # Obsłuż proaktywne powiadomienia
+            await self.handle_proactive_notifications(data)
+            
+        elif message_type == 'startup_briefing':
+            # Obsłuż briefing startowy
+            briefing = data.get('briefing', {})
+            await self.handle_startup_briefing(briefing)
+            
+        elif message_type == 'day_summary':
+            # Obsłuż podsumowanie dnia
+            summary = data.get('summary', {})
+            await self.handle_day_summary(summary)
+            
+        elif message_type == 'ai_response':
             response = data.get('response', '')
             logger.info(f"AI Response received: {response}")
             
@@ -571,11 +722,12 @@ class ClientApp:
             
             # Listen for server messages (or just keep running if no server)
             if self.websocket:
-                # Start command queue processor alongside websocket listener
+                # Start command queue processor alongside websocket listener and proactive check
                 try:
                     await asyncio.gather(
                         self.listen_for_messages(),
-                        self.process_command_queue()
+                        self.process_command_queue(),
+                        self.periodic_proactive_check()
                     )
                 except asyncio.CancelledError:
                     logger.info("Main tasks cancelled")
@@ -642,6 +794,42 @@ class ClientApp:
             wakeword_thread = threading.Thread(target=self.wakeword_detector.start_detection, daemon=True)
             wakeword_thread.start()
             logger.info("Wakeword monitoring started")
+
+    async def periodic_proactive_check(self):
+        """Okresowo sprawdzaj proaktywne powiadomienia."""
+        try:
+            # Wait a bit after startup before starting proactive checks
+            await asyncio.sleep(30)  # Initial delay
+            
+            while self.running:
+                try:
+                    # Request proactive notifications every 5 minutes
+                    if self.websocket:
+                        await self.request_proactive_notifications()
+                        
+                        # Also update user context with current activity
+                        from active_window_module import get_active_window_title
+                        context_data = {
+                            'timestamp': time.time(),
+                            'active_window': get_active_window_title(),
+                            'client_status': 'active'
+                        }
+                        await self.update_user_context(context_data)
+                    
+                    # Wait 5 minutes before next check
+                    await asyncio.sleep(300)  # 5 minutes
+                    
+                except asyncio.CancelledError:
+                    logger.info("Periodic proactive check cancelled")
+                    break
+                except Exception as e:
+                    logger.error(f"Error in periodic proactive check: {e}")
+                    await asyncio.sleep(60)  # Wait 1 minute on error
+                    
+        except asyncio.CancelledError:
+            logger.info("Periodic proactive check cancelled")
+        except Exception as e:
+            logger.error(f"Fatal error in periodic proactive check: {e}")
 
     async def cleanup(self):
         """Wyczyść zasoby przed zamknięciem."""
