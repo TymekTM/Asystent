@@ -105,8 +105,28 @@ class TTSModule:
         if OpenAI is None:
             logger.error("openai library is not available")
             return
-
+            
         api_key = os.getenv("OPENAI_API_KEY")
+        
+        # Try to load from environment manager if available
+        if not api_key:
+            try:
+                import sys
+                # Add parent directory to path (go up two levels from audio_modules)
+                current_dir = os.path.dirname(os.path.abspath(__file__))
+                parent_dir = os.path.dirname(os.path.dirname(current_dir))
+                sys.path.insert(0, parent_dir)
+                from environment_manager import EnvironmentManager
+                # Initialize with correct path to .env file
+                env_file_path = os.path.join(parent_dir, '.env')
+                env_manager = EnvironmentManager(env_file=env_file_path)
+                api_key = env_manager.get_api_key("openai")
+                logger.info(f"Loaded API key from environment manager: {bool(api_key)}")
+            except ImportError as e:
+                logger.warning(f"Environment manager not available: {e}")
+            except Exception as e:
+                logger.warning(f"Error loading API key from environment manager: {e}")
+        
         if not api_key:
             try:
                 import json

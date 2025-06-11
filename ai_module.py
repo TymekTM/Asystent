@@ -31,6 +31,14 @@ def _load_pipeline():
     return pipeline
 
 from config import STT_MODEL, MAIN_MODEL, PROVIDER, _config, DEEP_MODEL, load_config # Added load_config import
+
+# Import environment manager for secure API key handling
+try:
+    from environment_manager import env_manager
+except ImportError:
+    # Fallback if environment_manager is not available
+    env_manager = None
+
 from prompt_builder import (
     build_convert_query_prompt,
     build_full_system_prompt,
@@ -206,8 +214,15 @@ class AIProviders:
         temperature: Optional[float] = None,
         max_tokens: Optional[int] = None,
     ) -> Optional[Dict[str, Any]]:
-        try:
-            api_key = os.getenv("OPENAI_API_KEY") or _config["API_KEYS"]["OPENAI_API_KEY"]
+        try:            # Use environment manager for secure API key handling
+            api_key = None
+            if env_manager:
+                api_key = env_manager.get_api_key("openai")
+            
+            # Fallback to config file or environment variable
+            if not api_key:
+                api_key = os.getenv("OPENAI_API_KEY") or _config.get("API_KEYS", {}).get("OPENAI_API_KEY")
+            
             if not api_key:
                 raise ValueError("Brak OPENAI_API_KEY.")
 

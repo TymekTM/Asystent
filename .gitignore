@@ -84,3 +84,18 @@ Gaja_test/
 /overlay/target
 /overlay/dist
 /client/.hf_cache
+
+# Environment files with sensitive data
+.env
+.env.local
+.env.production
+
+# Admin credentials file
+admin_credentials.txt
+
+# API Keys and sensitive configuration files
+**/config.json
+**/client_config.json  
+**/server_config.json
+configs/api_keys.json
+configs/auth_config.json

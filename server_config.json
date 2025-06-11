@@ -13,10 +13,10 @@
         "model": "gpt-4.1-nano",
         "temperature": 0.7,
         "max_tokens": 1000
-    },
-    "api_keys": {
-        "openai": "YOUR_OPENAI_API_KEY_HERE",
-        "anthropic": "YOUR_ANTHROPIC_API_KEY_HERE"
+    },    "api_keys": {
+        "_comment": "API keys are now loaded from environment variables (.env file)",
+        "openai": "",
+        "anthropic": ""
     },
     "plugins": {
         "auto_load": true,

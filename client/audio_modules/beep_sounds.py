@@ -135,8 +135,7 @@ def _validate_ffplay_available() -> bool:
         if not ffplay_path:
             logger.error("ffplay not found in PATH. Please install FFmpeg.")
             return False
-        
-        # Additional security: ensure it's actually ffplay
+          # Additional security: ensure it's actually ffplay
         try:
             result = subprocess.run(
                 [ffplay_path, "-version"], 
@@ -144,7 +143,9 @@ def _validate_ffplay_available() -> bool:
                 text=True, 
                 timeout=5
             )
-            if "ffplay" not in result.stderr.lower():
+            # Check both stdout and stderr for ffplay signature
+            output_text = (result.stdout + result.stderr).lower()
+            if "ffplay" not in output_text:
                 logger.error("ffplay binary validation failed")
                 return False
         except (subprocess.TimeoutExpired, subprocess.SubprocessError) as e:

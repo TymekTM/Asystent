@@ -18,6 +18,20 @@ import requests  # Added requests import
 # Lazy import for transformers to speed up startup
 pipeline = None
 
+# Import environment manager for secure API key handling
+try:
+    import sys
+    import os
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+    from environment_manager import EnvironmentManager
+    # Initialize with correct path to .env file (one level up from server directory)
+    env_file_path = os.path.join(os.path.dirname(__file__), '..', '.env')
+    env_manager = EnvironmentManager(env_file=env_file_path)
+except ImportError as e:
+    # Fallback if environment_manager is not available
+    env_manager = None
+    print(f"Warning: Could not import EnvironmentManager: {e}")
+
 def _load_pipeline():
     global pipeline
     if pipeline is None:
@@ -204,10 +218,17 @@ class AIProviders:
         functions: Optional[List[dict]] = None,
         function_calling_system=None,
         temperature: Optional[float] = None,
-        max_tokens: Optional[int] = None,
-    ) -> Optional[Dict[str, Any]]:
+        max_tokens: Optional[int] = None,    ) -> Optional[Dict[str, Any]]:
         try:
-            api_key = os.getenv("OPENAI_API_KEY") or _config["api_keys"]["openai"]
+            # Use environment manager for secure API key handling
+            api_key = None
+            if env_manager:
+                api_key = env_manager.get_api_key("openai")
+            
+            # Fallback to config file or environment variable
+            if not api_key:
+                api_key = os.getenv("OPENAI_API_KEY") or _config.get("api_keys", {}).get("openai")
+            
             if not api_key:
                 raise ValueError("Brak OPENAI_API_KEY.")
 
@@ -626,17 +647,23 @@ async def generate_response(
         active_window_title: The title of the currently active window.
         track_active_window_setting: Boolean indicating if active window tracking is enabled.
         modules: Dictionary of available modules for function calling.
-        use_function_calling: Whether to use OpenAI Function Calling or traditional approach.
-
-    Returns:
+        use_function_calling: Whether to use OpenAI Function Calling or traditional approach.    Returns:
         A string containing the AI's response, potentially in JSON format for commands.
     """
     import datetime
     try:
-        config = load_config() # Use imported load_config
-        api_keys = config.get("api_keys", {}) # Get the nested api_keys dictionary
-        api_key = api_keys.get("openai") # Get the OpenAI API key from the nested dictionary
-        model_name = config.get("OPENAI_MODEL", "gpt-4.1-nano")
+        # Use environment manager for secure API key handling
+        api_key = None
+        if env_manager:
+            api_key = env_manager.get_api_key("openai")
+        
+        # Fallback to config file or environment variable
+        if not api_key:
+            config = load_config() # Use imported load_config
+            api_keys = config.get("api_keys", {}) # Get the nested api_keys dictionary
+            api_key = api_keys.get("openai") or os.getenv("OPENAI_API_KEY")
+        
+        model_name = "gpt-4.1-nano"  # Default model
 
         if not api_key:
             logger.error("OpenAI API key not found in configuration.")

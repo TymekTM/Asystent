@@ -4,6 +4,14 @@ import logging
 import os
 import sys
 
+# Import environment manager for secure API key handling
+try:
+    from environment_manager import env_manager
+    ENV_MANAGER_AVAILABLE = True
+except ImportError:
+    ENV_MANAGER_AVAILABLE = False
+    env_manager = None
+
 logger = logging.getLogger(__name__)
 
 """
@@ -175,12 +183,34 @@ def load_config(path=CONFIG_FILE_PATH, silent=False):
     WAKE_WORD_SENSITIVITY_THRESHOLD = _config.get("WAKE_WORD_SENSITIVITY_THRESHOLD", DEFAULT_CONFIG["WAKE_WORD_SENSITIVITY_THRESHOLD"])
     LANGUAGE = _config.get("LANGUAGE", DEFAULT_CONFIG["LANGUAGE"])
     
+    # Load API keys with environment variable override
     API_KEYS = _config.get("API_KEYS", DEFAULT_CONFIG["API_KEYS"].copy())
-    OPENAI_API_KEY = API_KEYS.get("OPENAI_API_KEY", DEFAULT_CONFIG["API_KEYS"]["OPENAI_API_KEY"])
-    AZURE_SPEECH_KEY = API_KEYS.get("AZURE_SPEECH_KEY", DEFAULT_CONFIG["API_KEYS"]["AZURE_SPEECH_KEY"])
+    
+    # Override with environment variables if available
+    if ENV_MANAGER_AVAILABLE and env_manager:
+        # Try to load from environment variables first, fallback to config file
+        OPENAI_API_KEY = env_manager.get_api_key("openai") or API_KEYS.get("OPENAI_API_KEY", DEFAULT_CONFIG["API_KEYS"]["OPENAI_API_KEY"])
+        AZURE_SPEECH_KEY = env_manager.get_api_key("azure") or API_KEYS.get("AZURE_SPEECH_KEY", DEFAULT_CONFIG["API_KEYS"]["AZURE_SPEECH_KEY"])
+        ANTHROPIC_API_KEY = env_manager.get_api_key("anthropic") or API_KEYS.get("ANTHROPIC_API_KEY", DEFAULT_CONFIG["API_KEYS"]["ANTHROPIC_API_KEY"])
+        DEEPSEEK_API_KEY = env_manager.get_api_key("deepseek") or API_KEYS.get("DEEPSEEK_API_KEY", DEFAULT_CONFIG["API_KEYS"]["DEEPSEEK_API_KEY"])
+        
+        # Update API_KEYS dictionary for backward compatibility
+        if OPENAI_API_KEY and OPENAI_API_KEY != DEFAULT_CONFIG["API_KEYS"]["OPENAI_API_KEY"]:
+            API_KEYS["OPENAI_API_KEY"] = OPENAI_API_KEY
+        if AZURE_SPEECH_KEY and AZURE_SPEECH_KEY != DEFAULT_CONFIG["API_KEYS"]["AZURE_SPEECH_KEY"]:
+            API_KEYS["AZURE_SPEECH_KEY"] = AZURE_SPEECH_KEY
+        if ANTHROPIC_API_KEY and ANTHROPIC_API_KEY != DEFAULT_CONFIG["API_KEYS"]["ANTHROPIC_API_KEY"]:
+            API_KEYS["ANTHROPIC_API_KEY"] = ANTHROPIC_API_KEY
+        if DEEPSEEK_API_KEY and DEEPSEEK_API_KEY != DEFAULT_CONFIG["API_KEYS"]["DEEPSEEK_API_KEY"]:
+            API_KEYS["DEEPSEEK_API_KEY"] = DEEPSEEK_API_KEY
+    else:
+        # Fallback to config file values
+        OPENAI_API_KEY = API_KEYS.get("OPENAI_API_KEY", DEFAULT_CONFIG["API_KEYS"]["OPENAI_API_KEY"])
+        AZURE_SPEECH_KEY = API_KEYS.get("AZURE_SPEECH_KEY", DEFAULT_CONFIG["API_KEYS"]["AZURE_SPEECH_KEY"])
+        ANTHROPIC_API_KEY = API_KEYS.get("ANTHROPIC_API_KEY", DEFAULT_CONFIG["API_KEYS"]["ANTHROPIC_API_KEY"])
+        DEEPSEEK_API_KEY = API_KEYS.get("DEEPSEEK_API_KEY", DEFAULT_CONFIG["API_KEYS"]["DEEPSEEK_API_KEY"])
+    
     AZURE_SPEECH_REGION = API_KEYS.get("AZURE_SPEECH_REGION", DEFAULT_CONFIG["API_KEYS"]["AZURE_SPEECH_REGION"])
-    ANTHROPIC_API_KEY = API_KEYS.get("ANTHROPIC_API_KEY", DEFAULT_CONFIG["API_KEYS"]["ANTHROPIC_API_KEY"])
-    DEEPSEEK_API_KEY = API_KEYS.get("DEEPSEEK_API_KEY", DEFAULT_CONFIG["API_KEYS"]["DEEPSEEK_API_KEY"])
 
     STT_MODEL = _config.get("STT_MODEL", DEFAULT_CONFIG["STT_MODEL"])
     MAIN_MODEL = _config.get("MAIN_MODEL", DEFAULT_CONFIG["MAIN_MODEL"])

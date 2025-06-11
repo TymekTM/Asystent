@@ -276,8 +276,7 @@ class AuthenticationManager:
                 ],
                 'failed_attempts': self.failed_attempts,
                 'last_updated': datetime.now().isoformat()
-            }
-            
+            }            
             with open(self.config_path, 'w', encoding='utf-8') as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)            
         except Exception as e:
@@ -291,7 +290,7 @@ class AuthenticationManager:
             admin_id = "admin_" + secrets.token_hex(8)
             
             # Generate a secure random password instead of using a default
-            secure_password = secrets.token_urlsafe(16)  # 128-bit security
+            secure_password = secrets.token_urlsafe(20)  # 160-bit security
             password_hash, salt = self._hash_password(secure_password)
             
             admin = User(
@@ -326,7 +325,13 @@ class AuthenticationManager:
                     f"IMPORTANT: Change this password immediately after first login!\n"
                     f"Delete this file after saving the credentials securely.\n"
                 )
-                admin_creds_file.chmod(0o600)  # Read only for owner
+                # Set secure permissions (Unix/Linux only)
+                try:
+                    admin_creds_file.chmod(0o600)  # Read only for owner
+                except OSError:
+                    # Windows - use alternative approach
+                    import stat
+                    admin_creds_file.chmod(stat.S_IREAD | stat.S_IWRITE)
                 logger.critical(f"Credentials also saved to: {admin_creds_file.absolute()}")
             except Exception as e:
                 logger.error(f"Failed to save admin credentials to file: {e}")

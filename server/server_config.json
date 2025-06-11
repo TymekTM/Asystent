@@ -1,6 +1,5 @@
-{
-  "server": {
-    "host": "0.0.0.0",
+{  "server": {
+    "host": "localhost",
     "port": 8001,
     "debug": false
   },
@@ -12,11 +11,11 @@
     "model": "gpt-4.1-nano",
     "temperature": 0.7,
     "max_tokens": 1500
-  },
-  "api_keys": {
-    "openai": "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",
-    "anthropic": "YOUR_ANTHROPIC_API_KEY_HERE",
-    "deepseek": "YOUR_DEEPSEEK_API_KEY_HERE"
+  },  "api_keys": {
+    "_comment": "API keys are now loaded from environment variables (.env file)",
+    "openai": "",
+    "anthropic": "",
+    "deepseek": ""
   },
   "plugins": {
     "auto_load": true,
@@ -24,18 +23,15 @@
       "weather_module",
       "search_module"
     ]
-  },
-  "security": {
+  },  "security": {
     "cors_origins": [
-      "*"
+      "http://localhost:3000",
+      "http://localhost:8000",
+      "http://localhost:8001"
     ],
     "max_connections_per_user": 5
-  },
-  "logging": {
+  },  "logging": {
     "level": "INFO",
     "file": "logs/server_{time:YYYY-MM-DD}.log"
-  },
-  "openai_api_key": "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",
-  "host": "localhost",
-  "port": 8000
+  }
 }

@@ -19,6 +19,7 @@ import subprocess
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 import time
+import queue
 from active_window_module import get_active_window_title
 
 # Dodaj ścieżkę główną projektu do PYTHONPATH
@@ -78,10 +79,12 @@ class ClientApp:
         self.tts_playing = False
         self.last_tts_text = ""
         self.current_status = "Starting..."
-        
-        # HTTP server for overlay
+          # HTTP server for overlay
         self.http_server = None
         self.http_thread = None
+        self.command_queue = queue.Queue()  # Queue for HTTP commands
+        # Update overlay status data for showing/hiding
+        self.overlay_visible = False
         self.sse_clients = []
     
     def load_client_config(self) -> Dict:
@@ -274,6 +277,9 @@ class ClientApp:
                         finally:
                             self.tts_playing = False
                             self.wake_word_detected = False  # Reset wakeword flag after speaking
+                            self.recording_command = False  # Reset recording flag
+                            # Hide overlay after speaking
+                            await self.hide_overlay()
                             self.update_status("Listening...")  # Return to listening immediately
                     else:
                         logger.warning("TTS not available")
@@ -304,6 +310,9 @@ class ClientApp:
                         finally:
                             self.tts_playing = False
                             self.wake_word_detected = False  # Reset wakeword flag after speaking (fallback)
+                            self.recording_command = False  # Reset recording flag
+                            # Hide overlay after speaking
+                            await self.hide_overlay()
                             self.update_status("Listening...")  # Return to listening immediately
                     else:
                         logger.warning("TTS not available")
@@ -337,8 +346,7 @@ class ClientApp:
         if query:
             # We already have transcribed text from wakeword detector
             logger.info(f"Wakeword detected with query: {query}")
-            
-            # Set wake word detection flag for overlay
+              # Set wake word detection flag for overlay
             self.wake_word_detected = True
             self.update_status("Wake word detected!")
             
@@ -349,6 +357,9 @@ class ClientApp:
             try:
                 self.recording_command = True
                 self.update_status("Processing...")
+                
+                # Show overlay when processing starts
+                await self.show_overlay()
                 
                 # Send transcribed query to server
                 active_title = get_active_window_title()
@@ -382,6 +393,26 @@ class ClientApp:
             logger.info("Wakeword detected! Recording and transcription handled by wakeword detector.")
             self.wake_word_detected = True
             self.update_status("Listening...")
+
+    async def show_overlay(self):
+        """Pokaż overlay."""
+        try:
+            # Set overlay visible flag and update status to something overlay might recognize
+            self.overlay_visible = True
+            self.update_status("Processing...")  # Use original status
+            logger.info("Overlay shown - status updated to Processing...")
+        except Exception as e:
+            logger.error(f"Error showing overlay: {e}")
+
+    async def hide_overlay(self):
+        """Ukryj overlay."""
+        try:
+            # Set overlay hidden flag and update status  
+            self.overlay_visible = False
+            self.update_status("Listening...")
+            logger.info("Overlay hidden - status updated to Listening...")
+        except Exception as e:
+            logger.error(f"Error hiding overlay: {e}")
 
     async def update_overlay_status(self, status: str):
         """Zaktualizuj status w overlay."""
@@ -489,15 +520,17 @@ class ClientApp:
             
             # Set status to ready
             self.update_status("Listening...")
-            
-            # Listen for server messages (or just keep running if no server)
+              # Listen for server messages (or just keep running if no server)
             if self.websocket:
-                await self.listen_for_messages()
+                # Start command queue processor alongside websocket listener
+                await asyncio.gather(
+                    self.listen_for_messages(),
+                    self.process_command_queue()
+                )
             else:
                 # Standalone mode - just keep running with wakeword detection
                 logger.info("Running in standalone mode - use Ctrl+C to stop")
-                while self.running:
-                    await asyncio.sleep(1)
+                await self.process_command_queue()  # Just process commands
             
         except KeyboardInterrupt:
             logger.info("Client interrupted by user")
@@ -505,6 +538,37 @@ class ClientApp:
             logger.error(f"Error in client main loop: {e}")
         finally:
             await self.cleanup()
+
+    async def process_command_queue(self):
+        """Process commands from HTTP requests in the main async loop."""
+        while self.running:
+            try:
+                # Check for commands from HTTP handlers
+                while not self.command_queue.empty():
+                    command = self.command_queue.get_nowait()
+                    try:
+                        await self.execute_command(command)
+                    except Exception as e:
+                        logger.error(f"Error executing command {command}: {e}")
+                
+                await asyncio.sleep(0.1)  # Small delay to prevent busy loop
+            except Exception as e:
+                logger.error(f"Error in command queue processor: {e}")
+                await asyncio.sleep(1)
+
+    async def execute_command(self, command: Dict):
+        """Execute a command from the HTTP interface."""
+        command_type = command.get('type')
+        
+        if command_type == 'show_overlay':
+            await self.show_overlay()
+        elif command_type == 'hide_overlay':
+            await self.hide_overlay()
+        elif command_type == 'test_wakeword':
+            query = command.get('query', 'Powiedz mi coś o sobie.')
+            await self.on_wakeword_detected(query)
+        else:
+            logger.warning(f"Unknown command type: {command_type}")
 
     async def start_wakeword_monitoring(self):
         """Uruchom monitoring słowa aktywującego w tle."""
@@ -544,12 +608,21 @@ class ClientApp:
                         logger.info("Overlay process killed forcefully")
                     except subprocess.TimeoutExpired:
                         logger.error("Failed to kill overlay process - it may remain in memory")
-                        
-                        # Last resort: try Windows taskkill
+                          # Last resort: try Windows taskkill
                         try:
-                            import os
-                            os.system(f"taskkill /PID {self.overlay_process.pid} /F >nul 2>&1")
-                            logger.info("Attempted taskkill as last resort")
+                            import subprocess
+                            result = subprocess.run(
+                                ["taskkill", "/PID", str(self.overlay_process.pid), "/F"],
+                                capture_output=True,
+                                text=True,
+                                timeout=5
+                            )
+                            if result.returncode == 0:
+                                logger.info("Successfully killed process with taskkill")
+                            else:
+                                logger.warning(f"Taskkill returned non-zero exit code: {result.returncode}")
+                        except subprocess.TimeoutExpired:
+                            logger.error("Taskkill command timed out")
                         except Exception as taskkill_e:
                             logger.error(f"Taskkill failed: {taskkill_e}")
                             
@@ -585,7 +658,9 @@ class StatusHTTPHandler(BaseHTTPRequestHandler):
                     "text": self.client_app.last_tts_text,
                     "is_listening": self.client_app.recording_command,
                     "is_speaking": self.client_app.tts_playing if hasattr(self.client_app, 'tts_playing') else False,
-                    "wake_word_detected": self.client_app.wake_word_detected
+                    "wake_word_detected": self.client_app.wake_word_detected,
+                    "overlay_visible": getattr(self.client_app, 'overlay_visible', False),
+                    "show_overlay": getattr(self.client_app, 'overlay_visible', False)  # Explicit overlay show flag
                 }
                 
                 self.send_response(200)
@@ -593,6 +668,57 @@ class StatusHTTPHandler(BaseHTTPRequestHandler):
                 self.send_header('Access-Control-Allow-Origin', '*')
                 self.end_headers()
                 self.wfile.write(json.dumps(status_data).encode())
+                
+            elif path == '/api/overlay/show':                # Pokaż overlay
+                self.client_app.command_queue.put({'type': 'show_overlay'})
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "shown"}).encode())                
+            elif path == '/api/overlay/hide':
+                # Ukryj overlay
+                self.client_app.command_queue.put({'type': 'hide_overlay'})
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "hidden"}).encode())
+                
+            elif path == '/api/overlay/status':
+                # Status overlay
+                status_data = {
+                    "overlay_visible": self.client_app.overlay_visible,
+                    "is_listening": getattr(self.client_app, 'is_listening', False),
+                    "is_speaking": getattr(self.client_app, 'is_speaking', False),
+                    "current_text": getattr(self.client_app, 'current_text', ''),
+                    "status": "active"
+                }
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps(status_data).encode())
+                
+            elif path == '/api/test/wakeword':
+                # Test endpoint for manual wakeword trigger
+                query_params = parse_qs(urlparse(self.path).query)
+                test_query = query_params.get('query', ['Powiedz mi coś o sobie.'])[0]
+                
+                if self.client_app.wakeword_detector:
+                    # Put wakeword test in command queue to be processed by main thread
+                    self.client_app.command_queue.put({'type': 'test_wakeword', 'query': test_query})
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'application/json')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"status": "triggered", "query": test_query}).encode())
+                else:
+                    self.send_response(500)
+                    self.send_header('Content-Type', 'application/json')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"error": "Wakeword detector not available"}).encode())
                 
             elif path == '/status/stream':
                 # SSE endpoint for real-time updates

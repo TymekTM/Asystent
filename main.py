@@ -8,6 +8,7 @@ import time
 import threading
 import subprocess
 from threading import Thread
+from pathlib import Path
 
 # Add current directory to Python path for PyInstaller
 if getattr(sys, 'frozen', False):
@@ -77,17 +78,20 @@ overlay_process = None
 try:
     from selenium import webdriver
     from selenium.webdriver.chrome.service import Service
-    from webdriver_manager.chrome import ChromeDriverManager
-    
-    # Enable webdriver manager for all platforms
-    os.environ['WDM_LOG_LEVEL'] = '0'  # Disable webdriver manager verbose logging
-    
-    # Pre-install chromedriver to avoid path issues in subprocess
     try:
-        chrome_driver_path = ChromeDriverManager().install()
-        logger.debug(f"ChromeDriver path: {chrome_driver_path}")
-    except Exception as e:
-        logger.warning(f"Failed to pre-install ChromeDriver: {e}")
+        from webdriver_manager.chrome import ChromeDriverManager
+        
+        # Enable webdriver manager for all platforms
+        os.environ['WDM_LOG_LEVEL'] = '0'  # Disable webdriver manager verbose logging
+        
+        # Pre-install chromedriver to avoid path issues in subprocess
+        try:
+            chrome_driver_path = ChromeDriverManager().install()
+            logger.debug(f"ChromeDriver path: {chrome_driver_path}")
+        except Exception as e:
+            logger.warning(f"Failed to pre-install ChromeDriver: {e}")
+    except ImportError:
+        logger.warning("webdriver_manager not available - ChromeDriver management disabled")
         
 except ImportError as e:
     logger.warning(f"Selenium webdriver not available: {e}")
@@ -96,6 +100,8 @@ def start_overlay():
     """Start the Tauri overlay application if it exists."""
     global overlay_process
     try:
+        from process_manager import process_manager
+        
         # Determine overlay path based on runtime environment
         if getattr(sys, 'frozen', False):
             # Running from PyInstaller bundle
@@ -109,28 +115,35 @@ def start_overlay():
             # Development mode
             overlay_exe_path = os.path.join(script_dir, "overlay", "target", "release", "Asystent Overlay.exe")
         
-        if os.path.exists(overlay_exe_path):
-            logger.info(f"Starting overlay from: {overlay_exe_path}")
-            
-            # Set environment variable for the correct port
-            env = os.environ.copy()
-            port = 5000 if getattr(sys, 'frozen', False) else 5001
-            env['GAJA_PORT'] = str(port)
-            
-            # Start overlay as a separate process and store reference
-            overlay_process = subprocess.Popen(
-                [overlay_exe_path], 
-                env=env, 
-                cwd=os.path.dirname(overlay_exe_path),
-                creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
-            )
-            logger.info("Overlay started successfully")
-            return overlay_process
-            
-        else:
+        # Validate overlay path
+        overlay_path = Path(overlay_exe_path)
+        if not overlay_path.exists():
             logger.warning(f"Overlay executable not found at: {overlay_exe_path}")
             if not getattr(sys, 'frozen', False):
                 logger.info("To build overlay, run: cd overlay && npm run tauri build")
+            return None
+        
+        # Configure overlay process
+        port = 5000 if getattr(sys, 'frozen', False) else 5001
+        process_manager.register_process_config('overlay', {
+            'executable_path': overlay_exe_path,
+            'args': [],
+            'environment': {
+                'GAJA_PORT': str(port)
+            },
+            'working_dir': overlay_path.parent,
+            'no_window': True,
+            'capture_output': False
+        })
+        
+        # Start overlay process
+        overlay_process = process_manager.start_process('overlay')
+        
+        if overlay_process:
+            logger.info(f"Overlay started successfully (PID: {overlay_process.pid})")
+            return overlay_process
+        else:
+            logger.error("Failed to start overlay process")
             return None
             
     except Exception as e:
@@ -140,27 +153,34 @@ def start_overlay():
 def stop_overlay():
     """Stop the overlay process if it's running."""
     global overlay_process
-    if overlay_process:
-        try:
-            logger.info("Stopping overlay process...")
-            
-            if overlay_process.poll() is None:  # Process is still running
-                overlay_process.terminate()
+    try:
+        from process_manager import process_manager
+        
+        # Use process manager to safely stop overlay
+        if process_manager.stop_process('overlay', timeout=5, force=True):
+            logger.info("Overlay process stopped via process manager")
+        else:
+            # Fallback to direct process handling
+            if overlay_process:
+                logger.info("Fallback: stopping overlay process directly...")
                 
-                # Wait for graceful termination
-                try:
-                    overlay_process.wait(timeout=5)
-                    logger.info("Overlay process terminated gracefully")
-                except subprocess.TimeoutExpired:
-                    logger.warning("Overlay process did not terminate gracefully, forcing...")
-                    overlay_process.kill()
-                    overlay_process.wait()
-                    logger.info("Overlay process killed")
-                
-            overlay_process = None
-            
-        except Exception as e:
-            logger.error(f"Error stopping overlay: {e}", exc_info=True)
+                if overlay_process.poll() is None:  # Process is still running
+                    overlay_process.terminate()
+                    
+                    # Wait for graceful termination
+                    try:
+                        overlay_process.wait(timeout=5)
+                        logger.info("Overlay process terminated gracefully")
+                    except subprocess.TimeoutExpired:
+                        logger.warning("Overlay process did not terminate gracefully, forcing...")
+                        overlay_process.kill()
+                        overlay_process.wait()
+                        logger.info("Overlay process killed")
+        
+        overlay_process = None
+        
+    except Exception as e:
+        logger.error(f"Error stopping overlay: {e}", exc_info=True)
 
 # --- Process Target Functions ---
 

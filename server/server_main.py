@@ -25,7 +25,12 @@ from database_manager import DatabaseManager, initialize_database_manager
 from ai_module import AIModule
 from function_calling_system import FunctionCallingSystem
 from plugin_manager import plugin_manager
-from onboarding_module import OnboardingModule
+# Import onboarding from current server directory
+import sys
+import os
+sys.path.insert(0, os.path.dirname(__file__))
+import onboarding_module as server_onboarding
+OnboardingModule = server_onboarding.OnboardingModule
 from plugin_monitor import plugin_monitor
 from extended_webui import ExtendedWebUI
 
@@ -114,6 +119,9 @@ class ServerApp:
             self.config = load_config("server_config.json")
             logger.info("Configuration loaded")
             
+            # Konfiguruj CORS - dodaj middleware po załadowaniu konfiguracji
+            self._configure_cors_middleware()
+            
             # Inicjalizuj bazę danych
             self.db_manager = initialize_database_manager("server_data.db")
             await self.db_manager.initialize()
@@ -174,6 +182,20 @@ class ServerApp:
         except Exception as e:
             logger.error(f"Failed to load user plugins: {e}")
     
+    def _configure_cors_middleware(self):
+        """Konfiguruje CORS middleware z bezpiecznymi ustawieniami."""
+        cors_origins = self.config.get('security', {}).get('cors_origins', ["http://localhost:3000", "http://localhost:8080"])
+        
+        # Sprawdź czy używamy niebezpiecznej konfiguracji
+        if "*" in cors_origins:
+            logger.warning("CORS is configured to allow all origins (*). This is not recommended for production!")
+            if not self.config.get('server', {}).get('debug', False):
+                logger.error("Wildcard CORS is only allowed in debug mode!")
+                cors_origins = ["http://localhost:3000", "http://localhost:8080"]        
+        # Import app z modułu globalnego - to może być problematyczne
+        # Lepiej będzie to zrobić w main()
+        logger.info(f"Configuring CORS for origins: {cors_origins}")
+    
     async def load_plugin(self, plugin_name: str):
         """
         Dynamicznie załaduj plugin z walidacją bezpieczeństwa.
@@ -188,8 +210,19 @@ class ServerApp:
                 return None
             
             # Dodatkowa walidacja - nie pozwalaj na ../  lub inne niebezpieczne znaki
-            if '..' in plugin_name or '/' in plugin_name or '\\' in plugin_name:
+            if '..' in plugin_name or '/' in plugin_name or '\\' in plugin_name or plugin_name.startswith('.'):
                 logger.error(f"Plugin name contains prohibited characters: {plugin_name}")
+                return None
+            
+            # Sprawdź długość nazwy (zapobieganie atakom)
+            if len(plugin_name) > 50:
+                logger.error(f"Plugin name too long: {plugin_name}")
+                return None
+            
+            # Whitelist dozwolonych pluginów (jeśli skonfigurowane)
+            allowed_plugins = self.config.get('plugins', {}).get('whitelist', [])
+            if allowed_plugins and plugin_name not in allowed_plugins:
+                logger.error(f"Plugin {plugin_name} not in whitelist: {allowed_plugins}")
                 return None
             
             # Sprawdź czy plugin istnieje w modules/ (używaj bezpiecznej konstrukcji ścieżki)
@@ -207,28 +240,66 @@ class ServerApp:
             
             # Sprawdź, czy plik nie jest za duży (zapobieganie atakom DoS)
             file_size = plugin_path.stat().st_size
-            if file_size > 1024 * 1024:  # 1MB limit
-                logger.error(f"Plugin file too large: {file_size} bytes (max 1MB)")
+            max_size = self.config.get('plugins', {}).get('max_file_size', 1024 * 1024)  # 1MB default
+            if file_size > max_size:
+                logger.error(f"Plugin file too large: {file_size} bytes (max {max_size})")
                 return None
             
-            # Dynamiczny import modułu
+            # Sprawdź uprawnienia pliku
+            if not os.access(plugin_path, os.R_OK):
+                logger.error(f"Cannot read plugin file: {plugin_path}")
+                return None
+            
+            # Dynamiczny import modułu z timeout
             import importlib.util
-            spec = importlib.util.spec_from_file_location(plugin_name, plugin_path)
-            if not spec or not spec.loader:
-                logger.error(f"Could not create module spec for {plugin_name}")
-                return None
-                
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
+            import signal
             
-            # Sprawdź czy moduł ma wymagane funkcje
-            if hasattr(module, 'execute_function') and hasattr(module, 'get_functions'):
+            def timeout_handler(signum, frame):
+                raise TimeoutError("Plugin loading timeout")
+            
+            # Set timeout for plugin loading (Unix only)
+            timeout_seconds = 10
+            if hasattr(signal, 'SIGALRM'):
+                old_handler = signal.signal(signal.SIGALRM, timeout_handler)
+                signal.alarm(timeout_seconds)
+            
+            try:
+                spec = importlib.util.spec_from_file_location(plugin_name, plugin_path)
+                if not spec or not spec.loader:
+                    logger.error(f"Could not create module spec for {plugin_name}")
+                    return None
+                    
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                
+                # Sprawdź czy moduł ma wymagane funkcje
+                required_functions = ['execute_function', 'get_functions']
+                missing_functions = [func for func in required_functions if not hasattr(module, func)]
+                
+                if missing_functions:
+                    logger.warning(f"Plugin {plugin_name} missing required functions: {missing_functions}")
+                    return None
+                
+                # Sprawdź czy plugin ma opcjonalne metadane bezpieczeństwa
+                if hasattr(module, 'PLUGIN_METADATA'):
+                    metadata = module.PLUGIN_METADATA
+                    if 'permissions' in metadata:
+                        logger.info(f"Plugin {plugin_name} requires permissions: {metadata['permissions']}")
+                    if 'version' in metadata:
+                        logger.info(f"Plugin {plugin_name} version: {metadata['version']}")
+                
                 logger.info(f"Successfully loaded plugin: {plugin_name}")
                 return module
-            else:
-                logger.warning(f"Plugin {plugin_name} missing required functions (execute_function, get_functions)")
-                return None
                 
+            finally:
+                # Clear timeout
+                if hasattr(signal, 'SIGALRM'):
+                    signal.alarm(0)
+                    signal.signal(signal.SIGALRM, old_handler)
+                
+        except TimeoutError:
+            logger.error(f"Plugin {plugin_name} loading timed out")
+            return None
         except Exception as e:
             logger.error(f"Error loading plugin {plugin_name}: {e}")
             return None
@@ -477,7 +548,23 @@ class ServerApp:
                 'type': 'error',
                 'message': f'Status update failed: {str(e)}'
             }
-
+    
+    def _configure_cors_middleware(self):
+        """Konfiguruje CORS middleware z bezpiecznymi ustawieniami."""
+        cors_origins = self.config.get('security', {}).get('cors_origins', ["http://localhost:3000", "http://localhost:8080"])
+        
+        # Sprawdź czy używamy niebezpiecznej konfiguracji
+        if "*" in cors_origins:
+            logger.warning("CORS is configured to allow all origins (*). This is not recommended for production!")
+            if not self.config.get('server', {}).get('debug', False):
+                logger.error("Wildcard CORS is only allowed in debug mode!")
+                cors_origins = ["http://localhost:3000", "http://localhost:8080"]
+        
+        # Import app z modułu globalnego - to może być problematyczne
+        # Lepiej będzie to zrobić w main()
+        logger.info(f"Configuring CORS for origins: {cors_origins}")
+    
+    # ...existing code...
 
 # Globalna instancja serwera
 server_app = ServerApp()
@@ -499,15 +586,6 @@ app = FastAPI(
     description="Server obsługujący AI Assistant dla wielu użytkowników",
     version="1.0.0",
     lifespan=lifespan
-)
-
-# CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # W produkcji ograniczyć do konkretnych domen
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
 )
 
 
@@ -618,25 +696,48 @@ if __name__ == "__main__":
         format="<green>{time:HH:mm:ss}</green> | <level>{level}</level> | <cyan>{name}:{function}:{line}</cyan> | {message}"
     )
     
-    # Utwórz katalog logs jeśli nie istnieje
-    os.makedirs("logs", exist_ok=True)
+    # Utwórz katalog logs jeśli nie istnieje    os.makedirs("logs", exist_ok=True)
     
-    logger.info("Starting GAJA Assistant Server...")
-    
+    logger.info("Starting GAJA Assistant Server...")    
     # Load configuration
     config = load_config()
+      # Configure CORS middleware with security validation
+    import sys
+    import os
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+    from environment_manager import EnvironmentManager
+    env_manager = EnvironmentManager()
+    cors_origins = config.get('security', {}).get('cors_origins', ["http://localhost:3000", "http://localhost:8080"])
     
-    # Debug: show config values
+    # Sprawdź czy używamy niebezpiecznej konfiguracji
+    if "*" in cors_origins:
+        logger.warning("CORS is configured to allow all origins (*). This is not recommended for production!")
+        if not config.get('server', {}).get('debug', False):
+            logger.error("Wildcard CORS is only allowed in debug mode! Using safe defaults.")
+            cors_origins = ["http://localhost:3000", "http://localhost:8080"]
+    
+    # Add CORS middleware
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_origins,
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allow_headers=["*"],
+    )
+    logger.info(f"CORS configured for origins: {cors_origins}")
+    
+    # Sanitize and log server config
     server_config = config.get('server', {})
-    host = server_config.get('host', '0.0.0.0')
+    host = server_config.get('host', 'localhost')
     port = server_config.get('port', 8001)
-    logger.info(f"Server config: host={host}, port={port}")
-    logger.info(f"Full server config: {server_config}")
     
-    # Uruchom serwer
+    # Use environment manager to sanitize sensitive data in logs
+    sanitized_config = env_manager.sanitize_config_for_logging(config)
+    logger.info(f"Server starting with config: {sanitized_config}")
+      # Uruchom serwer
     uvicorn.run(
         app,
-        host=config.get('server', {}).get('host', '0.0.0.0'),
+        host=config.get('server', {}).get('host', 'localhost'),  # Default to localhost for security
         port=config.get('server', {}).get('port', 8001),
         log_level="info",
         reload=False  # W produkcji wyłącz reload
