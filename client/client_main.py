@@ -149,12 +149,11 @@ class ClientApp:
                 
             # Initialize Whisper ASR - Enhanced or Legacy
             whisper_config = self.config.get('whisper', {})
-            if WhisperASR and USER_MODE_AVAILABLE:
-                # Use Enhanced Whisper ASR with User Mode support
-                self.whisper_asr = WhisperASR()
-                logger.info("Enhanced Whisper ASR initialized")
+            if USER_MODE_AVAILABLE:
+                # ASR module provided by user_integrator
+                self.whisper_asr = user_integrator.asr_module
+                logger.info("ASR module initialized via User Mode Integrator")
             else:
-                # Use Legacy Whisper ASR
                 self.whisper_asr = create_whisper_asr(whisper_config)
                 logger.info("Legacy Whisper ASR initialized")
                 
