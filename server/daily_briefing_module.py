@@ -10,10 +10,7 @@ import os
 from datetime import datetime, timedelta, time
 from typing import Dict, List, Optional, Any
 import random
-try:
-    import requests  # noqa: F401
-except Exception:
-    requests = None
+import aiohttp
 from pathlib import Path
 import threading
 
@@ -200,7 +197,7 @@ class DailyBriefingModule:
             weather_module = WeatherModule()
             await weather_module.initialize()
 
-            current_location = self.get_current_location()
+            current_location = await self.get_current_location()
             api_key = self.config.get("api_keys", {}).get("openweather", "")
             result = await weather_module.get_weather(0, current_location, api_key)
             if result and "current" in result:
@@ -220,14 +217,13 @@ class DailyBriefingModule:
             return []
             
         try:
-            if requests is None:
-                return []
             year = datetime.now().year
             url = f"{self.holidays_api_url}/{year}/PL"
 
-            response = requests.get(url, timeout=5)
-            response.raise_for_status()
-            holidays = response.json()
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, timeout=5) as response:
+                    response.raise_for_status()
+                    holidays = await response.json()
             
             today = datetime.now().date()
             today_holidays = []
@@ -298,15 +294,15 @@ class DailyBriefingModule:
         if not self.include_quote:
             return None
 
-        if requests is not None:
-            try:
-                r = requests.get(self.quote_api_url, timeout=5)
-                if r.status_code == 200:
-                    data = r.json()
-                    if data.get("content"):
-                        return {"text": data.get("content"), "author": data.get("author", "")}
-            except Exception as e:
-                logger.warning(f"Quote API failed: {e}")
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(self.quote_api_url, timeout=5) as r:
+                    if r.status == 200:
+                        data = await r.json()
+                        if data.get("content"):
+                            return {"text": data.get("content"), "author": data.get("author", "")}
+        except Exception as e:
+            logger.warning(f"Quote API failed: {e}")
 
         quotes = [
             {"text": "Uśmiech to najkrótsza droga do drugiego człowieka.", "author": "H. Sienkiewicz"},
@@ -428,7 +424,7 @@ class DailyBriefingModule:
               # Build context for AI generation
             briefing_context = {
                 'user_name': self.user_name,
-                'location': self.get_current_location(),
+                'location': await self.get_current_location(),
                 'date': content['date'],
                 'weather': content['weather'],
                 'holidays': content['holidays'],
@@ -627,25 +623,25 @@ Wygeneruj kompletny dzienny briefing (2-4 zdania) zawierający powitanie, inform
             logger.error(f"Error delivering daily briefing: {e}", exc_info=True)
             return "Przepraszam, wystąpił błąd podczas przygotowywania dzisiejszego briefingu."
 
-    def get_location_from_ip(self):
+    async def get_location_from_ip(self):
         """Get user location based on IP address."""
         try:
-            import requests
-            response = requests.get('http://ip-api.com/json/', timeout=5)
-            if response.status_code == 200:
-                data = response.json()
-                if data.get('status') == 'success':
-                    city = data.get('city', 'Warsaw')
-                    country_code = data.get('countryCode', 'PL')
-                    return f"{city},{country_code}"
+            async with aiohttp.ClientSession() as session:
+                async with session.get('http://ip-api.com/json/', timeout=5) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        if data.get('status') == 'success':
+                            city = data.get('city', 'Warsaw')
+                            country_code = data.get('countryCode', 'PL')
+                            return f"{city},{country_code}"
         except Exception as e:
             logger.warning(f"Failed to get location from IP: {e}")
         return "Warsaw,PL"  # Default fallback
 
-    def get_current_location(self) -> str:
+    async def get_current_location(self) -> str:
         """Get current location - either from config or dynamically from IP."""
         if self.use_dynamic_location:
-            return self.get_location_from_ip()
+            return await self.get_location_from_ip()
         return self.location
 
 # Handler function for integration with assistant

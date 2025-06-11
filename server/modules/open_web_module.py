@@ -6,27 +6,27 @@ logger.setLevel(logging.WARNING)
 
 
 def open_web_handler(params: str = "", conversation_history=None) -> str:
-    """Otwiera podany adres URL w domyślnej przeglądarce."""
+"""Open the given URL in the default browser."""
     # Support both string params and dict params with a 'url' key
     if isinstance(params, dict):
         url = params.get('url', '').strip()
     else:
         url = str(params).strip()
     if not url:
-        return "Podaj adres URL po komendzie !open"
+        return "Provide a URL after the !open command"
     # ensure scheme
     if not url.startswith(("http://", "https://")):
         url = "http://" + url
     try:
         success = webbrowser.open(url)
         if success:
-            return f"Otwieram stronę: {url}"
+            return f"Opening page: {url}"
         else:
-            logger.error("Nie udało się otworzyć strony: %s", url)
-            return f"Nie mogę otworzyć strony: {url}"
+            logger.error("Failed to open page: %s", url)
+            return f"Unable to open page: {url}"
     except Exception as e:
-        logger.error("Błąd otwierania strony: %s", e, exc_info=True)
-        return f"Nie mogę otworzyć strony: {e}"
+        logger.error("Error opening page: %s", e, exc_info=True)
+        return f"Unable to open page: {e}"
 
 
 def register():
@@ -34,15 +34,15 @@ def register():
     return {
         "command": "open",
         "aliases": ["open", "url", "browser", "open_web"],
-        "description": "Otwiera stronę internetową w domyślnej przeglądarce",
+        "description": "Open a web page in the default browser",
         "handler": open_web_handler,
         "sub_commands": {
             "open": {
-                "description": "Otwórz stronę internetową w przeglądarce",
+                "description": "Open a web page in the browser",
                 "parameters": {
                     "url": {
                         "type": "string",
-                        "description": "URL strony do otwarcia (np. https://www.google.com)",
+                        "description": "URL of the page to open (e.g. https://www.google.com)",
                         "required": True
                     }
                 }

@@ -14,8 +14,8 @@
 <div class="container mt-4">
     <!-- Dashboard Header with Welcome Message -->
     <div class="gaja-welcome">
-        <h1>Dzień dobry, {{ session.username }} 🌞</h1>
-        <p>Jestem Gaja. Co dziś razem zrobimy?</p>
+        <h1>Good morning, {{ session.username }} 🌞</h1>
+        <p>I am Gaja. What shall we do today?</p>
     </div>
 
     <!-- Dashboard Grid Layout -->
@@ -25,7 +25,7 @@
             <!-- Status Card -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <i class="fas fa-info-circle me-2"></i>Status Gai
+                    <i class="fas fa-info-circle me-2"></i>Gaja Status
                 </div>
                 <div class="card-body">
                     <div class="status-item">
@@ -84,29 +84,29 @@
             <!-- Usage Statistics -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <i class="fas fa-chart-bar me-2"></i>Statystyki użycia
+                    <i class="fas fa-chart-bar me-2"></i>Usage Statistics
                 </div>
                 <div class="card-body">
                     <div class="stats-container">
                         <div class="stat-card">
-                            <div class="stat-label">Wiadomości</div>
+                            <div class="stat-label">Messages</div>
                             <div class="stat-value" id="stat-message-count">{{ stats.get('message_count', 0) }}</div>
-                            <div class="stat-label">ogółem</div>
+                            <div class="stat-label">total</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-label">Średni czas odpowiedzi</div>
+                            <div class="stat-label">Average response time</div>
                             <div class="stat-value" id="stat-avg-response-time">{{ stats.get('avg_response_time', '0.0') }}s</div>
                         </div>
                         <div class="stat-card highlighted">
-                            <div class="stat-label">Dzisiejsze zapytania</div>
+                            <div class="stat-label">Queries today</div>
                             <div class="stat-value" id="stat-today-queries">{{ stats.get('today_queries', 0) }}</div>
                         </div>
                     </div>
                     
                     <div class="mt-4">
-                        <h5>Ostatnie zapytanie:</h5>
+                        <h5>Last query:</h5>
                         <div class="last-query" id="stat-last-query">
-                            "{{ stats.get('last_query', 'Brak ostatnich zapytań') }}"
+                            "{{ stats.get('last_query', 'No recent queries') }}"
                         </div>
                     </div>
                 </div>            </div>
@@ -114,13 +114,13 @@
             <!-- Recent Messages -->
             <div class="card">
                 <div class="card-header">
-                    <i class="fas fa-comments me-2"></i>Ostatnie wiadomości
+                    <i class="fas fa-comments me-2"></i>Recent messages
                 </div>
                 <div class="card-body">
                     <div class="message-list" id="recent-activity-list">
                         <!-- Messages will be dynamically inserted here by JavaScript -->
                         {% if not recent_messages %}
-                            <p class="text-muted">Brak ostatnich wiadomości.</p>
+                            <p class="text-muted">No recent messages.</p>
                         {% endif %}
                         {# {% for message in recent_messages %}
                         <div class="message-item">
@@ -142,7 +142,7 @@
     <div class="row mt-4">
         <div class="col-12">
             <div class="card">
-                <div class="card-header">Statystyki Użytkowania (API)</div>
+                <div class="card-header">Usage Statistics (API)</div>
                 <div class="card-body" id="analytics-section">
                     <div class="alert alert-info">Ładowanie statystyk...</div>
                 </div>
@@ -161,7 +161,7 @@
 
     if (activateBtn) {
         activateBtn.addEventListener('click', () => {
-            activateStatus.textContent = 'Wysyłanie żądania aktywacji...';
+            activateStatus.textContent = 'Sending activation request...';
             activateStatus.className = 'ms-2 text-info';
             activateBtn.disabled = true;
             fetch('/api/activate', {
@@ -173,10 +173,10 @@
             .then(response => response.json().then(data => ({ status: response.status, body: data })))
             .then(({ status, body }) => {
                 if (status === 202 || status === 200) { // 202 Accepted or 200 OK
-                    activateStatus.textContent = body.message || 'Aktywacja wysłana!';
+                    activateStatus.textContent = body.message || 'Activation sent!';
                     activateStatus.className = 'ms-2 text-success';
                 } else {
-                    activateStatus.textContent = `Błąd: ${body.error || 'Nie udało się wysłać żądania.'}`;
+                    activateStatus.textContent = `Error: ${body.error || 'Failed to send request.'}`;
                     activateStatus.className = 'ms-2 text-danger';
                 }
                 setTimeout(() => {
@@ -185,7 +185,7 @@
                 }, 3000);
             })
             .catch(error => {
-                activateStatus.textContent = 'Błąd wysyłania żądania.';
+                activateStatus.textContent = 'Error sending request.';
                 activateStatus.className = 'ms-2 text-danger';
                 activateBtn.disabled = false;
                 setTimeout(() => {
@@ -203,22 +203,22 @@
 
     function handleRestart(url, label) {
         if (restartStatus) {
-            restartStatus.textContent = `Wysyłanie żądania: ${label}...`;
+            restartStatus.textContent = `Sending request: ${label}...`;
             restartStatus.className = 'ms-2 text-info';
         }
         fetch(url, { method: 'POST' })
             .then(response => response.json().then(data => ({ status: response.status, body: data })))
             .then(({ status, body }) => {
                 if (status === 202 || status === 200) {
-                    restartStatus.textContent = body.message || `${label} wysłane!`;
+                    restartStatus.textContent = body.message || `${label} sent!`;
                     restartStatus.className = 'ms-2 text-success';
                 } else {
-                    restartStatus.textContent = `Błąd: ${body.error || 'Nie udało się zrestartować.'}`;
+                    restartStatus.textContent = `Error: ${body.error || 'Failed to restart.'}`;
                     restartStatus.className = 'ms-2 text-danger';
                 }
             })
             .catch(() => {
-                restartStatus.textContent = 'Błąd wysyłania żądania restartu.';
+                restartStatus.textContent = 'Error sending restart request.';
                 restartStatus.className = 'ms-2 text-danger';
             });
     }
@@ -231,7 +231,7 @@
     const stopStatus = document.getElementById('stop-status');
     if (stopAssistantBtn) stopAssistantBtn.onclick = () => {
         if (stopStatus) {
-            stopStatus.textContent = 'Wysyłanie żądania zatrzymania...';
+            stopStatus.textContent = 'Sending stop request...';
             stopStatus.className = 'ms-2 text-info';
         }
         fetch('/api/stop/assistant', { method: 'POST' })
@@ -241,12 +241,12 @@
                     stopStatus.textContent = body.message || 'Asystent zatrzymany!';
                     stopStatus.className = 'ms-2 text-success';
                 } else {
-                    stopStatus.textContent = `Błąd: ${body.error || 'Nie udało się zatrzymać asystenta.'}`;
+                    stopStatus.textContent = `Error: ${body.error || 'Failed to stop assistant.'}`;
                     stopStatus.className = 'ms-2 text-danger';
                 }
             })
             .catch(() => {
-                stopStatus.textContent = 'Błąd wysyłania żądania zatrzymania.';
+                stopStatus.textContent = 'Error sending stop request.';
                 stopStatus.className = 'ms-2 text-danger';
             });
     };
@@ -338,14 +338,14 @@
                             listElement.appendChild(messageItem);
                         });
                     } else {
-                        listElement.innerHTML = '<p class="text-muted">Brak ostatnich wiadomości.</p>';
+                        listElement.innerHTML = '<p class="text-muted">No recent messages.</p>';
                     }
                 }
             })
             .catch(error => {
                 const listElement = document.getElementById('recent-activity-list');
                 if (listElement) {
-                    listElement.innerHTML = '<p class="text-danger">Błąd ładowania wiadomości.</p>';
+                    listElement.innerHTML = '<p class="text-danger">Error loading messages.</p>';
                 }
                 console.error('Error fetching recent activity:', error);
             });
@@ -366,15 +366,15 @@
                 if (msgCountEl) msgCountEl.textContent = data.msg_count;
                 if (avgTimeEl) avgTimeEl.textContent = (data.avg_response_time || 0).toFixed(2) + 's';
                 if (todayEl) todayEl.textContent = data.today_queries;
-                if (lastQueryEl) lastQueryEl.textContent = '"' + (data.last_query || 'Brak') + '"';
+                if (lastQueryEl) lastQueryEl.textContent = '"' + (data.last_query || 'None') + '"';
                 // Also render details in analytics section
                 const section = document.getElementById('analytics-section');
                 if (section) {
                     section.innerHTML = `
                         <div class="row">
-                            <div class="col-sm-4"><strong>Unikalni użytkownicy:</strong> ${data.unique_users.length}</div>
-                            <div class="col-sm-4"><strong>Ostatnie zapytanie:</strong> ${data.last_query || 'Brak'}</div>
-                            <div class="col-sm-4"><strong>Liczba logów:</strong> ${data.msg_count}</div>
+                            <div class="col-sm-4"><strong>Unique users:</strong> ${data.unique_users.length}</div>
+                            <div class="col-sm-4"><strong>Last query:</strong> ${data.last_query || 'None'}</div>
+                            <div class="col-sm-4"><strong>Log count:</strong> ${data.msg_count}</div>
                         </div>
                     `;
                 }
@@ -393,7 +393,7 @@
     function fetchAnalytics() {
         fetch('/api/analytics')
             .then(response => {
-                if (!response.ok) throw new Error('Błąd API: ' + response.status);
+                if (!response.ok) throw new Error('API error: ' + response.status);
                 return response.json();
             })
             .then(data => {
@@ -403,20 +403,20 @@
                 document.getElementById('stat-message-count').textContent = data.msg_count ?? '0';
                 document.getElementById('stat-avg-response-time').textContent = (data.avg_response_time || 0).toFixed(1) + 's';
                 document.getElementById('stat-today-queries').textContent = data.today_queries ?? '0'; // Assuming API provides this
-                document.getElementById('stat-last-query').textContent = `"${data.last_query || 'Brak'}"`; // Assuming API provides this
+                document.getElementById('stat-last-query').textContent = `"${data.last_query || 'None'}"`; // Assuming API provides this
 
                 // Update detailed analytics section
                 let html = '<ul class="list-group">';
-                html += `<li class="list-group-item">Liczba wiadomości (z DB): <b>${data.msg_count ?? '-'}</b></li>`;
-                html += `<li class="list-group-item">Unikalni użytkownicy (z DB): <b>${data.unique_users ? data.unique_users.length : 0}</b> (${data.unique_users ? data.unique_users.join(', ') : ''})</li>`;
-                html += `<li class="list-group-item">Średni czas odpowiedzi (z DB): <b>${(data.avg_response_time || 0).toFixed(2)}s</b></li>`;
-                html += `<li class="list-group-item">Ostatnie zapytanie (z DB): <b>${data.last_query_time ? new Date(data.last_query_time).toLocaleString() : '-'}</b></li>`;
+                html += `<li class="list-group-item">Messages (from DB): <b>${data.msg_count ?? '-'}</b></li>`;
+                html += `<li class="list-group-item">Unique users (from DB): <b>${data.unique_users ? data.unique_users.length : 0}</b> (${data.unique_users ? data.unique_users.join(', ') : ''})</li>`;
+                html += `<li class="list-group-item">Average response time (from DB): <b>${(data.avg_response_time || 0).toFixed(2)}s</b></li>`;
+                html += `<li class="list-group-item">Last query (from DB): <b>${data.last_query_time ? new Date(data.last_query_time).toLocaleString() : '-'}</b></li>`;
                 html += '</ul>';
                 section.innerHTML = html;
             })
             .catch(err => {
                 const section = document.getElementById('analytics-section');
-                if (section) section.innerHTML = `<div class='alert alert-danger'>Błąd ładowania statystyk: ${err.message}</div>`;
+                if (section) section.innerHTML = `<div class='alert alert-danger'>Error loading stats: ${err.message}</div>`;
                  // Clear main dashboard stats on error
                 document.getElementById('stat-message-count').textContent = '0';
                 document.getElementById('stat-avg-response-time').textContent = '0.0s';

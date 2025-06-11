@@ -38,5 +38,6 @@
     "level": "INFO",
     "file": "logs/server_{time:YYYY-MM-DD}.log",
     "sanitize_sensitive_data": true
-  }
+  },
+  "ui_language": "en"
 }

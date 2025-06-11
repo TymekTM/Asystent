@@ -75,7 +75,8 @@ def create_default_config() -> Dict[str, Any]:
         "logging": {
             "level": "INFO",
             "file": "logs/server_{time:YYYY-MM-DD}.log"
-        }
+        },
+        "ui_language": "en"
     }
 
 class ConfigLoader:
