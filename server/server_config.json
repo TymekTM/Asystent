@@ -1,4 +1,5 @@
-{  "server": {
+{
+  "server": {
     "host": "localhost",
     "port": 8001,
     "debug": false
@@ -6,12 +7,14 @@
   "database": {
     "url": "sqlite:///./server_data.db",
     "echo": false
-  },  "ai": {
+  },
+  "ai": {
     "provider": "openai",
     "model": "gpt-4.1-nano",
     "temperature": 0.7,
     "max_tokens": 1500
-  },  "api_keys": {
+  },
+  "api_keys": {
     "_comment": "API keys are now loaded from environment variables (.env file)",
     "openai": "",
     "anthropic": "",
@@ -23,15 +26,18 @@
       "weather_module",
       "search_module"
     ]
-  },  "security": {
+  },
+  "security": {
     "cors_origins": [
       "http://localhost:3000",
       "http://localhost:8000",
       "http://localhost:8001"
     ],
     "max_connections_per_user": 5
-  },  "logging": {
+  },
+  "logging": {
     "level": "INFO",
     "file": "logs/server_{time:YYYY-MM-DD}.log"
-  }
+  },
+  "ui_language": "en"
 }

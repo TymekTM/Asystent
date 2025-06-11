@@ -6,7 +6,7 @@ Obsługa pierwszego uruchomienia i konfiguracji wstępnej w architekturze klient
 import json
 import logging
 import os
-import requests
+import aiohttp
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 from database_manager import DatabaseManager
@@ -35,13 +35,14 @@ class OnboardingModule:
     async def get_location_from_ip(self) -> str:
         """Pobierz lokalizację na podstawie IP."""
         try:
-            response = requests.get('http://ip-api.com/json/', timeout=5)
-            if response.status_code == 200:
-                data = response.json()
-                if data.get('status') == 'success':
-                    city = data.get('city', 'Warsaw')
-                    country_code = data.get('countryCode', 'PL')
-                    return f"{city},{country_code}"
+            async with aiohttp.ClientSession() as session:
+                async with session.get('http://ip-api.com/json/', timeout=5) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        if data.get('status') == 'success':
+                            city = data.get('city', 'Warsaw')
+                            country_code = data.get('countryCode', 'PL')
+                            return f"{city},{country_code}"
         except Exception as e:
             logger.warning(f"Failed to get location from IP: {e}")
         

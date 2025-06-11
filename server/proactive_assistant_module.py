@@ -1,6 +1,6 @@
 """
-Proactive Assistant Module - Proaktywny system asystenta
-Automatycznie sugeruje akcje, przewiduje potrzeby użytkownika i wysyła powiadomienia
+Proactive Assistant Module
+Automatically suggests actions, predicts user needs and sends notifications.
 """
 
 import json
@@ -138,15 +138,15 @@ class ProactiveAssistantModule:
             
             conn.commit()
             conn.close()
-            self.logger.info("Baza danych proaktywnego asystenta zainicjalizowana")
+            self.logger.info("Proactive assistant database initialized")
             
         except Exception as e:
-            self.logger.error(f"Błąd inicjalizacji bazy danych: {e}")
+            self.logger.error(f"Error initializing database: {e}")
 
     def start(self):
         """Uruchomienie proaktywnego asystenta"""
         if not self.config.get("enabled", True):
-            self.logger.info("Proaktywny asystent wyłączony w konfiguracji")
+            self.logger.info("Proactive assistant disabled in configuration")
             return
             
         try:
@@ -208,10 +208,10 @@ class ProactiveAssistantModule:
             )
             
             self.scheduler.start()
-            self.logger.info("Proaktywny asystent uruchomiony")
+            self.logger.info("Proactive assistant started")
             
         except Exception as e:
-            self.logger.error(f"Błąd uruchamiania proaktywnego asystenta: {e}")
+            self.logger.error(f"Error starting proactive assistant: {e}")
 
     def stop(self):
         """Zatrzymanie proaktywnego asystenta"""
@@ -219,9 +219,9 @@ class ProactiveAssistantModule:
             self.is_active = False
             if self.scheduler.running:
                 self.scheduler.shutdown()
-            self.logger.info("Proaktywny asystent zatrzymany")
+            self.logger.info("Proactive assistant stopped")
         except Exception as e:
-            self.logger.error(f"Błąd zatrzymywania proaktywnego asystenta: {e}")
+            self.logger.error(f"Error stopping proactive assistant: {e}")
 
     def update_user_context(self, context_data: Dict):
         """Aktualizacja kontekstu użytkownika"""
@@ -244,7 +244,7 @@ class ProactiveAssistantModule:
                 self._save_context_to_db()
                 
         except Exception as e:
-            self.logger.error(f"Błąd aktualizacji kontekstu użytkownika: {e}")
+            self.logger.error(f"Error updating user context: {e}")
 
     def wellness_check(self):
         """Sprawdzenie stanu zdrowia i samopoczucia użytkownika"""
@@ -285,7 +285,7 @@ class ProactiveAssistantModule:
                 )
                 
         except Exception as e:
-            self.logger.error(f"Błąd sprawdzania wellness: {e}")
+            self.logger.error(f"Error checking wellness: {e}")
 
     def break_reminder_check(self):
         """Sprawdzenie czy czas na przypomnienie o przerwie"""
@@ -303,7 +303,7 @@ class ProactiveAssistantModule:
                 )
                 
         except Exception as e:
-            self.logger.error(f"Błąd sprawdzania przerw: {e}")
+            self.logger.error(f"Error checking breaks: {e}")
 
     def productivity_check(self):
         """Analiza i optymalizacja produktywności"""
@@ -332,7 +332,7 @@ class ProactiveAssistantModule:
                 )
                 
         except Exception as e:
-            self.logger.error(f"Błąd sprawdzania produktywności: {e}")
+            self.logger.error(f"Error checking productivity: {e}")
 
     def routine_optimization_check(self):
         """Sprawdzenie i optymalizacja rutyn"""
@@ -353,7 +353,7 @@ class ProactiveAssistantModule:
                 )
                 
         except Exception as e:
-            self.logger.error(f"Błąd optymalizacji rutyn: {e}")
+            self.logger.error(f"Error optimizing routines: {e}")
 
     def daily_goals_check(self):
         """Sprawdzenie postępu celów dziennych"""
@@ -384,7 +384,7 @@ class ProactiveAssistantModule:
                     )
                     
         except Exception as e:
-            self.logger.error(f"Błąd sprawdzania celów: {e}")
+            self.logger.error(f"Error checking goals: {e}")
 
     def end_of_day_summary(self):
         """Podsumowanie końca dnia"""
@@ -404,7 +404,7 @@ class ProactiveAssistantModule:
             )
             
         except Exception as e:
-            self.logger.error(f"Błąd podsumowania dnia: {e}")
+            self.logger.error(f"Error generating day summary: {e}")
 
     def predict_user_needs(self) -> List[Dict]:
         """Przewidywanie potrzeb użytkownika"""
@@ -435,7 +435,7 @@ class ProactiveAssistantModule:
             return predictions
             
         except Exception as e:
-            self.logger.error(f"Błąd przewidywania potrzeb: {e}")
+            self.logger.error(f"Error predicting needs: {e}")
             return []
 
     def get_pending_notifications(self) -> List[ProactiveNotification]:
@@ -450,7 +450,7 @@ class ProactiveAssistantModule:
                 ]
                 return self.notification_queue.copy()
         except Exception as e:
-            self.logger.error(f"Błąd pobierania powiadomień: {e}")
+            self.logger.error(f"Error fetching notifications: {e}")
             return []
 
     def _dismiss_notification_sync(self, notification_id: int, user_response: str = None):
@@ -468,7 +468,7 @@ class ProactiveAssistantModule:
                 self._update_notification_response(notification_id, user_response)
                 
         except Exception as e:
-            self.logger.error(f"Błąd odrzucania powiadomienia: {e}")
+            self.logger.error(f"Error dismissing notification: {e}")
 
     def _create_notification(self, type_: str, priority: str, title: str, message: str, suggested_action: str = None, context: Dict = None):
         """Stwórz nowe powiadomienie"""
@@ -493,10 +493,10 @@ class ProactiveAssistantModule:
             # Zapisz do bazy danych
             self._save_notification_to_db(notification)
             
-            self.logger.info(f"Utworzono proaktywne powiadomienie: {title}")
+            self.logger.info(f"Created proactive notification: {title}")
             
         except Exception as e:
-            self.logger.error(f"Błąd tworzenia powiadomienia: {e}")
+            self.logger.error(f"Error creating notification: {e}")
 
     def _is_notification_on_cooldown(self, notification_type: str) -> bool:
         """Sprawdź czy typ powiadomienia jest w cooldown"""
@@ -513,7 +513,7 @@ class ProactiveAssistantModule:
             return len(recent_notifications) > 0
             
         except Exception as e:
-            self.logger.error(f"Błąd sprawdzania cooldown: {e}")
+            self.logger.error(f"Error checking cooldown: {e}")
             return False
 
     def _analyze_productivity_trend(self) -> Dict:
@@ -527,7 +527,7 @@ class ProactiveAssistantModule:
                 "current_level": self.user_context.work_intensity
             }
         except Exception as e:
-            self.logger.error(f"Błąd analizy produktywności: {e}")
+            self.logger.error(f"Error analyzing productivity: {e}")
             return {"trend": "stable", "decline_percentage": 0.0, "improvement_percentage": 0.0}
 
     def _get_routine_suggestions(self) -> Optional[Dict]:
@@ -553,7 +553,7 @@ class ProactiveAssistantModule:
             return None
             
         except Exception as e:
-            self.logger.error(f"Błąd pobierania sugestii rutyn: {e}")
+            self.logger.error(f"Error fetching routine suggestions: {e}")
             return None
 
     def _generate_proactive_day_summary(self) -> Dict:
@@ -564,7 +564,7 @@ class ProactiveAssistantModule:
                 "tomorrow_suggestion": "Na jutro sugeruję zaplanowanie najważniejszych zadań na godziny poranne."
             }
         except Exception as e:
-            self.logger.error(f"Błąd generowania podsumowania: {e}")
+            self.logger.error(f"Error generating summary: {e}")
             return {"message": "Koniec dnia!", "tomorrow_suggestion": "Miłego wieczoru!"}
 
     def _save_context_to_db(self):
@@ -589,7 +589,7 @@ class ProactiveAssistantModule:
             conn.close()
             
         except Exception as e:
-            self.logger.error(f"Błąd zapisywania kontekstu: {e}")
+            self.logger.error(f"Error saving context: {e}")
 
     def _save_notification_to_db(self, notification: ProactiveNotification):
         """Zapisz powiadomienie do bazy danych"""
@@ -615,7 +615,7 @@ class ProactiveAssistantModule:
             conn.close()
             
         except Exception as e:
-            self.logger.error(f"Błąd zapisywania powiadomienia: {e}")
+            self.logger.error(f"Error saving notification: {e}")
 
     def _update_notification_response(self, notification_id: int, user_response: str):
         """Zaktualizuj odpowiedź użytkownika na powiadomienie"""
@@ -633,7 +633,7 @@ class ProactiveAssistantModule:
             conn.close()
             
         except Exception as e:
-            self.logger.error(f"Błąd aktualizacji odpowiedzi: {e}")
+            self.logger.error(f"Error updating response: {e}")
 
     def get_status(self) -> Dict:
         """Pobierz status modułu"""
@@ -665,7 +665,7 @@ class ProactiveAssistantModule:
                 for notif in notifications
             ]
         except Exception as e:
-            self.logger.error(f"Błąd pobierania powiadomień: {e}")
+            self.logger.error(f"Error fetching notifications: {e}")
             return []
 
     async def add_notification(self, user_id: str, notification_type: str, message: str, 
@@ -684,7 +684,7 @@ class ProactiveAssistantModule:
                 return True
             return False
         except Exception as e:
-            self.logger.error(f"Błąd dodawania powiadomienia: {e}")
+            self.logger.error(f"Error adding notification: {e}")
             return False
 
     async def dismiss_notification(self, user_id: str, notification_id: str) -> bool:
@@ -697,7 +697,7 @@ class ProactiveAssistantModule:
             self._dismiss_notification_sync(notification_id)
             return True
         except Exception as e:
-            self.logger.error(f"Błąd odrzucania powiadomienia: {e}")
+            self.logger.error(f"Error dismissing notification: {e}")
             return False
 
     async def update_user_context(self, user_id: str, context_data: Dict):
@@ -717,7 +717,7 @@ class ProactiveAssistantModule:
             await self._save_context_to_db(context_data)
             
         except Exception as e:
-            self.logger.error(f"Błąd aktualizacji kontekstu: {e}")
+            self.logger.error(f"Error updating context: {e}")
 
     async def get_predictions(self, user_id: str) -> List[Dict]:
         """Pobierz predykcje dla użytkownika (async interface)"""
@@ -740,7 +740,7 @@ class ProactiveAssistantModule:
             ]
             return predictions
         except Exception as e:
-            self.logger.error(f"Błąd generowania predykcji: {e}")
+            self.logger.error(f"Error generating predictions: {e}")
             return []
 
     async def _save_context_to_db(self, context_data: Dict):
@@ -765,4 +765,4 @@ class ProactiveAssistantModule:
             conn.close()
             
         except Exception as e:
-            self.logger.error(f"Błąd zapisywania kontekstu: {e}")
+            self.logger.error(f"Error saving context: {e}")

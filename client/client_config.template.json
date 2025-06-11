@@ -14,7 +14,7 @@
   },
   "whisper": {
     "model": "small",
-    "language": "pl",
+    "language": "en",
     "device_id": null
   },
   "overlay": {
