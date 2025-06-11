@@ -8,6 +8,7 @@ librosa==0.10.1
 
 # Speech recognition
 openai-whisper==20231117
+openai==1.21.0
 faster-whisper==0.10.0
 torch>=2.0.0
 torchaudio>=2.0.0
@@ -28,3 +29,4 @@ pydantic==2.5.0
 
 # System dependencies
 psutil==5.9.6
+edge-tts==7.0.0
