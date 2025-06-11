@@ -72,13 +72,13 @@ class AssistantBenchmark:
         self.update_progress("Database Operations", 10)
         
         try:
-            from database_manager import get_db_connection
+            from server.database_manager import get_database_manager
             
             operations = {}
             
             # Test database connection
             start_time = time.time()
-            conn = get_db_connection()
+            conn = get_database_manager().get_db_connection()
             operations['connection'] = round(time.time() - start_time, 4)
             self.update_progress("Database Operations", 30)
             

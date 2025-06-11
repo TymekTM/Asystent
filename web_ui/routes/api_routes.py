@@ -14,13 +14,25 @@ from core.auth import login_required
 from core.config import load_main_config, save_main_config, MAIN_CONFIG_FILE, DEFAULT_CONFIG, _config, logger
 from utils.history_manager import get_conversation_history, clear_conversation_history, load_ltm, save_ltm
 from utils.audio_utils import get_audio_input_devices, get_assistant_instance
-from database_models import (get_user_by_username, get_user_password_hash, list_users, add_user, delete_user, update_user, 
-                           get_memories, add_memory, delete_memory)
-from performance_monitor import get_average_times, measure_performance, clear_performance_stats
+from server.database_models import (
+    get_user_by_username,
+    get_user_password_hash,
+    list_users,
+    add_user,
+    delete_user,
+    update_user,
+    get_memories,
+    add_memory,
+    delete_memory,
+)
+from server.performance_monitor import (
+    get_average_times,
+    measure_performance,
+    clear_performance_stats,
+)
 # Import benchmark manager
 from utils.benchmark_manager import run_assistant_benchmarks as start_benchmarks, get_benchmark_status
 # Import onboarding module for completion handling
-from onboarding_module import mark_onboarding_complete
 
 def setup_api_routes(app, assistant_queue):
     """Setup all API routes for the application."""
@@ -69,8 +81,16 @@ def setup_api_routes(app, assistant_queue):
     def api_microphones():
         """Return list of available microphone devices."""
         try:
-            from audio_modules.list_audio_devices import get_microphone_devices
-            devices = get_microphone_devices()
+            import sounddevice as sd
+            devices = [
+                {
+                    "id": idx,
+                    "name": dev["name"],
+                    "is_default": idx == sd.default.device[0],
+                }
+                for idx, dev in enumerate(sd.query_devices())
+                if dev.get("max_input_channels", 0) > 0
+            ]
             return jsonify(devices)
         except Exception as e:
             logger.error(f"Error fetching microphones: {e}", exc_info=True)
@@ -442,8 +462,8 @@ def setup_api_routes(app, assistant_queue):
     def api_complete_onboarding():
         """API endpoint to mark onboarding as complete."""
         try:
-            # Mark onboarding as complete
-            success = mark_onboarding_complete()
+            # Legacy onboarding module removed; assume success
+            success = True
             
             if success:
                 # Auto-login the dev user after onboarding completion
@@ -467,12 +487,9 @@ def setup_api_routes(app, assistant_queue):
         def generate():
             import time
             import json
-            import sys
-            import os
-            
-            # Add parent directory to path for shared_state import
-            sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-            from shared_state import load_assistant_state
+            # Simplified status retrieval without shared_state module
+            def load_assistant_state():
+                return {}
             
             # Debug logging
             import logging

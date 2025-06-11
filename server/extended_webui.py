@@ -47,11 +47,18 @@ class ExtendedWebUI:
                 config = self.config_loader.get_config()
                 
                 # Pobierz podstawowe statystyki
+                pm = getattr(self.server_app, 'plugin_manager', None)
+                loaded_count = 0
+                total_functions = 0
+                if pm:
+                    loaded_count = sum(1 for p in pm.plugins.values() if p.loaded)
+                    total_functions = len(pm.function_registry)
+
                 stats = {
                     "server_status": "running",
                     "uptime": getattr(self.server_app, 'start_time', datetime.now()).isoformat(),
-                    "loaded_plugins": len(getattr(self.server_app, 'plugin_manager', {}).get('loaded_plugins', {})),
-                    "total_functions": len(getattr(self.server_app, 'plugin_manager', {}).get('function_registry', {})),
+                    "loaded_plugins": loaded_count,
+                    "total_functions": total_functions,
                     "user_name": config.get('USER_NAME', 'User'),
                     "first_run": config.get('FIRST_RUN', True)
                 }
@@ -103,9 +110,10 @@ class ExtendedWebUI:
                 plugin_data = {}
                 if hasattr(self.server_app, 'plugin_manager'):
                     pm = self.server_app.plugin_manager
+                    loaded = [name for name, info in pm.plugins.items() if info.loaded]
                     plugin_data = {
-                        "loaded_plugins": list(pm.loaded_plugins.keys()) if hasattr(pm, 'loaded_plugins') else [],
-                        "function_registry": pm.function_registry if hasattr(pm, 'function_registry') else {},
+                        "loaded_plugins": loaded,
+                        "function_registry": pm.function_registry,
                         "plugin_paths": getattr(pm, 'plugin_paths', [])
                     }
                 
@@ -161,11 +169,17 @@ class ExtendedWebUI:
         @self.app.route('/api/status')
         def api_status():
             try:
+                pm = getattr(self.server_app, 'plugin_manager', None)
+                loaded_count = 0
+                functions_available = 0
+                if pm:
+                    loaded_count = sum(1 for p in pm.plugins.values() if p.loaded)
+                    functions_available = len(pm.function_registry)
                 status = {
                     "server_running": True,
                     "timestamp": datetime.now().isoformat(),
-                    "plugins_loaded": len(getattr(self.server_app, 'plugin_manager', {}).get('loaded_plugins', {})),
-                    "functions_available": len(getattr(self.server_app, 'plugin_manager', {}).get('function_registry', {}))
+                    "plugins_loaded": loaded_count,
+                    "functions_available": functions_available
                 }
                 return jsonify(status)
             except Exception as e:
@@ -205,11 +219,11 @@ class ExtendedWebUI:
                     "function_registry": {},
                     "monitoring_status": {}
                 }
-                
+
                 if hasattr(self.server_app, 'plugin_manager'):
                     pm = self.server_app.plugin_manager
-                    plugin_data["loaded_plugins"] = list(pm.loaded_plugins.keys()) if hasattr(pm, 'loaded_plugins') else []
-                    plugin_data["function_registry"] = pm.function_registry if hasattr(pm, 'function_registry') else {}
+                    plugin_data["loaded_plugins"] = [name for name, info in pm.plugins.items() if info.loaded]
+                    plugin_data["function_registry"] = pm.function_registry
                 
                 if hasattr(self.server_app, 'plugin_monitor'):
                     import asyncio
