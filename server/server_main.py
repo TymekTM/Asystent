@@ -19,6 +19,8 @@ from loguru import logger
 
 # Dodaj ścieżkę serwera do PYTHONPATH
 sys.path.insert(0, str(Path(__file__).parent))
+# Dodaj ścieżkę modules do PYTHONPATH dla pluginów
+sys.path.insert(0, str(Path(__file__).parent / "modules"))
 
 from config_loader import load_config
 from database_manager import DatabaseManager, initialize_database_manager

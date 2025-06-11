@@ -498,9 +498,13 @@ async def chat_with_providers(
         try:
             if prov["check"]():
                 logger.info(f"✅ Provider {provider_name} check passed")
-                # Only pass functions to OpenAI provider for now
-                if provider_name == "openai" and functions:
-                    result = await prov["chat"](
+                
+                # Handle different providers with appropriate parameters
+                chat_func = prov["chat"]
+                
+                if provider_name == "openai":
+                    # OpenAI supports function calling
+                    result = await chat_func(
                         model,
                         messages,
                         images,
@@ -509,29 +513,27 @@ async def chat_with_providers(
                         temperature=temperature,
                         max_tokens=max_tokens,
                     )
-                    logger.info(f"✅ Provider {provider_name} returned result")
-                    return result
+                elif provider_name in ["deepseek"]:
+                    # Other async providers that don't support function calling yet
+                    result = await chat_func(
+                        model,
+                        messages,
+                        images,
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                    )
                 else:
-                    # Handle non-async providers
-                    chat_func = prov["chat"]
-                    if provider_name in ["openai"]:  # async providers
-                        result = await chat_func(
-                            model,
-                            messages,
-                            images,
-                            temperature=temperature,
-                            max_tokens=max_tokens,
-                        )
-                    else:  # sync providers
-                        result = chat_func(
-                            model,
-                            messages,
-                            images,
-                            temperature=temperature,
-                            max_tokens=max_tokens,
-                        )
-                    logger.info(f"✅ Provider {provider_name} returned result")
-                    return result
+                    # Sync providers (ollama, lmstudio)
+                    result = chat_func(
+                        model,
+                        messages,
+                        images,
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                    )
+                    
+                logger.info(f"✅ Provider {provider_name} returned result")
+                return result
             else:
                 logger.warning(f"❌ Provider {provider_name} check failed")
         except Exception as exc:  # pragma: no cover
@@ -669,15 +671,27 @@ async def generate_response(
             logger.error("OpenAI API key not found in configuration.")
             return '{"text": "Błąd: Klucz API OpenAI nie został skonfigurowany.", "command": "", "params": {}}'
 
-        # Initialize function calling system if enabled and modules provided
+        # Initialize function calling system if enabled and plugins available
         function_calling_system = None
         functions = None
         
-        if use_function_calling and modules and PROVIDER.lower() == "openai":
-            from function_calling_system import convert_module_system_to_function_calling
-            function_calling_system = convert_module_system_to_function_calling(modules)
+        if use_function_calling and PROVIDER.lower() == "openai":
+            # Get functions directly from plugin_manager
+            from plugin_manager import plugin_manager
+            from function_calling_system import FunctionCallingSystem
+            
+            # Initialize function calling system
+            function_calling_system = FunctionCallingSystem()
+            
+            # Get functions from plugin manager
             functions = function_calling_system.convert_modules_to_functions()
-            logger.info(f"Function calling enabled with {len(functions)} functions")
+            
+            if functions:
+                logger.info(f"Function calling enabled with {len(functions)} functions")
+                logger.debug(f"Available functions: {[f['function']['name'] for f in functions]}")
+            else:
+                logger.warning("No functions available for function calling")
+                function_calling_system = None
 
             # Use standard system prompt for function calling
             system_prompt = build_full_system_prompt(

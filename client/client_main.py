@@ -259,8 +259,17 @@ class ClientApp:
                         break
                     except json.JSONDecodeError as e:
                         logger.error(f"Invalid JSON from server: {e}")
+                    except asyncio.CancelledError:
+                        logger.info("WebSocket listener cancelled")
+                        break
                 else:
-                    await asyncio.sleep(0.1)
+                    try:
+                        await asyncio.sleep(0.1)
+                    except asyncio.CancelledError:
+                        logger.info("WebSocket listener cancelled")
+                        break
+        except asyncio.CancelledError:
+            logger.info("WebSocket listener cancelled")
         except Exception as e:
             logger.error(f"Error listening for messages: {e}")
 
@@ -557,20 +566,26 @@ class ClientApp:
             
             # Start wakeword monitoring
             await self.start_wakeword_monitoring()
-            
-            # Set status to ready
+              # Set status to ready
             self.update_status("Listening...")
-              # Listen for server messages (or just keep running if no server)
+            
+            # Listen for server messages (or just keep running if no server)
             if self.websocket:
                 # Start command queue processor alongside websocket listener
-                await asyncio.gather(
-                    self.listen_for_messages(),
-                    self.process_command_queue()
-                )
+                try:
+                    await asyncio.gather(
+                        self.listen_for_messages(),
+                        self.process_command_queue()
+                    )
+                except asyncio.CancelledError:
+                    logger.info("Main tasks cancelled")
             else:
                 # Standalone mode - just keep running with wakeword detection
                 logger.info("Running in standalone mode - use Ctrl+C to stop")
-                await self.process_command_queue()  # Just process commands
+                try:
+                    await self.process_command_queue()  # Just process commands
+                except asyncio.CancelledError:
+                    logger.info("Command queue processor cancelled")
             
         except KeyboardInterrupt:
             logger.info("Client interrupted by user")
@@ -581,20 +596,29 @@ class ClientApp:
 
     async def process_command_queue(self):
         """Process commands from HTTP requests in the main async loop."""
-        while self.running:
-            try:
-                # Check for commands from HTTP handlers
-                while not self.command_queue.empty():
-                    command = self.command_queue.get_nowait()
-                    try:
-                        await self.execute_command(command)
-                    except Exception as e:
-                        logger.error(f"Error executing command {command}: {e}")
-                
-                await asyncio.sleep(0.1)  # Small delay to prevent busy loop
-            except Exception as e:
-                logger.error(f"Error in command queue processor: {e}")
-                await asyncio.sleep(1)
+        try:
+            while self.running:
+                try:
+                    # Check for commands from HTTP handlers
+                    while not self.command_queue.empty():
+                        command = self.command_queue.get_nowait()
+                        try:
+                            await self.execute_command(command)
+                        except Exception as e:
+                            logger.error(f"Error executing command {command}: {e}")
+                    
+                    await asyncio.sleep(0.1)  # Small delay to prevent busy loop
+                except asyncio.CancelledError:
+                    # Task was cancelled, exit gracefully
+                    logger.info("Command queue processor cancelled")
+                    break
+                except Exception as e:
+                    logger.error(f"Error in command queue processor: {e}")
+                    await asyncio.sleep(1)
+        except asyncio.CancelledError:
+            logger.info("Command queue processor cancelled")
+        except Exception as e:
+            logger.error(f"Fatal error in command queue processor: {e}")
 
     async def execute_command(self, command: Dict):
         """Execute a command from the HTTP interface."""
@@ -626,11 +650,11 @@ class ClientApp:
             
             # Stop HTTP server
             self.stop_http_server()
-            
-            # Stop wakeword detection
+              # Stop wakeword detection
             if self.wakeword_detector:
                 self.wakeword_detector.stop_detection()
-                  # Close overlay process with improved termination
+                
+            # Close overlay process with improved termination
             if self.overlay_process and self.overlay_process.poll() is None:
                 logger.info(f"Terminating overlay process (PID: {self.overlay_process.pid})...")
                 
@@ -819,14 +843,27 @@ async def main():
     logger.add(
         sys.stderr,
         level="INFO",
-        format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
-    )
+        format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"    )
     
     logger.info("Starting GAJA Assistant Client...")
     
     client = ClientApp()
-    await client.run()
+    try:
+        await client.run()
+    except asyncio.CancelledError:
+        logger.info("Client cancelled")
+    except KeyboardInterrupt:
+        logger.info("Client interrupted by user")
+    except Exception as e:
+        logger.error(f"Unexpected error in main: {e}")
+    finally:
+        logger.info("Client shutdown")
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("\nClient stopped by user")
+    except Exception as e:
+        print(f"Fatal error: {e}")

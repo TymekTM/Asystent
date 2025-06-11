@@ -38,15 +38,15 @@ class PluginManager:
         self.plugins: Dict[str, PluginInfo] = {}
         self.user_plugins: Dict[str, Dict[str, bool]] = {}  # user_id -> {plugin_name: enabled}
         self.function_registry: Dict[str, Callable] = {}
-        
-        # Create plugins directory if it doesn't exist
+          # Create plugins directory if it doesn't exist
         self.plugins_directory.mkdir(exist_ok=True)
     
     async def discover_plugins(self) -> List[PluginInfo]:
         """Discover all available plugins."""
         discovered = []
         
-        try:            # Scan modules directory
+        try:
+            # Scan modules directory
             for file_path in self.plugins_directory.glob("*.py"):
                 if file_path.name.startswith("__"):
                     continue
@@ -70,11 +70,23 @@ class PluginManager:
             
             # Try to load module temporarily to analyze
             try:
-                spec = importlib.util.spec_from_file_location(module_name, file_path)
+                # Add parent directory to sys.path for relative imports
+                parent_dir = str(file_path.parent)
+                if parent_dir not in sys.path:
+                    sys.path.insert(0, parent_dir)
+                
+                # Use proper module name with package structure
+                full_module_name = f"modules.{module_name}"
+                
+                spec = importlib.util.spec_from_file_location(full_module_name, file_path)
                 if not spec or not spec.loader:
                     return None
                 
                 module = importlib.util.module_from_spec(spec)
+                
+                # Set package for relative imports
+                module.__package__ = 'modules'
+                
                 spec.loader.exec_module(module)
                 
                 # Extract metadata
@@ -152,16 +164,27 @@ class PluginManager:
                 if not self._check_dependency(dep):
                     logger.error(f"Missing dependency for {plugin_name}: {dep}")
                     return False
+              # Load module
+            # Add parent directory to sys.path for relative imports
+            parent_dir = str(Path(plugin_info.module_path).parent)
+            if parent_dir not in sys.path:
+                sys.path.insert(0, parent_dir)
             
-            # Load module
+            # Use proper module name with package structure
+            full_module_name = f"modules.{plugin_name}"
+            
             spec = importlib.util.spec_from_file_location(
-                plugin_name, 
+                full_module_name, 
                 plugin_info.module_path
             )
             if not spec or not spec.loader:
                 return False
             
             module = importlib.util.module_from_spec(spec)
+            
+            # Set package for relative imports
+            module.__package__ = 'modules'
+            
             spec.loader.exec_module(module)
             
             # Store module reference
