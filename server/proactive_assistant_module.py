@@ -679,7 +679,7 @@ class ProactiveAssistantModule:
             notification = self._create_notification(
                 notification_type, priority, title, message, suggested_action, context
             )
-              if notification:
+            if notification:
                 self._save_notification_to_db(notification)
                 return True
             return False
