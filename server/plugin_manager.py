@@ -10,6 +10,7 @@ import os
 import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Any, Callable
+from .plugin_protocol import PluginProtocol
 from loguru import logger
 import importlib.util
 from dataclasses import dataclass
@@ -27,7 +28,7 @@ class PluginInfo:
     dependencies: List[str]
     enabled: bool = False
     loaded: bool = False
-    module = None
+    module: Optional[PluginProtocol] = None
 
 
 class PluginManager:
@@ -70,11 +71,6 @@ class PluginManager:
             
             # Try to load module temporarily to analyze
             try:
-                # Add parent directory to sys.path for relative imports
-                parent_dir = str(file_path.parent)
-                if parent_dir not in sys.path:
-                    sys.path.insert(0, parent_dir)
-                
                 # Use proper module name with package structure
                 full_module_name = f"modules.{module_name}"
                 
@@ -166,10 +162,6 @@ class PluginManager:
                     return False
               # Load module
             # Add parent directory to sys.path for relative imports
-            parent_dir = str(Path(plugin_info.module_path).parent)
-            if parent_dir not in sys.path:
-                sys.path.insert(0, parent_dir)
-            
             # Use proper module name with package structure
             full_module_name = f"modules.{plugin_name}"
             

@@ -69,5 +69,40 @@ TTS_VOICE_PROMPT = (
     "Features: Feels familiar. Uses your name sometimes, remembers details you’ve told her. Doesn't overwhelm — speaks briefly, listens more. Sounds present, real, and emotionally attuned, with room for dry wit or soft reassurance."
 )
 
+# --- Dynamic voice prompt helpers ---
+HOLIDAYS_PL = {
+    "01-01",  # Nowy Rok
+    "05-03",  # Święto Konstytucji 3 Maja
+    "11-11",  # Święto Niepodległości
+    "12-25",  # Boże Narodzenie
+    "12-26",  # Drugi dzień Świąt
+}
 
+
+def _time_hint() -> str:
+    hour = datetime.now().hour
+    if 6 <= hour < 12:
+        return "It is morning, give the user energy for the day."
+    if hour >= 22 or hour < 6:
+        return "It is night time, be quieter."
+    return ""
+
+
+def _holiday_hint() -> str:
+    today = datetime.now().strftime("%m-%d")
+    if today in HOLIDAYS_PL:
+        return "Today is a holiday, sound cheerful."
+    return ""
+
+
+def get_tts_voice_prompt() -> str:
+    """Return TTS prompt adjusted for time of day and holidays."""
+    parts = [TTS_VOICE_PROMPT]
+    hint = _time_hint()
+    if hint:
+        parts.append(hint)
+    holiday = _holiday_hint()
+    if holiday:
+        parts.append(holiday)
+    return " ".join(parts)
 

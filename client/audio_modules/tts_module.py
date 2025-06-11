@@ -25,9 +25,10 @@ except ImportError:
 
 # TTS prompt (fallback if prompts module not available)
 try:
-    from prompts import TTS_VOICE_PROMPT
+    from prompts import get_tts_voice_prompt
 except ImportError:
-    TTS_VOICE_PROMPT = "Speak naturally and conversationally."
+    def get_tts_voice_prompt() -> str:
+        return "Speak naturally and conversationally."
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
@@ -51,6 +52,23 @@ class TTSModule:
         self.model = "gpt-4o-mini-tts"  # OpenAI TTS model (correct model name)
         # Defer cleanup task start to first use to avoid blocking initialization
         # self._start_cleanup_task()
+
+    def _adjust_settings(self) -> None:
+        """Adjust volume based on time of day and holidays."""
+        from datetime import datetime
+        hour = datetime.now().hour
+        if 6 <= hour < 12:
+            self.volume = 200
+        elif hour >= 22 or hour < 6:
+            self.volume = 120
+        else:
+            self.volume = 180
+        try:
+            from prompts import _holiday_hint
+            if _holiday_hint():
+                self.volume = min(self.volume + 20, 250)
+        except Exception:
+            pass
 
     def _start_cleanup_task(self):
         if not self._cleanup_task_started:
@@ -97,6 +115,8 @@ class TTSModule:
         # Start cleanup task on first use
         if not self._cleanup_task_started:
             self._start_cleanup_task()
+
+        self._adjust_settings()
             
         # Skip speaking if muted (e.g., in text/chat mode)
         if getattr(self, 'mute', False):
@@ -107,18 +127,12 @@ class TTSModule:
             return
             
         api_key = os.getenv("OPENAI_API_KEY")
-        
+
         # Try to load from environment manager if available
         if not api_key:
             try:
-                import sys
-                # Add parent directory to path (go up two levels from audio_modules)
-                current_dir = os.path.dirname(os.path.abspath(__file__))
-                parent_dir = os.path.dirname(os.path.dirname(current_dir))
-                sys.path.insert(0, parent_dir)
                 from environment_manager import EnvironmentManager
-                # Initialize with correct path to .env file
-                env_file_path = os.path.join(parent_dir, '.env')
+                env_file_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
                 env_manager = EnvironmentManager(env_file=env_file_path)
                 api_key = env_manager.get_api_key("openai")
                 logger.info(f"Loaded API key from environment manager: {bool(api_key)}")
@@ -151,6 +165,7 @@ class TTSModule:
 
         client = OpenAI(api_key=api_key)
         self._last_activity = time.time()
+        voice_prompt = get_tts_voice_prompt()
 
         def _stream_and_play() -> None:
             ensure_ffmpeg_installed()
@@ -159,7 +174,9 @@ class TTSModule:
                     model=self.model,
                     voice=self.voice,
                     input=text,
-                    response_format="opus",                ) as response:
+                    response_format="opus",
+                    voice_prompt=voice_prompt,
+                ) as response:
                     self.cancel()
                     self.current_process = subprocess.Popen(
                         ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", "-volume", str(self.volume), "-i", "-"] ,
