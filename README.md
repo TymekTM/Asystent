@@ -15,6 +15,12 @@ cd server && python server_main.py
 cd web_ui && python app.py
 ```
 
+To check which TTS/ASR modules are active you can run:
+
+```bash
+python mode_test.py --mode poor_man  # or --mode paid
+```
+
 ## 📁 Project Structure
 
 ```
@@ -138,6 +144,7 @@ python demo_enhanced_tts.py        # TTS providers demo
 - `audio_modules/enhanced_whisper_asr.py` - Dynamic ASR  
 - `auth_system.py` - Authentication and roles
 - `mode_integrator.py` - System integration layer
+- `mode_test.py` - Simple CLI for checking free vs. paid mode
 
 ### Architecture
 - **Client-Server Architecture**: Scalable AI processing
