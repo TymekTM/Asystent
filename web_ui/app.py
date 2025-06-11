@@ -128,8 +128,8 @@ from core.config import (
 setup_i18n(app)
 
 # Setup database components
-from database_manager import get_db_connection
-from database_models import init_schema
+from server.database_manager import get_database_manager
+from server.database_models import init_schema
 init_schema()
 
 # Setup module-level configuration API endpoint for backwards compatibility

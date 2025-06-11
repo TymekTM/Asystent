@@ -5,7 +5,7 @@ import urllib.parse
 import re
 from datetime import datetime
 
-from modules.api_module import get_api_module
+from .api_module import get_api_module
 
 logger = logging.getLogger(__name__)
 

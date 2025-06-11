@@ -15,8 +15,8 @@ from flask import request, jsonify, session, Response, stream_with_context, send
 from core.auth import login_required
 from core.config import logger, load_main_config
 from utils.audio_utils import convert_audio, transcribe_audio, cleanup_files, get_assistant_instance
-from database_manager import get_db_connection
-from database_models import get_user_by_username, init_schema
+from server.database_manager import get_database_manager
+from server.database_models import get_user_by_username, init_schema
 from utils.usage_tracker import record_usage
 
 def setup_additional_api_routes(app):
@@ -33,7 +33,7 @@ def setup_additional_api_routes(app):
             return jsonify({'history': []})
         user_id = user.id
         
-        with get_db_connection() as conn:
+        with get_database_manager().get_db_connection() as conn:
             rows = conn.execute(
                 "SELECT ch.content, ch.timestamp, ch.user_id, u.username"
                 " FROM chat_history ch"
@@ -53,7 +53,7 @@ def setup_additional_api_routes(app):
     @app.route('/api/chat/send', methods=['POST'])
     @login_required(role="user")
     def chat_send_api():
-        from ai_module import chat_with_providers
+        from server.ai_module import chat_with_providers
         from config import MAIN_MODEL
         from prompts import SYSTEM_PROMPT
         
@@ -69,14 +69,14 @@ def setup_additional_api_routes(app):
         user_id = user['id']
         
         # Save user message to chat_history
-        with get_db_connection() as conn:
+        with get_database_manager().get_db_connection() as conn:
             conn.execute(
                 "INSERT INTO chat_history (role, content, user_id, timestamp) VALUES (?, ?, ?, ?) ",
                 ('user', message, user_id, datetime.utcnow())
             )
         
         # Get chat history
-        with get_db_connection() as conn:
+        with get_database_manager().get_db_connection() as conn:
             rows = conn.execute(
                 "SELECT ch.content, ch.timestamp, ch.user_id, u.username"
                 " FROM chat_history ch"
@@ -175,7 +175,7 @@ def setup_additional_api_routes(app):
             reply = "(Brak odpowiedzi AI)"
         
         # Save AI response to chat_history
-        with get_db_connection() as conn:
+        with get_database_manager().get_db_connection() as conn:
             conn.execute(
                 "INSERT INTO chat_history (role, content, user_id, timestamp) VALUES (?, ?, ?, ?)",
                 ('assistant', reply, None, datetime.utcnow())
@@ -199,7 +199,7 @@ def setup_additional_api_routes(app):
             return jsonify({'success': False})
         user_id = user.id
         
-        with get_db_connection() as conn:
+        with get_database_manager().get_db_connection() as conn:
             conn.execute(
                 "DELETE FROM chat_history WHERE user_id = ?",
                 (user_id,)
@@ -829,7 +829,7 @@ def setup_additional_api_routes(app):
             try:
                 if dry_run:
                     # Just test AI response without executing plugins
-                    from ai_module import chat_with_providers
+                    from server.ai_module import chat_with_providers
                     from prompt_builder import build_prompt_context
                     
                     # Build the complete prompt with context
@@ -975,7 +975,7 @@ def setup_additional_api_routes(app):
             }
 
             try:
-                from ai_module import chat_with_providers # Assuming this handles provider/model selection
+                from server.ai_module import chat_with_providers # Assuming this handles provider/model selection
                 from core.config import load_main_config, save_main_config
 
                 original_provider_config = None

@@ -3,7 +3,7 @@ import logging
 from typing import Dict, Any, Optional, List
 from datetime import datetime, timedelta
 
-from modules.api_module import get_api_module
+from .api_module import get_api_module
 from database_manager import get_database_manager
 
 logger = logging.getLogger(__name__)

@@ -227,7 +227,7 @@ class PluginMonitor:
             logger.info(f"{'Loading new' if is_new else 'Reloading'} plugin: {plugin_name}")
             
             # Jeśli to istniejący plugin, najpierw go odładuj
-            if not is_new and plugin_name in plugin_manager.loaded_plugins:
+            if not is_new and plugin_manager.is_plugin_loaded(plugin_name):
                 await self._unload_plugin(plugin_name)
             
             # Załaduj/przeładuj plugin
@@ -267,8 +267,8 @@ class PluginMonitor:
         """Załaduj plugin."""
         try:
             # Użyj plugin_manager do załadowania
-            result = plugin_manager.load_plugin(plugin_name)
-            return result is not None
+            result = await plugin_manager.load_plugin(plugin_name)
+            return result
         except Exception as e:
             logger.error(f"Error loading plugin {plugin_name}: {e}")
             return False
@@ -276,25 +276,15 @@ class PluginMonitor:
     async def _unload_plugin(self, plugin_name: str) -> bool:
         """Odładuj plugin."""
         try:
-            # Usuń z function_registry
-            keys_to_remove = [
-                key for key in plugin_manager.function_registry.keys()
-                if key.startswith(f"{plugin_name}.")
-            ]
-            
-            for key in keys_to_remove:
-                del plugin_manager.function_registry[key]
-            
-            # Usuń z loaded_plugins
-            if plugin_name in plugin_manager.loaded_plugins:
-                del plugin_manager.loaded_plugins[plugin_name]
-            
+            # Skorzystaj z plugin_manager do odładowania
+            await plugin_manager.unload_plugin(plugin_name)
+
             # Usuń z sys.modules jeśli jest
             import sys
             module_key = f"modules.{plugin_name}"
             if module_key in sys.modules:
                 del sys.modules[module_key]
-            
+
             logger.info(f"Unloaded plugin: {plugin_name}")
             return True
             
@@ -311,7 +301,7 @@ class PluginMonitor:
                     
                     # Sprawdź czy plugin jest już załadowany
                     plugin_name = file_path.stem
-                    if plugin_name in plugin_manager.loaded_plugins:
+                    if plugin_manager.is_plugin_loaded(plugin_name):
                         self.stats['active_plugins'].add(plugin_name)
             
             logger.info(f"Initial scan complete. Monitoring {len(self.stats['monitored_files'])} files, "
