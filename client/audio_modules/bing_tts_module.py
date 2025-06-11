@@ -99,7 +99,7 @@ class TTSModule:
                 try:
                     os.remove(temp_path)
                 except PermissionError:
-                    logger.warning(f"Nie można usunąć pliku {temp_path}, jest używany przez inny proces.")
+                    logger.warning(f"Cannot delete file {temp_path}, it is being used by another process.")
                 except Exception as e:
                     logger.error(f"Błąd przy usuwaniu pliku {temp_path}: {e}")
             self.current_process = None
