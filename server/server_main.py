@@ -365,8 +365,8 @@ class ServerApp:
             context = request_data.get('context', {})
 
             user_level = self.db_manager.get_user_level(int(user_id))
-            monthly = self.db_manager.count_api_calls(int(user_id), days=30)
-            daily = self.db_manager.count_api_calls(int(user_id), days=1)
+            monthly = await asyncio.to_thread(self.db_manager.count_api_calls, int(user_id), days=30)
+            daily = await asyncio.to_thread(self.db_manager.count_api_calls, int(user_id), days=1)
             limits = {
                 'free': {'monthly': 1000, 'daily': 100},
                 'plus': {'monthly': 10000, 'daily': None},
