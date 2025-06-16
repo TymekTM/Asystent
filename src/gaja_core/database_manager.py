@@ -1,23 +1,27 @@
-import sqlite3
 import json
 import logging
-from datetime import datetime, timedelta
-from pathlib import Path
-from typing import Dict, List, Optional, Any, Tuple
+import sqlite3
 import threading
 from contextlib import contextmanager
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any, Optional
 
-from database_models import (
-    User, UserSession, Message, MemoryContext, 
-    APIUsage, SystemLog, UserPreference
+from .database_models import (
+    APIUsage,
+    MemoryContext,
+    Message,
+    User,
+    UserSession,
 )
 
 logger = logging.getLogger(__name__)
 
+
 class DatabaseManager:
     def __init__(self, db_path: str = "server_data.db"):
         """Inicjalizuje menedżer bazy danych.
-        
+
         Args:
             db_path: Ścieżka do pliku bazy danych
         """
@@ -25,18 +29,16 @@ class DatabaseManager:
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._lock = threading.Lock()
         self._local = threading.local()
-        
+
         # Inicjalizuj bazę danych
         self._init_database()
         logger.info(f"DatabaseManager initialized with database: {self.db_path}")
 
     def _get_connection(self) -> sqlite3.Connection:
         """Pobiera połączenie do bazy danych dla bieżącego wątku."""
-        if not hasattr(self._local, 'connection'):
+        if not hasattr(self._local, "connection"):
             self._local.connection = sqlite3.connect(
-                str(self.db_path),
-                check_same_thread=False,
-                timeout=30.0
+                str(self.db_path), check_same_thread=False, timeout=30.0
             )
             self._local.connection.row_factory = sqlite3.Row
             # Włącz foreign keys - WAŻNE: to musi być zawsze włączone
@@ -63,7 +65,8 @@ class DatabaseManager:
         """Inicjalizuje strukturę bazy danych."""
         with self.get_db_connection() as conn:
             # Tabela użytkowników
-            conn.execute('''
+            conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     username TEXT UNIQUE NOT NULL,
@@ -75,10 +78,12 @@ class DatabaseManager:
                     settings TEXT DEFAULT '{}',
                     api_keys TEXT DEFAULT '{}'
                 )
-            ''')
+            """
+            )
 
             # Tabela sesji użytkowników
-            conn.execute('''
+            conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS user_sessions (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER NOT NULL,
@@ -89,10 +94,12 @@ class DatabaseManager:
                     client_info TEXT DEFAULT '{}',
                     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
                 )
-            ''')
+            """
+            )
 
             # Tabela wiadomości/konwersacji
-            conn.execute('''
+            conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS messages (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER NOT NULL,
@@ -106,10 +113,12 @@ class DatabaseManager:
                     FOREIGN KEY (session_id) REFERENCES user_sessions (id) ON DELETE SET NULL,
                     FOREIGN KEY (parent_message_id) REFERENCES messages (id) ON DELETE SET NULL
                 )
-            ''')
+            """
+            )
 
             # Tabela kontekstu pamięci
-            conn.execute('''
+            conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS memory_contexts (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER NOT NULL,
@@ -123,10 +132,12 @@ class DatabaseManager:
                     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
                     UNIQUE(user_id, context_type, key_name)
                 )
-            ''')
+            """
+            )
 
             # Tabela wykorzystania API
-            conn.execute('''
+            conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS api_usage (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER NOT NULL,
@@ -142,10 +153,12 @@ class DatabaseManager:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
                 )
-            ''')
+            """
+            )
 
             # Tabela logów systemowych
-            conn.execute('''
+            conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS system_logs (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     level TEXT NOT NULL,
@@ -158,10 +171,12 @@ class DatabaseManager:
                     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL,
                     FOREIGN KEY (session_id) REFERENCES user_sessions (id) ON DELETE SET NULL
                 )
-            ''')
+            """
+            )
 
             # Tabela preferencji użytkowników
-            conn.execute('''
+            conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS user_preferences (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER NOT NULL,
@@ -174,36 +189,66 @@ class DatabaseManager:
                     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
                     UNIQUE(user_id, category, key_name)
                 )
-            ''')
+            """
+            )
 
             # Indeksy dla wydajności
-            conn.execute('CREATE INDEX IF NOT EXISTS idx_messages_user_id ON messages (user_id)')
-            conn.execute('CREATE INDEX IF NOT EXISTS idx_messages_session_id ON messages (session_id)')
-            conn.execute('CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages (created_at)')
-            conn.execute('CREATE INDEX IF NOT EXISTS idx_memory_contexts_user_id ON memory_contexts (user_id)')
-            conn.execute('CREATE INDEX IF NOT EXISTS idx_memory_contexts_type ON memory_contexts (context_type)')
-            conn.execute('CREATE INDEX IF NOT EXISTS idx_api_usage_user_id ON api_usage (user_id)')
-            conn.execute('CREATE INDEX IF NOT EXISTS idx_api_usage_created_at ON api_usage (created_at)')
-            conn.execute('CREATE INDEX IF NOT EXISTS idx_user_sessions_token ON user_sessions (session_token)')
-            conn.execute('CREATE INDEX IF NOT EXISTS idx_system_logs_created_at ON system_logs (created_at)')
-            conn.execute('CREATE INDEX IF NOT EXISTS idx_user_preferences_user_id ON user_preferences (user_id)')
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_messages_user_id ON messages (user_id)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_messages_session_id ON messages (session_id)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages (created_at)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_memory_contexts_user_id ON memory_contexts (user_id)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_memory_contexts_type ON memory_contexts (context_type)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_api_usage_user_id ON api_usage (user_id)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_api_usage_created_at ON api_usage (created_at)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_user_sessions_token ON user_sessions (session_token)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_system_logs_created_at ON system_logs (created_at)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_user_preferences_user_id ON user_preferences (user_id)"
+            )
 
     # === ZARZĄDZANIE UŻYTKOWNIKAMI ===
-    
-    def create_user(self, username: str, email: str = None, password_hash: str = None, 
-                   settings: Dict = None, api_keys: Dict = None) -> int:
+
+    def create_user(
+        self,
+        username: str,
+        email: str = None,
+        password_hash: str = None,
+        settings: dict = None,
+        api_keys: dict = None,
+    ) -> int:
         """Tworzy nowego użytkownika."""
         with self.get_db_connection() as conn:
-            cursor = conn.execute('''
+            cursor = conn.execute(
+                """
                 INSERT INTO users (username, email, password_hash, settings, api_keys)
                 VALUES (?, ?, ?, ?, ?)
-            ''', (
-                username, 
-                email, 
-                password_hash,
-                json.dumps(settings or {}),
-                json.dumps(api_keys or {})
-            ))
+            """,
+                (
+                    username,
+                    email,
+                    password_hash,
+                    json.dumps(settings or {}),
+                    json.dumps(api_keys or {}),
+                ),
+            )
             user_id = cursor.lastrowid
             logger.info(f"Created user: {username} (ID: {user_id})")
             return user_id
@@ -212,63 +257,86 @@ class DatabaseManager:
         """Pobiera użytkownika po ID lub nazwie."""
         with self.get_db_connection() as conn:
             if user_id:
-                cursor = conn.execute('SELECT * FROM users WHERE id = ?', (user_id,))
+                cursor = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,))
             elif username:
-                cursor = conn.execute('SELECT * FROM users WHERE username = ?', (username,))
+                cursor = conn.execute(
+                    "SELECT * FROM users WHERE username = ?", (username,)
+                )
             else:
                 return None
-            
+
             row = cursor.fetchone()
             if row:
                 return User.from_db_row(row)
             return None
 
-    def update_user_settings(self, user_id: int, settings: Dict):
+    def update_user_settings(self, user_id: int, settings: dict):
         """Aktualizuje ustawienia użytkownika."""
         with self.get_db_connection() as conn:
-            conn.execute('''
+            conn.execute(
+                """
                 UPDATE users SET settings = ?, last_login = CURRENT_TIMESTAMP
                 WHERE id = ?
-            ''', (json.dumps(settings), user_id))
+            """,
+                (json.dumps(settings), user_id),
+            )
 
-    def update_user_api_keys(self, user_id: int, api_keys: Dict):
+    def update_user_api_keys(self, user_id: int, api_keys: dict):
         """Aktualizuje klucze API użytkownika."""
         with self.get_db_connection() as conn:
-            conn.execute('''
+            conn.execute(
+                """
                 UPDATE users SET api_keys = ? WHERE id = ?
-            ''', (json.dumps(api_keys), user_id))
+            """,
+                (json.dumps(api_keys), user_id),
+            )
 
     def get_user_level(self, user_id: int) -> str:
         """Return user subscription level (free/plus/pro)."""
         user = self.get_user(user_id=user_id)
         if user and isinstance(user.settings, dict):
-            return user.settings.get('level', 'free')
-        return 'free'
+            return user.settings.get("level", "free")
+        return "free"
 
     def set_user_level(self, user_id: int, level: str) -> None:
-        settings = self.get_user(user_id=user_id).settings if self.get_user(user_id=user_id) else {}
-        settings['level'] = level
+        settings = (
+            self.get_user(user_id=user_id).settings
+            if self.get_user(user_id=user_id)
+            else {}
+        )
+        settings["level"] = level
         self.update_user_settings(user_id, settings)
 
     # === ZARZĄDZANIE SESJAMI ===
-    
-    def create_session(self, user_id: int, session_token: str, expires_at: datetime,
-                      client_info: Dict = None) -> int:
+
+    def create_session(
+        self,
+        user_id: int,
+        session_token: str,
+        expires_at: datetime,
+        client_info: dict = None,
+    ) -> int:
         """Tworzy nową sesję użytkownika."""
         with self.get_db_connection() as conn:
-            cursor = conn.execute('''
+            cursor = conn.execute(
+                """
                 INSERT INTO user_sessions (user_id, session_token, expires_at, client_info)
                 VALUES (?, ?, ?, ?)
-            ''', (user_id, session_token, expires_at, json.dumps(client_info or {})))
+            """,
+                (user_id, session_token, expires_at, json.dumps(client_info or {})),
+            )
             return cursor.lastrowid
 
     def get_session(self, session_token: str) -> Optional[UserSession]:
         """Pobiera sesję po tokenie."""
         with self.get_db_connection() as conn:
-            cursor = conn.execute('''
-                SELECT * FROM user_sessions 
+            cursor = conn.execute(
+                """
+                SELECT * FROM user_sessions
                 WHERE session_token = ? AND is_active = TRUE AND expires_at > CURRENT_TIMESTAMP
-            ''', (session_token,))
+            """,
+                (session_token,),
+            )
             row = cursor.fetchone()
             if row:
                 return UserSession.from_db_row(row)
@@ -277,157 +345,252 @@ class DatabaseManager:
     def invalidate_session(self, session_token: str):
         """Dezaktywuje sesję."""
         with self.get_db_connection() as conn:
-            conn.execute('''
+            conn.execute(
+                """
                 UPDATE user_sessions SET is_active = FALSE WHERE session_token = ?
-            ''', (session_token,))
+            """,
+                (session_token,),
+            )
 
     # === ZARZĄDZANIE WIADOMOŚCIAMI ===
-    
-    def save_message(self, user_id: int, role: str, content: str, 
-                    session_id: int = None, metadata: Dict = None,
-                    parent_message_id: int = None) -> int:
+
+    def save_message(
+        self,
+        user_id: int,
+        role: str,
+        content: str,
+        session_id: int = None,
+        metadata: dict = None,
+        parent_message_id: int = None,
+    ) -> int:
         """Zapisuje wiadomość do bazy danych."""
         with self.get_db_connection() as conn:
-            cursor = conn.execute('''
+            cursor = conn.execute(
+                """
                 INSERT INTO messages (user_id, session_id, role, content, metadata, parent_message_id)
                 VALUES (?, ?, ?, ?, ?, ?)
-            ''', (user_id, session_id, role, content, json.dumps(metadata or {}), parent_message_id))
+            """,
+                (
+                    user_id,
+                    session_id,
+                    role,
+                    content,
+                    json.dumps(metadata or {}),
+                    parent_message_id,
+                ),
+            )
             return cursor.lastrowid
 
-    def get_user_messages(self, user_id: int, limit: int = 100, 
-                         session_id: int = None) -> List[Message]:
+    def get_user_messages(
+        self, user_id: int, limit: int = 100, session_id: int = None
+    ) -> list[Message]:
         """Pobiera wiadomości użytkownika."""
         with self.get_db_connection() as conn:
             if session_id:
-                cursor = conn.execute('''
-                    SELECT * FROM messages 
+                cursor = conn.execute(
+                    """
+                    SELECT * FROM messages
                     WHERE user_id = ? AND session_id = ?
                     ORDER BY created_at DESC LIMIT ?
-                ''', (user_id, session_id, limit))
+                """,
+                    (user_id, session_id, limit),
+                )
             else:
-                cursor = conn.execute('''
-                    SELECT * FROM messages 
+                cursor = conn.execute(
+                    """
+                    SELECT * FROM messages
                     WHERE user_id = ?
                     ORDER BY created_at DESC LIMIT ?
-                ''', (user_id, limit))
-            
+                """,
+                    (user_id, limit),
+                )
+
             return [Message.from_db_row(row) for row in cursor.fetchall()]
 
-    def get_conversation_context(self, user_id: int, session_id: int = None, 
-                               limit: int = 10) -> List[Message]:
+    def get_conversation_context(
+        self, user_id: int, session_id: int = None, limit: int = 10
+    ) -> list[Message]:
         """Pobiera kontekst konwersacji dla AI."""
         messages = self.get_user_messages(user_id, limit, session_id)
         return list(reversed(messages))  # Odwróć aby mieć chronologiczny porządek
 
     # === ZARZĄDZANIE PAMIĘCIĄ ===
-    
-    def save_memory_context(self, user_id: int, context_type: str, key_name: str,
-                           value: str, metadata: Dict = None, expires_at: datetime = None):
+
+    def save_memory_context(
+        self,
+        user_id: int,
+        context_type: str,
+        key_name: str,
+        value: str,
+        metadata: dict = None,
+        expires_at: datetime = None,
+    ):
         """Zapisuje kontekst pamięci."""
         with self.get_db_connection() as conn:
-            conn.execute('''
-                INSERT OR REPLACE INTO memory_contexts 
+            conn.execute(
+                """
+                INSERT OR REPLACE INTO memory_contexts
                 (user_id, context_type, key_name, value, metadata, expires_at, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-            ''', (user_id, context_type, key_name, value, json.dumps(metadata or {}), expires_at))
+            """,
+                (
+                    user_id,
+                    context_type,
+                    key_name,
+                    value,
+                    json.dumps(metadata or {}),
+                    expires_at,
+                ),
+            )
 
-    def get_memory_context(self, user_id: int, context_type: str, 
-                          key_name: str = None) -> List[MemoryContext]:
+    def get_memory_context(
+        self, user_id: int, context_type: str, key_name: str = None
+    ) -> list[MemoryContext]:
         """Pobiera kontekst pamięci."""
         with self.get_db_connection() as conn:
             if key_name:
-                cursor = conn.execute('''
-                    SELECT * FROM memory_contexts 
+                cursor = conn.execute(
+                    """
+                    SELECT * FROM memory_contexts
                     WHERE user_id = ? AND context_type = ? AND key_name = ?
                     AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)
-                ''', (user_id, context_type, key_name))
+                """,
+                    (user_id, context_type, key_name),
+                )
             else:
-                cursor = conn.execute('''
-                    SELECT * FROM memory_contexts 
+                cursor = conn.execute(
+                    """
+                    SELECT * FROM memory_contexts
                     WHERE user_id = ? AND context_type = ?
                     AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)
                     ORDER BY updated_at DESC
-                ''', (user_id, context_type))
-            
+                """,
+                    (user_id, context_type),
+                )
+
             return [MemoryContext.from_db_row(row) for row in cursor.fetchall()]
 
     def cleanup_expired_memory(self):
         """Usuwa wygasłe wpisy pamięci."""
         with self.get_db_connection() as conn:
-            cursor = conn.execute('''
-                DELETE FROM memory_contexts 
+            cursor = conn.execute(
+                """
+                DELETE FROM memory_contexts
                 WHERE expires_at IS NOT NULL AND expires_at <= CURRENT_TIMESTAMP
-            ''')
+            """
+            )
             if cursor.rowcount > 0:
                 logger.info(f"Cleaned up {cursor.rowcount} expired memory entries")
 
     # === ZARZĄDZANIE PREFERENCJAMI ===
-    
-    def set_user_preference(self, user_id: int, category: str, key_name: str,
-                           value: Any, value_type: str = 'string'):
+
+    def set_user_preference(
+        self,
+        user_id: int,
+        category: str,
+        key_name: str,
+        value: Any,
+        value_type: str = "string",
+    ):
         """Ustawia preferencję użytkownika."""
         with self.get_db_connection() as conn:
-            conn.execute('''
-                INSERT OR REPLACE INTO user_preferences 
+            conn.execute(
+                """
+                INSERT OR REPLACE INTO user_preferences
                 (user_id, category, key_name, value, value_type, updated_at)
                 VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-            ''', (user_id, category, key_name, str(value), value_type))
+            """,
+                (user_id, category, key_name, str(value), value_type),
+            )
 
-    def get_user_preferences(self, user_id: int, category: str = None) -> Dict[str, Any]:
+    def get_user_preferences(
+        self, user_id: int, category: str = None
+    ) -> dict[str, Any]:
         """Pobiera preferencje użytkownika."""
         with self.get_db_connection() as conn:
             if category:
-                cursor = conn.execute('''
-                    SELECT key_name, value, value_type FROM user_preferences 
+                cursor = conn.execute(
+                    """
+                    SELECT key_name, value, value_type FROM user_preferences
                     WHERE user_id = ? AND category = ?
-                ''', (user_id, category))
+                """,
+                    (user_id, category),
+                )
             else:
-                cursor = conn.execute('''
-                    SELECT key_name, value, value_type FROM user_preferences 
+                cursor = conn.execute(
+                    """
+                    SELECT key_name, value, value_type FROM user_preferences
                     WHERE user_id = ?
-                ''', (user_id,))
-            
+                """,
+                    (user_id,),
+                )
+
             preferences = {}
             for row in cursor.fetchall():
                 key_name, value, value_type = row
                 # Konwertuj wartość na odpowiedni typ
-                if value_type == 'int':
+                if value_type == "int":
                     preferences[key_name] = int(value)
-                elif value_type == 'float':
+                elif value_type == "float":
                     preferences[key_name] = float(value)
-                elif value_type == 'bool':
-                    preferences[key_name] = value.lower() in ('true', '1', 'yes')
-                elif value_type == 'json':
+                elif value_type == "bool":
+                    preferences[key_name] = value.lower() in ("true", "1", "yes")
+                elif value_type == "json":
                     preferences[key_name] = json.loads(value)
                 else:
                     preferences[key_name] = value
-            
+
             return preferences
 
     # === STATYSTYKI I LOGI ===
-    
-    def log_api_usage(self, user_id: int, api_provider: str, endpoint: str, 
-                     method: str, tokens_used: int = 0, cost: float = 0.0,
-                     success: bool = True, response_time: float = None,
-                     error_message: str = None, metadata: Dict = None):
+
+    def log_api_usage(
+        self,
+        user_id: int,
+        api_provider: str,
+        endpoint: str,
+        method: str,
+        tokens_used: int = 0,
+        cost: float = 0.0,
+        success: bool = True,
+        response_time: float = None,
+        error_message: str = None,
+        metadata: dict = None,
+    ):
         """Loguje wykorzystanie API."""
         with self.get_db_connection() as conn:
-            conn.execute('''
-                INSERT INTO api_usage 
-                (user_id, api_provider, endpoint, method, tokens_used, cost, 
+            conn.execute(
+                """
+                INSERT INTO api_usage
+                (user_id, api_provider, endpoint, method, tokens_used, cost,
                  success, response_time, error_message, metadata)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (user_id, api_provider, endpoint, method, tokens_used, cost,
-                  success, response_time, error_message, json.dumps(metadata or {})))
+            """,
+                (
+                    user_id,
+                    api_provider,
+                    endpoint,
+                    method,
+                    tokens_used,
+                    cost,
+                    success,
+                    response_time,
+                    error_message,
+                    json.dumps(metadata or {}),
+                ),
+            )
 
-    def get_user_api_usage(self, user_id: int, days: int = 30) -> List[APIUsage]:
+    def get_user_api_usage(self, user_id: int, days: int = 30) -> list[APIUsage]:
         """Pobiera statystyki użycia API dla użytkownika."""
         with self.get_db_connection() as conn:
-            cursor = conn.execute('''
+            cursor = conn.execute(
+                f"""
                 SELECT * FROM api_usage
-                WHERE user_id = ? AND created_at >= date('now', '-{} days')
+                WHERE user_id = ? AND created_at >= date('now', '-{days} days')
                 ORDER BY created_at DESC
-            '''.format(days), (user_id,))
+            """,
+                (user_id,),
+            )
 
             return [APIUsage.from_db_row(row) for row in cursor.fetchall()]
 
@@ -442,120 +605,162 @@ class DatabaseManager:
             row = cursor.fetchone()
             return row[0] if row else 0
 
-    def log_system_event(self, level: str, module: str, message: str,
-                        user_id: int = None, session_id: int = None,
-                        metadata: Dict = None):
+    def log_system_event(
+        self,
+        level: str,
+        module: str,
+        message: str,
+        user_id: int = None,
+        session_id: int = None,
+        metadata: dict = None,
+    ):
         """Loguje zdarzenie systemowe."""
         with self.get_db_connection() as conn:
-            conn.execute('''
+            conn.execute(
+                """
                 INSERT INTO system_logs (level, module, message, user_id, session_id, metadata)
                 VALUES (?, ?, ?, ?, ?, ?)
-            ''', (level, module, message, user_id, session_id, json.dumps(metadata or {})))
+            """,
+                (
+                    level,
+                    module,
+                    message,
+                    user_id,
+                    session_id,
+                    json.dumps(metadata or {}),
+                ),
+            )
 
     # === CZYSZCZENIE I KONSERWACJA ===
-    
+
     def cleanup_old_data(self, days: int = 90):
         """Czyści stare dane z bazy."""
         with self.get_db_connection() as conn:
             # Usuń stare logi systemowe
-            cursor = conn.execute('''
-                DELETE FROM system_logs 
-                WHERE created_at <= date('now', '-{} days')
-            '''.format(days))
+            cursor = conn.execute(
+                f"""
+                DELETE FROM system_logs
+                WHERE created_at <= date('now', '-{days} days')
+            """
+            )
             logs_deleted = cursor.rowcount
-            
-            # Usuń stare sesje
-            cursor = conn.execute('''
-                DELETE FROM user_sessions 
-                WHERE created_at <= date('now', '-{} days') AND is_active = FALSE
-            '''.format(days))
-            sessions_deleted = cursor.rowcount
-            
-            # Usuń stare statystyki API
-            cursor = conn.execute('''
-                DELETE FROM api_usage 
-                WHERE created_at <= date('now', '-{} days')
-            '''.format(days))
-            api_deleted = cursor.rowcount
-            
-            logger.info(f"Cleanup completed: {logs_deleted} logs, {sessions_deleted} sessions, {api_deleted} API records deleted")
 
-    def get_database_stats(self) -> Dict[str, int]:
+            # Usuń stare sesje
+            cursor = conn.execute(
+                f"""
+                DELETE FROM user_sessions
+                WHERE created_at <= date('now', '-{days} days') AND is_active = FALSE
+            """
+            )
+            sessions_deleted = cursor.rowcount
+
+            # Usuń stare statystyki API
+            cursor = conn.execute(
+                f"""
+                DELETE FROM api_usage
+                WHERE created_at <= date('now', '-{days} days')
+            """
+            )
+            api_deleted = cursor.rowcount
+
+            logger.info(
+                f"Cleanup completed: {logs_deleted} logs, {sessions_deleted} sessions, {api_deleted} API records deleted"
+            )
+
+    def get_database_stats(self) -> dict[str, int]:
         """Pobiera statystyki bazy danych."""
         with self.get_db_connection() as conn:
             stats = {}
-            
-            tables = ['users', 'user_sessions', 'messages', 'memory_contexts', 
-                     'api_usage', 'system_logs', 'user_preferences']
-            
+
+            tables = [
+                "users",
+                "user_sessions",
+                "messages",
+                "memory_contexts",
+                "api_usage",
+                "system_logs",
+                "user_preferences",
+            ]
+
             for table in tables:
-                cursor = conn.execute(f'SELECT COUNT(*) FROM {table}')
+                cursor = conn.execute(f"SELECT COUNT(*) FROM {table}")
                 stats[table] = cursor.fetchone()[0]
-            
+
             return stats
 
     def close(self):
         """Zamyka połączenia z bazą danych."""
-        if hasattr(self._local, 'connection'):
+        if hasattr(self._local, "connection"):
             self._local.connection.close()
-            delattr(self._local, 'connection')
+            delattr(self._local, "connection")
 
     # === NOWE METODY DLA SERWERA ===
-    
+
     async def initialize(self):
         """Asynchroniczna inicjalizacja dla FastAPI."""
         # W tym przypadku synchroniczna inicjalizacja jest wystarczająca
         pass
-    
-    async def get_all_users(self) -> List[Dict]:
+
+    async def get_all_users(self) -> list[dict]:
         """Pobiera wszystkich użytkowników z ich ustawieniami pluginów."""
         with self.get_db_connection() as conn:
-            cursor = conn.execute('''
+            cursor = conn.execute(
+                """
                 SELECT u.id, u.username, u.settings, p.value as enabled_plugins
                 FROM users u
-                LEFT JOIN user_preferences p ON u.id = p.user_id 
+                LEFT JOIN user_preferences p ON u.id = p.user_id
                     AND p.category = 'plugins' AND p.key_name = 'enabled'
                 WHERE u.is_active = TRUE
-            ''')
-            
+            """
+            )
+
             users = []
             for row in cursor.fetchall():
                 enabled_plugins = []
-                if row['enabled_plugins']:
+                if row["enabled_plugins"]:
                     try:
-                        enabled_plugins = json.loads(row['enabled_plugins'])
+                        enabled_plugins = json.loads(row["enabled_plugins"])
                     except json.JSONDecodeError:
                         enabled_plugins = []
-                
-                users.append({                    'id': str(row['id']),
-                    'username': row['username'],
-                    'settings': json.loads(row['settings'] or '{}'),
-                    'enabled_plugins': enabled_plugins
-                })
-            
+
+                users.append(
+                    {
+                        "id": str(row["id"]),
+                        "username": row["username"],
+                        "settings": json.loads(row["settings"] or "{}"),
+                        "enabled_plugins": enabled_plugins,
+                    }
+                )
+
             return users
-    
-    async def get_user_history(self, user_id: str, limit: int = 50) -> List[Dict]:
+
+    async def get_user_history(self, user_id: str, limit: int = 50) -> list[dict]:
         """Pobiera historię wiadomości użytkownika."""
         with self.get_db_connection() as conn:
-            cursor = conn.execute('''
+            cursor = conn.execute(
+                """
                 SELECT role, content, metadata, created_at
                 FROM messages
                 WHERE user_id = ?
                 ORDER BY created_at DESC
                 LIMIT ?
-            ''', (user_id, limit))
-            
+            """,
+                (user_id, limit),
+            )
+
             history = []
             for row in cursor.fetchall():
-                history.append({
-                    'role': row['role'],
-                    'content': row['content'],
-                    'metadata': json.loads(row['metadata'] or '{}'),
-                    'timestamp': row['created_at']                })
-            
+                history.append(
+                    {
+                        "role": row["role"],
+                        "content": row["content"],
+                        "metadata": json.loads(row["metadata"] or "{}"),
+                        "timestamp": row["created_at"],
+                    }
+                )
+
             return list(reversed(history))  # Odwróć żeby najstarsze były pierwsze
-    
+
     async def save_interaction(self, user_id: str, query: str, response: str):
         """Zapisuje interakcję użytkownika z AI."""
         # Convert string user_id to integer for database
@@ -568,170 +773,183 @@ class DatabaseManager:
         except ValueError:
             # If conversion fails, use 1 as default
             db_user_id = 1
-            
+
         with self.get_db_connection() as conn:
             # Zapisz zapytanie użytkownika
-            conn.execute('''
+            conn.execute(
+                """
                 INSERT INTO messages (user_id, role, content, metadata)
                 VALUES (?, 'user', ?, '{}')
-            ''', (db_user_id, query))
-            
+            """,
+                (db_user_id, query),
+            )
+
             # Zapisz odpowiedź asystenta
-            conn.execute('''
+            conn.execute(
+                """
                 INSERT INTO messages (user_id, role, content, metadata)
                 VALUES (?, 'assistant', ?, '{}')
-            ''', (db_user_id, response))
-    
+            """,
+                (db_user_id, response),
+            )
+
     async def update_user_plugins(self, user_id: str, plugin_name: str, enabled: bool):
         """Aktualizuje ustawienia pluginów użytkownika."""
         with self.get_db_connection() as conn:
             # Pobierz obecne ustawienia pluginów
-            cursor = conn.execute('''
+            cursor = conn.execute(
+                """
                 SELECT value FROM user_preferences
                 WHERE user_id = ? AND category = 'plugins' AND key_name = 'enabled'
-            ''', (int(user_id),))
-            
+            """,
+                (int(user_id),),
+            )
+
             row = cursor.fetchone()
             if row:
                 try:
-                    enabled_plugins = json.loads(row['value'])
+                    enabled_plugins = json.loads(row["value"])
                 except json.JSONDecodeError:
                     enabled_plugins = []
             else:
                 enabled_plugins = []
-            
+
             # Aktualizuj listę pluginów
             if enabled and plugin_name not in enabled_plugins:
                 enabled_plugins.append(plugin_name)
             elif not enabled and plugin_name in enabled_plugins:
                 enabled_plugins.remove(plugin_name)
-            
+
             # Zapisz zaktualizowane ustawienia
-            conn.execute('''                INSERT OR REPLACE INTO user_preferences
+            conn.execute(
+                """                INSERT OR REPLACE INTO user_preferences
                 (user_id, category, key_name, value, updated_at)
                 VALUES (?, 'plugins', 'enabled', ?, CURRENT_TIMESTAMP)
-            ''', (int(user_id), json.dumps(enabled_plugins)))
+            """,
+                (int(user_id), json.dumps(enabled_plugins)),
+            )
 
     def get_user_api_key(self, user_id: int, provider: str) -> Optional[str]:
         """
         Pobiera klucz API użytkownika dla danego providera.
-        
+
         Args:
             user_id: ID użytkownika
             provider: Nazwa providera (np. 'openweather', 'newsapi', 'google_search')
-            
+
         Returns:
-            Klucz API lub None jeśli nie istnieje        """
+            Klucz API lub None jeśli nie istnieje"""
         try:
             with self.get_db_connection() as conn:
                 cursor = conn.cursor()
-                cursor.execute(
-                    "SELECT api_keys FROM users WHERE id = ?",
-                    (user_id,)
-                )
-                
+                cursor.execute("SELECT api_keys FROM users WHERE id = ?", (user_id,))
+
                 row = cursor.fetchone()
-                if row and row['api_keys']:
-                    api_keys = json.loads(row['api_keys'])
+                if row and row["api_keys"]:
+                    api_keys = json.loads(row["api_keys"])
                     return api_keys.get(provider)
-                
+
                 return None
         except Exception as e:
-            logger.error(f"Error getting API key for user {user_id}, provider {provider}: {e}")
+            logger.error(
+                f"Error getting API key for user {user_id}, provider {provider}: {e}"
+            )
             return None
-    
+
     def set_user_api_key(self, user_id: int, provider: str, api_key: str) -> bool:
         """
         Ustawia klucz API użytkownika dla danego providera.
-        
+
         Args:
             user_id: ID użytkownika
             provider: Nazwa providera
             api_key: Klucz API
-            
+
         Returns:
             True jeśli zapisano pomyślnie
         """
         try:
             with self.get_db_connection() as conn:
                 cursor = conn.cursor()
-                
+
                 # Pobierz aktualne klucze API
-                cursor.execute(
-                    "SELECT api_keys FROM users WHERE id = ?",
-                    (user_id,)
-                )
-                
+                cursor.execute("SELECT api_keys FROM users WHERE id = ?", (user_id,))
+
                 row = cursor.fetchone()
                 if not row:
                     logger.error(f"User {user_id} not found")
                     return False
-                
+
                 # Parsuj aktualne klucze
-                api_keys = json.loads(row['api_keys']) if row['api_keys'] else {}
-                
+                api_keys = json.loads(row["api_keys"]) if row["api_keys"] else {}
+
                 # Dodaj/zaktualizuj klucz
                 api_keys[provider] = api_key
-                
+
                 # Zapisz z powrotem
                 cursor.execute(
                     "UPDATE users SET api_keys = ? WHERE id = ?",
-                    (json.dumps(api_keys), user_id)
-                )                
+                    (json.dumps(api_keys), user_id),
+                )
                 conn.commit()
                 logger.info(f"Set API key for user {user_id}, provider {provider}")
                 return True
         except Exception as e:
-            logger.error(f"Error setting API key for user {user_id}, provider {provider}: {e}")
+            logger.error(
+                f"Error setting API key for user {user_id}, provider {provider}: {e}"
+            )
             return False
-    
+
     def remove_user_api_key(self, user_id: int, provider: str) -> bool:
         """
         Usuwa klucz API użytkownika dla danego providera.
-        
+
         Args:
             user_id: ID użytkownika
             provider: Nazwa providera
-            
+
         Returns:
             True jeśli usunięto pomyślnie
         """
         try:
             with self.get_db_connection() as conn:
                 cursor = conn.cursor()
-                
+
                 # Pobierz aktualne klucze API
-                cursor.execute(
-                    "SELECT api_keys FROM users WHERE id = ?",
-                    (user_id,)
-                )
-                
+                cursor.execute("SELECT api_keys FROM users WHERE id = ?", (user_id,))
+
                 row = cursor.fetchone()
                 if not row:
                     return False
-                
+
                 # Parsuj aktualne klucze
-                api_keys = json.loads(row['api_keys']) if row['api_keys'] else {}
-                
+                api_keys = json.loads(row["api_keys"]) if row["api_keys"] else {}
+
                 # Usuń klucz jeśli istnieje
                 if provider in api_keys:
                     del api_keys[provider]
-                    
+
                     # Zapisz z powrotem
                     cursor.execute(
                         "UPDATE users SET api_keys = ? WHERE id = ?",
-                        (json.dumps(api_keys), user_id)
+                        (json.dumps(api_keys), user_id),
                     )
                     conn.commit()
-                    logger.info(f"Removed API key for user {user_id}, provider {provider}")
+                    logger.info(
+                        f"Removed API key for user {user_id}, provider {provider}"
+                    )
                     return True
-                
+
                 return True  # Klucz nie istniał, ale można uznać to za sukces
         except Exception as e:
-            logger.error(f"Error removing API key for user {user_id}, provider {provider}: {e}")
+            logger.error(
+                f"Error removing API key for user {user_id}, provider {provider}: {e}"
+            )
             return False
-    
-    async def update_user_plugin_status(self, user_id: str, plugin_name: str, enabled: bool):
+
+    async def update_user_plugin_status(
+        self, user_id: str, plugin_name: str, enabled: bool
+    ):
         """Updates plugin status for a user in the database."""
         try:
             # Convert string user_id to integer for database
@@ -742,55 +960,71 @@ class DatabaseManager:
         except ValueError:
             # If conversion fails, use 1 as default
             db_user_id = 1
-            
+
         try:
             with self.get_db_connection() as conn:
                 # Check if user exists, create if not
-                cursor = conn.execute('SELECT id FROM users WHERE id = ?', (db_user_id,))
+                cursor = conn.execute(
+                    "SELECT id FROM users WHERE id = ?", (db_user_id,)
+                )
                 if not cursor.fetchone():
                     # Create user
-                    conn.execute('''
+                    conn.execute(
+                        """
                         INSERT INTO users (id, username, settings, api_keys)
                         VALUES (?, ?, '{}', '{}')
-                    ''', (db_user_id, f"user_{db_user_id}"))
-                
+                    """,
+                        (db_user_id, f"user_{db_user_id}"),
+                    )
+
                 # Get current enabled plugins
-                cursor = conn.execute('''
+                cursor = conn.execute(
+                    """
                     SELECT value FROM user_preferences
                     WHERE user_id = ? AND category = 'plugins' AND key_name = 'enabled'
-                ''', (db_user_id,))
-                
+                """,
+                    (db_user_id,),
+                )
+
                 row = cursor.fetchone()
                 if row:
                     try:
-                        enabled_plugins = json.loads(row['value'])
+                        enabled_plugins = json.loads(row["value"])
                     except json.JSONDecodeError:
                         enabled_plugins = []
                 else:
                     enabled_plugins = []
-                
+
                 # Update plugin list
                 if enabled and plugin_name not in enabled_plugins:
                     enabled_plugins.append(plugin_name)
                 elif not enabled and plugin_name in enabled_plugins:
                     enabled_plugins.remove(plugin_name)
-                
+
                 # Save updated settings
-                conn.execute('''
+                conn.execute(
+                    """
                     INSERT OR REPLACE INTO user_preferences
                     (user_id, category, key_name, value, updated_at)
                     VALUES (?, 'plugins', 'enabled', ?, CURRENT_TIMESTAMP)
-                ''', (db_user_id, json.dumps(enabled_plugins)))
-                
-                logger.info(f"Updated plugin {plugin_name} status for user {user_id}: {enabled}")
+                """,
+                    (db_user_id, json.dumps(enabled_plugins)),
+                )
+
+                logger.info(
+                    f"Updated plugin {plugin_name} status for user {user_id}: {enabled}"
+                )
                 return True
         except Exception as e:
-            logger.error(f"Error updating plugin status for user {user_id}, plugin {plugin_name}: {e}")
+            logger.error(
+                f"Error updating plugin status for user {user_id}, plugin {plugin_name}: {e}"
+            )
             return False
 
 
 # Global database manager instance
 _db_manager = None
+
 
 def get_database_manager() -> DatabaseManager:
     """Pobiera globalną instancję menedżera bazy danych."""
@@ -798,6 +1032,7 @@ def get_database_manager() -> DatabaseManager:
     if _db_manager is None:
         _db_manager = DatabaseManager()
     return _db_manager
+
 
 def initialize_database_manager(db_path: str = "server_data.db") -> DatabaseManager:
     """Inicjalizuje globalną instancję menedżera bazy danych."""
