@@ -482,21 +482,22 @@ def setup_api_routes(app, assistant_queue):
 
     # --- SSE Status Stream ---
     @app.route('/status/stream')
-    def status_stream():
+    async def status_stream():
         """Server-Sent Events endpoint for real-time status updates."""
-        def generate():
-            import time
+        async def generate():
             import json
+            import logging
+            import asyncio
+            import time
             # Simplified status retrieval without shared_state module
             def load_assistant_state():
                 return {}
-            
-            # Debug logging
-            import logging
+
             sse_logger = logging.getLogger('sse_endpoint')
-            
             last_status = {}
-            
+            last_config_time = 0.0
+            current_config = load_main_config()
+
             while True:
                 try:
                     lock_path = os.path.join(os.path.dirname(__file__), '..', '..', 'assistant_restarting.lock')
@@ -504,26 +505,28 @@ def setup_api_routes(app, assistant_queue):
                         status_str = "Restarting"
                     else:
                         status_str = "Online"
-                    
-                    current_config = load_main_config()
-                    
+
+                    now = time.time()
+                    if now - last_config_time > 1.0:
+                        current_config = load_main_config()
+                        last_config_time = now
+
                     # Try to read state from shared file first
                     shared_state = load_assistant_state()
                     sse_logger.debug(f"SSE: Loaded shared state: {shared_state}")
-                    
+
                     if shared_state:
                         is_listening = shared_state.get('is_listening', False)
                         is_speaking = shared_state.get('is_speaking', False)
                         last_text = shared_state.get('last_tts_text', "")
                         wake_word_detected = shared_state.get('wake_word_detected', False)
                     else:
-                        # Fallback to assistant instance if shared state fails
                         assistant = get_assistant_instance()
                         is_listening = getattr(assistant, 'is_listening', False) if assistant else False
                         is_speaking = getattr(assistant, 'is_speaking', False) if assistant else False
                         last_text = getattr(assistant, 'last_tts_text', "") if assistant else ""
                         wake_word_detected = getattr(assistant, 'wake_word_detected', False) if assistant else False
-                    
+
                     current_status = {
                         "status": status_str,
                         "wake_word": current_config.get('WAKE_WORD', 'N/A'),
@@ -534,23 +537,22 @@ def setup_api_routes(app, assistant_queue):
                         "text": last_text,
                         "wake_word_detected": wake_word_detected
                     }
-                      # Send initial status or when changed
+
                     if current_status != last_status or not last_status:
                         data = json.dumps(current_status)
                         yield f"data: {data}\n\n"
                         last_status = current_status.copy()
-                        # Only log significant state changes
                         if current_status.get('is_listening') or current_status.get('is_speaking') or current_status.get('wake_word_detected'):
                             logger.info(f"SSE sent: {current_status}")
-                            sse_logger.info(f"Status update: {current_status}")  # Debug log
-                    
-                    time.sleep(0.1)  # Check every 100ms for changes
-                    
+                            sse_logger.info(f"Status update: {current_status}")
+
+                    await asyncio.sleep(0.05)
+
                 except Exception as e:
                     logger.error(f"Error in SSE stream: {e}")
                     yield f"data: {json.dumps({'error': str(e)})}\n\n"
-                    time.sleep(1)
-        
+                    await asyncio.sleep(1)
+
         return Response(generate(), mimetype='text/event-stream',
                        headers={'Cache-Control': 'no-cache',
                                'Connection': 'keep-alive',
