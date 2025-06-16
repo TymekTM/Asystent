@@ -460,19 +460,26 @@ class Assistant:
                     except Exception as e:
                         logger.error(f"Błąd przy ładowaniu pluginu {name}: {e}", exc_info=True)
                         continue
-                    if hasattr(module, 'register'):
+                    info = None
+                    if hasattr(module, 'get_manifest'):
+                        try:
+                            info = module.get_manifest()
+                        except Exception as e:
+                            logger.error(f"Błąd podczas get_manifest() pluginu {name}: {e}", exc_info=True)
+                            continue
+                    elif hasattr(module, 'register'):
                         try:
                             info = module.register()
                         except Exception as e:
                             logger.error(f"Błąd podczas register() pluginu {name}: {e}", exc_info=True)
                             continue
-                        if isinstance(info, dict):
-                            info['_module_name'] = name
-                            cmd = info.get('command')
-                            if cmd and isinstance(cmd, str):
-                                new_modules[cmd] = info
-                            else:
-                                logger.warning(f"Plugin {name} missing 'command', skipping.")
+                    if isinstance(info, dict):
+                        info['_module_name'] = name
+                        cmd = info.get('command')
+                        if cmd and isinstance(cmd, str):
+                            new_modules[cmd] = info
+                        else:
+                            logger.warning(f"Plugin {name} missing 'command', skipping.")
                 self.modules = new_modules
                 logger.info("Plugins loaded: %s", list(self.modules.keys()))
                 return
@@ -529,19 +536,26 @@ class Assistant:
                 self.plugin_mod_times.pop(filepath, None)
                 continue
             # register
-            if hasattr(module, 'register'):
+            info = None
+            if hasattr(module, 'get_manifest'):
+                try:
+                    info = module.get_manifest()
+                except Exception as e:
+                    logger.error(f"Błąd podczas get_manifest() pluginu {mod_name}: {e}", exc_info=True)
+                    continue
+            elif hasattr(module, 'register'):
                 try:
                     info = module.register()
                 except Exception as e:
                     logger.error(f"Błąd podczas register() pluginu {mod_name}: {e}", exc_info=True)
                     continue
-                if isinstance(info, dict):
-                    info['_module_name'] = mod_name
-                    cmd = info.get('command')
-                    if cmd and isinstance(cmd, str):
-                        new_modules[cmd] = info
-                    else:
-                        logger.warning(f"Plugin {mod_name} missing 'command', skipping.")
+            if isinstance(info, dict):
+                info['_module_name'] = mod_name
+                cmd = info.get('command')
+                if cmd and isinstance(cmd, str):
+                    new_modules[cmd] = info
+                else:
+                    logger.warning(f"Plugin {mod_name} missing 'command', skipping.")
         # update and log
         self.modules = new_modules
         added = set(new_modules) - set(old_modules)
