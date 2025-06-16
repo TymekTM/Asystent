@@ -54,18 +54,20 @@ def handle_test_exception_module(params: str = "", conversation_history=None, us
     
     raise random.choice(exception_types)
 
-# Module registration info for the assistant
-TEST_MODULES = {
-    "test_error": {
-        "handler": handle_test_error_module,
-        "description": "Test module that returns error messages"
-    },
-    "test_success": {
-        "handler": handle_test_success_module,
-        "description": "Test module that returns success messages"
-    },
-    "test_exception": {
-        "handler": handle_test_exception_module,
-        "description": "Test module that throws exceptions"
+
+def get_manifest() -> dict:
+    """Return plugin registration info for the assistant."""
+    return {
+        "test_error": {
+            "handler": handle_test_error_module,
+            "description": "Test module that returns error messages",
+        },
+        "test_success": {
+            "handler": handle_test_success_module,
+            "description": "Test module that returns success messages",
+        },
+        "test_exception": {
+            "handler": handle_test_exception_module,
+            "description": "Test module that throws exceptions",
+        },
     }
-}

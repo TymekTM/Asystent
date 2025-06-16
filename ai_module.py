@@ -418,16 +418,41 @@ def remove_chain_of_thought(text: str) -> str:
 
 
 def extract_json(text: str) -> str:
-    """Zwraca pierwszy blok JSON z tekstu (albo cały string)."""
+    """Return the first valid JSON block found in ``text``.
+
+    ``extract_json`` previously relied on a simple regular expression which
+    could easily be confused by braces in the surrounding text.  This
+    implementation scans the string and attempts to decode candidate slices
+    with :func:`json.loads` until a valid JSON object is found.  If no object is
+    detected the original text is returned unchanged.
+    """
+
     text = text.strip()
     if text.startswith("```"):
         lines = [ln for ln in text.splitlines() if ln.strip("`")]
         text = "\n".join(lines).strip()
-    # Find all JSON-like blocks and choose the most complete one
-    matches = re.findall(r"(\{.*\})", text, flags=re.DOTALL)
-    if matches:
-        # Return the largest match, assuming it's the full JSON object
-        return max(matches, key=len)
+
+    start = text.find("{")
+    if start == -1:
+        return text
+
+    depth = 0
+    for idx in range(start, len(text)):
+        ch = text[idx]
+        if ch == "{":
+            if depth == 0:
+                start = idx
+            depth += 1
+        elif ch == "}":
+            if depth > 0:
+                depth -= 1
+                if depth == 0:
+                    candidate = text[start : idx + 1]
+                    try:
+                        json.loads(candidate)
+                        return candidate
+                    except json.JSONDecodeError:
+                        pass
     return text
 
 
