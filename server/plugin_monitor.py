@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Dict, Set, Optional, Any
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
-from plugin_manager import plugin_manager
+from .plugin_manager import plugin_manager
 
 logger = logging.getLogger(__name__)
 

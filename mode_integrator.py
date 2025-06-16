@@ -18,22 +18,22 @@ def _load_mode() -> str:
         if CONFIG_PATH.exists():
             with open(CONFIG_PATH, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                return data.get("current_mode", "poor_man")
+                return data.get("current_level", "free")
     except Exception as e:
         logger.error(f"Failed to load user mode: {e}")
-    return "poor_man"
+    return "free"
 
 
 class UserModeIntegrator:
     def __init__(self):
         self.mode = _load_mode()
         logger.info(f"Loaded user mode: {self.mode}")
-        if self.mode == "paid":
-            self.tts_module = OpenAITTS()
-            self.asr_module = create_openai_asr({})
-        else:
+        if self.mode == "free":
             self.tts_module = BingTTS()
             self.asr_module = create_whisper_asr({})
+        else:
+            self.tts_module = OpenAITTS()
+            self.asr_module = create_openai_asr({})
 
 
 user_integrator = UserModeIntegrator()

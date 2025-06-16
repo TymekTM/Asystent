@@ -7,8 +7,6 @@ import asyncio
 import json
 import logging
 import os
-import sys
-from pathlib import Path
 from typing import Dict, List, Optional, Any
 import uvicorn
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Depends
@@ -16,31 +14,23 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from contextlib import asynccontextmanager
 from loguru import logger
+from environment_manager import EnvironmentManager
 
-# Dodaj ścieżkę serwera do PYTHONPATH
-sys.path.insert(0, str(Path(__file__).parent))
-# Dodaj ścieżkę modules do PYTHONPATH dla pluginów
-sys.path.insert(0, str(Path(__file__).parent / "modules"))
-
-from config_loader import load_config
-from database_manager import DatabaseManager, initialize_database_manager
-from ai_module import AIModule
-from function_calling_system import FunctionCallingSystem
-from plugin_manager import plugin_manager
-# Import onboarding from current server directory
-import sys
-import os
-sys.path.insert(0, os.path.dirname(__file__))
-import onboarding_module as server_onboarding
+from .config_loader import load_config
+from .database_manager import DatabaseManager, initialize_database_manager
+from .ai_module import AIModule
+from .function_calling_system import FunctionCallingSystem
+from .plugin_manager import plugin_manager
+from . import onboarding_module as server_onboarding
 OnboardingModule = server_onboarding.OnboardingModule
-from plugin_monitor import plugin_monitor
-from extended_webui import ExtendedWebUI
-from daily_briefing_module import DailyBriefingModule
-from day_summary_module import DaySummaryModule
-from user_behavior_module import UserBehaviorModule
-from routines_learner_module import RoutinesLearnerModule
-from day_narrative_module import DayNarrativeModule
-from proactive_assistant_simple import get_proactive_assistant
+from .plugin_monitor import plugin_monitor
+from .extended_webui import ExtendedWebUI
+from .daily_briefing_module import DailyBriefingModule
+from .day_summary_module import DaySummaryModule
+from .user_behavior_module import UserBehaviorModule
+from .routines_learner_module import RoutinesLearnerModule
+from .day_narrative_module import DayNarrativeModule
+from .proactive_assistant_simple import get_proactive_assistant
 
 
 class ConnectionManager:
@@ -373,6 +363,23 @@ class ServerApp:
         try:
             query = request_data.get('query', '')
             context = request_data.get('context', {})
+
+            user_level = self.db_manager.get_user_level(int(user_id))
+            monthly = await asyncio.to_thread(self.db_manager.count_api_calls, int(user_id), days=30)
+            daily = await asyncio.to_thread(self.db_manager.count_api_calls, int(user_id), days=1)
+            limits = {
+                'free': {'monthly': 1000, 'daily': 100},
+                'plus': {'monthly': 10000, 'daily': None},
+                'pro': {'monthly': 50000, 'daily': None},
+            }
+            limit = limits.get(user_level, limits['free'])
+            if monthly >= limit['monthly'] or (
+                limit['daily'] is not None and daily >= limit['daily']
+            ):
+                return {
+                    'type': 'error',
+                    'message': 'Query limit reached for your account.',
+                }
             
             # Pobierz historię użytkownika z bazy
             user_history = await self.db_manager.get_user_history(user_id)            # Przygotuj kontekst dla AI
@@ -403,11 +410,12 @@ class ServerApp:
             
             # Zapisz interakcję w bazie
             await self.db_manager.save_interaction(user_id, query, response)
-            
+
             return {
                 'type': 'ai_response',
                 'response': response,
-                'timestamp': asyncio.get_event_loop().time()
+                'timestamp': asyncio.get_event_loop().time(),
+                'tts_engine': 'edge' if user_level == 'free' else 'openai'
             }
             
         except Exception as e:
@@ -896,10 +904,6 @@ if __name__ == "__main__":
     # Load configuration
     config = load_config()
       # Configure CORS middleware with security validation
-    import sys
-    import os
-    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-    from environment_manager import EnvironmentManager
     env_manager = EnvironmentManager()
     cors_origins = config.get('security', {}).get('cors_origins', ["http://localhost:3000", "http://localhost:8080"])
     

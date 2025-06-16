@@ -20,15 +20,10 @@ pipeline = None
 
 # Import environment manager for secure API key handling
 try:
-    import sys
-    import os
-    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
     from environment_manager import EnvironmentManager
-    # Initialize with correct path to .env file (one level up from server directory)
     env_file_path = os.path.join(os.path.dirname(__file__), '..', '.env')
     env_manager = EnvironmentManager(env_file=env_file_path)
 except ImportError as e:
-    # Fallback if environment_manager is not available
     env_manager = None
     print(f"Warning: Could not import EnvironmentManager: {e}")
 

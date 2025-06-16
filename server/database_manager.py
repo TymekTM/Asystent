@@ -238,6 +238,18 @@ class DatabaseManager:
                 UPDATE users SET api_keys = ? WHERE id = ?
             ''', (json.dumps(api_keys), user_id))
 
+    def get_user_level(self, user_id: int) -> str:
+        """Return user subscription level (free/plus/pro)."""
+        user = self.get_user(user_id=user_id)
+        if user and isinstance(user.settings, dict):
+            return user.settings.get('level', 'free')
+        return 'free'
+
+    def set_user_level(self, user_id: int, level: str) -> None:
+        settings = self.get_user(user_id=user_id).settings if self.get_user(user_id=user_id) else {}
+        settings['level'] = level
+        self.update_user_settings(user_id, settings)
+
     # === ZARZĄDZANIE SESJAMI ===
     
     def create_session(self, user_id: int, session_token: str, expires_at: datetime,
@@ -412,12 +424,23 @@ class DatabaseManager:
         """Pobiera statystyki użycia API dla użytkownika."""
         with self.get_db_connection() as conn:
             cursor = conn.execute('''
-                SELECT * FROM api_usage 
+                SELECT * FROM api_usage
                 WHERE user_id = ? AND created_at >= date('now', '-{} days')
                 ORDER BY created_at DESC
             '''.format(days), (user_id,))
-            
+
             return [APIUsage.from_db_row(row) for row in cursor.fetchall()]
+
+    def count_api_calls(self, user_id: int, days: int = 30) -> int:
+        """Return number of API calls by user within given days."""
+        with self.get_db_connection() as conn:
+            since = (datetime.now() - timedelta(days=days)).isoformat()
+            cursor = conn.execute(
+                "SELECT COUNT(*) FROM api_usage WHERE user_id = ? AND created_at >= ?",
+                (user_id, since),
+            )
+            row = cursor.fetchone()
+            return row[0] if row else 0
 
     def log_system_event(self, level: str, module: str, message: str,
                         user_id: int = None, session_id: int = None,
