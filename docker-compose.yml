@@ -1,0 +1,204 @@
+services:
+  # ==============================================================================
+  # Gaja Server (CPU variant)
+  # ==============================================================================  gaja-server-cpu:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: cpu
+    container_name: gaja-server-cpu
+    ports:
+      - "8001:8001"  # API server (adjusted port)
+      - "8080:8080"  # Web UI (if applicable)
+    volumes:
+      - ./data:/app/data
+      - ./config:/app/config
+      - gaja-cache:/app/.cache
+      - gaja-models:/app/.hf_cache
+    environment:
+      - GAJA_MODE=server
+      - GAJA_LOG_LEVEL=INFO
+      - GAJA_HOST=0.0.0.0
+      - GAJA_PORT=8001
+      - GAJA_DATA_DIR=/app/data
+      - GAJA_CACHE_DIR=/app/.cache
+      # AI Provider settings
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}      # Security
+      - GAJA_SECRET_KEY=${GAJA_SECRET_KEY:-dev-secret-change-in-production}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    profiles:
+      - cpu
+      - default
+
+  # ==============================================================================
+  # Gaja Server (GPU variant)
+  # ==============================================================================
+  gaja-server-gpu:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: gpu
+    container_name: gaja-server-gpu    ports:
+      - "8001:8001"  # API server (standardized port)
+      - "8080:8080"  # Web UI (if applicable)
+    volumes:
+      - ./data:/app/data
+      - ./config:/app/config
+      - gaja-cache:/app/.cache
+      - gaja-models:/app/.hf_cache
+    environment:      - GAJA_MODE=server
+      - GAJA_LOG_LEVEL=INFO
+      - GAJA_HOST=0.0.0.0
+      - GAJA_PORT=8001
+      - GAJA_DATA_DIR=/app/data
+      - GAJA_CACHE_DIR=/app/.cache
+      # GPU settings
+      - CUDA_VISIBLE_DEVICES=0
+      - NVIDIA_VISIBLE_DEVICES=all
+      # AI Provider settings
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      # Security
+      - GAJA_SECRET_KEY=${GAJA_SECRET_KEY:-dev-secret-change-in-production}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    profiles:
+      - gpu
+
+  # ==============================================================================
+  # Database (SQLite in development, PostgreSQL for production)
+  # ==============================================================================
+  database:
+    image: postgres:15-alpine
+    container_name: gaja-database
+    environment:
+      - POSTGRES_DB=gaja
+      - POSTGRES_USER=gaja
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-gaja-dev-password}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gaja"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    profiles:
+      - production
+      - full
+
+  # ==============================================================================
+  # Redis (for caching and session management)
+  # ==============================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: gaja-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-gaja-dev-redis}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    profiles:
+      - production
+      - full
+
+  # ==============================================================================
+  # Nginx (reverse proxy and static file serving)
+  # ==============================================================================
+  nginx:
+    image: nginx:alpine
+    container_name: gaja-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./web_ui/dist:/usr/share/nginx/html:ro
+      - nginx-logs:/var/log/nginx
+    depends_on:
+      - gaja-server-cpu
+    restart: unless-stopped
+    profiles:
+      - production
+      - full
+
+  # ==============================================================================
+  # Development environment
+  # ==============================================================================
+  gaja-dev:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: development
+    container_name: gaja-dev
+    ports:
+      - "5000:5000"
+      - "8080:8080"
+      - "3000:3000"  # Frontend dev server
+    volumes:
+      - .:/app
+      - gaja-cache:/app/.cache
+      - gaja-models:/app/.hf_cache
+    environment:
+      - GAJA_MODE=development
+      - GAJA_LOG_LEVEL=DEBUG
+      - GAJA_HOST=0.0.0.0
+      - GAJA_PORT=5000
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+    command: ["poetry", "run", "python", "-m", "gaja_server.main", "--debug"]
+    restart: unless-stopped
+    profiles:
+      - development
+
+# ==============================================================================
+# Volumes
+# ==============================================================================
+volumes:
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  gaja-cache:
+    driver: local
+  gaja-models:
+    driver: local
+  nginx-logs:
+    driver: local
+
+# ==============================================================================
+# Networks
+# ==============================================================================
+networks:
+  default:
+    name: gaja-network
+    driver: bridge

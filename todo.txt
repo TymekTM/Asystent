@@ -2,16 +2,13 @@
 - When AI wants to activate listening and user does the same time it just happens twice
 - Moduł od muzyki klucz spotify
 
-# ⭐ WAŻNE (strategiczne / fundamenty) - MAJOR PROGRESS! 🚀
+# ⭐ WAŻNE (strategiczne / fundamenty) 
 - Plug and play installation
 - Listen after finished speaking (jako funkcja dla ai)
 - Test poorman and richman mode 
 - Dostosowywanie tts w zależności od pory dnia i "święta"
-- Limiter zapytań w zależności od poziomu użytkownika(różne poziomy, free, plus, pro czy coś takiego)
 
 # 🔧 OPTYMALIZACJE
-- Add loading indicators for long-running operations in web UI
-- Reduce latency
 
 # 🟢 ŁATWE (mały scope, max 1 dzień)
 - Wheel decide do robienia czego

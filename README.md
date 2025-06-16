@@ -4,29 +4,67 @@
 
 ## 🚀 Quick Start
 
+### 🐳 With Docker (Recommended)
 ```bash
+# Copy environment template
+cp .env.example .env
+# Edit .env with your API keys
+
+# Start with CPU support
+docker-compose up -d
+
+# Or start with GPU support
+docker-compose --profile gpu up -d
+```
+
+### 🐍 Traditional Python Setup
+```bash
+# Install dependencies with Poetry
+poetry install
+
 # Start client (voice assistant)
-cd client && python client_main.py
+poetry run python -m gaja_client.main
 
 # Start server (AI processing) 
-cd server && python server_main.py
+poetry run python -m gaja_server.main
 
 # Start web UI (configuration)
 cd web_ui && python app.py
 ```
 
-To check which TTS/ASR modules are active you can run:
-
+### 🧪 Development Setup
 ```bash
-python mode_test.py --mode poor_man  # or --mode paid
+# Install development dependencies
+poetry install --with dev
+
+# Install pre-commit hooks
+poetry run pre-commit install
+
+# Run tests
+poetry run pytest
+
+# Run linting
+poetry run ruff check .
+poetry run black --check .
 ```
+
+For detailed Docker setup, see [README_DOCKER.md](README_DOCKER.md)
 
 ## 📁 Project Structure
 
 ```
 f:\Asystent\
-├── 🎙️ client/              # Voice assistant client
-├── 🧠 server/              # AI processing server  
+├── 📦 src/                 # Source code (new structure)
+│   ├── gaja_server/        # AI processing server
+│   ├── gaja_client/        # Voice assistant client
+│   └── gaja_core/          # Shared utilities
+├── 🐳 docker/              # Docker configuration
+│   ├── Dockerfile          # Multi-stage build
+│   ├── nginx.conf          # Reverse proxy config
+│   └── init-db.sql         # Database initialization
+├── 🔄 .github/workflows/   # CI/CD pipelines
+├── 🎙️ client/              # Voice assistant client (legacy)
+├── 🧠 server/              # AI processing server (legacy)
 ├── 🌐 web_ui/              # Web configuration interface
 ├── 🎨 overlay/             # Visual status overlay
 ├── 🔊 audio_modules/       # TTS, STT, wake word detection
@@ -38,7 +76,10 @@ f:\Asystent\
 ├── 🎭 demos/               # Feature demonstration scripts
 ├── 📊 reports/             # Test reports and documentation
 ├── ⚙️ configs/             # Configuration files
-└── 📚 docs/                # Documentation
+├── 📚 docs/                # Documentation
+├── 📝 pyproject.toml       # Poetry configuration
+├── 🐳 docker-compose.yml   # Docker orchestration
+└── 🔧 .pre-commit-config.yaml  # Code quality hooks
 ```
 
 ## ✨ Key Features

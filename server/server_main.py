@@ -7,6 +7,8 @@ import asyncio
 import json
 import logging
 import os
+import sys
+from pathlib import Path
 from typing import Dict, List, Optional, Any
 import uvicorn
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Depends
@@ -16,21 +18,21 @@ from contextlib import asynccontextmanager
 from loguru import logger
 from environment_manager import EnvironmentManager
 
-from .config_loader import load_config
-from .database_manager import DatabaseManager, initialize_database_manager
-from .ai_module import AIModule
-from .function_calling_system import FunctionCallingSystem
-from .plugin_manager import plugin_manager
-from . import onboarding_module as server_onboarding
+from server.config_loader import load_config
+from server.database_manager import DatabaseManager, initialize_database_manager
+from server.ai_module import AIModule
+from server.function_calling_system import FunctionCallingSystem
+from server.plugin_manager import plugin_manager
+from server import onboarding_module as server_onboarding
 OnboardingModule = server_onboarding.OnboardingModule
-from .plugin_monitor import plugin_monitor
-from .extended_webui import ExtendedWebUI
-from .daily_briefing_module import DailyBriefingModule
-from .day_summary_module import DaySummaryModule
-from .user_behavior_module import UserBehaviorModule
-from .routines_learner_module import RoutinesLearnerModule
-from .day_narrative_module import DayNarrativeModule
-from .proactive_assistant_simple import get_proactive_assistant
+from server.plugin_monitor import plugin_monitor
+from server.extended_webui import ExtendedWebUI
+from server.daily_briefing_module import DailyBriefingModule
+from server.day_summary_module import DaySummaryModule
+from server.user_behavior_module import UserBehaviorModule
+from server.routines_learner_module import RoutinesLearnerModule
+from server.day_narrative_module import DayNarrativeModule
+from server.proactive_assistant_simple import get_proactive_assistant
 
 
 class ConnectionManager:
@@ -895,15 +897,15 @@ if __name__ == "__main__":
     logger.add(
         sys.stderr,
         level="INFO",
-        format="<green>{time:HH:mm:ss}</green> | <level>{level}</level> | <cyan>{name}:{function}:{line}</cyan> | {message}"
-    )
+        format="<green>{time:HH:mm:ss}</green> | <level>{level}</level> | <cyan>{name}:{function}:{line}</cyan> | {message}"    )
     
-    # Utwórz katalog logs jeśli nie istnieje    os.makedirs("logs", exist_ok=True)
+    # Utwórz katalog logs jeśli nie istnieje
+    os.makedirs("logs", exist_ok=True)
     
-    logger.info("Starting GAJA Assistant Server...")    
+    logger.info("Starting GAJA Assistant Server...")
     # Load configuration
     config = load_config()
-      # Configure CORS middleware with security validation
+    # Configure CORS middleware with security validation
     env_manager = EnvironmentManager()
     cors_origins = config.get('security', {}).get('cors_origins', ["http://localhost:3000", "http://localhost:8080"])
     
