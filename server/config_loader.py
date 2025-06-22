@@ -5,6 +5,7 @@ Uproszczony loader konfiguracji dla serwera
 
 import json
 import logging
+import os
 from pathlib import Path
 from typing import Dict, Any, Optional
 
@@ -12,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 def load_config(config_file: str = "server_config.json") -> Dict[str, Any]:
     """
-    Ładuje konfigurację z pliku JSON.
+    Ładuje konfigurację z pliku JSON i nadpisuje wartości zmiennymi środowiskowymi.
     
     Args:
         config_file: Nazwa pliku konfiguracyjnego
@@ -27,16 +28,23 @@ def load_config(config_file: str = "server_config.json") -> Dict[str, Any]:
         logger.warning(f"Config file {config_file} not found, creating default")
         default_config = create_default_config()
         save_config(default_config, config_file)
-        return default_config
+        config = default_config
+    else:
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+            logger.info(f"Loaded configuration from {config_file}")
+        except Exception as e:
+            logger.error(f"Error loading config {config_file}: {e}")
+            config = create_default_config()
     
-    try:
-        with open(config_path, 'r', encoding='utf-8') as f:
-            config = json.load(f)
-        logger.info(f"Loaded configuration from {config_file}")
-        return config
-    except Exception as e:
-        logger.error(f"Error loading config {config_file}: {e}")
-        return create_default_config()
+    # Nadpisz wartości zmiennymi środowiskowymi
+    if 'GAJA_HOST' in os.environ:
+        config.setdefault('server', {})['host'] = os.environ['GAJA_HOST']
+    if 'GAJA_PORT' in os.environ:
+        config.setdefault('server', {})['port'] = int(os.environ['GAJA_PORT'])
+    
+    return config
 
 def save_config(config: Dict[str, Any], config_file: str = "server_config.json"):
     """Zapisuje konfigurację do pliku."""

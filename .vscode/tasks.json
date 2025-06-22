@@ -2,15 +2,161 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "Build EXE",
+			"label": "🚀 Complete Setup",
 			"type": "shell",
 			"command": "python",
 			"args": [
-				"build.py"
+				"manage.py",
+				"setup"
+			],
+			"group": "build",
+			"problemMatcher": [],
+			"isBackground": false,
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "shared"
+			}
+		},
+		{
+			"label": "Build Client EXE",
+			"type": "shell",
+			"command": "python",
+			"args": [
+				"manage.py",
+				"build-client"
+			],
+			"group": "build",
+			"problemMatcher": [],
+			"isBackground": false,
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared"
+			}
+		},
+		{
+			"label": "Build Legacy EXE",
+			"type": "shell",
+			"command": "python",
+			"args": [
+				"build.py",
+				"--component",
+				"legacy"
 			],
 			"group": "build",
 			"problemMatcher": [],
 			"isBackground": false
+		},
+		{
+			"label": "Build EXE",
+			"type": "shell",
+			"command": "python",
+			"args": [
+				"manage.py",
+				"build-client"
+			],
+			"group": "build",
+			"problemMatcher": [],
+			"isBackground": false,
+			"dependsOrder": "sequence"
+		},
+		{
+			"label": "Docker: Build Server",
+			"type": "shell",
+			"command": "python",
+			"args": [
+				"manage.py",
+				"build-server"
+			],
+			"group": "build",
+			"problemMatcher": [],
+			"isBackground": false,
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared"
+			}
+		},
+		{
+			"label": "Docker: Start Server",
+			"type": "shell",
+			"command": "python",
+			"args": [
+				"manage.py",
+				"start-server"
+			],
+			"group": "test",
+			"problemMatcher": [],
+			"isBackground": false,
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared"
+			}
+		},
+		{
+			"label": "Docker: Stop Server",
+			"type": "shell",
+			"command": "python",
+			"args": [
+				"manage.py",
+				"stop-server"
+			],
+			"group": "test",
+			"problemMatcher": [],
+			"isBackground": false
+		},
+		{
+			"label": "Docker: Server Logs",
+			"type": "shell",
+			"command": "python",
+			"args": [
+				"manage.py",
+				"logs"
+			],
+			"group": "test",
+			"problemMatcher": [],
+			"isBackground": true,
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "dedicated"
+			}
+		},
+		{
+			"label": "Docker: Server Status",
+			"type": "shell",
+			"command": "python",
+			"args": [
+				"manage.py",
+				"status"
+			],
+			"group": "test",
+			"problemMatcher": [],
+			"isBackground": false
+		},
+		{
+			"label": "🧪 Test System",
+			"type": "shell",
+			"command": "python",
+			"args": [
+				"manage.py",
+				"test"
+			],
+			"group": "test",
+			"problemMatcher": [],
+			"isBackground": false,			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "shared"
+			}
 		}
 	]
 }

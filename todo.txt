@@ -7,6 +7,7 @@
 - Listen after finished speaking (jako funkcja dla ai)
 - Test poorman and richman mode 
 - Dostosowywanie tts w zależności od pory dnia i "święta"
+- Clean up main catalog
 
 # 🔧 OPTYMALIZACJE
 

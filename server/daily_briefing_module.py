@@ -644,6 +644,42 @@ Wygeneruj kompletny dzienny briefing (2-4 zdania) zawierający powitanie, inform
             return await self.get_location_from_ip()
         return self.location
 
+    async def generate_daily_briefing(self, user_id: str = "default") -> str:
+        """
+        Generate daily briefing for a specific user.
+        
+        Args:
+            user_id: User identifier for personalized briefing
+            
+        Returns:
+            Generated briefing text
+        """
+        try:
+            logger.info(f"Generating daily briefing for user: {user_id}")
+            
+            # Generate briefing content
+            content = await self.generate_briefing_content()
+            
+            # Try AI generation first if enabled
+            briefing_text = None
+            if self.use_ai_generation:
+                ai_briefing = await self.generate_ai_briefing(content)
+                if ai_briefing:
+                    briefing_text = ai_briefing
+                    logger.info("Using AI-generated briefing")
+            
+            # Fallback to template-based briefing if AI generation failed
+            if not briefing_text:
+                briefing_text = self.build_briefing_text(content)
+                logger.info("Using template-based briefing")
+            
+            logger.info(f"Daily briefing generated for {user_id}: {len(briefing_text)} characters")
+            return briefing_text
+            
+        except Exception as e:
+            logger.error(f"Error generating daily briefing for {user_id}: {e}", exc_info=True)
+            return f"Dzień dobry! Przepraszam, wystąpił błąd podczas przygotowywania briefingu. Mam nadzieję, że dzień będzie udany!"
+
 # Handler function for integration with assistant
 async def handle_daily_briefing(query: str, params: Dict[str, Any]) -> Dict[str, Any]:
     """Handle daily briefing requests."""
