@@ -64,16 +64,16 @@ a = Analysis(
         'websockets.client',
         'flask',
         'flask_cors',
-        
+
         # Database
         'sqlalchemy',
         'sqlalchemy.dialects.sqlite',
         'alembic',
-        
+
         # AI providers
         'openai',
         'anthropic',
-        
+
         # Server modules
         'server.server_main',
         'server.ai_module',
@@ -85,13 +85,13 @@ a = Analysis(
         'server.performance_monitor',
         'server.prompt_builder',
         'server.prompts',
-        
+
         # Server plugins
         'server.modules.weather_module',
         'server.modules.search_module',
         'server.modules.memory_module',
         'server.modules.api_module',
-        
+
         # Utilities
         'requests',
         'python_multipart',
@@ -122,7 +122,7 @@ a = Analysis(
         'pvporcupine',
         'tkinter',
         'edge_tts',
-        
+
         # Heavy ML packages not needed for server
         'scipy',
         'sklearn',

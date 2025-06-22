@@ -1,4 +1,4 @@
-# gaja_client.spec - Client Build Configuration  
+# gaja_client.spec - Client Build Configuration
 # PyInstaller spec file for GAJA Assistant Client
 
 block_cipher = None
@@ -67,34 +67,34 @@ a = Analysis(
         # WebSocket communication
         'websockets',
         'websockets.client',
-        
+
         # Dependency management (critical for runtime)
         'dependency_manager',
         'aiohttp',
         'aiofiles',
-        
+
         # Core dependencies only
         'loguru',
         'requests',
         'pydantic',
         'psutil',
         'numpy',  # Keep numpy as it's used by many modules
-        
+
         # GUI/Overlay
         'tkinter',
         'tkinter.ttk',
         'tkinter.messagebox',
         'tkinter.filedialog',
-        
+
         # Client modules
         'client.client_main',
         'client.config',
         'client.shared_state',
         'client.active_window_module',
-        
+
         # Client audio modules (structure only)
         'client.audio_modules',
-        
+
         # Essential system modules
         'json',
         'pathlib',
@@ -106,7 +106,7 @@ a = Analysis(
         'configparser',
         'urllib.parse',
         'edge_tts',
-        
+
         # Heavy dependencies - downloaded by dependency_manager at runtime
         # 'sounddevice',     # Downloaded dynamically
         # 'librosa',         # Downloaded dynamically
@@ -121,7 +121,7 @@ a = Analysis(
     runtime_hooks=[],excludes=[
         # Heavy ML packages - downloaded by dependency_manager at runtime
         'torch',
-        'torchvision', 
+        'torchvision',
         'torchaudio',
         'torch.nn',
         'torch.optim',
@@ -133,7 +133,7 @@ a = Analysis(
         'faster_whisper',
         'openwakeword',
         'pvporcupine',
-        
+
         # Server-specific modules
         'fastapi',
         'uvicorn',
@@ -148,10 +148,10 @@ a = Analysis(
         'schedule',
         'beautifulsoup4',
         'watchdog',
-        
+
         # Heavy packages not needed for basic client
         'scipy',
-        'sklearn', 
+        'sklearn',
         'matplotlib',
         'cv2',
         'PIL',
@@ -161,7 +161,7 @@ a = Analysis(
         'ipython',
         'tensorflow',
         'keras',
-        
+
         # Development tools
         'pytest',
         'black',

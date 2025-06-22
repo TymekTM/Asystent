@@ -4,7 +4,7 @@ websockets==12.0
 # Audio processing (basic - heavy ones downloaded by dependency manager)
 numpy>=1.24.0
 
-# Basic client dependencies  
+# Basic client dependencies
 loguru==0.7.2
 requests==2.31.0
 pydantic==2.5.0

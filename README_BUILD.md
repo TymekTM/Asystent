@@ -11,19 +11,23 @@ System został zaprojektowany zgodnie z nowoczesnymi praktykami DevOps:
 ## Jak działa system zależności
 
 ### Lekki EXE + Runtime Dependencies
+
 Klient jest budowany jako lekki EXE zawierający tylko podstawowe zależności:
+
 - WebSocket komunikacja
-- GUI (tkinter) 
+- GUI (tkinter)
 - Podstawowe utilities
 - **Dependency Manager**
 
 Ciężkie zależności ML (~800 MB) są pobierane przy pierwszym uruchomieniu:
+
 - torch, torchaudio (~800 MB)
 - whisper, faster-whisper (~200 MB)
 - sounddevice, librosa (~100 MB)
 - openwakeword (~100 MB)
 
 ### Pierwsze uruchomienie klienta
+
 ```
 🚀 GAJA Assistant Client
 ========================================
@@ -148,10 +152,11 @@ docker images:
 ## Architektura systemu
 
 ### Client (GajaClient.exe)
+
 - **Rozmiar EXE**: ~50-80 MB (lekki build)
 - **Runtime dependencies**: ~800 MB (pobierane automatycznie)
 - **Funkcjonalności**: Audio processing, wake-word detection, GUI overlay, WebSocket communication
-- **Folder aplikacji**: 
+- **Folder aplikacji**:
   - `dependencies/` - Ciężkie pakiety ML
   - `logs/` - Logi klienta
   - `config/` - Konfiguracja klienta
@@ -159,6 +164,7 @@ docker images:
 - **Dystrybucja**: Pojedynczy plik EXE do pobrania przez użytkowników
 
 ### Server (Docker)
+
 - **Funkcjonalności**: FastAPI API, AI processing (OpenAI/Anthropic/Ollama), SQLite database, plugin system
 - **Porty**: 8001 (API), 8080 (Web UI)
 - **Volumes**: Persistence dla danych, cache, logs
@@ -169,11 +175,13 @@ docker images:
 Dostępne zadania w VS Code (Ctrl+Shift+P → "Tasks: Run Task"):
 
 ### Build Tasks
+
 - **Build Client EXE** - Zbuduj klienta jako EXE
 - **Build Legacy EXE** - Zbuduj legacy unified EXE
 - **Build EXE** - Alias dla "Build Client EXE"
 
-### Docker Tasks  
+### Docker Tasks
+
 - **Docker: Build Server** - Zbuduj obraz Docker serwera
 - **Docker: Start Server** - Uruchom serwer w tle
 - **Docker: Stop Server** - Zatrzymaj serwer
@@ -182,12 +190,15 @@ Dostępne zadania w VS Code (Ctrl+Shift+P → "Tasks: Run Task"):
 ## Deployment
 
 ### Dystrybucja klienta
+
 1. Zbuduj: `python build.py`
 2. Udostępnij: `dist/GajaClient.exe` (pojedynczy plik)
 3. Instrukcja dla użytkowników: "Pobierz i uruchom GajaClient.exe"
 
 ### Deployment serwera
+
 1. Na serwerze produkcyjnym:
+
 ```bash
 # Sklonuj repozytorium
 git clone <repo>
@@ -206,11 +217,12 @@ docker-compose logs gaja-server-cpu
 ```
 
 2. Konfiguracja nginx (opcjonalnie):
+
 ```nginx
 server {
     listen 80;
     server_name your-domain.com;
-    
+
     location / {
         proxy_pass http://localhost:8001;
         proxy_http_version 1.1;
@@ -225,6 +237,7 @@ server {
 ## Rozwiązywanie problemów
 
 ### Problemy z buildem klienta
+
 ```powershell
 # Sprawdź czy PyInstaller jest dostępny
 python -c "import PyInstaller; print(PyInstaller.__version__)"
@@ -237,6 +250,7 @@ python -m PyInstaller --clean --log-level DEBUG gaja_client.spec
 ```
 
 ### Problemy z Docker serverem
+
 ```powershell
 # Sprawdź Docker
 docker --version
@@ -252,6 +266,7 @@ docker-compose up -d gaja-server-cpu
 ```
 
 ### Problemy z połączeniem
+
 - Sprawdź czy serwer działa: `curl http://localhost:8001/health`
 - Sprawdź porty: `netstat -an | findstr 8001`
 - Sprawdź logi klienta i serwera
@@ -259,35 +274,41 @@ docker-compose up -d gaja-server-cpu
 ## Migracja z poprzedniej wersji
 
 ### Ze starego systemu unified
+
 1. **Zachowaj dane**: Skopiuj `data/` i `config/`
 2. **Zbuduj nowy klient**: `python build.py`
 3. **Uruchom serwer w Docker**: `docker-compose up gaja-server-cpu`
 4. **Przetestuj**: Uruchom `GajaClient.exe`
 
 ### Konfiguracja
+
 - **Serwer**: `server/server_config.json` → Docker volumes
 - **Klient**: `client/client_config.json` → lokalnie w folderze klienta
 
 ## Performance & Monitoring
 
 ### Metryki serwera
+
 - Resource usage: `docker stats gaja-server-cpu`
 - API health: `curl http://localhost:8001/health`
 - Database size: `du -sh data/server_data.db`
 
 ### Metryki klienta
+
 - Połączenie z serwerem sprawdzane automatycznie
 - Logi klienta w lokalnym folderze `logs/`
 
 ## Bezpieczeństwo
 
 ### Serwer (Production)
+
 - Zmień `GAJA_SECRET_KEY` w `.env`
 - Skonfiguruj `CORS_ORIGINS`
 - Użyj reverse proxy (nginx)
 - Regularnie aktualizuj obraz Docker
 
 ### Klient
+
 - Połączenie tylko z zaufanymi serwerami
 - Dane audio przetwarzane lokalnie
 - Brak wysyłania wrażliwych danych bez zgody
@@ -295,23 +316,27 @@ docker-compose up -d gaja-server-cpu
 ## Status implementacji
 
 ✅ **Ukończone**:
+
 - Build klienta jako EXE
 - Docker server z docker-compose
-- Zadania VS Code dla obu architektur  
+- Zadania VS Code dla obu architektur
 - Dokumentacja deployment
 - Weryfikacja architektury
 - Resource management w Docker
 
 🔄 **W trakcie**:
+
 - Optymalizacja rozmiaru EXE klienta
 - Monitoring i health checks
 
 📋 **Planowane**:
+
 - Automated builds (CI/CD)
 - Multi-platform Docker images
 - Client auto-update mechanism
 
 ### 3. Kolejne uruchomienia
+
 - Sprawdzenie pliku `installation.lock`
 - Konfiguracja ścieżek do zainstalowanych pakietów
 - Normalne uruchomienie aplikacji
@@ -373,18 +398,21 @@ excludes=[
 ## Rozwiązywanie problemów
 
 ### Problem: Błąd kompilacji PyInstaller
+
 ```bash
 # Sprawdź logi
 pyinstaller --clean --debug all gaja.spec
 ```
 
 ### Problem: Błąd podczas pobierania zależności
+
 ```python
 # W dependency_manager.py zwiększ timeout
 subprocess.run(cmd, timeout=300)  # 5 minut
 ```
 
 ### Problem: Brakujące pakiety po instalacji
+
 ```python
 # Dodaj pakiet do essential_packages w dependency_manager.py
 essential_packages = [
@@ -396,11 +424,13 @@ essential_packages = [
 ## Testowanie
 
 ### Test kompilacji:
+
 ```powershell
 python build.py
 ```
 
 ### Test pierwszego uruchomienia:
+
 ```powershell
 # Usuń folder dependencies (symuluje pierwsze uruchomienie)
 Remove-Item -Recurse -Force dependencies -ErrorAction SilentlyContinue
@@ -410,6 +440,7 @@ Remove-Item -Recurse -Force dependencies -ErrorAction SilentlyContinue
 ```
 
 ### Test kolejnego uruchomienia:
+
 ```powershell
 # Uruchom ponownie (dependencies już istnieją)
 .\dist\Gaja.exe
@@ -427,6 +458,7 @@ Po udanej kompilacji:
 ## Wersjonowanie
 
 Każda kompilacja zawiera:
+
 - Wersję w `deps_config.json`
 - Timestamp instalacji
 - Listę zainstalowanych pakietów

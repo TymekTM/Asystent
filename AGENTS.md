@@ -9,7 +9,9 @@ This document outlines the required practices, constraints, and expectations for
 ## 🔍 Before You Start
 
 ### 🔎 Research First
+
 Before modifying or generating any code:
+
 - **Understand the full architecture** of Gaja (both client and server).
 - Review how existing agents, APIs, and modules interact.
 - Study naming conventions, folder structure, and key async workflows.
@@ -20,18 +22,22 @@ Before modifying or generating any code:
 ## ✅ Code Requirements
 
 ### 1. **Asynchronous Code Only**
+
 - All code must use `async/await`. Blocking operations (`time.sleep`, `requests`, synchronous file I/O) are **strictly forbidden**.
 - Use `aiohttp`, `asyncio`, `asyncpg`, or similar async-compatible libraries only.
 - If wrapping sync logic is absolutely necessary, use `run_in_executor` and document it clearly.
 
 ### 2. **Test Coverage Required**
+
 - Every new feature or behavior must include one or more **pytest unit tests**.
 - Place all tests in the appropriate `tests/` directory and use clear, descriptive names.
 - If your agent performs external I/O (e.g. generates files, calls external tools), mock them.
 - Test both expected behavior and edge cases (e.g. missing config, invalid input).
 
 ### 3. **End-to-End Verification**
+
 Before submitting a PR or finishing your task:
+
 - Run **`pytest`** on the full project.
 - Start both the **server** and **client** of Gaja locally.
 - Interact with your feature and verify it behaves correctly from user entrypoint to output.
@@ -61,6 +67,7 @@ Before submitting a PR or finishing your task:
 ## 🗃️ Memory & State Modifications
 
 If your agent changes Gaja’s internal memory (e.g., user profile, intent history, conversation state):
+
 - Always use the **defined memory interface** – never write directly to `.json`, `.sqlite`, or `.txt` unless approved.
 - Log all changes explicitly if your function is long-running or affects user experience significantly.
 - Keep in mind **Gaja must remain explainable** – if the agent performs autonomous actions, log why.
@@ -70,6 +77,7 @@ If your agent changes Gaja’s internal memory (e.g., user profile, intent histo
 ## 🧪 Testing Philosophy
 
 Write your code assuming someone else will have to debug it in 6 months:
+
 - Break functionality into small, pure, testable functions.
 - Use mocking for anything external or unpredictable.
 - If the feature is too complex to test via unit tests, provide a `feature_name_test_manual.md` file with step-by-step test instructions.

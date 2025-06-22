@@ -34,8 +34,7 @@ class EnvironmentManager:
                 logger.error(f"Error loading .env file: {e}")
 
     def get_api_key(self, service: str) -> Optional[str]:
-        """
-        Pobiera klucz API dla danej usługi z zmiennych środowiskowych.
+        """Pobiera klucz API dla danej usługi z zmiennych środowiskowych.
 
         Args:
             service: Nazwa usługi (openai, anthropic, etc.)
@@ -72,8 +71,7 @@ class EnvironmentManager:
         }
 
     def sanitize_config_for_logging(self, config: dict[str, Any]) -> dict[str, Any]:
-        """
-        Czyści konfigurację z wrażliwych danych przed logowaniem.
+        """Czyści konfigurację z wrażliwych danych przed logowaniem.
 
         Args:
             config: Słownik konfiguracji
@@ -116,8 +114,7 @@ class EnvironmentManager:
         return sanitized
 
     def validate_required_keys(self, required_services: list[str]) -> dict[str, bool]:
-        """
-        Sprawdza czy wymagane klucze API są dostępne.
+        """Sprawdza czy wymagane klucze API są dostępne.
 
         Args:
             required_services: Lista wymaganych usług

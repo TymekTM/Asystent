@@ -49,7 +49,7 @@ a = Analysis(
         # Core communication only
         'websockets',
         'websockets.client',
-        
+
         # Basic utilities
         'loguru',
         'requests',
@@ -60,23 +60,23 @@ a = Analysis(
         'asyncio',
         'threading',
         'configparser',
-        
+
         # Client core
         'client.client_main',
         'client.config',
         'client.shared_state',
-        
+
         # Basic GUI
         'tkinter',
         'tkinter.ttk',
     ],
-    hookspath=[],  
+    hookspath=[],
     runtime_hooks=[],
     excludes=[
         # Exclude ALL heavy dependencies
         'torch',
         'torchvision',
-        'torchaudio', 
+        'torchaudio',
         'whisper',
         'faster_whisper',
         'openai',
@@ -88,18 +88,18 @@ a = Analysis(
         'matplotlib',
         'cv2',
         'PIL',
-        'pandas',  
+        'pandas',
         'openwakeword',
         'pvporcupine',
         'edge_tts',
-        
+
         # Server dependencies
         'fastapi',
         'uvicorn',
         'flask',
         'sqlalchemy',
         'anthropic',
-        
+
         # Development tools
         'pytest',
         'jupyter',

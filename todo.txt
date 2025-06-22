@@ -1,11 +1,11 @@
-# ✅ FIXY 
+# ✅ FIXY
 - When AI wants to activate listening and user does the same time it just happens twice
 - Moduł od muzyki klucz spotify
 
-# ⭐ WAŻNE (strategiczne / fundamenty) 
+# ⭐ WAŻNE (strategiczne / fundamenty)
 - Plug and play installation
 - Listen after finished speaking (jako funkcja dla ai)
-- Test poorman and richman mode 
+- Test poorman and richman mode
 - Dostosowywanie tts w zależności od pory dnia i "święta"
 - Clean up main catalog
 
