@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 def main():
     """Main entry point that determines whether to run client or server."""
+    import asyncio
 
     if len(sys.argv) > 1 and sys.argv[1] == "server":
         # Run as server
@@ -25,7 +26,7 @@ def main():
         # Default: run as client
         from client.client_main import main as client_main
 
-        client_main()
+        asyncio.run(client_main())
 
 
 if __name__ == "__main__":

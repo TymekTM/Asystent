@@ -8,6 +8,11 @@
 - Test poorman and richman mode
 - Dostosowywanie tts w zależności od pory dnia i "święta"
 - Clean up main catalog
+- Nie ma opcji ustawić mikrofon oraz wyjście audio w klient
+- overlay się nie wyświetla
+- daily briefing przy każdym uruchomieniu aplikacji
+- przetestować cały system
+- Rebuid overlay
 
 # 🔧 OPTYMALIZACJE
 
@@ -19,8 +24,7 @@
 - Instalator z GUI
 - API integrations: weather, calendar, IoT – MCP
 - Desktop/mobile version (Tauri)
-- Interakcje z przeglądarką (prosty Puppeteer / Pyppeteer)
-
+czy
 # 🔴 TRUDNE (większe systemy, AI/ML, duży zakres)
 - TTS and voice personalization (głos, język, szybkość, test)
 - Wykrywanie rozmówcy za pomocą speechbrain

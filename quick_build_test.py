@@ -110,7 +110,7 @@ def identify_slow_components():
             __import__(dep)
             print(f"   📦 {dep} installed - {desc}")
         except ImportError:
-            print(f"   ⚪ {dep} not installed")    # Check dist directory size if it exists
+            print(f"   ⚪ {dep} not installed")  # Check dist directory size if it exists
     dist_path = Path("dist")
     if dist_path.exists():
         try:

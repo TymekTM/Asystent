@@ -9,14 +9,14 @@
 <style>
     .info-icon {
         margin-left: 5px;
-        color: #0d6efd; 
+        color: #0d6efd;
         cursor: help;
     }
-    
+
     .config-accordion {
         margin-bottom: 1.5rem;
     }
-    
+
     .config-accordion .accordion-item {
         background-color: rgba(255, 255, 255, 0.03);
         border: 1px solid rgba(255, 255, 255, 0.1);
@@ -24,7 +24,7 @@
         border-radius: 0.75rem;
         overflow: hidden;
     }
-    
+
     .config-accordion .accordion-button {
         padding: 1rem 1.25rem;
         font-size: 1.1rem;
@@ -32,27 +32,27 @@
         background-color: rgba(255, 255, 255, 0.05);
         color: inherit;
     }
-    
+
     .config-accordion .accordion-button:not(.collapsed) {
         color: var(--gaja-primary);
         background-color: rgba(152, 230, 192, 0.05);
         box-shadow: none;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
-    
+
     .config-accordion .accordion-button:focus {
         box-shadow: none;
         border-color: rgba(152, 230, 192, 0.5);
     }
-    
+
     .config-accordion .accordion-button::after {
         background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
     }
-    
+
     .config-accordion .accordion-button i {
         margin-right: 10px;
     }
-    
+
     .config-accordion .accordion-body {
         padding: 1.25rem;
     }
@@ -60,7 +60,7 @@
         max-width: 300px;
         text-align: left;
     }
-    
+
     /* Responsive tooltip adjustments for smaller screens */
     @media (max-width: 768px) {
         .tooltip-inner {
@@ -69,7 +69,7 @@
             padding: 0.5rem 0.75rem;
         }
     }
-    
+
     @media (max-width: 576px) {
         .tooltip-inner {
             max-width: 250px;
@@ -77,7 +77,7 @@
             padding: 0.4rem 0.6rem;
         }
     }
-    
+
     @media (max-width: 480px) {
         .tooltip-inner {
             max-width: 200px;
@@ -85,23 +85,23 @@
             padding: 0.4rem 0.5rem;
         }
     }
-    
+
     .device-refresh-btn {
         margin-left: 10px;
     }
-    
+
     #mic-device-id-select {
         max-width: calc(100% - 50px);
         display: inline-block;
         vertical-align: middle;
     }
-    
+
     .config-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
         gap: 1rem;
     }
-    
+
     /* Card styling */
     .config-card {
         border-radius: 0.75rem;
@@ -109,7 +109,7 @@
         border: 1px solid rgba(255, 255, 255, 0.1);
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     }
-    
+
     .config-card-header {
         display: flex;
         align-items: center;
@@ -117,16 +117,16 @@
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         font-weight: 600;
     }
-    
+
     .config-card-header i {
         margin-right: 0.75rem;
         color: var(--gaja-primary);
     }
-    
+
     .config-card-body {
         padding: 1.25rem;
     }
-    
+
     .btn-save {
         border-radius: 2rem;
         padding: 0.5rem 2rem;
@@ -140,7 +140,7 @@
 <div class="container mt-4">
     <h2 class="mb-3"><i class="fas fa-cogs"></i> Konfiguracja Asystenta</h2>
     <p class="mb-4">Zarządzaj ustawieniami asystenta głosowego. Najedź kursorem na ikonę <i class="fas fa-info-circle info-icon"></i>, aby uzyskać więcej informacji.</p>
-    
+
     <div id="flash-message-container"></div> <!-- Container for flash messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% for category, message in messages %}
@@ -170,7 +170,7 @@
                                 </label>
                                 <input type="text" class="form-control" id="WAKE_WORD" name="WAKE_WORD" value="{{ config.WAKE_WORD }}">
                             </div>
-                            
+
                             <!-- Mic Device -->
                             <div class="mb-3">
                                 <label for="MIC_DEVICE_ID" class="form-label">Urządzenie wejściowe (mikrofon)
@@ -187,7 +187,22 @@
                                     </button>
                                 </div>
                             </div>
-                            
+
+                            <!-- Speaker Device -->
+                            <div class="mb-3">
+                                <label for="SPEAKER_DEVICE_ID" class="form-label">Urządzenie wyjściowe (głośniki)
+                                    <i class="fas fa-info-circle info-icon" data-bs-toggle="tooltip" title="Wybierz urządzenie wyjściowe audio dla TTS. Kliknij przycisk odświeżania obok listy, aby zaktualizować dostępne urządzenia."></i>
+                                </label>
+                                <div class="d-flex">
+                                    <select class="form-select" id="speaker-device-id-select" name="SPEAKER_DEVICE_ID" data-current-value="{{ config.SPEAKER_DEVICE_ID }}">
+                                        <!-- Options will be populated by JavaScript -->
+                                    </select>
+                                    <button class="btn btn-outline-secondary device-refresh-btn" type="button" id="refresh-speaker-devices-btn" data-bs-toggle="tooltip" title="Odśwież listę urządzeń">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
+                                </div>
+                            </div>
+
                             <!-- STT Silence Threshold -->
                             <div class="mb-3">
                                 <label for="sttSilenceThreshold" class="form-label">
@@ -196,7 +211,7 @@
                                 </label>
                                 <input type="number" class="form-control" id="sttSilenceThreshold" name="STT_SILENCE_THRESHOLD" value="{{ config.STT_SILENCE_THRESHOLD }}" step="100">
                             </div>
-                            
+
                             <!-- Auto Listen -->
                             <div class="mb-3">
                                 <div class="form-check">
@@ -207,7 +222,7 @@
                                     </label>
                                 </div>
                             </div>
-                            
+
                             <!-- Whisper Model -->
                             <div class="mb-3">
                                 <label for="WHISPER_MODEL" class="form-label">
@@ -220,7 +235,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- LLM Settings Section -->
             <div class="accordion-item">
                 <h2 class="accordion-header" id="headingLLM">
@@ -245,7 +260,7 @@
                                     <option value="together" {% if config.PROVIDER == 'together' %}selected{% endif %}>Together AI</option>
                                 </select>
                             </div>
-                            
+
                             <!-- Model Name -->
                             <div class="mb-3">
                                 <label for="MODEL_NAME" class="form-label">
@@ -254,7 +269,7 @@
                                 </label>
                                 <input type="text" class="form-control" id="MODEL_NAME" name="MODEL_NAME" value="{{ config.MODEL_NAME }}">
                             </div>
-                            
+
                             <!-- API Keys Configuration -->
                             {% for provider_key, display_name in [
                                 ('OPENAI_API_KEY', 'OpenAI API Key'),
@@ -269,7 +284,7 @@
                                 <input type="password" class="form-control" id="API_KEYS.{{ provider_key }}" name="API_KEYS.{{ provider_key }}" value="{{ config.API_KEYS[provider_key] if config.API_KEYS and provider_key in config.API_KEYS else '' }}" placeholder="Wprowadź klucz API">
                             </div>
                             {% endfor %}
-                            
+
                             <div class="alert alert-info">
                                 <i class="fas fa-info-circle me-2"></i> Wypełnij tylko te klucze API, które są potrzebne dla wybranego dostawcy.
                             </div>
@@ -277,7 +292,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Performance Settings Section -->
             <div class="accordion-item">
                 <h2 class="accordion-header" id="headingPerformance">
@@ -296,7 +311,7 @@
                                 </label>
                                 <input type="number" class="form-control" id="MAX_HISTORY_LENGTH" name="MAX_HISTORY_LENGTH" value="{{ config.MAX_HISTORY_LENGTH }}">
                             </div>
-                            
+
                             <!-- Low Power Mode -->
                             <div class="mb-3">
                                 <div class="form-check">
@@ -307,7 +322,7 @@
                                     </label>
                                 </div>
                             </div>
-                            
+
                             <!-- AI Base Path -->
                             <div class="mb-3">
                                 <label for="AI_BASE_PATH" class="form-label">
@@ -320,7 +335,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Development Settings Section -->
             <div class="accordion-item">
                 <h2 class="accordion-header" id="headingDev">
@@ -341,7 +356,7 @@
                                     </label>
                                 </div>
                             </div>
-                            
+
                             <!-- Profile Mode -->
                             <div class="mb-3">
                                 <div class="form-check">
@@ -356,7 +371,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Daily Briefing Settings Section -->
             <div class="accordion-item">
                 <h2 class="accordion-header" id="headingDailyBriefing">
@@ -377,7 +392,7 @@
                                     </label>
                                 </div>
                             </div>
-                            
+
                             <!-- Startup Briefing -->
                             <div class="mb-3">
                                 <div class="form-check">
@@ -388,7 +403,7 @@
                                     </label>
                                 </div>
                             </div>
-                            
+
                             <!-- Scheduled Briefing -->
                             <div class="mb-3">
                                 <div class="form-check">
@@ -399,7 +414,7 @@
                                     </label>
                                 </div>
                             </div>
-                            
+
                             <!-- Weekend Briefing -->
                             <div class="mb-3">
                                 <div class="form-check">
@@ -410,7 +425,7 @@
                                     </label>
                                 </div>
                             </div>
-                            
+
                             <!-- User Name -->
                             <div class="mb-3">
                                 <label for="daily_briefing_user_name" class="form-label">
@@ -419,7 +434,7 @@
                                 </label>
 <input type="text" class="form-control" id="daily_briefing_user_name" name="daily_briefing.user_name" value="{{ daily.user_name }}">
                             </div>
-                            
+
                             <!-- Location -->
                             <div class="mb-3">
                                 <label for="daily_briefing_location" class="form-label">
@@ -436,32 +451,32 @@
                                 </label>
 <input type="time" class="form-control" id="daily_briefing_time" name="daily_briefing.briefing_time" value="{{ daily.briefing_time }}">
                             </div>
-                            
+
                             <!-- Include Options -->
                             <div class="mb-3">
                                 <label class="form-label">Elementy briefingu:</label>
-                                
+
                                 <div class="form-check">
 <input class="form-check-input" type="checkbox" id="daily_briefing_weather" name="daily_briefing.include_weather" {% if daily.include_weather %}checked{% endif %}>
                                     <label class="form-check-label" for="daily_briefing_weather">
                                         Pogoda
                                     </label>
                                 </div>
-                                
+
                                 <div class="form-check">
 <input class="form-check-input" type="checkbox" id="daily_briefing_calendar" name="daily_briefing.include_calendar" {% if daily.include_calendar %}checked{% endif %}>
                                     <label class="form-check-label" for="daily_briefing_calendar">
                                         Kalendarz i przypomnienia
                                     </label>
                                 </div>
-                                
+
                                 <div class="form-check">
 <input class="form-check-input" type="checkbox" id="daily_briefing_holidays" name="daily_briefing.include_holidays" {% if daily.include_holidays %}checked{% endif %}>
                                     <label class="form-check-label" for="daily_briefing_holidays">
                                         Święta polskie
                                     </label>
                                 </div>
-                                
+
                                 <div class="form-check">
 <input class="form-check-input" type="checkbox" id="daily_briefing_memories" name="daily_briefing.include_memories" {% if daily.include_memories %}checked{% endif %}>
                                     <label class="form-check-label" for="daily_briefing_memories">
@@ -469,7 +484,7 @@
                                     </label>
                                 </div>
                             </div>
-                            
+
                             <!-- Minimum Interval -->
                             <div class="mb-3">
                                 <label for="daily_briefing_interval" class="form-label">
@@ -478,7 +493,7 @@
                                 </label>
 <input type="number" class="form-control" id="daily_briefing_interval" name="daily_briefing.min_interval_hours" value="{{ daily.min_interval_hours }}" min="1" max="48">
                             </div>
-                            
+
                             <!-- Briefing Style -->
                             <div class="mb-3">
                                 <label for="daily_briefing_style" class="form-label">
@@ -496,7 +511,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="text-center mb-5">
             <button type="submit" id="save-config-btn" class="btn btn-gaja btn-save">
                 <i class="fas fa-save me-2"></i> Zapisz konfigurację
@@ -522,19 +537,19 @@
                 const rect = tooltipTriggerEl.getBoundingClientRect();
                 const elementCenterX = rect.left + rect.width / 2;
                 const screenCenterX = screenWidth / 2;
-                
+
                 // For very small screens, always use top placement
                 if (screenWidth <= 480) {
                     return 'top';
                 }
-                
+
                 // For small screens, use top/bottom based on vertical position
                 if (screenWidth <= 768) {
                     const windowHeight = window.innerHeight;
                     const elementCenterY = rect.top + rect.height / 2;
                     return elementCenterY < windowHeight / 2 ? 'bottom' : 'top';
                 }
-                
+
                 // For larger screens, use left/right based on horizontal position
                 if (elementCenterX < screenCenterX) {
                     return 'right';
@@ -542,7 +557,7 @@
                     return 'left';
                 }
             };
-            
+
             return new bootstrap.Tooltip(tooltipTriggerEl, {
                 placement: getResponsivePlacement(),
                 boundary: 'viewport',
@@ -581,7 +596,7 @@
             resizeTimeout = setTimeout(function() {
                 // Dispose existing tooltips
                 tooltipList.forEach(tooltip => tooltip.dispose());
-                
+
                 // Reinitialize with new responsive placement
                 const newTooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
                 newTooltipTriggerList.forEach(function (tooltipTriggerEl) {
@@ -590,24 +605,24 @@
                         const rect = tooltipTriggerEl.getBoundingClientRect();
                         const elementCenterX = rect.left + rect.width / 2;
                         const screenCenterX = screenWidth / 2;
-                        
+
                         if (screenWidth <= 480) {
                             return 'top';
                         }
-                        
+
                         if (screenWidth <= 768) {
                             const windowHeight = window.innerHeight;
                             const elementCenterY = rect.top + rect.height / 2;
                             return elementCenterY < windowHeight / 2 ? 'bottom' : 'top';
                         }
-                        
+
                         if (elementCenterX < screenCenterX) {
                             return 'right';
                         } else {
                             return 'left';
                         }
                     };
-                    
+
                     new bootstrap.Tooltip(tooltipTriggerEl, {
                         placement: getResponsivePlacement(),
                         boundary: 'viewport',
@@ -640,39 +655,46 @@
                 });
             }, 250); // Debounce resize events
         });
-        
+
         // Save config on form submit
         configForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             saveConfig();
         });
-        
+
         // Show/hide API key fields based on selected provider
         provider.addEventListener('change', function() {
             updateApiKeyFields();
         });
-        
+
         // Refresh mic devices
         refreshMicBtn.addEventListener('click', function() {
             loadMicDevices();
         });
-        
-        // Load mic devices on page load
+
+        // Refresh speaker devices
+        const refreshSpeakerBtn = document.getElementById('refresh-speaker-devices-btn');
+        refreshSpeakerBtn.addEventListener('click', function() {
+            loadSpeakerDevices();
+        });
+
+        // Load devices on page load
         loadMicDevices();
-        
+        loadSpeakerDevices();
+
         // Show/hide API key fields on page load
         updateApiKeyFields();
-        
+
         // Function to save config
         async function saveConfig() {
             saveBtn.disabled = true;
             saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Zapisywanie...';
-            
+
             try {
                 // Collect form data into one object
                 const formData = new FormData(configForm);
                 let config = {};
-                
+
                 // Process form fields
                 for (const [key, value] of formData.entries()) {
                     // Handle nested properties (like API_KEYS.OPENAI_API_KEY)
@@ -684,27 +706,27 @@
                         // Handle boolean values from checkboxes
                         if (document.getElementById(key)?.type === 'checkbox') {
                             config[key] = document.getElementById(key).checked;
-                        } 
+                        }
                         // Handle numeric values
                         else if (!isNaN(value) && document.getElementById(key)?.type === 'number') {
                             config[key] = Number(value);
-                        } 
+                        }
                         // Handle all other values as strings
                         else {
                             config[key] = value;
                         }
                     }
                 }
-                
+
                 // Send config to server
                 const response = await fetch('/api/config', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(config)
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (result.success) {
                     showFlashMessage('Konfiguracja została zapisana pomyślnie!', 'success');
                 } else {
@@ -719,7 +741,7 @@
                 saveBtn.innerHTML = '<i class="fas fa-save me-2"></i> Zapisz konfigurację';
             }
         }
-        
+
         // Function to show flash messages dynamically
         function showFlashMessage(message, category) {
             const container = document.getElementById('flash-message-container');
@@ -727,11 +749,11 @@
                 console.error("Flash message container not found!");
                 return;
             }
-            
+
             // Remove existing flash messages first
             const existingAlerts = container.querySelectorAll('.alert');
             existingAlerts.forEach(alert => alert.remove());
-            
+
             const alertDiv = document.createElement('div');
             alertDiv.className = `alert alert-${category} alert-dismissible fade show mt-3`;
             alertDiv.role = 'alert';
@@ -741,29 +763,29 @@
             `;
             container.appendChild(alertDiv);
         }
-        
+
         // Function to load microphone devices
         async function loadMicDevices() {
             const select = document.getElementById('mic-device-id-select');
             const currentValue = select.getAttribute('data-current-value');
-            
+
             select.disabled = true;
             select.innerHTML = '<option value="">Ładowanie urządzeń...</option>';
             refreshMicBtn.disabled = true;
-            
+
             try {
                 const response = await fetch('/api/audio/devices');
                 const devices = await response.json();
-                
+
                 select.innerHTML = '';
-                
+
                 // Add default option
                 const defaultOption = document.createElement('option');
                 defaultOption.value = '';
                 defaultOption.textContent = 'Wybierz urządzenie';
                 defaultOption.selected = !currentValue;
                 select.appendChild(defaultOption);
-                
+
                 // Add device options
                 devices.forEach(device => {
                     const option = document.createElement('option');
@@ -780,15 +802,55 @@
                 refreshMicBtn.disabled = false;
             }
         }
-        
+
+        // Function to load speaker devices
+        async function loadSpeakerDevices() {
+            const select = document.getElementById('speaker-device-id-select');
+            const currentValue = select.getAttribute('data-current-value');
+            const refreshSpeakerBtn = document.getElementById('refresh-speaker-devices-btn');
+
+            select.disabled = true;
+            select.innerHTML = '<option value="">Ładowanie urządzeń...</option>';
+            refreshSpeakerBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/audio/speakers');
+                const devices = await response.json();
+
+                select.innerHTML = '';
+
+                // Add default option
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = 'Wybierz urządzenie';
+                defaultOption.selected = !currentValue;
+                select.appendChild(defaultOption);
+
+                // Add device options
+                devices.forEach(device => {
+                    const option = document.createElement('option');
+                    option.value = device.id;
+                    option.textContent = device.name || `Urządzenie ${device.id}`;
+                    option.selected = device.id.toString() === currentValue;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading speaker devices:', error);
+                select.innerHTML = '<option value="">Błąd ładowania urządzeń</option>';
+            } finally {
+                select.disabled = false;
+                refreshSpeakerBtn.disabled = false;
+            }
+        }
+
         // Function to update API key fields
         function updateApiKeyFields() {
             const selectedProvider = provider.value;
             const apiKeyFields = document.querySelectorAll('.api-key-field');
-            
+
             apiKeyFields.forEach(field => {
                 const providerId = field.id.replace('api-key-', '');
-                
+
                 if ((selectedProvider === 'openai' && providerId === 'openai') ||
                     (selectedProvider === 'anthropic' && providerId === 'anthropic') ||
                     (selectedProvider === 'together' && providerId === 'together') ||
