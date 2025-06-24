@@ -1,12 +1,25 @@
+"""
+Refactored core_module for GAJA Assistant - AGENTS.md Compliant
+
+This module provides core functionality including:
+- Timers with async polling
+- Calendar events
+- Reminders
+- Task management
+- List management
+
+All functions are async/await compatible and use asyncio.to_thread() for non-blocking I/O.
+"""
+
+import asyncio
 import json
 import logging
 import os
-import sys  # Added import for sys
-import threading
+import sys
 from datetime import datetime, timedelta
+from typing import Any
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.WARNING)
 
 # Determine the appropriate directory for persistent application data
 APP_NAME = "Asystent_Server"
@@ -32,707 +45,144 @@ except Exception as e:
         f"Could not create/access user-specific data directory: {e}. Falling back."
     )
     # Fallback: try to create a data directory in the current working directory
-    # This is not ideal, especially for bundled apps, but better than failing outright.
     fallback_dir_name = f"{APP_NAME}_data_fallback"
     try:
         # Try to use the directory where the script/executable is located if possible
         if getattr(
             sys, "frozen", False
         ):  # If application is frozen (e.g. PyInstaller bundle)
-            # sys.executable is the path to the frozen executable
-            app_run_dir = os.path.dirname(sys.executable)  # Use executable's directory
+            app_run_dir = os.path.dirname(sys.executable)
         else:  # If running as a script
-            # __file__ is the path to the script
-            app_run_dir = os.path.dirname(
-                os.path.abspath(__file__)
-            )  # Use script's directory
+            app_run_dir = os.path.dirname(os.path.abspath(__file__))
 
         user_data_dir = os.path.join(app_run_dir, fallback_dir_name)
         os.makedirs(user_data_dir, exist_ok=True)
-        logger.warning(f"Using fallback data directory: {user_data_dir}")
-    except Exception as e2:
-        logger.critical(
-            f"Failed to create even fallback data directory {user_data_dir}: {e2}. Data storage will likely fail."
-        )
+        logger.info(f"Using fallback data directory: {user_data_dir}")
+    except Exception as fallback_e:
+        logger.error(f"Fallback directory creation also failed: {fallback_e}")
         # If even this fails, set user_data_dir to something to prevent crash on join, though writes will fail
         user_data_dir = "."
 
 STORAGE_FILE = os.path.join(user_data_dir, "core_storage.json")
 logger.info(f"Using storage file: {STORAGE_FILE}")
 
-
-# initialize storage
-def _init_storage():
-    if not os.path.exists(STORAGE_FILE):
-        try:
-            with open(STORAGE_FILE, "w") as f:
-                json.dump(
-                    {
-                        "timers": [],
-                        "events": [],
-                        "reminders": [],
-                        "shopping_list": [],
-                        "tasks": [],
-                    },
-                    f,
-                )
-            logger.info(f"Initialized new storage file at: {STORAGE_FILE}")
-        except Exception as e:
-            logger.error(
-                f"Failed to create or write initial storage file at {STORAGE_FILE}: {e}"
-            )
-            # This is a critical error; the application might not function correctly.
-            # Consider raising an exception or implementing more specific error handling.
+# Global timer polling task
+_timer_polling_task = None
 
 
-_init_storage()
-
-
-# --- Background timer polling thread ---
-def _timer_polling_loop():
-    import time
-
-    while True:
-        try:
-            data = _load_storage()
-            now = datetime.now()
-            changed = False
-            remaining = []
-            for t in data["timers"]:
-                target = datetime.fromisoformat(t["target"])
-                if target <= now:
-                    logger.info(f"Timer finished: {t['label']}")
-                    # Server-side: Log timer completion instead of playing beep
-                    # The client will be notified and can play the sound
-                    try:
-                        # TODO: Send notification to connected clients
-                        logger.warning(
-                            f"⏰ TIMER FINISHED: {t['label']} - Sound: {t.get('sound', 'beep')}"
-                        )
-                    except Exception as e:
-                        logger.error(f"Timer notification failed: {e}")
-                    changed = True
-                else:
-                    remaining.append(t)
-            if changed:
-                data["timers"] = remaining
-                _save_storage(data)
-        except Exception as e:
-            logger.error(f"Timer polling error: {e}")
-        time.sleep(1)
-
-
-# Start polling thread once on import (after all functions are defined)
-def _start_timer_polling_thread():
-    t = threading.Thread(target=_timer_polling_loop, daemon=True)
-    t.start()
-
-
-def _load_storage():
-    with open(STORAGE_FILE) as f:
-        return json.load(f)
-
-
-def _save_storage(data):
-    with open(STORAGE_FILE, "w") as f:
-        json.dump(data, f, indent=2)
-
-
-# --- Timer callback ---
-def _timer_finished(label: str):
-    logger.info(f"Timer finished: {label}")
-    # Server-side: Log completion instead of playing sound
-    logger.warning(f"⏰ TIMER FINISHED: {label}")
-
-
-# --- Timers ---
-def set_timer(params) -> str:
-    """Set a timer asynchronously: core set_timer <seconds> <label?>"""
-    # Normalize params if dict (AI sometimes passes {"action":..., "duration":..., "label":...})
-    if isinstance(params, dict):
-        seconds = None
-        label = "timer"
-        # Try common keys
-        if "duration" in params:
-            seconds = params["duration"]
-        elif "seconds" in params:
-            seconds = params["seconds"]
-        elif "time" in params:
-            seconds = params["time"]
-        if "label" in params:
-            label = str(params["label"])
-        elif "name" in params:
-            label = str(params["name"])
-        elif (
-            "action" in params
-            and isinstance(params["action"], str)
-            and params["action"] != "set_timer"
-        ):
-            label = params["action"]
-        if seconds is None:
-            return 'Podaj czas w sekundach, np. "core set_timer 60 przerwa"'
-        try:
-            seconds = int(seconds)
-        except Exception:
-            return 'Podaj czas w sekundach, np. "core set_timer 60 przerwa"'
-    elif isinstance(params, int):
-        seconds = params
-        label = "timer"
-    else:
-        parts = str(params).split()
-        if not parts or not parts[0].isdigit():
-            return 'Podaj czas w sekundach, np. "core set_timer 60 przerwa"'
-        seconds = int(parts[0])
-        label = " ".join(parts[1:]) if len(parts) > 1 else "timer"
-    # Allow user to specify sound type (default: beep)
-    sound = None
-    if isinstance(params, dict):
-        sound = params.get("sound") or params.get("beep") or params.get("audio")
-    if not sound:
-        sound = "beep"
-    target = datetime.now() + timedelta(seconds=seconds)
-    data = _load_storage()
-    data["timers"].append(
-        {"label": label, "target": target.isoformat(), "sound": sound}
-    )
-    _save_storage(data)
-    logger.info(f"Set timer: {label} for {seconds} seconds (sound: {sound})")
-    # Schedule immediate timer beep in background (fallback to polling)
-    try:
-        timer_thread = threading.Timer(seconds, _timer_finished, args=(label,))
-        timer_thread.daemon = True
-        timer_thread.start()
-        logger.debug(f"Scheduled Timer thread for label: {label} in {seconds}s")
-    except Exception as e:
-        logger.error(f"Error scheduling timer thread: {e}", exc_info=True)
-    return f'Timer "{label}" ustawiony na {seconds} sekund.'
-
-
-def view_timers(params) -> str:
-    data = _load_storage()
-    now = datetime.now()
-    active = []
-    for t in data["timers"]:
-        target = datetime.fromisoformat(t["target"])
-        if target > now:
-            rem = int((target - now).total_seconds())
-            active.append(f"{t['label']}: {rem}s pozostało")
-    return "\n".join(active) if active else "Brak aktywnych timerów."
-
-
-# --- Calendar Events ---
-def add_event(params: str) -> str:
-    try:
-        when_str, desc = params.split(" ", 1)
-        when = datetime.fromisoformat(when_str)
-    except Exception:
-        return "Format: core add_event 2025-05-10T14:00 Spotkanie"
-    data = _load_storage()
-    data["events"].append({"time": when.isoformat(), "desc": desc})
-    _save_storage(data)
-    logger.info(f"Added event: {when} - {desc}")
-    return f'Dodano wydarzenie "{desc}" na {when}.'
-
-
-def view_calendar(params) -> str:
-    data = _load_storage()
-    if not data["events"]:
-        return "Brak wydarzeń."
-    lines = []
-    for e in sorted(data["events"], key=lambda x: x["time"]):
-        dt = datetime.fromisoformat(e["time"])
-        lines.append(f"{dt.strftime('%Y-%m-%d %H:%M')}: {e['desc']}")
-    return "\n".join(lines)
-
-
-# --- Reminders ---
-def set_reminder(params: str, conversation_history=None) -> str:
-    try:
-        when_str, note = params.split(" ", 1)
-        when = datetime.fromisoformat(when_str)
-    except Exception:
-        return "Format: core set_reminder 2025-05-10T08:00 Kup_mleko"
-    data = _load_storage()
-    data["reminders"].append({"time": when.isoformat(), "note": note})
-    _save_storage(data)
-    logger.info(f"Set reminder: {note} at {when}")
-    return f'Ustawiono przypomnienie "{note}" na {when}.'
-
-
-def view_reminders(params) -> str:
-    data = _load_storage()
-    now = datetime.now()
-    upcoming = [r for r in data["reminders"] if datetime.fromisoformat(r["time"]) > now]
-    if not upcoming:
-        return "Brak nadchodzących przypomnień."
-    lines = []
-    for r in sorted(upcoming, key=lambda x: x["time"]):
-        dt = datetime.fromisoformat(r["time"])
-        lines.append(f"{dt.strftime('%Y-%m-%d %H:%M')}: {r['note']}")
-    return "\n".join(lines)
-
-
-# --- Shopping List ---
-def add_item(params: str) -> str:
-    # Accept dict or string
-    if isinstance(params, dict):
-        # Try common keys
-        item = (
-            params.get("item")
-            or params.get("name")
-            or params.get("add")
-            or params.get("value")
-        )
-        if not item:
-            # If only one key, use its value
-            if len(params) == 1:
-                item = list(params.values())[0]
-        if not item:
-            return "Podaj nazwę przedmiotu do dodania."
-        item = str(item).strip()
-    else:
-        item = str(params).strip()
-    if not item:
-        return "Podaj nazwę przedmiotu do dodania."
-    data = _load_storage()
-    data["shopping_list"].append(item)
-    _save_storage(data)
-    logger.info(f"Added item to shopping list: {item}")
-    return f'Dodano "{item}" do listy zakupów.'
-
-
-def view_list(params) -> str:
-    data = _load_storage()
-    if not data["shopping_list"]:
-        return "Lista zakupów jest pusta."
-    return "\n".join(f"- {i}" for i in data["shopping_list"])
-
-
-def remove_item(params: str) -> str:
-    # Accept dict or string
-    if isinstance(params, dict):
-        item = (
-            params.get("item")
-            or params.get("name")
-            or params.get("remove")
-            or params.get("value")
-        )
-        if not item:
-            # If only one key, use its value
-            if len(params) == 1:
-                item = list(params.values())[0]
-        if not item:
-            return "Podaj nazwę przedmiotu do usunięcia."
-        item = str(item).strip()
-    else:
-        item = str(params).strip()
-    data = _load_storage()
-    if item in data["shopping_list"]:
-        data["shopping_list"].remove(item)
-        _save_storage(data)
-        return f'Usunięto "{item}" z listy zakupów.'
-    return f'Nie ma "{item}" na liście.'
-
-
-# --- To-Do Tasks ---
-def add_task(params: str) -> str:
-    # Accept dict or string
-    if isinstance(params, dict):
-        task = (
-            params.get("task")
-            or params.get("add")
-            or params.get("name")
-            or params.get("value")
-        )
-        if not task:
-            if len(params) == 1:
-                task = list(params.values())[0]
-        if not task:
-            return "Podaj opis zadania."
-        task = str(task).strip()
-    else:
-        task = str(params).strip()
-    if not task:
-        return "Podaj opis zadania."
-    data = _load_storage()
-    data["tasks"].append({"task": task, "done": False})
-    _save_storage(data)
-    logger.info(f"Added task: {task}")
-    return f"Dodano zadanie: {task}"
-
-
-def view_tasks(params) -> str:
-    data = _load_storage()
-    if not data["tasks"]:
-        return "Brak zadań na liście."
-    lines = []
-    for idx, t in enumerate(data["tasks"], 1):
-        status = "✔" if t["done"] else "✗"
-        lines.append(f"{idx}. [{status}] {t['task']}")
-    return "\n".join(lines)
-
-
-def complete_task(params: str) -> str:
-    # Accept dict or string
-    if isinstance(params, dict):
-        idx = (
-            params.get("task_number")
-            or params.get("index")
-            or params.get("done")
-            or params.get("id")
-        )
-        if idx is None:
-            if len(params) == 1:
-                idx = list(params.values())[0]
-        if idx is None:
-            return "Podaj numer zadania, np. core complete_task 2"
-        try:
-            idx = int(idx) - 1
-        except Exception:
-            return "Podaj numer zadania, np. core complete_task 2"
-    else:
-        if not str(params).isdigit():
-            return "Podaj numer zadania, np. core complete_task 2"
-        idx = int(params) - 1
-    data = _load_storage()
-    if idx < 0 or idx >= len(data["tasks"]):
-        return "Nie ma zadania o takim numerze."
-    data["tasks"][idx]["done"] = True
-    _save_storage(data)
-    logger.info(f'Marked task as done: {data["tasks"][idx]["task"]}')
-    return f"Oznaczono zadanie {idx+1} jako wykonane."
-
-
-def remove_task(params: str) -> str:
-    # Accept dict or string
-    if isinstance(params, dict):
-        idx = (
-            params.get("task_number")
-            or params.get("index")
-            or params.get("remove")
-            or params.get("id")
-        )
-        if idx is None:
-            if len(params) == 1:
-                idx = list(params.values())[0]
-        if idx is None:
-            return "Podaj numer zadania, np. core remove_task 3"
-        try:
-            idx = int(idx) - 1
-        except Exception:
-            return "Podaj numer zadania, np. core remove_task 3"
-    else:
-        if not str(params).isdigit():
-            return "Podaj numer zadania, np. core remove_task 3"
-        idx = int(params) - 1
-    data = _load_storage()
-    if idx < 0 or idx >= len(data["tasks"]):
-        return "Nie ma zadania o takim numerze."
-    removed = data["tasks"].pop(idx)
-    _save_storage(data)
-    logger.info(f'Removed task: {removed["task"]}')
-    return f'Usunięto zadanie: {removed["task"]}'
-
-
-# Main handler
-def handler(params: str = "", conversation_history: list = None) -> str:
-    reg = register()
-    # 1. Obsługa: params jako dict z 'action' (oryginalna logika)
-    if isinstance(params, dict) and "action" in params:
-        action = params["action"]
-        sub_params = dict(params)
-        del sub_params["action"]
-        if len(sub_params) == 1:
-            sub_params = list(sub_params.values())[0]
-        sub = reg["sub_commands"].get(action)
-        if not sub:
-            for name, sc in reg["sub_commands"].items():
-                if action in sc.get("aliases", []):
-                    sub = sc
-                    break
-        if sub:
-            return sub["function"](sub_params)
-        else:
-            return f"Nieznana subkomenda: {action}"
-
-    # 2. Obsługa: params jako dict z jednym kluczem będącym subkomendą lub aliasem
-    if isinstance(params, dict) and len(params) == 1:
-        key = list(params.keys())[0]
-        value = params[key]
-        sub = reg["sub_commands"].get(key)
-        if not sub:
-            # Spróbuj aliasów
-            for name, sc in reg["sub_commands"].items():
-                if key in sc.get("aliases", []):
-                    sub = sc
-                    break
-        if sub:
-            return sub["function"](value)
-
-    return (
-        "Użyj sub-komend: set_timer, view_timers, add_event, view_calendar, "
-        "set_reminder, view_reminders, add_item, view_list, remove_item, "
-        "add_task, view_tasks, complete_task, remove_task"
-    )
-
-
-# Registration
-def register():
-    """Register core plugin with sub-commands for timers, events, reminders, shopping
-    list, and tasks.
-
-    Expands aliases for sub-command lookup.
-    """
-    info = {
-        "command": "core",
-        "description": "Timers, calendar events, reminders, shopping list, to-do tasks",
-        "handler": handler,
-        "sub_commands": {
-            "set_timer": {
-                "function": set_timer,
-                "description": "Ustaw timer",
-                "aliases": ["timer"],
-                "params_desc": "<seconds>",
-            },
-            "view_timers": {
-                "function": view_timers,
-                "description": "Pokaż aktywne timery",
-                "aliases": ["timers"],
-                "params_desc": "",
-            },
-            "add_event": {
-                "function": add_event,
-                "description": "Dodaj wydarzenie",
-                "aliases": ["event"],
-                "params_desc": "<ISOdatetime> <desc>",
-            },
-            "view_calendar": {
-                "function": view_calendar,
-                "description": "Pokaż kalendarz",
-                "aliases": ["calendar"],
-                "params_desc": "",
-            },
-            "set_reminder": {
-                "function": set_reminder,
-                "description": "Ustaw przypomnienie",
-                "aliases": ["reminder"],
-                "params_desc": "<ISOdatetime> <note>",
-            },
-            "view_reminders": {
-                "function": view_reminders,
-                "description": "Pokaż przypomnienia",
-                "aliases": ["reminders"],
-                "params_desc": "",
-            },
-            "add_item": {
-                "function": add_item,
-                "description": "Dodaj do listy zakupów",
-                "aliases": ["item"],
-                "params_desc": "<item>",
-            },
-            "view_list": {
-                "function": view_list,
-                "description": "Pokaż listę zakupów",
-                "aliases": ["list"],
-                "params_desc": "",
-            },
-            "remove_item": {
-                "function": remove_item,
-                "description": "Usuń z listy zakupów",
-                "aliases": ["remove"],
-                "params_desc": "<item>",
-            },
-            "add_task": {
-                "function": add_task,
-                "description": "Dodaj zadanie do to-do",
-                "aliases": ["task"],
-                "params_desc": "<task>",
-            },
-            "view_tasks": {
-                "function": view_tasks,
-                "description": "Pokaż listę zadań",
-                "aliases": ["tasks"],
-                "params_desc": "",
-            },
-            "complete_task": {
-                "function": complete_task,
-                "description": "Oznacz zadanie jako wykonane",
-                "aliases": ["done"],
-                "params_desc": "<task_number>",
-            },
-            "remove_task": {
-                "function": remove_task,
-                "description": "Usuń zadanie",
-                "aliases": ["rm_task"],
-                "params_desc": "<task_number>",
-            },
-        },
-    }
-    # Expand sub-command aliases for lookup
-    subs = info["sub_commands"]
-    for name, sc in list(subs.items()):
-        for alias in sc.get("aliases", []):
-            # do not override if alias equals primary name
-            if alias not in subs:
-                subs[alias] = sc
-    return info
-
-
-# Start polling thread when module is loaded
-_start_timer_polling_thread()
-
-
-def get_reminders_for_today():
-    """Get reminders for today only - helper function for daily briefing."""
-    data = _load_storage()
-    today = datetime.now().date()
-    today_reminders = []
-
-    for reminder in data["reminders"]:
-        reminder_date = datetime.fromisoformat(reminder["time"]).date()
-        if reminder_date == today:
-            today_reminders.append(
-                {"title": reminder["note"], "time": reminder["time"]}
-            )
-
-    return today_reminders
-
-
-# Plugin metadata (required by plugin manager)
-PLUGIN_NAME = "core_module"
-PLUGIN_DESCRIPTION = (
-    "Core functionality: timers, calendar, reminders, shopping list, to-do tasks"
-)
-PLUGIN_VERSION = "1.0.0"
-PLUGIN_AUTHOR = "GAJA Assistant"
-PLUGIN_DEPENDENCIES = []
-
-
-def get_current_time():
-    """Get current date and time."""
-    now = datetime.now()
-    return f"Aktualna data i godzina: {now.strftime('%Y-%m-%d %H:%M:%S')}"
-
-
-def get_functions():
-    """Return list of available functions for OpenAI function calling."""
+# Required plugin functions
+def get_functions() -> list[dict[str, Any]]:
+    """Returns list of available functions in the plugin."""
     return [
         {
-            "name": "get_current_time",
-            "description": "Get the current date and time",
-            "parameters": {"type": "object", "properties": {}, "required": []},
-        },
-        {
             "name": "set_timer",
-            "description": "Set a timer for a specified duration",
+            "description": "Set a timer with specified duration and label",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "seconds": {
-                        "type": "integer",
-                        "description": "Duration in seconds",
+                    "duration": {
+                        "type": "string",
+                        "description": "Duration (e.g., '5m', '30s', '1h')",
                     },
-                    "label": {"type": "string", "description": "Timer label/name"},
+                    "label": {
+                        "type": "string",
+                        "description": "Timer label/description",
+                        "default": "timer",
+                    },
                 },
-                "required": ["seconds"],
+                "required": ["duration"],
             },
         },
         {
             "name": "view_timers",
-            "description": "View all active timers",
-            "parameters": {"type": "object", "properties": {}, "required": []},
+            "description": "View active timers",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+            },
         },
         {
             "name": "add_event",
-            "description": "Add an event to the calendar",
+            "description": "Add a calendar event",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "datetime": {
+                    "title": {"type": "string", "description": "Event title"},
+                    "date": {
                         "type": "string",
-                        "description": "Event date and time in ISO format (YYYY-MM-DDTHH:MM)",
+                        "description": "Event date (YYYY-MM-DD)",
                     },
-                    "description": {
+                    "time": {
                         "type": "string",
-                        "description": "Event description",
+                        "description": "Event time (HH:MM)",
+                        "default": "12:00",
                     },
                 },
-                "required": ["datetime", "description"],
+                "required": ["title", "date"],
             },
         },
         {
             "name": "view_calendar",
-            "description": "View all calendar events",
-            "parameters": {"type": "object", "properties": {}, "required": []},
+            "description": "View calendar events",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+            },
         },
         {
             "name": "set_reminder",
-            "description": "Set a reminder for a specific date and time",
+            "description": "Set a reminder",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "datetime": {
+                    "text": {"type": "string", "description": "Reminder text"},
+                    "time": {
                         "type": "string",
-                        "description": "Reminder date and time in ISO format (YYYY-MM-DDTHH:MM)",
+                        "description": "Reminder time (ISO format)",
                     },
-                    "note": {"type": "string", "description": "Reminder note/message"},
                 },
-                "required": ["datetime", "note"],
+                "required": ["text", "time"],
             },
         },
         {
             "name": "view_reminders",
-            "description": "View all upcoming reminders",
-            "parameters": {"type": "object", "properties": {}, "required": []},
-        },
-        {
-            "name": "add_item",
-            "description": "Add an item to the shopping list",
+            "description": "View reminders",
             "parameters": {
                 "type": "object",
-                "properties": {
-                    "item": {
-                        "type": "string",
-                        "description": "Item to add to shopping list",
-                    }
-                },
-                "required": ["item"],
+                "properties": {},
             },
         },
         {
-            "name": "view_list",
-            "description": "View the shopping list",
-            "parameters": {"type": "object", "properties": {}, "required": []},
-        },
-        {
-            "name": "remove_item",
-            "description": "Remove an item from the shopping list",
+            "name": "get_reminders_for_today",
+            "description": "Get reminders due today",
             "parameters": {
                 "type": "object",
-                "properties": {
-                    "item": {
-                        "type": "string",
-                        "description": "Item to remove from shopping list",
-                    }
-                },
-                "required": ["item"],
+                "properties": {},
             },
         },
         {
             "name": "add_task",
-            "description": "Add a task to the to-do list",
+            "description": "Add a task",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "task": {"type": "string", "description": "Task description"}
+                    "task": {"type": "string", "description": "Task description"},
+                    "priority": {
+                        "type": "string",
+                        "description": "Priority level",
+                        "default": "medium",
+                    },
                 },
                 "required": ["task"],
             },
         },
         {
             "name": "view_tasks",
-            "description": "View all tasks in the to-do list",
-            "parameters": {"type": "object", "properties": {}, "required": []},
+            "description": "View tasks",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+            },
         },
         {
             "name": "complete_task",
@@ -740,72 +190,1050 @@ def get_functions():
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "task_number": {
+                    "task_id": {
                         "type": "integer",
-                        "description": "Task number to mark as completed",
-                    }
+                        "description": "Task ID to complete",
+                    },
                 },
-                "required": ["task_number"],
+                "required": ["task_id"],
             },
         },
         {
             "name": "remove_task",
-            "description": "Remove a task from the to-do list",
+            "description": "Remove a task",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "task_number": {
-                        "type": "integer",
-                        "description": "Task number to remove",
-                    }
+                    "task_id": {"type": "integer", "description": "Task ID to remove"},
                 },
-                "required": ["task_number"],
+                "required": ["task_id"],
+            },
+        },
+        {
+            "name": "add_item",
+            "description": "Add item to a list",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "list_name": {"type": "string", "description": "List name"},
+                    "item": {"type": "string", "description": "Item to add"},
+                },
+                "required": ["list_name", "item"],
+            },
+        },
+        {
+            "name": "view_list",
+            "description": "View items in a list",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "list_name": {"type": "string", "description": "List name"},
+                },
+                "required": ["list_name"],
+            },
+        },
+        {
+            "name": "remove_item",
+            "description": "Remove item from a list",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "list_name": {"type": "string", "description": "List name"},
+                    "item": {"type": "string", "description": "Item to remove"},
+                },
+                "required": ["list_name", "item"],
+            },
+        },
+        {
+            "name": "get_current_time",
+            "description": "Get current time",
+            "parameters": {
+                "type": "object",
+                "properties": {},
             },
         },
     ]
 
 
-def execute_function(function_name: str, parameters: dict, user_id: int = None):
-    """Execute a function by name with given parameters."""
+async def execute_function(
+    function_name: str, parameters: dict[str, Any], user_id: int
+) -> dict[str, Any]:
+    """Executes plugin function asynchronously."""
     try:
-        if function_name == "get_current_time":
-            return get_current_time()
-        elif function_name == "set_timer":
-            return set_timer(parameters)
+        if function_name == "set_timer":
+            duration = parameters.get("duration", "")
+            label = parameters.get("label", "timer")
+            return await set_timer({"duration": duration, "label": label})
+
         elif function_name == "view_timers":
-            return view_timers(parameters)
+            return await view_timers({})
+
         elif function_name == "add_event":
-            # Convert parameters to expected format
-            datetime_str = parameters.get("datetime", "")
-            description = parameters.get("description", "")
-            param_str = f"{datetime_str} {description}"
-            return add_event(param_str)
+            title = parameters.get("title", "")
+            date = parameters.get("date", "")
+            time = parameters.get("time", "12:00")
+            return await add_event({"title": title, "date": date, "time": time})
+
         elif function_name == "view_calendar":
-            return view_calendar(parameters)
+            return await view_calendar({})
+
         elif function_name == "set_reminder":
-            # Convert parameters to expected format
-            datetime_str = parameters.get("datetime", "")
-            note = parameters.get("note", "")
-            param_str = f"{datetime_str} {note}"
-            return set_reminder(param_str)
+            text = parameters.get("text", "")
+            time = parameters.get("time", "")
+            return await set_reminder({"text": text, "time": time})
+
         elif function_name == "view_reminders":
-            return view_reminders(parameters)
-        elif function_name == "add_item":
-            return add_item(parameters)
-        elif function_name == "view_list":
-            return view_list(parameters)
-        elif function_name == "remove_item":
-            return remove_item(parameters)
+            return await view_reminders({})
+
+        elif function_name == "get_reminders_for_today":
+            return await get_reminders_for_today({})
+
         elif function_name == "add_task":
-            return add_task(parameters)
+            task = parameters.get("task", "")
+            priority = parameters.get("priority", "medium")
+            return await add_task({"task": task, "priority": priority})
+
         elif function_name == "view_tasks":
-            return view_tasks(parameters)
+            return await view_tasks({})
+
         elif function_name == "complete_task":
-            return complete_task(parameters)
+            task_id = parameters.get("task_id", -1)
+            return await complete_task({"task_id": task_id})
+
         elif function_name == "remove_task":
-            return remove_task(parameters)
+            task_id = parameters.get("task_id", -1)
+            return await remove_task({"task_id": task_id})
+
+        elif function_name == "add_item":
+            list_name = parameters.get("list_name", "")
+            item = parameters.get("item", "")
+            return await add_item({"list_name": list_name, "item": item})
+
+        elif function_name == "view_list":
+            list_name = parameters.get("list_name", "")
+            return await view_list({"list_name": list_name})
+
+        elif function_name == "remove_item":
+            list_name = parameters.get("list_name", "")
+            item = parameters.get("item", "")
+            return await remove_item({"list_name": list_name, "item": item})
+
+        elif function_name == "get_current_time":
+            return await get_current_time({})
+
         else:
-            return f"Function {function_name} not found in core_module"
+            return {
+                "success": False,
+                "message": f"Unknown function: {function_name}",
+                "error": f"Function '{function_name}' not supported",
+            }
+
     except Exception as e:
-        logger.error(f"Error executing function {function_name}: {e}")
-        return f"Error executing function {function_name}: {str(e)}"
+        logger.error(f"Error in core module function {function_name}: {e}")
+        return {
+            "success": False,
+            "message": f"Error executing {function_name}: {str(e)}",
+            "error": str(e),
+        }
+
+
+# Storage functions
+async def _init_storage():
+    """Initialize storage file with default structure if it doesn't exist."""
+    if not os.path.exists(STORAGE_FILE):
+        try:
+
+            def _write_init_file():
+                with open(STORAGE_FILE, "w") as f:
+                    json.dump(
+                        {
+                            "timers": [],
+                            "events": [],
+                            "reminders": [],
+                            "shopping_list": [],  # Legacy compatibility
+                            "tasks": [],
+                            "lists": {},
+                        },
+                        f,
+                        indent=2,
+                    )
+
+            await asyncio.to_thread(_write_init_file)
+            logger.info(f"Initialized new storage file at: {STORAGE_FILE}")
+        except Exception as e:
+            logger.error(
+                f"Failed to create or write initial storage file at {STORAGE_FILE}: {e}"
+            )
+            raise
+
+
+async def _load_storage():
+    """Load storage data from file asynchronously."""
+    try:
+
+        def _read_file():
+            with open(STORAGE_FILE) as f:
+                return f.read()
+
+        content = await asyncio.to_thread(_read_file)
+        return json.loads(content)
+    except FileNotFoundError:
+        # Initialize storage if file doesn't exist
+        await _init_storage()
+        return {
+            "timers": [],
+            "events": [],
+            "reminders": [],
+            "shopping_list": [],
+            "tasks": [],
+            "lists": {},
+        }
+    except Exception as e:
+        logger.error(f"Error loading storage: {e}")
+        raise
+
+
+async def _save_storage(data):
+    """Save storage data to file asynchronously."""
+    try:
+
+        def _write_file():
+            with open(STORAGE_FILE, "w") as f:
+                json.dump(data, f, indent=2)
+
+        await asyncio.to_thread(_write_file)
+    except Exception as e:
+        logger.error(f"Error saving storage: {e}")
+        raise
+
+
+# Timer polling loop
+async def _timer_polling_loop():
+    """Async timer polling loop - checks for expired timers."""
+    while True:
+        try:
+            data = await _load_storage()
+            now = datetime.now()
+            changed = False
+            remaining = []
+
+            for t in data["timers"]:
+                target = datetime.fromisoformat(t["target"])
+                if target <= now:
+                    logger.info(f"Timer finished: {t['label']}")
+                    logger.warning(f"⏰ TIMER FINISHED: {t['label']}")
+                    changed = True
+                else:
+                    remaining.append(t)
+
+            if changed:
+                data["timers"] = remaining
+                await _save_storage(data)
+
+        except Exception as e:
+            logger.error(f"Timer polling error: {e}")
+
+        # Use async sleep instead of time.sleep
+        await asyncio.sleep(1)
+
+
+def _start_timer_polling_task():
+    """Start the async timer polling task."""
+    global _timer_polling_task
+    if _timer_polling_task is None:
+        _timer_polling_task = asyncio.create_task(_timer_polling_loop())
+
+
+# Core functions
+async def set_timer(params) -> dict[str, Any]:
+    """Set a timer with specified duration and label."""
+    try:
+        # Parse timer parameters
+        seconds = 0
+        label = "timer"
+
+        if isinstance(params, dict):
+            duration = params.get("duration", "")
+            label = params.get("label", "timer")
+
+            if not duration:
+                return {
+                    "success": False,
+                    "message": "Duration parameter is required",
+                    "error": "Missing duration parameter",
+                }
+
+            # Parse duration (support "5m", "30s", "1h" format)
+            if isinstance(duration, str):
+                if duration.endswith("s"):
+                    seconds = int(duration[:-1])
+                elif duration.endswith("m"):
+                    seconds = int(duration[:-1]) * 60
+                elif duration.endswith("h"):
+                    seconds = int(duration[:-1]) * 3600
+                else:
+                    seconds = int(duration)
+            else:
+                seconds = int(duration)
+
+        else:
+            return {
+                "success": False,
+                "message": "Invalid parameters format",
+                "error": "Parameters must be a dictionary",
+            }
+
+        if seconds <= 0:
+            return {
+                "success": False,
+                "message": "Duration must be positive",
+                "error": "Invalid duration value",
+            }
+
+        # Create timer
+        target = datetime.now() + timedelta(seconds=seconds)
+        data = await _load_storage()
+
+        timer_entry = {
+            "label": str(label),
+            "target": target.isoformat(),
+            "sound": "beep",
+            "created": datetime.now().isoformat(),
+        }
+
+        data["timers"].append(timer_entry)
+        await _save_storage(data)
+
+        logger.info(f"Set timer: {label} for {seconds} seconds")
+        return {
+            "success": True,
+            "message": f'Timer "{label}" set for {seconds} seconds.',
+            "timer": timer_entry,
+        }
+
+    except ValueError as e:
+        return {
+            "success": False,
+            "message": f"Invalid duration format: {e}",
+            "error": str(e),
+        }
+    except Exception as e:
+        logger.error(f"Error setting timer: {e}")
+        return {
+            "success": False,
+            "message": f"Error setting timer: {e}",
+            "error": str(e),
+        }
+
+
+async def view_timers(params) -> dict[str, Any]:
+    """View active timers."""
+    try:
+        data = await _load_storage()
+        now = datetime.now()
+        active = []
+
+        for t in data["timers"]:
+            target = datetime.fromisoformat(t["target"])
+            if target > now:
+                remaining = target - now
+                remaining_seconds = int(remaining.total_seconds())
+                active.append(
+                    {
+                        "label": t["label"],
+                        "remaining_seconds": remaining_seconds,
+                        "remaining_formatted": str(remaining).split(".")[0],
+                    }
+                )
+
+        if not active:
+            return {"success": True, "message": "No active timers.", "timers": []}
+
+        result_message = "Active timers:\n"
+        for i, timer in enumerate(active, 1):
+            result_message += (
+                f"{i}. {timer['label']}: {timer['remaining_formatted']} remaining\n"
+            )
+
+        return {"success": True, "message": result_message.strip(), "timers": active}
+
+    except Exception as e:
+        logger.error(f"Error viewing timers: {e}")
+        return {
+            "success": False,
+            "message": f"Error viewing timers: {e}",
+            "error": str(e),
+        }
+
+
+async def add_event(params) -> dict[str, Any]:
+    """Add a calendar event."""
+    try:
+        if not isinstance(params, dict):
+            return {
+                "success": False,
+                "message": "Parameters must be a dictionary",
+                "error": "Invalid parameter format",
+            }
+
+        title = params.get("title", "").strip()
+        date = params.get("date", "").strip()
+        time = params.get("time", "12:00").strip()
+
+        if not title or not date:
+            return {
+                "success": False,
+                "message": "Title and date parameters are required",
+                "error": "Missing required parameters",
+            }
+
+        # Combine date and time
+        when_str = f"{date}T{time}"
+        when = datetime.fromisoformat(when_str)
+
+        data = await _load_storage()
+        event_entry = {
+            "title": title,
+            "time": when.isoformat(),
+            "desc": title,  # Legacy compatibility
+            "created": datetime.now().isoformat(),
+        }
+
+        data["events"].append(event_entry)
+        await _save_storage(data)
+
+        logger.info(f"Added event: {title} at {when_str}")
+        return {
+            "success": True,
+            "message": f'Event "{title}" added for {when.strftime("%Y-%m-%d %H:%M")}',
+            "event": event_entry,
+        }
+
+    except ValueError as e:
+        return {
+            "success": False,
+            "message": f"Invalid date/time format: {e}",
+            "error": str(e),
+        }
+    except Exception as e:
+        logger.error(f"Error adding event: {e}")
+        return {
+            "success": False,
+            "message": f"Error adding event: {e}",
+            "error": str(e),
+        }
+
+
+async def view_calendar(params) -> dict[str, Any]:
+    """View calendar events."""
+    try:
+        data = await _load_storage()
+        events = data.get("events", [])
+
+        if not events:
+            return {"success": True, "message": "No calendar events.", "events": []}
+
+        # Sort events by time
+        sorted_events = sorted(events, key=lambda x: x["time"])
+
+        result_message = "Calendar events:\n"
+        for i, event in enumerate(sorted_events, 1):
+            event_time = datetime.fromisoformat(event["time"])
+            title = event.get("title") or event.get("desc", "Untitled")
+            result_message += (
+                f"{i}. {event_time.strftime('%Y-%m-%d %H:%M')} - {title}\n"
+            )
+
+        return {
+            "success": True,
+            "message": result_message.strip(),
+            "events": sorted_events,
+        }
+
+    except Exception as e:
+        logger.error(f"Error viewing calendar: {e}")
+        return {
+            "success": False,
+            "message": f"Error viewing calendar: {e}",
+            "error": str(e),
+        }
+
+
+async def set_reminder(params) -> dict[str, Any]:
+    """Set a reminder."""
+    try:
+        if not isinstance(params, dict):
+            return {
+                "success": False,
+                "message": "Parameters must be a dictionary",
+                "error": "Invalid parameter format",
+            }
+
+        text = params.get("text", "").strip()
+        time_str = params.get("time", "").strip()
+
+        if not text or not time_str:
+            return {
+                "success": False,
+                "message": "Text and time parameters are required",
+                "error": "Missing required parameters",
+            }
+
+        # Parse reminder time
+        reminder_time = datetime.fromisoformat(time_str)
+
+        data = await _load_storage()
+        reminder_entry = {
+            "text": text,
+            "time": reminder_time.isoformat(),
+            "created": datetime.now().isoformat(),
+        }
+
+        data["reminders"].append(reminder_entry)
+        await _save_storage(data)
+
+        logger.info(f"Set reminder: {text} at {time_str}")
+        return {
+            "success": True,
+            "message": f'Reminder "{text}" set for {reminder_time.strftime("%Y-%m-%d %H:%M")}',
+            "reminder": reminder_entry,
+        }
+
+    except ValueError as e:
+        return {
+            "success": False,
+            "message": f"Invalid time format: {e}",
+            "error": str(e),
+        }
+    except Exception as e:
+        logger.error(f"Error setting reminder: {e}")
+        return {
+            "success": False,
+            "message": f"Error setting reminder: {e}",
+            "error": str(e),
+        }
+
+
+async def view_reminders(params) -> dict[str, Any]:
+    """View reminders."""
+    try:
+        data = await _load_storage()
+        reminders = data.get("reminders", [])
+
+        if not reminders:
+            return {"success": True, "message": "No reminders.", "reminders": []}
+
+        # Sort reminders by time
+        sorted_reminders = sorted(reminders, key=lambda x: x["time"])
+
+        result_message = "Reminders:\n"
+        for i, reminder in enumerate(sorted_reminders, 1):
+            reminder_time = datetime.fromisoformat(reminder["time"])
+            result_message += f"{i}. {reminder_time.strftime('%Y-%m-%d %H:%M')} - {reminder['text']}\n"
+
+        return {
+            "success": True,
+            "message": result_message.strip(),
+            "reminders": sorted_reminders,
+        }
+
+    except Exception as e:
+        logger.error(f"Error viewing reminders: {e}")
+        return {
+            "success": False,
+            "message": f"Error viewing reminders: {e}",
+            "error": str(e),
+        }
+
+
+async def get_reminders_for_today(params) -> dict[str, Any]:
+    """Get reminders due today."""
+    try:
+        data = await _load_storage()
+        reminders = data.get("reminders", [])
+        today = datetime.now().date()
+
+        today_reminders = []
+        for reminder in reminders:
+            reminder_time = datetime.fromisoformat(reminder["time"])
+            if reminder_time.date() == today:
+                today_reminders.append(reminder)
+
+        if not today_reminders:
+            return {
+                "success": True,
+                "message": "No reminders for today.",
+                "reminders": [],
+            }
+
+        # Sort by time
+        sorted_reminders = sorted(today_reminders, key=lambda x: x["time"])
+
+        result_message = "Today's reminders:\n"
+        for i, reminder in enumerate(sorted_reminders, 1):
+            reminder_time = datetime.fromisoformat(reminder["time"])
+            result_message += (
+                f"{i}. {reminder_time.strftime('%H:%M')} - {reminder['text']}\n"
+            )
+
+        return {
+            "success": True,
+            "message": result_message.strip(),
+            "reminders": sorted_reminders,
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting today's reminders: {e}")
+        return {
+            "success": False,
+            "message": f"Error getting today's reminders: {e}",
+            "error": str(e),
+        }
+
+
+async def add_task(params) -> dict[str, Any]:
+    """Add a task."""
+    try:
+        if not isinstance(params, dict):
+            return {
+                "success": False,
+                "message": "Parameters must be a dictionary",
+                "error": "Invalid parameter format",
+            }
+
+        task_text = params.get("task", "").strip()
+        priority = params.get("priority", "medium").strip().lower()
+
+        if not task_text:
+            return {
+                "success": False,
+                "message": "Task parameter is required",
+                "error": "Missing task parameter",
+            }
+
+        # Validate priority
+        valid_priorities = ["low", "medium", "high", "urgent"]
+        if priority not in valid_priorities:
+            priority = "medium"
+
+        data = await _load_storage()
+        task_entry = {
+            "task": task_text,
+            "priority": priority,
+            "completed": False,
+            "created": datetime.now().isoformat(),
+        }
+
+        data["tasks"].append(task_entry)
+        await _save_storage(data)
+
+        logger.info(f"Added task: {task_text} (priority: {priority})")
+        return {
+            "success": True,
+            "message": f'Task "{task_text}" added with {priority} priority.',
+            "task": task_entry,
+        }
+
+    except Exception as e:
+        logger.error(f"Error adding task: {e}")
+        return {"success": False, "message": f"Error adding task: {e}", "error": str(e)}
+
+
+async def view_tasks(params) -> dict[str, Any]:
+    """View tasks."""
+    try:
+        data = await _load_storage()
+        tasks = data.get("tasks", [])
+
+        if not tasks:
+            return {"success": True, "message": "No tasks.", "tasks": []}
+
+        result_message = "Tasks:\n"
+        for i, task in enumerate(tasks):
+            status = "✓" if task.get("completed", False) else "○"
+            priority = task.get("priority", "medium").upper()
+            result_message += f"{i}. {status} [{priority}] {task['task']}\n"
+
+        return {"success": True, "message": result_message.strip(), "tasks": tasks}
+
+    except Exception as e:
+        logger.error(f"Error viewing tasks: {e}")
+        return {
+            "success": False,
+            "message": f"Error viewing tasks: {e}",
+            "error": str(e),
+        }
+
+
+async def complete_task(params) -> dict[str, Any]:
+    """Mark a task as completed."""
+    try:
+        if not isinstance(params, dict):
+            return {
+                "success": False,
+                "message": "Parameters must be a dictionary",
+                "error": "Invalid parameter format",
+            }
+
+        task_id = params.get("task_id", -1)
+
+        if task_id < 0:
+            return {
+                "success": False,
+                "message": "Task ID parameter is required",
+                "error": "Missing or invalid task_id parameter",
+            }
+
+        data = await _load_storage()
+        tasks = data.get("tasks", [])
+
+        if task_id >= len(tasks):
+            return {
+                "success": False,
+                "message": f"Task ID {task_id} not found",
+                "error": "Invalid task ID",
+            }
+
+        tasks[task_id]["completed"] = True
+        await _save_storage(data)
+
+        task_text = tasks[task_id]["task"]
+        logger.info(f"Completed task: {task_text}")
+        return {
+            "success": True,
+            "message": f'Task "{task_text}" marked as completed.',
+            "task": tasks[task_id],
+        }
+
+    except Exception as e:
+        logger.error(f"Error completing task: {e}")
+        return {
+            "success": False,
+            "message": f"Error completing task: {e}",
+            "error": str(e),
+        }
+
+
+async def remove_task(params) -> dict[str, Any]:
+    """Remove a task."""
+    try:
+        if not isinstance(params, dict):
+            return {
+                "success": False,
+                "message": "Parameters must be a dictionary",
+                "error": "Invalid parameter format",
+            }
+
+        task_id = params.get("task_id", -1)
+
+        if task_id < 0:
+            return {
+                "success": False,
+                "message": "Task ID parameter is required",
+                "error": "Missing or invalid task_id parameter",
+            }
+
+        data = await _load_storage()
+        tasks = data.get("tasks", [])
+
+        if task_id >= len(tasks):
+            return {
+                "success": False,
+                "message": f"Task ID {task_id} not found",
+                "error": "Invalid task ID",
+            }
+
+        removed_task = tasks.pop(task_id)
+        await _save_storage(data)
+
+        task_text = removed_task["task"]
+        logger.info(f"Removed task: {task_text}")
+        return {
+            "success": True,
+            "message": f'Task "{task_text}" removed.',
+            "removed_task": removed_task,
+        }
+
+    except Exception as e:
+        logger.error(f"Error removing task: {e}")
+        return {
+            "success": False,
+            "message": f"Error removing task: {e}",
+            "error": str(e),
+        }
+
+
+async def add_item(params) -> dict[str, Any]:
+    """Add item to a list."""
+    try:
+        if not isinstance(params, dict):
+            return {
+                "success": False,
+                "message": "Parameters must be a dictionary",
+                "error": "Invalid parameter format",
+            }
+
+        list_name = params.get("list_name", "").strip()
+        item = params.get("item", "").strip()
+
+        if not list_name or not item:
+            return {
+                "success": False,
+                "message": "List name and item parameters are required",
+                "error": "Missing required parameters",
+            }
+
+        data = await _load_storage()
+        if "lists" not in data:
+            data["lists"] = {}
+
+        if list_name not in data["lists"]:
+            data["lists"][list_name] = []
+
+        data["lists"][list_name].append(item)
+        await _save_storage(data)
+
+        logger.info(f"Added item '{item}' to list '{list_name}'")
+        return {
+            "success": True,
+            "message": f'Item "{item}" added to list "{list_name}".',
+            "list_name": list_name,
+            "item": item,
+        }
+
+    except Exception as e:
+        logger.error(f"Error adding item to list: {e}")
+        return {
+            "success": False,
+            "message": f"Error adding item to list: {e}",
+            "error": str(e),
+        }
+
+
+async def view_list(params) -> dict[str, Any]:
+    """View items in a list."""
+    try:
+        if not isinstance(params, dict):
+            return {
+                "success": False,
+                "message": "Parameters must be a dictionary",
+                "error": "Invalid parameter format",
+            }
+
+        list_name = params.get("list_name", "").strip()
+
+        if not list_name:
+            return {
+                "success": False,
+                "message": "List name parameter is required",
+                "error": "Missing list_name parameter",
+            }
+
+        data = await _load_storage()
+        lists = data.get("lists", {})
+
+        if list_name not in lists:
+            return {
+                "success": True,
+                "message": f'List "{list_name}" is empty or does not exist.',
+                "items": [],
+            }
+
+        items = lists[list_name]
+
+        if not items:
+            return {
+                "success": True,
+                "message": f'List "{list_name}" is empty.',
+                "items": [],
+            }
+
+        result_message = f'List "{list_name}":\n'
+        for i, item in enumerate(items, 1):
+            result_message += f"{i}. {item}\n"
+
+        return {
+            "success": True,
+            "message": result_message.strip(),
+            "list_name": list_name,
+            "items": items,
+        }
+
+    except Exception as e:
+        logger.error(f"Error viewing list: {e}")
+        return {
+            "success": False,
+            "message": f"Error viewing list: {e}",
+            "error": str(e),
+        }
+
+
+async def remove_item(params) -> dict[str, Any]:
+    """Remove item from a list."""
+    try:
+        if not isinstance(params, dict):
+            return {
+                "success": False,
+                "message": "Parameters must be a dictionary",
+                "error": "Invalid parameter format",
+            }
+
+        list_name = params.get("list_name", "").strip()
+        item = params.get("item", "").strip()
+
+        if not list_name or not item:
+            return {
+                "success": False,
+                "message": "List name and item parameters are required",
+                "error": "Missing required parameters",
+            }
+
+        data = await _load_storage()
+        lists = data.get("lists", {})
+
+        if list_name not in lists:
+            return {
+                "success": False,
+                "message": f'List "{list_name}" does not exist.',
+                "error": "List not found",
+            }
+
+        if item not in lists[list_name]:
+            return {
+                "success": False,
+                "message": f'Item "{item}" not found in list "{list_name}".',
+                "error": "Item not found",
+            }
+
+        lists[list_name].remove(item)
+        await _save_storage(data)
+
+        logger.info(f"Removed item '{item}' from list '{list_name}'")
+        return {
+            "success": True,
+            "message": f'Item "{item}" removed from list "{list_name}".',
+            "list_name": list_name,
+            "removed_item": item,
+        }
+
+    except Exception as e:
+        logger.error(f"Error removing item from list: {e}")
+        return {
+            "success": False,
+            "message": f"Error removing item from list: {e}",
+            "error": str(e),
+        }
+
+
+async def get_current_time(params) -> dict[str, Any]:
+    """Get current time."""
+    try:
+        now = datetime.now()
+        formatted_time = now.strftime("%Y-%m-%d %H:%M:%S")
+
+        return {
+            "success": True,
+            "message": f"Current time: {formatted_time}",
+            "current_time": now.isoformat(),
+            "formatted_time": formatted_time,
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting current time: {e}")
+        return {
+            "success": False,
+            "message": f"Error getting current time: {e}",
+            "error": str(e),
+        }
+
+
+# Legacy handler functions for backward compatibility
+async def handler(params: str = "", conversation_history: list = None) -> str:
+    """Legacy handler for backward compatibility."""
+    # Simple command parsing for legacy support
+    if not params:
+        return "Specify a command: set_timer, view_timers, add_event, etc."
+
+    parts = str(params).strip().split()
+    if not parts:
+        return "Specify a command: set_timer, view_timers, add_event, etc."
+
+    command = parts[0].lower()
+
+    try:
+        if command == "set_timer" and len(parts) >= 2:
+            duration = parts[1]
+            label = " ".join(parts[2:]) if len(parts) > 2 else "timer"
+            result = await execute_function(
+                "set_timer", {"duration": duration, "label": label}, user_id=0
+            )
+            return result["message"]
+
+        elif command == "view_timers":
+            result = await execute_function("view_timers", {}, user_id=0)
+            return result["message"]
+
+        else:
+            return f"Unknown command: {command}"
+
+    except Exception as e:
+        logger.error(f"Error in legacy handler: {e}")
+        return f"Error: {e}"
+
+
+def register():
+    """Register the core module for backward compatibility."""
+    return {
+        "command": "core",
+        "aliases": ["core", "timer", "calendar", "reminder", "task", "list"],
+        "description": "Core functionality: timers, events, reminders, tasks, lists",
+        "handler": handler,
+        "sub_commands": {
+            "timer": {
+                "description": "Timer management",
+                "parameters": {
+                    "duration": {
+                        "type": "string",
+                        "description": "Duration (e.g., '5m', '30s')",
+                        "required": True,
+                    }
+                },
+            }
+        },
+    }
+
+
+# Initialize storage and start timer polling when module is imported
+async def _initialize_module():
+    """Initialize the module asynchronously."""
+    try:
+        await _init_storage()
+        _start_timer_polling_task()
+        logger.info("Core module initialized successfully")
+    except Exception as e:
+        logger.error(f"Error initializing core module: {e}")
+
+
+# Note: In a real async application, this should be called by the main event loop
+# For now, we'll start the timer polling when needed
+def start_core_module():
+    """Start the core module (to be called by the main application)."""
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            # If loop is already running, create task
+            asyncio.create_task(_initialize_module())
+        else:
+            # If no loop is running, run initialization
+            loop.run_until_complete(_initialize_module())
+    except Exception as e:
+        logger.error(f"Error starting core module: {e}")
+
+
+# Start the module when imported (will be handled by main application)
+try:
+    _start_timer_polling_task()
+except Exception as e:
+    logger.warning(
+        f"Could not start timer polling immediately: {e}. Will retry when event loop is available."
+    )

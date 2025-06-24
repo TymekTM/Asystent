@@ -441,4 +441,4 @@ class PluginManager:
 
 
 # Global plugin manager instance
-plugin_manager = PluginManager()
+plugin_manager = PluginManager("server/modules")

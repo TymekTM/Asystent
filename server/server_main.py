@@ -536,13 +536,15 @@ class ServerApp:
             if not plugin_manager.is_plugin_loaded(plugin_name):
                 await plugin_manager.load_plugin(plugin_name)
 
-            # Wywołaj funkcję pluginu
-            plugin_module = await self.load_plugin_module(plugin_name)
-            if not plugin_module:
+            # Pobierz moduł pluginu
+            plugin_info = plugin_manager.plugins.get(plugin_name)
+            if not plugin_info or not plugin_info.module:
                 return {
                     "type": "error",
-                    "message": f"Failed to load plugin {plugin_name}",
+                    "message": f"Plugin {plugin_name} module not available",
                 }
+
+            plugin_module = plugin_info.module
 
             # Wykonaj funkcję
             if hasattr(plugin_module, "execute_function"):

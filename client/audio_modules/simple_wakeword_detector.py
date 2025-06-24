@@ -111,7 +111,9 @@ class WakewordDetector:
                 logger.info("Audio stream started for wakeword detection")
 
                 while self.is_running:
-                    time.sleep(0.1)  # Small delay to prevent busy waiting
+                    # TODO: Replace with proper async/await pattern
+                    # Small delay to prevent busy waiting - acceptable in audio thread
+                    time.sleep(0.1)
 
         except Exception as e:
             logger.error(f"Error in wakeword detection loop: {e}")
