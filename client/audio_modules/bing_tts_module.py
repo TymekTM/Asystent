@@ -1,4 +1,12 @@
-import asyncio, logging, os, subprocess, uuid, threading, glob, time
+import asyncio
+import glob
+import logging
+import os
+import subprocess
+import threading
+import time
+import uuid
+
 try:
     from edge_tts import Communicate  # type: ignore
 except Exception:
@@ -8,8 +16,10 @@ except Exception:
 try:
     from performance_monitor import measure_performance
 except ImportError:
+
     def measure_performance(func):
         return func
+
 
 try:
     from .ffmpeg_installer import ensure_ffmpeg_installed
@@ -17,11 +27,14 @@ except ImportError:
     try:
         from ffmpeg_installer import ensure_ffmpeg_installed
     except ImportError:
+
         def ensure_ffmpeg_installed():
             pass
 
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
+
 
 class TTSModule:
     CLEANUP_INTERVAL = 10
@@ -41,7 +54,10 @@ class TTSModule:
                     loop = asyncio.get_running_loop()
                     loop.create_task(self._cleanup_temp_files_loop())
                 except RuntimeError:
-                    threading.Thread(target=lambda: asyncio.run(self._cleanup_temp_files_loop()), daemon=True).start()
+                    threading.Thread(
+                        target=lambda: asyncio.run(self._cleanup_temp_files_loop()),
+                        daemon=True,
+                    ).start()
                 self._cleanup_task_started = True
             except Exception as e:
                 logger.error(f"Failed to start TTS cleanup task: {e}")
@@ -57,9 +73,13 @@ class TTSModule:
                             mtime = os.path.getmtime(path)
                             if now - mtime > self.INACTIVITY_THRESHOLD:
                                 os.remove(path)
-                                logger.info(f"[TTS Cleanup] Deleted old temp file: {path}")
+                                logger.info(
+                                    f"[TTS Cleanup] Deleted old temp file: {path}"
+                                )
                         except Exception as e:
-                            logger.warning(f"[TTS Cleanup] Failed to delete {path}: {e}")
+                            logger.warning(
+                                f"[TTS Cleanup] Failed to delete {path}: {e}"
+                            )
             except Exception as e:
                 logger.error(f"[TTS Cleanup] Error in cleanup loop: {e}")
             await asyncio.sleep(self.CLEANUP_INTERVAL)
@@ -74,7 +94,7 @@ class TTSModule:
 
     @measure_performance
     async def speak(self, text: str):
-        if getattr(self, 'mute', False):
+        if getattr(self, "mute", False):
             return
         logger.info("TTS: %s", text)
         if Communicate is None:
@@ -99,13 +119,16 @@ class TTSModule:
                 try:
                     os.remove(temp_path)
                 except PermissionError:
-                    logger.warning(f"Cannot delete file {temp_path}, it is being used by another process.")
+                    logger.warning(
+                        f"Cannot delete file {temp_path}, it is being used by another process."
+                    )
                 except Exception as e:
                     logger.error(f"Błąd przy usuwaniu pliku {temp_path}: {e}")
             self.current_process = None
 
+
 _tts_module_instance = TTSModule()
+
 
 async def speak(text: str):
     await _tts_module_instance.speak(text)
-

@@ -5,7 +5,7 @@ environment_manager.py - Bezpieczne zarządzanie zmiennymi środowiskowymi i klu
 import logging
 import os
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -33,9 +33,8 @@ class EnvironmentManager:
             except Exception as e:
                 logger.error(f"Error loading .env file: {e}")
 
-    def get_api_key(self, service: str) -> Optional[str]:
-        """
-        Pobiera klucz API dla danej usługi z zmiennych środowiskowych.
+    def get_api_key(self, service: str) -> str | None:
+        """Pobiera klucz API dla danej usługi z zmiennych środowiskowych.
 
         Args:
             service: Nazwa usługi (openai, anthropic, etc.)
@@ -72,8 +71,7 @@ class EnvironmentManager:
         }
 
     def sanitize_config_for_logging(self, config: dict[str, Any]) -> dict[str, Any]:
-        """
-        Czyści konfigurację z wrażliwych danych przed logowaniem.
+        """Czyści konfigurację z wrażliwych danych przed logowaniem.
 
         Args:
             config: Słownik konfiguracji
@@ -116,8 +114,7 @@ class EnvironmentManager:
         return sanitized
 
     def validate_required_keys(self, required_services: list[str]) -> dict[str, bool]:
-        """
-        Sprawdza czy wymagane klucze API są dostępne.
+        """Sprawdza czy wymagane klucze API są dostępne.
 
         Args:
             required_services: Lista wymaganych usług

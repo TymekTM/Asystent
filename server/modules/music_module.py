@@ -1,6 +1,5 @@
 import logging
 import os
-import platform
 from collections import deque
 
 # Optional third‑party libraries
@@ -24,7 +23,11 @@ SUPPORTED_ACTIONS = {
     "prev": ["prev", "previous", "back"],
 }
 # Reverse lookup for quick normalisation
-NORMALISE = {alias: canonical for canonical, aliases in SUPPORTED_ACTIONS.items() for alias in aliases}
+NORMALISE = {
+    alias: canonical
+    for canonical, aliases in SUPPORTED_ACTIONS.items()
+    for alias in aliases
+}
 
 PLATFORM_ALIASES = {
     "spotify": ["spotify", "spo"],
@@ -32,7 +35,7 @@ PLATFORM_ALIASES = {
     "applemusic": ["applemusic", "itunes", "music", "apple"],
     "tidal": ["tidal"],
     "deezer": ["deezer"],
-    "auto": ["auto", "default"]
+    "auto": ["auto", "default"],
 }
 
 # --------------------------------------------------
@@ -48,7 +51,9 @@ def _get_spotify_client():
         return None
 
     try:
-        auth_manager = SpotifyOAuth(scope=SPOTIFY_SCOPE, cache_path=os.path.expanduser("~/.cache-music-control"))
+        auth_manager = SpotifyOAuth(
+            scope=SPOTIFY_SCOPE, cache_path=os.path.expanduser("~/.cache-music-control")
+        )
         return spotipy.Spotify(auth_manager=auth_manager)
     except Exception as exc:
         logger.warning("Spotify authentication failed: %s", exc)
@@ -89,6 +94,7 @@ def _spotify_action(action: str) -> str:
 
     return f"Spotify → {action} ✓"
 
+
 # --------------------------------------------------
 # Generic system media‑key helpers (fallback / universal)
 # --------------------------------------------------
@@ -101,10 +107,10 @@ MEDIA_KEY_MAPPING = {
 }
 
 MAC_KEYCODES = {
-    "play": 16,   # F8
+    "play": 16,  # F8
     "pause": 16,
-    "next": 17,   # F9
-    "prev": 18,   # F7
+    "next": 17,  # F9
+    "prev": 18,  # F7
 }
 
 
@@ -115,9 +121,11 @@ def _system_media_key(action: str) -> str:
     logger.info(f"Server request: Send media key '{action}' to client")
     return f"Server: Media key '{action}' request logged (client implementation needed)"
 
+
 # --------------------------------------------------
 # Core processing logic
 # --------------------------------------------------
+
 
 def _normalise_platform(token: str) -> str:
     for canonical, aliases in PLATFORM_ALIASES.items():
@@ -140,7 +148,9 @@ def process_input(params: str) -> str:
     platform_token = tokens[0]
     platform_name = _normalise_platform(platform_token)
 
-    action_token = tokens[1] if platform_name != "unknown" and len(tokens) > 1 else platform_token
+    action_token = (
+        tokens[1] if platform_name != "unknown" and len(tokens) > 1 else platform_token
+    )
     action = _normalise_action(action_token)
 
     if action == "unknown":
@@ -165,11 +175,17 @@ def process_input(params: str) -> str:
 
     return result
 
+
 # --------------------------------------------------
 # Main handler (required by the Asystent plugin API)
 # --------------------------------------------------
 
-def handler(params: str = "", conversation_history: deque | None = None, user_lang: str | None = None) -> str:  # noqa: D401,E501
+
+def handler(
+    params: str = "",
+    conversation_history: deque | None = None,
+    user_lang: str | None = None,
+) -> str:  # noqa: D401,E501
     """Entry‑point called by Asystent when the user invokes the /music command."""
     try:
         # Server-side: Cannot play beep sound directly
@@ -191,9 +207,11 @@ def handler(params: str = "", conversation_history: deque | None = None, user_la
         logger.error("Music control plugin error: %s", exc, exc_info=True)
         return f"⚠️ Błąd w pluginie: {exc}"
 
+
 # --------------------------------------------------
 # Plugin metadata (required)
 # --------------------------------------------------
+
 
 def register():
     return {
@@ -209,31 +227,19 @@ def register():
         "description": "Steruje odtwarzaniem muzyki (play/pause/next/prev) na Spotify lub przez klawisze multimedialne.",
         "handler": handler,
         "sub_commands": {
-            "play": {
-                "description": "Włącz odtwarzanie muzyki",
-                "parameters": {}
-            },
-            "pause": {
-                "description": "Zatrzymaj odtwarzanie muzyki", 
-                "parameters": {}
-            },
-            "next": {
-                "description": "Następny utwór",
-                "parameters": {}
-            },
-            "previous": {
-                "description": "Poprzedni utwór",
-                "parameters": {}
-            },
+            "play": {"description": "Włącz odtwarzanie muzyki", "parameters": {}},
+            "pause": {"description": "Zatrzymaj odtwarzanie muzyki", "parameters": {}},
+            "next": {"description": "Następny utwór", "parameters": {}},
+            "previous": {"description": "Poprzedni utwór", "parameters": {}},
             "search": {
                 "description": "Wyszukaj i odtwórz muzykę",
                 "parameters": {
                     "query": {
                         "type": "string",
                         "description": "Nazwa utworu, artysty lub albumu do wyszukania",
-                        "required": True
+                        "required": True,
                     }
-                }
-            }
-        }
+                },
+            },
+        },
     }

@@ -1,13 +1,12 @@
 # prompts.py
 
 from datetime import datetime
+
 current_date = datetime.now().strftime("%Y-%m-%d")
 name = "Gaja"
 
 # Konwersja zapytania na krótkie, precyzyjne pytanie
-CONVERT_QUERY_PROMPT = (
-    "Carefully correct only clear speech-to-text transcription errors. Preserve the original intended meaning, phrasing, and language. Avoid adding context, translations, or assumptions. Respond strictly with the corrected text."
-)
+CONVERT_QUERY_PROMPT = "Carefully correct only clear speech-to-text transcription errors. Preserve the original intended meaning, phrasing, and language. Avoid adding context, translations, or assumptions. Respond strictly with the corrected text."
 
 # Prompt for Language Detection
 DETECT_LANGUAGE_PROMPT = (
@@ -105,4 +104,3 @@ def get_tts_voice_prompt() -> str:
     if holiday:
         parts.append(holiday)
     return " ".join(parts)
-

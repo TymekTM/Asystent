@@ -1,53 +1,49 @@
-"""
-Extended Web UI for GAJA Assistant Server
-Rozszerzony panel Web UI z Flask i pełną funkcjonalnością.
-"""
+"""Extended Web UI for GAJA Assistant Server Rozszerzony panel Web UI z Flask i pełną
+funkcjonalnością."""
 
-import json
 import logging
-import os
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any, List
-from flask import Flask, render_template, request, jsonify, send_file, redirect
-from flask_cors import CORS
+from typing import Any
+
 from config_loader import ConfigLoader
 from database_manager import DatabaseManager
+from flask import Flask, jsonify, redirect, render_template, request, send_file
+from flask_cors import CORS
 
 logger = logging.getLogger(__name__)
 
+
 class ExtendedWebUI:
     """Rozszerzony panel Web UI dla serwera GAJA."""
-    
+
     def __init__(self, config_loader: ConfigLoader, db_manager: DatabaseManager):
         self.config_loader = config_loader
         self.db_manager = db_manager
-        self.app = Flask(__name__, 
-                        template_folder='templates',
-                        static_folder='static')
+        self.app = Flask(__name__, template_folder="templates", static_folder="static")
         CORS(self.app)
-        
+
         # Server reference - will be set when starting
         self.server_app = None
-        
+
         self._setup_routes()
         logger.info("ExtendedWebUI initialized")
-    
+
     def set_server_app(self, server_app):
         """Ustaw referencję do głównej aplikacji serwera."""
         self.server_app = server_app
-    
+
     def _setup_routes(self):
         """Skonfiguruj routing Flask."""
-        
+
         # Strona główna - dashboard
-        @self.app.route('/')
+        @self.app.route("/")
         def dashboard():
             try:
                 config = self.config_loader.get_config()
-                
+
                 # Pobierz podstawowe statystyki
-                pm = getattr(self.server_app, 'plugin_manager', None)
+                pm = getattr(self.server_app, "plugin_manager", None)
                 loaded_count = 0
                 total_functions = 0
                 if pm:
@@ -56,120 +52,126 @@ class ExtendedWebUI:
 
                 stats = {
                     "server_status": "running",
-                    "uptime": getattr(self.server_app, 'start_time', datetime.now()).isoformat(),
+                    "uptime": getattr(
+                        self.server_app, "start_time", datetime.now()
+                    ).isoformat(),
                     "loaded_plugins": loaded_count,
                     "total_functions": total_functions,
-                    "user_name": config.get('USER_NAME', 'User'),
-                    "first_run": config.get('FIRST_RUN', True)
+                    "user_name": config.get("USER_NAME", "User"),
+                    "first_run": config.get("FIRST_RUN", True),
                 }
-                
-                return render_template('dashboard.html', stats=stats, config=config)
+
+                return render_template("dashboard.html", stats=stats, config=config)
             except Exception as e:
                 logger.error(f"Error loading dashboard: {e}")
                 return f"Error loading dashboard: {e}", 500
-        
+
         # Onboarding
-        @self.app.route('/onboarding')
+        @self.app.route("/onboarding")
         def onboarding():
             try:
                 config = self.config_loader.get_config()
-                first_run = config.get('FIRST_RUN', True)
-                
+                first_run = config.get("FIRST_RUN", True)
+
                 if not first_run:
-                    return redirect('/')
-                
+                    return redirect("/")
+
                 # Pobierz szablon konfiguracji
-                if hasattr(self.server_app, 'onboarding_module'):
+                if hasattr(self.server_app, "onboarding_module"):
                     template = asyncio.run(
                         self.server_app.onboarding_module.get_default_config_template()
                     )
                 else:
                     template = {}
-                
-                return render_template('onboarding.html', 
-                                     config_template=template,
-                                     current_config=config)
+
+                return render_template(
+                    "onboarding.html", config_template=template, current_config=config
+                )
             except Exception as e:
                 logger.error(f"Error loading onboarding: {e}")
                 return f"Error loading onboarding: {e}", 500
-        
+
         # Konfiguracja
-        @self.app.route('/config')
+        @self.app.route("/config")
         def config_page():
             try:
                 config = self.config_loader.get_config()
-                return render_template('config.html', config=config)
+                return render_template("config.html", config=config)
             except Exception as e:
                 logger.error(f"Error loading config page: {e}")
                 return f"Error loading config page: {e}", 500
-        
+
         # Pluginy
-        @self.app.route('/plugins')
+        @self.app.route("/plugins")
         def plugins_page():
             try:
                 plugin_data = {}
-                if hasattr(self.server_app, 'plugin_manager'):
+                if hasattr(self.server_app, "plugin_manager"):
                     pm = self.server_app.plugin_manager
                     loaded = [name for name, info in pm.plugins.items() if info.loaded]
                     plugin_data = {
                         "loaded_plugins": loaded,
                         "function_registry": pm.function_registry,
-                        "plugin_paths": getattr(pm, 'plugin_paths', [])
+                        "plugin_paths": getattr(pm, "plugin_paths", []),
                     }
-                
+
                 # Status monitorowania
                 monitoring_status = {}
-                if hasattr(self.server_app, 'plugin_monitor'):
+                if hasattr(self.server_app, "plugin_monitor"):
                     import asyncio
+
                     monitoring_status = asyncio.run(
                         self.server_app.plugin_monitor.get_monitoring_status()
                     )
-                
-                return render_template('plugins.html', 
-                                     plugins=plugin_data,
-                                     monitoring=monitoring_status)
+
+                return render_template(
+                    "plugins.html", plugins=plugin_data, monitoring=monitoring_status
+                )
             except Exception as e:
                 logger.error(f"Error loading plugins page: {e}")
                 return f"Error loading plugins page: {e}", 500
-        
+
         # Pamięć
-        @self.app.route('/memory')
+        @self.app.route("/memory")
         def memory_page():
             try:
                 memory_stats = {}
-                if hasattr(self.server_app, 'advanced_memory'):
+                if hasattr(self.server_app, "advanced_memory"):
                     import asyncio
+
                     memory_stats = asyncio.run(
                         self.server_app.advanced_memory.get_memory_statistics("1")
                     )
-                
-                return render_template('memory.html', memory_stats=memory_stats)
+
+                return render_template("memory.html", memory_stats=memory_stats)
             except Exception as e:
                 logger.error(f"Error loading memory page: {e}")
                 return f"Error loading memory page: {e}", 500
-        
+
         # Logi
-        @self.app.route('/logs')
+        @self.app.route("/logs")
         def logs_page():
             try:
                 # Pobierz ostatnie logi
                 log_files = []
                 logs_dir = Path("logs")
                 if logs_dir.exists():
-                    log_files = sorted(logs_dir.glob("*.log"), 
-                                     key=lambda x: x.stat().st_mtime, 
-                                     reverse=True)[:10]
-                
-                return render_template('logs.html', log_files=log_files)
+                    log_files = sorted(
+                        logs_dir.glob("*.log"),
+                        key=lambda x: x.stat().st_mtime,
+                        reverse=True,
+                    )[:10]
+
+                return render_template("logs.html", log_files=log_files)
             except Exception as e:
                 logger.error(f"Error loading logs page: {e}")
                 return f"Error loading logs page: {e}", 500
-        
+
         # API endpoints
-        @self.app.route('/api/status')
+        @self.app.route("/api/status")
         def api_status():
             try:
-                pm = getattr(self.server_app, 'plugin_manager', None)
+                pm = getattr(self.server_app, "plugin_manager", None)
                 loaded_count = 0
                 functions_available = 0
                 if pm:
@@ -179,123 +181,147 @@ class ExtendedWebUI:
                     "server_running": True,
                     "timestamp": datetime.now().isoformat(),
                     "plugins_loaded": loaded_count,
-                    "functions_available": functions_available
+                    "functions_available": functions_available,
                 }
                 return jsonify(status)
             except Exception as e:
                 logger.error(f"Error getting status: {e}")
                 return jsonify({"error": str(e)}), 500
-        
-        @self.app.route('/api/config', methods=['GET', 'POST'])
+
+        @self.app.route("/api/config", methods=["GET", "POST"])
         def api_config():
             try:
-                if request.method == 'GET':
+                if request.method == "GET":
                     config = self.config_loader.get_config()
                     return jsonify(config)
-                
-                elif request.method == 'POST':
+
+                elif request.method == "POST":
                     new_config = request.json
                     if not new_config:
                         return jsonify({"error": "No configuration data provided"}), 400
-                    
+
                     # Waliduj i zapisz konfigurację
                     current_config = self.config_loader.get_config()
                     current_config.update(new_config)
                     self.config_loader.save_config(current_config)
-                    
-                    return jsonify({
-                        "success": True,
-                        "message": "Configuration updated successfully"
-                    })
+
+                    return jsonify(
+                        {
+                            "success": True,
+                            "message": "Configuration updated successfully",
+                        }
+                    )
             except Exception as e:
                 logger.error(f"Error handling config API: {e}")
                 return jsonify({"error": str(e)}), 500
-        
-        @self.app.route('/api/plugins')
+
+        @self.app.route("/api/plugins")
         def api_plugins():
             try:
                 plugin_data = {
                     "loaded_plugins": [],
                     "function_registry": {},
-                    "monitoring_status": {}
+                    "monitoring_status": {},
                 }
 
-                if hasattr(self.server_app, 'plugin_manager'):
+                if hasattr(self.server_app, "plugin_manager"):
                     pm = self.server_app.plugin_manager
-                    plugin_data["loaded_plugins"] = [name for name, info in pm.plugins.items() if info.loaded]
+                    plugin_data["loaded_plugins"] = [
+                        name for name, info in pm.plugins.items() if info.loaded
+                    ]
                     plugin_data["function_registry"] = pm.function_registry
-                
-                if hasattr(self.server_app, 'plugin_monitor'):
+
+                if hasattr(self.server_app, "plugin_monitor"):
                     import asyncio
+
                     plugin_data["monitoring_status"] = asyncio.run(
                         self.server_app.plugin_monitor.get_monitoring_status()
                     )
-                
+
                 return jsonify(plugin_data)
             except Exception as e:
                 logger.error(f"Error getting plugins data: {e}")
                 return jsonify({"error": str(e)}), 500
-        
-        @self.app.route('/api/plugins/reload/<plugin_name>', methods=['POST'])
+
+        @self.app.route("/api/plugins/reload/<plugin_name>", methods=["POST"])
         def api_reload_plugin(plugin_name):
             try:
-                if hasattr(self.server_app, 'plugin_monitor'):
+                if hasattr(self.server_app, "plugin_monitor"):
                     import asyncio
+
                     result = asyncio.run(
-                        self.server_app.plugin_monitor.reload_plugin_manually(plugin_name)
+                        self.server_app.plugin_monitor.reload_plugin_manually(
+                            plugin_name
+                        )
                     )
                     return jsonify(result)
                 else:
-                    return jsonify({
-                        "success": False,
-                        "error": "Plugin monitoring not available"
-                    }), 400
+                    return (
+                        jsonify(
+                            {
+                                "success": False,
+                                "error": "Plugin monitoring not available",
+                            }
+                        ),
+                        400,
+                    )
             except Exception as e:
                 logger.error(f"Error reloading plugin {plugin_name}: {e}")
                 return jsonify({"error": str(e)}), 500
-        
-        @self.app.route('/api/memory/search', methods=['POST'])
+
+        @self.app.route("/api/memory/search", methods=["POST"])
         def api_memory_search():
             try:
                 data = request.json
-                query = data.get('query', '')
-                user_id = data.get('user_id', '1')
-                category = data.get('category')
-                limit = data.get('limit', 10)
-                
-                if hasattr(self.server_app, 'advanced_memory'):
+                query = data.get("query", "")
+                user_id = data.get("user_id", "1")
+                category = data.get("category")
+                limit = data.get("limit", 10)
+
+                if hasattr(self.server_app, "advanced_memory"):
                     import asyncio
+
                     result = asyncio.run(
-                        self.server_app.advanced_memory.search_memory(user_id, query, category, limit)
+                        self.server_app.advanced_memory.search_memory(
+                            user_id, query, category, limit
+                        )
                     )
                     return jsonify(result)
                 else:
-                    return jsonify({
-                        "success": False,
-                        "error": "Advanced memory system not available"
-                    }), 400
+                    return (
+                        jsonify(
+                            {
+                                "success": False,
+                                "error": "Advanced memory system not available",
+                            }
+                        ),
+                        400,
+                    )
             except Exception as e:
                 logger.error(f"Error searching memory: {e}")
                 return jsonify({"error": str(e)}), 500
-        
-        @self.app.route('/api/memory/add', methods=['POST'])
+
+        @self.app.route("/api/memory/add", methods=["POST"])
         def api_memory_add():
             try:
                 data = request.json
-                user_id = data.get('user_id', '1')
-                key = data.get('key')
-                content = data.get('content')
-                category = data.get('category', 'general')
-                importance = data.get('importance', 1)
-                
+                user_id = data.get("user_id", "1")
+                key = data.get("key")
+                content = data.get("content")
+                category = data.get("category", "general")
+                importance = data.get("importance", 1)
+
                 if not key or not content:
-                    return jsonify({
-                        "success": False,
-                        "error": "Key and content are required"
-                    }), 400
-                
-                if hasattr(self.server_app, 'advanced_memory'):
+                    return (
+                        jsonify(
+                            {"success": False, "error": "Key and content are required"}
+                        ),
+                        400,
+                    )
+
+                if hasattr(self.server_app, "advanced_memory"):
                     import asyncio
+
                     result = asyncio.run(
                         self.server_app.advanced_memory.store_memory(
                             user_id, key, content, category, importance
@@ -303,50 +329,54 @@ class ExtendedWebUI:
                     )
                     return jsonify(result)
                 else:
-                    return jsonify({
-                        "success": False,
-                        "error": "Advanced memory system not available"
-                    }), 400
+                    return (
+                        jsonify(
+                            {
+                                "success": False,
+                                "error": "Advanced memory system not available",
+                            }
+                        ),
+                        400,
+                    )
             except Exception as e:
                 logger.error(f"Error adding memory: {e}")
                 return jsonify({"error": str(e)}), 500
-        
-        @self.app.route('/api/logs/<log_file>')
+
+        @self.app.route("/api/logs/<log_file>")
         def api_get_log(log_file):
             try:
                 log_path = Path("logs") / log_file
                 if not log_path.exists() or not log_path.is_file():
                     return jsonify({"error": "Log file not found"}), 404
-                
+
                 # Bezpieczeństwo - sprawdź czy plik jest w katalogu logs
                 if not str(log_path.resolve()).startswith(str(Path("logs").resolve())):
                     return jsonify({"error": "Access denied"}), 403
-                
-                with open(log_path, 'r', encoding='utf-8') as f:
+
+                with open(log_path, encoding="utf-8") as f:
                     lines = f.readlines()
                     # Zwróć ostatnie 1000 linii
                     recent_lines = lines[-1000:] if len(lines) > 1000 else lines
-                    
-                return jsonify({
-                    "file": log_file,
-                    "lines": recent_lines,
-                    "total_lines": len(lines)
-                })
+
+                return jsonify(
+                    {"file": log_file, "lines": recent_lines, "total_lines": len(lines)}
+                )
             except Exception as e:
                 logger.error(f"Error reading log file {log_file}: {e}")
                 return jsonify({"error": str(e)}), 500
-          # Obsługa plików statycznych
-        @self.app.route('/static/<path:filename>')
+
+        # Obsługa plików statycznych
+        @self.app.route("/static/<path:filename>")
         def static_files(filename):
-            return send_file(f'static/{filename}')
-    
+            return send_file(f"static/{filename}")
+
     def create_default_templates(self):
         """Stwórz domyślne templates jeśli nie istnieją."""
         templates_dir = Path("templates")
         templates_dir.mkdir(exist_ok=True)
-        
+
         # Base template
-        base_template = '''<!DOCTYPE html>
+        base_template = """<!DOCTYPE html>
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
@@ -385,7 +415,7 @@ class ExtendedWebUI:
                     </ul>
                 </div>
             </nav>
-            
+
             <main class="col-md-10 ms-sm-auto px-md-4 main-content">
                 <div class="pt-3">
                     {% block content %}{% endblock %}
@@ -393,18 +423,18 @@ class ExtendedWebUI:
             </main>
         </div>
     </div>
-    
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     {% block scripts %}{% endblock %}
 </body>
-</html>'''
-        
+</html>"""
+
         with open(templates_dir / "base.html", "w", encoding="utf-8") as f:
             f.write(base_template)
-        
+
         # Dashboard template
-        dashboard_template = '''{% extends "base.html" %}
+        dashboard_template = """{% extends "base.html" %}
 
 {% block title %}Dashboard - GAJA Assistant{% endblock %}
 
@@ -493,46 +523,44 @@ class ExtendedWebUI:
         </div>
     </div>
 </div>
-{% endblock %}'''
-        
+{% endblock %}"""
+
         with open(templates_dir / "dashboard.html", "w", encoding="utf-8") as f:
             f.write(dashboard_template)
-        
+
         logger.info("Created default templates")
-    
+
     def run(self, host: str = "localhost", port: int = 5001, debug: bool = False):
         """Uruchom serwer Web UI."""
         try:
             # Stwórz domyślne templates
             self.create_default_templates()
-            
+
             logger.info(f"Starting Extended Web UI on http://{host}:{port}")
             self.app.run(host=host, port=port, debug=debug, threaded=True)
         except Exception as e:
             logger.error(f"Error starting Web UI: {e}")
 
+
 # Global functions for function calling system
-async def get_webui_status() -> Dict[str, Any]:
+async def get_webui_status() -> dict[str, Any]:
     """Pobierz status Web UI."""
     # Import locally to avoid circular imports
     from server_main import server_app
-    
+
     try:
-        if hasattr(server_app, 'web_ui'):
-            return {
-                "success": True,
-                "running": True,
-                "message": "Web UI is running"
-            }
+        if hasattr(server_app, "web_ui"):
+            return {"success": True, "running": True, "message": "Web UI is running"}
         else:
             return {
                 "success": False,
                 "running": False,
-                "message": "Web UI not initialized"
+                "message": "Web UI not initialized",
             }
     except Exception as e:
         logger.error(f"Error getting Web UI status: {e}")
         return {"success": False, "error": str(e)}
+
 
 def get_functions():
     """Zwróć listę funkcji dostępnych w Web UI."""
@@ -540,10 +568,6 @@ def get_functions():
         {
             "name": "get_webui_status",
             "description": "Pobierz status panelu Web UI",
-            "parameters": {
-                "type": "object",
-                "properties": {},
-                "required": []
-            }
+            "parameters": {"type": "object", "properties": {}, "required": []},
         }
     ]

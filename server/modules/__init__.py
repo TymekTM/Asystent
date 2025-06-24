@@ -1,6 +1,6 @@
 # Initializes the server modules package
-"""
-Server modules package for GAJA Assistant.
+"""Server modules package for GAJA Assistant.
+
 Contains all plugins and modules for server functionality.
 """
 

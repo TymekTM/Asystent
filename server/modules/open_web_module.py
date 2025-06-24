@@ -1,15 +1,15 @@
-import webbrowser
 import logging
+import webbrowser
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
 
 def open_web_handler(params: str = "", conversation_history=None) -> str:
-"""Open the given URL in the default browser."""
+    """Open the given URL in the default browser."""
     # Support both string params and dict params with a 'url' key
     if isinstance(params, dict):
-        url = params.get('url', '').strip()
+        url = params.get("url", "").strip()
     else:
         url = str(params).strip()
     if not url:
@@ -43,9 +43,9 @@ def register():
                     "url": {
                         "type": "string",
                         "description": "URL of the page to open (e.g. https://www.google.com)",
-                        "required": True
+                        "required": True,
                     }
-                }
+                },
             }
-        }
+        },
     }

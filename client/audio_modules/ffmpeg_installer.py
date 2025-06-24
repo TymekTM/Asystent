@@ -1,9 +1,10 @@
+import logging
 import os
 import shutil
 import tempfile
 import urllib.request
 import zipfile
-import logging
+
 try:
     import winreg
 except ImportError:
@@ -15,16 +16,17 @@ FFMPEG_INSTALL_DIR = r"C:\ffmpeg"
 FFMPEG_BIN_DIR = os.path.join(FFMPEG_INSTALL_DIR, "bin")
 FFMPEG_URL = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
 
+
 def ensure_ffmpeg_installed():
-    """
-    Checks if ffmpeg is available, and if not, downloads a static build,
-    extracts it to C:\ffmpeg, adds it to PATH and registers it in the Windows registry.
-    """
+    """Checks if ffmpeg is available, and if not, downloads a static build, extracts it
+    to C:\ffmpeg, adds it to PATH and registers it in the Windows registry."""
     # Check if ffmpeg is on PATH
     if shutil.which("ffmpeg"):
         return
     # Check if already installed in target directory
-    if os.path.exists(FFMPEG_BIN_DIR) and shutil.which(os.path.join(FFMPEG_BIN_DIR, "ffmpeg")):
+    if os.path.exists(FFMPEG_BIN_DIR) and shutil.which(
+        os.path.join(FFMPEG_BIN_DIR, "ffmpeg")
+    ):
         os.environ["PATH"] += os.pathsep + FFMPEG_BIN_DIR
         return
     try:
@@ -49,9 +51,12 @@ def ensure_ffmpeg_installed():
         # Add to system PATH in registry
         if winreg:
             try:
-                with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
-                                    r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment",
-                                    0, winreg.KEY_ALL_ACCESS) as env_key:
+                with winreg.OpenKey(
+                    winreg.HKEY_LOCAL_MACHINE,
+                    r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment",
+                    0,
+                    winreg.KEY_ALL_ACCESS,
+                ) as env_key:
                     path_value, reg_type = winreg.QueryValueEx(env_key, "Path")
                     if FFMPEG_BIN_DIR not in path_value:
                         new_path = path_value + os.pathsep + FFMPEG_BIN_DIR

@@ -2,17 +2,16 @@
 """Tests for dependency_manager.py Following AGENTS.md guidelines: comprehensive async
 testing."""
 
-import sys
-from pathlib import Path
-
-# Add project root to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
 import json
+import sys
 import tempfile
+from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
+# Add project root to path
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from dependency_manager import (
     Dependency,
@@ -99,9 +98,15 @@ class TestDependencyManager:
         # Create lock file
         manager.lock_file.touch()
 
-        # Create valid manifest
+        # Create valid manifest with keys matching HEAVY_DEPENDENCIES
         manifest = {
-            "installed": ["torch", "sounddevice", "librosa"],  # Essential deps
+            "installed": [
+                "torch",
+                "torchaudio",
+                "whisper",
+                "sounddevice",
+                "librosa",
+            ],  # Essential deps from HEAVY_DEPENDENCIES
             "version": "1.0",
         }
 

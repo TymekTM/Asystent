@@ -1,6 +1,6 @@
 {
   "user_id": "1",
-  "server_url": "ws://localhost:5000/ws/client1",
+  "server_url": "ws://localhost:8001/ws/client1",
   "client_version": "1.0.0",
   "api_keys": {
     "_comment": "API keys are now loaded from environment variables (.env file)",

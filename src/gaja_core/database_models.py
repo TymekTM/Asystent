@@ -2,7 +2,7 @@ import json
 import sqlite3
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 
 @dataclass
@@ -11,11 +11,11 @@ class User:
 
     id: int
     username: str
-    email: Optional[str]
-    password_hash: Optional[str]
+    email: str | None
+    password_hash: str | None
     is_active: bool
     created_at: datetime
-    last_login: Optional[datetime]
+    last_login: datetime | None
     settings: dict[str, Any]
     api_keys: dict[str, str]
 
@@ -29,9 +29,9 @@ class User:
             password_hash=row["password_hash"],
             is_active=bool(row["is_active"]),
             created_at=datetime.fromisoformat(row["created_at"]),
-            last_login=datetime.fromisoformat(row["last_login"])
-            if row["last_login"]
-            else None,
+            last_login=(
+                datetime.fromisoformat(row["last_login"]) if row["last_login"] else None
+            ),
             settings=json.loads(row["settings"]) if row["settings"] else {},
             api_keys=json.loads(row["api_keys"]) if row["api_keys"] else {},
         )
@@ -45,7 +45,7 @@ class User:
             "is_active": self.is_active,
             "created_at": self.created_at.isoformat(),
             "last_login": self.last_login.isoformat() if self.last_login else None,
-            "settings": self.settings
+            "settings": self.settings,
             # api_keys i password_hash celowo pominięte
         }
 
@@ -99,12 +99,12 @@ class Message:
 
     id: int
     user_id: int
-    session_id: Optional[int]
+    session_id: int | None
     role: str  # 'user', 'assistant', 'system'
     content: str
     metadata: dict[str, Any]
     created_at: datetime
-    parent_message_id: Optional[int]
+    parent_message_id: int | None
 
     @classmethod
     def from_db_row(cls, row: sqlite3.Row) -> "Message":
@@ -150,7 +150,7 @@ class MemoryContext:
     metadata: dict[str, Any]
     created_at: datetime
     updated_at: datetime
-    expires_at: Optional[datetime]
+    expires_at: datetime | None
 
     @classmethod
     def from_db_row(cls, row: sqlite3.Row) -> "MemoryContext":
@@ -164,9 +164,9 @@ class MemoryContext:
             metadata=json.loads(row["metadata"]) if row["metadata"] else {},
             created_at=datetime.fromisoformat(row["created_at"]),
             updated_at=datetime.fromisoformat(row["updated_at"]),
-            expires_at=datetime.fromisoformat(row["expires_at"])
-            if row["expires_at"]
-            else None,
+            expires_at=(
+                datetime.fromisoformat(row["expires_at"]) if row["expires_at"] else None
+            ),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -203,8 +203,8 @@ class APIUsage:
     tokens_used: int
     cost: float
     success: bool
-    response_time: Optional[float]
-    error_message: Optional[str]
+    response_time: float | None
+    error_message: str | None
     metadata: dict[str, Any]
     created_at: datetime
 
@@ -252,8 +252,8 @@ class SystemLog:
     level: str
     module: str
     message: str
-    user_id: Optional[int]
-    session_id: Optional[int]
+    user_id: int | None
+    session_id: int | None
     metadata: dict[str, Any]
     created_at: datetime
 

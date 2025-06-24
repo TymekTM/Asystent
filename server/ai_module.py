@@ -1,37 +1,42 @@
-"""
-ai_providers.py – ulepszona wersja
-"""
+"""ai_providers.py – ulepszona wersja."""
 
 from __future__ import annotations
 
+import importlib
 import json
+import logging
 import os
 import re
-import importlib
-import logging
-from functools import lru_cache
-from typing import Any, Dict, List, Optional, Tuple, Callable
 from collections import deque
-from function_calling_system import FunctionCallingSystem
+from collections.abc import Callable
+from functools import lru_cache
+from typing import Any
 
 import requests  # Added requests import
+from config_loader import MAIN_MODEL, PROVIDER, _config, load_config
+from performance_monitor import measure_performance
+from prompt_builder import build_convert_query_prompt, build_full_system_prompt
+
 # Lazy import for transformers to speed up startup
 pipeline = None
 
 # Import environment manager for secure API key handling
 try:
     from environment_manager import EnvironmentManager
-    env_file_path = os.path.join(os.path.dirname(__file__), '..', '.env')
+
+    env_file_path = os.path.join(os.path.dirname(__file__), "..", ".env")
     env_manager = EnvironmentManager(env_file=env_file_path)
 except ImportError as e:
     env_manager = None
     print(f"Warning: Could not import EnvironmentManager: {e}")
+
 
 def _load_pipeline():
     global pipeline
     if pipeline is None:
         try:
             from transformers import pipeline as _pipeline
+
             pipeline = _pipeline
         except ImportError:
             pipeline = None
@@ -40,18 +45,13 @@ def _load_pipeline():
             )
     return pipeline
 
-from config_loader import STT_MODEL, MAIN_MODEL, PROVIDER, _config, DEEP_MODEL, load_config # Changed from config import
-from prompt_builder import (
-    build_convert_query_prompt,
-    build_full_system_prompt,
-)
-from performance_monitor import measure_performance
 
 # -----------------------------------------------------------------------------
 # Konfiguracja logów
 # -----------------------------------------------------------------------------
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
 
 # -----------------------------------------------------------------------------
 # Klasa providerów
@@ -65,14 +65,15 @@ class AIProviders:
 
         # Cached clients to avoid reinitialization overhead
         self._openai_client = None
-        self._deepseek_client = None        # Dynamiczny import modułów – brakujące biblioteki ≠ twardy crash
-        self._modules: Dict[str, Any] = {
-            mod: AIProviders._safe_import(mod) for mod in ("ollama", "openai", "anthropic")
+        self._deepseek_client = (
+            None  # Dynamiczny import modułów – brakujące biblioteki ≠ twardy crash
+        )
+        self._modules: dict[str, Any] = {
+            mod: AIProviders._safe_import(mod)
+            for mod in ("ollama", "openai", "anthropic")
         }
 
-        self.providers: Dict[
-            str, Dict[str, Callable[..., Any] | None]
-        ] = {
+        self.providers: dict[str, dict[str, Callable[..., Any] | None]] = {
             "ollama": {
                 "module": self._modules["ollama"],
                 "check": self.check_ollama,
@@ -108,7 +109,7 @@ class AIProviders:
     # ---------------------------------------------------------------------
     # Helpery
     # ---------------------------------------------------------------------    @staticmethod
-    def _safe_import(module_name: str) -> Optional[Any]:
+    def _safe_import(module_name: str) -> Any | None:
         try:
             return importlib.import_module(module_name)
         except ImportError:
@@ -121,7 +122,7 @@ class AIProviders:
         return bool(key and not key.startswith("YOUR_"))
 
     @staticmethod
-    def _append_images(messages: List[dict], images: Optional[List[str]]) -> None:
+    def _append_images(messages: list[dict], images: list[str] | None) -> None:
         if images:
             messages[-1]["content"] += "\n\nObrazy: " + ", ".join(images)
 
@@ -129,8 +130,8 @@ class AIProviders:
     # Check‑i (zwracają bool, nic nie rzucają)
     # ---------------------------------------------------------------------
     def check_ollama(self) -> bool:
-        try:            return (
-                requests.get("http://localhost:11434", timeout=5).status_code == 200            )
+        try:
+            return requests.get("http://localhost:11434", timeout=5).status_code == 200
         except requests.RequestException:
             return False
 
@@ -160,11 +161,11 @@ class AIProviders:
     def chat_ollama(
         self,
         model: str,
-        messages: List[dict],
-        images: Optional[List[str]] = None,
-        temperature: Optional[float] = None,
-        max_tokens: Optional[int] = None,
-    ) -> Optional[Dict[str, Any]]:
+        messages: list[dict],
+        images: list[str | None] = None,
+        temperature: float | None = None,
+        max_tokens: int | None = None,
+    ) -> dict[str, Any | None]:
         try:
             self._append_images(messages, images)
             ollama_mod = self.providers["ollama"]["module"]
@@ -177,16 +178,20 @@ class AIProviders:
     def chat_lmstudio(
         self,
         model: str,
-        messages: List[dict],
-        images: Optional[List[str]] = None,
-        temperature: Optional[float] = None,
-        max_tokens: Optional[int] = None,
-    ) -> Optional[Dict[str, Any]]:
+        messages: list[dict],
+        images: list[str | None] = None,
+        temperature: float | None = None,
+        max_tokens: int | None = None,
+    ) -> dict[str, Any | None]:
         try:
             payload = {
                 "model": model,
                 "messages": messages,
-                "temperature": temperature if temperature is not None else _config.get("temperature", 0.7),
+                "temperature": (
+                    temperature
+                    if temperature is not None
+                    else _config.get("temperature", 0.7)
+                ),
             }
             if max_tokens is not None:
                 payload["max_tokens"] = max_tokens
@@ -196,39 +201,39 @@ class AIProviders:
             )
             r = self._lmstudio_session.post(url, json=payload, timeout=30)
             data = r.json()
-            return {
-                "message": {"content": data["choices"][0]["message"]["content"]}
-            }
+            return {"message": {"content": data["choices"][0]["message"]["content"]}}
         except Exception as exc:
             logger.error("LM Studio error: %s", exc)
-            return {
-                "message": {"content": f"LM Studio error: {exc}"}
-            }
+            return {"message": {"content": f"LM Studio error: {exc}"}}
 
     async def chat_openai(
         self,
         model: str,
-        messages: List[dict],
-        images: Optional[List[str]] = None,
-        functions: Optional[List[dict]] = None,
+        messages: list[dict],
+        images: list[str | None] = None,
+        functions: list[dict | None] = None,
         function_calling_system=None,
-        temperature: Optional[float] = None,
-        max_tokens: Optional[int] = None,    ) -> Optional[Dict[str, Any]]:
+        temperature: float | None = None,
+        max_tokens: int | None = None,
+    ) -> dict[str, Any | None]:
         try:
             # Use environment manager for secure API key handling
             api_key = None
             if env_manager:
                 api_key = env_manager.get_api_key("openai")
-            
+
             # Fallback to config file or environment variable
             if not api_key:
-                api_key = os.getenv("OPENAI_API_KEY") or _config.get("api_keys", {}).get("openai")
-            
+                api_key = os.getenv("OPENAI_API_KEY") or _config.get(
+                    "api_keys", {}
+                ).get("openai")
+
             if not api_key:
                 raise ValueError("Brak OPENAI_API_KEY.")
 
             if self._openai_client is None:
                 from openai import OpenAI  # type: ignore
+
                 self._openai_client = OpenAI(api_key=api_key)
 
             client = self._openai_client
@@ -238,72 +243,94 @@ class AIProviders:
             params = {
                 "model": model,
                 "messages": messages,
-                "temperature": temperature if temperature is not None else _config.get("temperature", 0.7),
-                "max_tokens": max_tokens if max_tokens is not None else _config.get("max_tokens", 1500),
+                "temperature": (
+                    temperature
+                    if temperature is not None
+                    else _config.get("temperature", 0.7)
+                ),
+                "max_tokens": (
+                    max_tokens
+                    if max_tokens is not None
+                    else _config.get("max_tokens", 1500)
+                ),
             }
-            
+
             # Add tools (functions) if provided
             if functions:
                 params["tools"] = functions
                 params["tool_choice"] = "auto"
-            
+
             resp = client.chat.completions.create(**params)
-              # Handle function calls
+            # Handle function calls
             if resp.choices[0].message.tool_calls:
                 # Execute function calls and collect results
                 tool_results = []
                 for tool_call in resp.choices[0].message.tool_calls:
                     function_name = tool_call.function.name
                     function_args = json.loads(tool_call.function.arguments)
-                    
+
                     if function_calling_system:
                         result = await function_calling_system.execute_function(
-                            function_name, function_args, 
-                            conversation_history=deque(messages[-10:]) if messages else None  # Pass recent conversation
+                            function_name,
+                            function_args,
+                            conversation_history=(
+                                deque(messages[-10:]) if messages else None
+                            ),  # Pass recent conversation
                         )
-                        tool_results.append({
-                            "tool_call_id": tool_call.id,
-                            "role": "tool",
-                            "name": function_name,
-                            "content": str(result)
-                        })
-                
-                # Add tool calls to conversation
-                messages.append({
-                    "role": "assistant",
-                    "content": resp.choices[0].message.content,
-                    "tool_calls": [
-                        {
-                            "id": tc.id,
-                            "type": "function", 
-                            "function": {
-                                "name": tc.function.name,
-                                "arguments": tc.function.arguments
+                        tool_results.append(
+                            {
+                                "tool_call_id": tool_call.id,
+                                "role": "tool",
+                                "name": function_name,
+                                "content": str(result),
                             }
-                        } for tc in resp.choices[0].message.tool_calls
-                    ]
-                })
-                
+                        )
+
+                # Add tool calls to conversation
+                messages.append(
+                    {
+                        "role": "assistant",
+                        "content": resp.choices[0].message.content,
+                        "tool_calls": [
+                            {
+                                "id": tc.id,
+                                "type": "function",
+                                "function": {
+                                    "name": tc.function.name,
+                                    "arguments": tc.function.arguments,
+                                },
+                            }
+                            for tc in resp.choices[0].message.tool_calls
+                        ],
+                    }
+                )
+
                 # Add tool results
                 messages.extend(tool_results)
-                
+
                 # Get final response with tool results
                 final_params = {
                     "model": model,
                     "messages": messages,
-                    "temperature": temperature if temperature is not None else _config.get("temperature", 0.7),
-                    "max_tokens": max_tokens if max_tokens is not None else _config.get("max_tokens", 1500),
+                    "temperature": (
+                        temperature
+                        if temperature is not None
+                        else _config.get("temperature", 0.7)
+                    ),
+                    "max_tokens": (
+                        max_tokens
+                        if max_tokens is not None
+                        else _config.get("max_tokens", 1500)
+                    ),
                 }
-                
+
                 final_resp = client.chat.completions.create(**final_params)
                 return {
                     "message": {"content": final_resp.choices[0].message.content},
-                    "tool_calls_executed": len(tool_results)
+                    "tool_calls_executed": len(tool_results),
                 }
             else:
-                return {
-                    "message": {"content": resp.choices[0].message.content}
-                }
+                return {"message": {"content": resp.choices[0].message.content}}
         except Exception as exc:
             logger.error("OpenAI error: %s", exc, exc_info=True)
             return {"message": {"content": f"Błąd OpenAI: {exc}"}}
@@ -311,34 +338,40 @@ class AIProviders:
     def chat_deepseek(
         self,
         model: str,
-        messages: List[dict],
-        images: Optional[List[str]] = None,
-        temperature: Optional[float] = None,
-        max_tokens: Optional[int] = None,
-    ) -> Optional[Dict[str, Any]]:
+        messages: list[dict],
+        images: list[str | None] = None,
+        temperature: float | None = None,
+        max_tokens: int | None = None,
+    ) -> dict[str, Any | None]:
         try:
-            api_key = (
-                os.getenv("DEEPSEEK_API_KEY")
-                or _config["api_keys"]["deepseek"]
-            )
+            api_key = os.getenv("DEEPSEEK_API_KEY") or _config["api_keys"]["deepseek"]
             if not api_key:
                 raise ValueError("Brak DEEPSEEK_API_KEY.")
             # DeepSeek jest w 100 % OpenAI‑compatible
             if self._deepseek_client is None:
                 from openai import OpenAI  # type: ignore
-                self._deepseek_client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
+
+                self._deepseek_client = OpenAI(
+                    api_key=api_key, base_url="https://api.deepseek.com"
+                )
 
             client = self._deepseek_client
             self._append_images(messages, images)
             resp = client.chat.completions.create(
                 model=model,
                 messages=messages,
-                temperature=temperature if temperature is not None else _config.get("temperature", 0.7),
-                max_tokens=max_tokens if max_tokens is not None else _config.get("max_tokens", 1500),
+                temperature=(
+                    temperature
+                    if temperature is not None
+                    else _config.get("temperature", 0.7)
+                ),
+                max_tokens=(
+                    max_tokens
+                    if max_tokens is not None
+                    else _config.get("max_tokens", 1500)
+                ),
             )
-            return {
-                "message": {"content": resp.choices[0].message.content}
-            }
+            return {"message": {"content": resp.choices[0].message.content}}
         except Exception as exc:
             logger.error("DeepSeek error: %s", exc)
             return None
@@ -346,16 +379,13 @@ class AIProviders:
     def chat_anthropic(
         self,
         model: str,
-        messages: List[dict],
-        images: Optional[List[str]] = None,
-        temperature: Optional[float] = None,
-        max_tokens: Optional[int] = None,
-    ) -> Optional[Dict[str, Any]]:
+        messages: list[dict],
+        images: list[str | None] = None,
+        temperature: float | None = None,
+        max_tokens: int | None = None,
+    ) -> dict[str, Any | None]:
         try:
-            api_key = (
-                os.getenv("ANTHROPIC_API_KEY")
-                or _config["api_keys"]["anthropic"]
-            )
+            api_key = os.getenv("ANTHROPIC_API_KEY") or _config["api_keys"]["anthropic"]
             if not api_key:
                 raise ValueError("Brak ANTHROPIC_API_KEY.")
             from anthropic import Anthropic  # type: ignore
@@ -366,7 +396,11 @@ class AIProviders:
                 model=model,
                 messages=messages,
                 max_tokens=max_tokens if max_tokens is not None else 1000,
-                temperature=temperature if temperature is not None else _config.get("temperature", 0.7),
+                temperature=(
+                    temperature
+                    if temperature is not None
+                    else _config.get("temperature", 0.7)
+                ),
             )
             return {"message": {"content": resp.content[0].text}}
         except Exception as exc:
@@ -376,11 +410,11 @@ class AIProviders:
     def chat_transformer(
         self,
         model: str,
-        messages: List[dict],
-        images: Optional[List[str]] = None,
-        temperature: Optional[float] = None,
-        max_tokens: Optional[int] = None,
-    ) -> Optional[Dict[str, Any]]:
+        messages: list[dict],
+        images: list[str | None] = None,
+        temperature: float | None = None,
+        max_tokens: int | None = None,
+    ) -> dict[str, Any | None]:
         try:
             self._append_images(messages, images)
             pl = _load_pipeline()
@@ -397,7 +431,8 @@ class AIProviders:
             return None
 
 
-_ai_providers: Optional[AIProviders] = None
+_ai_providers: AIProviders | None = None
+
 
 def get_ai_providers() -> AIProviders:
     global _ai_providers
@@ -405,11 +440,12 @@ def get_ai_providers() -> AIProviders:
         _ai_providers = AIProviders()
     return _ai_providers
 
+
 # -----------------------------------------------------------------------------
 # Publiczne funkcje
 # -----------------------------------------------------------------------------
 @measure_performance
-def health_check() -> Dict[str, bool]:
+def health_check() -> dict[str, bool]:
     providers = get_ai_providers()
     return {name: cfg["check"]() for name, cfg in providers.providers.items()}
 
@@ -439,9 +475,8 @@ def extract_json(text: str) -> str:
     return text
 
 
-
-
 # ---------------------------------------------------------------- refiner ----
+
 
 @lru_cache(maxsize=256)
 @measure_performance
@@ -471,32 +506,34 @@ async def refine_query(query: str, detected_language: str = "Polish") -> str:
 @measure_performance
 async def chat_with_providers(
     model: str,
-    messages: List[dict],
-    images: Optional[List[str]] = None,
-    provider_override: Optional[str] = None,
-    functions: Optional[List[dict]] = None,
+    messages: list[dict],
+    images: list[str | None] = None,
+    provider_override: str | None = None,
+    functions: list[dict | None] = None,
     function_calling_system=None,
-    temperature: Optional[float] = None,
-    max_tokens: Optional[int] = None,
-) -> Optional[Dict[str, Any]]:
+    temperature: float | None = None,
+    max_tokens: int | None = None,
+) -> dict[str, Any | None]:
     providers = get_ai_providers()
     selected = (provider_override or PROVIDER).lower()
     provider_cfg = providers.providers.get(selected)
-    
-    logger.info(f"🔧 AI Request: model={model}, provider={selected}, provider_override={provider_override}")
+
+    logger.info(
+        f"🔧 AI Request: model={model}, provider={selected}, provider_override={provider_override}"
+    )
     logger.info(f"🔧 Available providers: {list(providers.providers.keys())}")
     logger.info(f"🔧 Selected provider config exists: {provider_cfg is not None}")
-    
-    async def _try(provider_name: str) -> Optional[Dict[str, Any]]:
+
+    async def _try(provider_name: str) -> dict[str, Any | None]:
         prov = providers.providers[provider_name]
         logger.info(f"🔧 Trying provider: {provider_name}")
         try:
             if prov["check"]():
                 logger.info(f"✅ Provider {provider_name} check passed")
-                
+
                 # Handle different providers with appropriate parameters
                 chat_func = prov["chat"]
-                
+
                 if provider_name == "openai":
                     # OpenAI supports function calling
                     result = await chat_func(
@@ -526,7 +563,7 @@ async def chat_with_providers(
                         temperature=temperature,
                         max_tokens=max_tokens,
                     )
-                    
+
                 logger.info(f"✅ Provider {provider_name} returned result")
                 return result
             else:
@@ -574,14 +611,14 @@ async def chat_with_providers(
 async def generate_response_logic(
     provider_name: str,
     model_name: str,
-    messages: List[Dict[str, Any]],
+    messages: list[dict[str, Any]],
     tools_info: str,
-    system_prompt_override: Optional[str] = None,
-    detected_language: Optional[str] = None,
-    language_confidence: Optional[float] = None,
-    images: Optional[List[str]] = None, # Added images
-    active_window_title: Optional[str] = None, # Added
-    track_active_window_setting: bool = False # Added
+    system_prompt_override: str | None = None,
+    detected_language: str | None = None,
+    language_confidence: float | None = None,
+    images: list[str | None] = None,  # Added images
+    active_window_title: str | None = None,  # Added
+    track_active_window_setting: bool = False,  # Added
 ) -> str:
     """Core logic to generate a response from a chosen AI provider."""
     # Build the full system prompt
@@ -592,8 +629,8 @@ async def generate_response_logic(
         detected_language=detected_language,
         language_confidence=language_confidence,
         tools_description=tools_info,
-        active_window_title=active_window_title, # Pass through
-        track_active_window_setting=track_active_window_setting # Pass through
+        active_window_title=active_window_title,  # Pass through
+        track_active_window_setting=track_active_window_setting,  # Pass through
     )
 
     # Convert deque to list for slicing and modification
@@ -601,7 +638,9 @@ async def generate_response_logic(
     if messages_list and messages_list[0]["role"] == "system":
         messages_list[0]["content"] = system_message_content
     else:
-        messages_list.insert(0, {"role": "system", "content": system_message_content})    # Send the modified messages to the AI provider
+        messages_list.insert(
+            0, {"role": "system", "content": system_message_content}
+        )  # Send the modified messages to the AI provider
     response = await chat_with_providers(
         model=model_name,
         messages=messages_list,
@@ -624,16 +663,16 @@ async def generate_response(
     system_prompt_override: str = None,
     detected_language: str = "en",
     language_confidence: float = 1.0,
-    active_window_title: str = None, 
+    active_window_title: str = None,
     track_active_window_setting: bool = False,
     tool_suggestion: str = None,
-    modules: Dict[str, Any] = None,
+    modules: dict[str, Any] = None,
     use_function_calling: bool = True,
-    user_name: str = None
+    user_name: str = None,
 ) -> str:
-    """
-    Generates a response from the AI model based on conversation history and available tools.
-    Can use either traditional prompt-based approach or OpenAI Function Calling.
+    """Generates a response from the AI model based on conversation history and
+    available tools. Can use either traditional prompt-based approach or OpenAI Function
+    Calling.
 
     Args:
         conversation_history: A deque of previous messages.
@@ -648,19 +687,18 @@ async def generate_response(
         A string containing the AI's response, potentially in JSON format for commands.
     """
     import datetime
+
     try:
         # Use environment manager for secure API key handling
         api_key = None
         if env_manager:
             api_key = env_manager.get_api_key("openai")
-        
+
         # Fallback to config file or environment variable
         if not api_key:
-            config = load_config() # Use imported load_config
-            api_keys = config.get("api_keys", {}) # Get the nested api_keys dictionary
+            config = load_config()  # Use imported load_config
+            api_keys = config.get("api_keys", {})  # Get the nested api_keys dictionary
             api_key = api_keys.get("openai") or os.getenv("OPENAI_API_KEY")
-        
-        model_name = "gpt-4.1-nano"  # Default model
 
         if not api_key:
             logger.error("OpenAI API key not found in configuration.")
@@ -669,21 +707,22 @@ async def generate_response(
         # Initialize function calling system if enabled and plugins available
         function_calling_system = None
         functions = None
-        
+
         if use_function_calling and PROVIDER.lower() == "openai":
             # Get functions directly from plugin_manager
-            from plugin_manager import plugin_manager
             from function_calling_system import FunctionCallingSystem
-            
+
             # Initialize function calling system
             function_calling_system = FunctionCallingSystem()
-            
+
             # Get functions from plugin manager
             functions = function_calling_system.convert_modules_to_functions()
-            
+
             if functions:
                 logger.info(f"Function calling enabled with {len(functions)} functions")
-                logger.debug(f"Available functions: {[f['function']['name'] for f in functions]}")
+                logger.debug(
+                    f"Available functions: {[f['function']['name'] for f in functions]}"
+                )
             else:
                 logger.warning("No functions available for function calling")
                 function_calling_system = None
@@ -697,7 +736,7 @@ async def generate_response(
                 active_window_title=active_window_title,
                 track_active_window_setting=track_active_window_setting,
                 tool_suggestion=tool_suggestion,
-                user_name=user_name
+                user_name=user_name,
             )
         else:
             # Traditional prompt-based approach
@@ -709,28 +748,38 @@ async def generate_response(
                 active_window_title=active_window_title,
                 track_active_window_setting=track_active_window_setting,
                 tool_suggestion=tool_suggestion,
-                user_name=user_name
+                user_name=user_name,
             )
-        
+
         # --- PROMPT LOGGING ---
         try:
             import json
+
             timestamp = datetime.datetime.now().isoformat()
-            
+
             with open("user_data/prompts_log.txt", "a", encoding="utf-8") as f:
                 # Log the system prompt
                 system_prompt_msg = {"role": "system", "content": system_prompt}
-                f.write(f"{timestamp} | {json.dumps(system_prompt_msg, ensure_ascii=False)}\n")
-                
+                f.write(
+                    f"{timestamp} | {json.dumps(system_prompt_msg, ensure_ascii=False)}\n"
+                )
+
                 # Log conversation history
                 for msg in list(conversation_history):
                     if msg.get("role") != "system":
-                        f.write(f"{timestamp} | {json.dumps(msg, ensure_ascii=False)}\n")
-                
+                        f.write(
+                            f"{timestamp} | {json.dumps(msg, ensure_ascii=False)}\n"
+                        )
+
                 # Log available functions if using function calling
                 if functions:
-                    functions_msg = {"role": "system", "content": f"Available functions: {len(functions)}"}
-                    f.write(f"{timestamp} | {json.dumps(functions_msg, ensure_ascii=False)}\n")
+                    functions_msg = {
+                        "role": "system",
+                        "content": f"Available functions: {len(functions)}",
+                    }
+                    f.write(
+                        f"{timestamp} | {json.dumps(functions_msg, ensure_ascii=False)}\n"
+                    )
         except Exception as log_exc:
             logger.warning(f"[PromptLog] Failed to log prompt: {log_exc}")
 
@@ -739,30 +788,42 @@ async def generate_response(
         if messages and messages[0]["role"] == "system":
             messages[0]["content"] = system_prompt
         else:
-            messages.insert(0, {"role": "system", "content": system_prompt})        # Make API call with or without functions
+            messages.insert(
+                0, {"role": "system", "content": system_prompt}
+            )  # Make API call with or without functions
         resp = await chat_with_providers(
-            MAIN_MODEL, 
-            messages, 
+            MAIN_MODEL,
+            messages,
             functions=functions,
-            function_calling_system=function_calling_system
+            function_calling_system=function_calling_system,
         )
-        
+
         # --- RAW API RESPONSE LOGGING ---
         try:
-            raw_content = resp.get("message", {}).get("content", "").strip() if resp else ""
-            import json
+            raw_content = (
+                resp.get("message", {}).get("content", "").strip() if resp else ""
+            )
             import datetime
+            import json
+
             with open("user_data/prompts_log.txt", "a", encoding="utf-8") as f:
                 raw_api_msg = {"role": "assistant_api_raw", "content": raw_content}
-                f.write(f"{datetime.datetime.now().isoformat()} | {json.dumps(raw_api_msg, ensure_ascii=False)}\n")
-                
+                f.write(
+                    f"{datetime.datetime.now().isoformat()} | {json.dumps(raw_api_msg, ensure_ascii=False)}\n"
+                )
+
                 # Log if function calls were executed
                 if resp and resp.get("tool_calls_executed"):
-                    tool_calls_msg = {"role": "system", "content": f"Tool calls executed: {resp['tool_calls_executed']}"}
-                    f.write(f"{datetime.datetime.now().isoformat()} | {json.dumps(tool_calls_msg, ensure_ascii=False)}\n")
+                    tool_calls_msg = {
+                        "role": "system",
+                        "content": f"Tool calls executed: {resp['tool_calls_executed']}",
+                    }
+                    f.write(
+                        f"{datetime.datetime.now().isoformat()} | {json.dumps(tool_calls_msg, ensure_ascii=False)}\n"
+                    )
         except Exception as log_exc:
             logger.warning(f"[RawAPI Log] Failed to log raw API response: {log_exc}")
-        
+
         content = resp["message"]["content"].strip() if resp else ""
         if not content:
             raise ValueError("Empty response.")
@@ -779,20 +840,26 @@ async def generate_response(
                     return content
                 else:
                     # It's JSON but not in our expected format, wrap it
-                    return json.dumps({
+                    return json.dumps(
+                        {
+                            "text": content,
+                            "command": "",
+                            "params": {},
+                            "function_calls_executed": True,
+                        },
+                        ensure_ascii=False,
+                    )
+            except json.JSONDecodeError:
+                # Content is plain text, wrap it in JSON
+                return json.dumps(
+                    {
                         "text": content,
                         "command": "",
                         "params": {},
-                        "function_calls_executed": True
-                    }, ensure_ascii=False)
-            except json.JSONDecodeError:
-                # Content is plain text, wrap it in JSON
-                return json.dumps({
-                    "text": content,
-                    "command": "",
-                    "params": {},
-                    "function_calls_executed": True
-                }, ensure_ascii=False)
+                        "function_calls_executed": True,
+                    },
+                    ensure_ascii=False,
+                )
 
         # Traditional JSON parsing for non-function calling responses
         parsed = extract_json(content)
@@ -804,11 +871,9 @@ async def generate_response(
             pass
 
         # fallback: zawinąć surowy tekst
-        return json.dumps({
-            "text": content,
-            "command": "",
-            "params": {}
-        }, ensure_ascii=False)
+        return json.dumps(
+            {"text": content, "command": "", "params": {}}, ensure_ascii=False
+        )
     except Exception as exc:  # pragma: no cover
         logger.error("generate_response error: %s", exc, exc_info=True)
         return json.dumps(
@@ -820,48 +885,66 @@ async def generate_response(
             ensure_ascii=False,
         )
 
+
 # -----------------------------------------------------------------------------
 # Klasa AIModule
 # -----------------------------------------------------------------------------
 
+
 class AIModule:
     """Główna klasa modułu AI dla serwera."""
-    
-    def __init__(self, config: Dict):
+
+    def __init__(self, config: dict):
         self.config = config
         self.providers = get_ai_providers()
         self._conversation_history = {}
-    
-    async def process_query(self, query: str, context: Dict) -> str:
+
+    async def process_query(self, query: str, context: dict) -> str:
         """Przetwarza zapytanie użytkownika i zwraca odpowiedź AI."""
         try:
-            user_id = context.get('user_id', 'anonymous')
-            history = context.get('history', [])
-            available_plugins = context.get('available_plugins', [])
-            modules = context.get('modules', {})
-            
+            user_id = context.get("user_id", "anonymous")
+            history = context.get("history", [])
+            available_plugins = context.get("available_plugins", [])
+            modules = context.get("modules", {})
+
             logger.info(f"AI Context - user_id: {user_id}")
             logger.info(f"AI Context - available_plugins: {available_plugins}")
-            logger.info(f"AI Context - modules: {list(modules.keys()) if modules else 'None'}")
+            logger.info(
+                f"AI Context - modules: {list(modules.keys()) if modules else 'None'}"
+            )
             logger.info(f"AI Context - modules content: {modules}")
-            
+
             # Convert history to deque format for generate_response
             conversation_history = deque()
-            
+
             # Add history from database
             for msg in history[-10:]:  # Last 10 messages
-                conversation_history.append({
-                    "role": msg['role'],
-                    "content": msg['content']
-                })
-            
+                content = msg["content"]
+
+                # If the content is a JSON string (from assistant), extract the text
+                if msg["role"] == "assistant":
+                    try:
+                        import json
+
+                        parsed_content = json.loads(content)
+                        if (
+                            isinstance(parsed_content, dict)
+                            and "text" in parsed_content
+                        ):
+                            content = parsed_content["text"]
+                    except (json.JSONDecodeError, KeyError):
+                        # If parsing fails, use content as-is
+                        pass
+
+                conversation_history.append({"role": msg["role"], "content": content})
+
             # Add current query
             conversation_history.append({"role": "user", "content": query})
-            
+
             # Build tools description
             tools_info = ""
             if available_plugins:
-                tools_info = f"Dostępne pluginy: {', '.join(available_plugins)}"            # Use the same generate_response function as in main ai_module.py
+                tools_info = f"Dostępne pluginy: {', '.join(available_plugins)}"  # Use the same generate_response function as in main ai_module.py
             response = await generate_response(
                 conversation_history=conversation_history,
                 tools_info=tools_info,
@@ -869,15 +952,18 @@ class AIModule:
                 language_confidence=1.0,
                 modules=modules,
                 use_function_calling=True,  # Enable function calling
-                user_name=context.get('user_name', 'User')
+                user_name=context.get("user_name", "User"),
             )
-            
+
             return response
-            
+
         except Exception as e:
             logger.error(f"Error processing AI query: {e}")
-            return json.dumps({
-                "text": f"Przepraszam, wystąpił błąd podczas przetwarzania zapytania: {str(e)}",
-                "command": "",
-                "params": {}
-            }, ensure_ascii=False)
+            return json.dumps(
+                {
+                    "text": f"Przepraszam, wystąpił błąd podczas przetwarzania zapytania: {str(e)}",
+                    "command": "",
+                    "params": {},
+                },
+                ensure_ascii=False,
+            )

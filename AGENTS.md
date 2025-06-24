@@ -8,6 +8,8 @@ This document outlines the required practices, constraints, and expectations for
 
 ## 🔍 Before You Start
 
+Check if there are any files to commit. Commit them, then proceed.
+
 ### 🔎 Research First
 
 Before modifying or generating any code:

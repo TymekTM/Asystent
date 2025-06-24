@@ -5,7 +5,7 @@ environment_manager.py - Bezpieczne zarządzanie zmiennymi środowiskowymi i klu
 import logging
 import os
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ class EnvironmentManager:
             except Exception as e:
                 logger.error(f"Error loading .env file: {e}")
 
-    def get_api_key(self, service: str) -> Optional[str]:
+    def get_api_key(self, service: str) -> str | None:
         """Pobiera klucz API dla danej usługi z zmiennych środowiskowych.
 
         Args:

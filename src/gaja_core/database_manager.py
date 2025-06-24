@@ -5,15 +5,9 @@ import threading
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
-from .database_models import (
-    APIUsage,
-    MemoryContext,
-    Message,
-    User,
-    UserSession,
-)
+from .database_models import APIUsage, MemoryContext, Message, User, UserSession
 
 logger = logging.getLogger(__name__)
 
@@ -253,7 +247,7 @@ class DatabaseManager:
             logger.info(f"Created user: {username} (ID: {user_id})")
             return user_id
 
-    def get_user(self, user_id: int = None, username: str = None) -> Optional[User]:
+    def get_user(self, user_id: int = None, username: str = None) -> User | None:
         """Pobiera użytkownika po ID lub nazwie."""
         with self.get_db_connection() as conn:
             if user_id:
@@ -327,7 +321,7 @@ class DatabaseManager:
             )
             return cursor.lastrowid
 
-    def get_session(self, session_token: str) -> Optional[UserSession]:
+    def get_session(self, session_token: str) -> UserSession | None:
         """Pobiera sesję po tokenie."""
         with self.get_db_connection() as conn:
             cursor = conn.execute(
@@ -829,16 +823,16 @@ class DatabaseManager:
                 (int(user_id), json.dumps(enabled_plugins)),
             )
 
-    def get_user_api_key(self, user_id: int, provider: str) -> Optional[str]:
-        """
-        Pobiera klucz API użytkownika dla danego providera.
+    def get_user_api_key(self, user_id: int, provider: str) -> str | None:
+        """Pobiera klucz API użytkownika dla danego providera.
 
         Args:
             user_id: ID użytkownika
             provider: Nazwa providera (np. 'openweather', 'newsapi', 'google_search')
 
         Returns:
-            Klucz API lub None jeśli nie istnieje"""
+            Klucz API lub None jeśli nie istnieje
+        """
         try:
             with self.get_db_connection() as conn:
                 cursor = conn.cursor()
@@ -857,8 +851,7 @@ class DatabaseManager:
             return None
 
     def set_user_api_key(self, user_id: int, provider: str, api_key: str) -> bool:
-        """
-        Ustawia klucz API użytkownika dla danego providera.
+        """Ustawia klucz API użytkownika dla danego providera.
 
         Args:
             user_id: ID użytkownika
@@ -901,8 +894,7 @@ class DatabaseManager:
             return False
 
     def remove_user_api_key(self, user_id: int, provider: str) -> bool:
-        """
-        Usuwa klucz API użytkownika dla danego providera.
+        """Usuwa klucz API użytkownika dla danego providera.
 
         Args:
             user_id: ID użytkownika

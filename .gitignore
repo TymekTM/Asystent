@@ -26,6 +26,7 @@ var/
 wheels/
 share/python-wheels/
 MANIFEST
+dependencies/
 
 # Virtual environments
 .env
@@ -168,7 +169,8 @@ admin_credentials.txt
 
 # API Keys and sensitive configuration files
 **/config.json
-**/client_config.json  
+**/client_config.json
 **/server_config.json
 configs/api_keys.json
 configs/auth_config.json
+/dependencies

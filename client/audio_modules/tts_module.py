@@ -1,4 +1,9 @@
-import asyncio, logging, os, subprocess, uuid, threading
+import asyncio
+import logging
+import os
+import subprocess
+import threading
+
 try:
     from openai import OpenAI  # type: ignore
 except Exception:  # openai not installed
@@ -8,9 +13,11 @@ except Exception:  # openai not installed
 try:
     from performance_monitor import measure_performance
 except ImportError:
+
     def measure_performance(func):
-        """Fallback decorator when performance_monitor is not available"""
+        """Fallback decorator when performance_monitor is not available."""
         return func
+
 
 # Handle relative imports
 try:
@@ -19,16 +26,20 @@ except ImportError:
     try:
         from ffmpeg_installer import ensure_ffmpeg_installed
     except ImportError:
+
         def ensure_ffmpeg_installed():
-            """Fallback function when ffmpeg_installer is not available"""
+            """Fallback function when ffmpeg_installer is not available."""
             pass
+
 
 # TTS prompt (fallback if prompts module not available)
 try:
     from prompts import get_tts_voice_prompt
 except ImportError:
+
     def get_tts_voice_prompt() -> str:
         return "Speak naturally and conversationally."
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
@@ -37,16 +48,17 @@ logger.setLevel(logging.WARNING)
 import glob
 import time
 
+
 class TTSModule:
     CLEANUP_INTERVAL = 10  # seconds
     INACTIVITY_THRESHOLD = 30  # seconds
 
-    def __init__(self):        
+    def __init__(self):
         # Mute flag to disable TTS in text/chat mode
         self.mute = False
         self.current_process = None
         self._last_activity = time.time()
-        self._cleanup_task_started = False        # TTS configuration
+        self._cleanup_task_started = False  # TTS configuration
         self.volume = 200  # ffplay volume (200% for louder audio)
         self.voice = "sage"  # OpenAI voice
         self.model = "gpt-4o-mini-tts"  # OpenAI TTS model (correct model name)
@@ -56,6 +68,7 @@ class TTSModule:
     def _adjust_settings(self) -> None:
         """Adjust volume based on time of day and holidays."""
         from datetime import datetime
+
         hour = datetime.now().hour
         if 6 <= hour < 12:
             self.volume = 200
@@ -65,6 +78,7 @@ class TTSModule:
             self.volume = 180
         try:
             from prompts import _holiday_hint
+
             if _holiday_hint():
                 self.volume = min(self.volume + 20, 250)
         except Exception:
@@ -78,7 +92,10 @@ class TTSModule:
                     loop.create_task(self._cleanup_temp_files_loop())
                 except RuntimeError:
                     # No running loop, start in a background thread
-                    threading.Thread(target=lambda: asyncio.run(self._cleanup_temp_files_loop()), daemon=True).start()
+                    threading.Thread(
+                        target=lambda: asyncio.run(self._cleanup_temp_files_loop()),
+                        daemon=True,
+                    ).start()
                 self._cleanup_task_started = True
             except Exception as e:
                 logger.error(f"Failed to start TTS cleanup task: {e}")
@@ -95,9 +112,13 @@ class TTSModule:
                             mtime = os.path.getmtime(path)
                             if now - mtime > self.INACTIVITY_THRESHOLD:
                                 os.remove(path)
-                                logger.info(f"[TTS Cleanup] Deleted old temp file: {path}")
+                                logger.info(
+                                    f"[TTS Cleanup] Deleted old temp file: {path}"
+                                )
                         except Exception as e:
-                            logger.warning(f"[TTS Cleanup] Failed to delete {path}: {e}")
+                            logger.warning(
+                                f"[TTS Cleanup] Failed to delete {path}: {e}"
+                            )
             except Exception as e:
                 logger.error(f"[TTS Cleanup] Error in cleanup loop: {e}")
             await asyncio.sleep(self.CLEANUP_INTERVAL)
@@ -117,22 +138,25 @@ class TTSModule:
             self._start_cleanup_task()
 
         self._adjust_settings()
-            
+
         # Skip speaking if muted (e.g., in text/chat mode)
-        if getattr(self, 'mute', False):
+        if getattr(self, "mute", False):
             return
         logger.info("TTS: %s", text)
         if OpenAI is None:
             logger.error("openai library is not available")
             return
-            
+
         api_key = os.getenv("OPENAI_API_KEY")
 
         # Try to load from environment manager if available
         if not api_key:
             try:
                 from environment_manager import EnvironmentManager
-                env_file_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
+
+                env_file_path = os.path.join(
+                    os.path.dirname(os.path.dirname(__file__)), ".env"
+                )
                 env_manager = EnvironmentManager(env_file=env_file_path)
                 api_key = env_manager.get_api_key("openai")
                 logger.info(f"Loaded API key from environment manager: {bool(api_key)}")
@@ -140,22 +164,26 @@ class TTSModule:
                 logger.warning(f"Environment manager not available: {e}")
             except Exception as e:
                 logger.warning(f"Error loading API key from environment manager: {e}")
-        
+
         if not api_key:
             try:
                 import json
+
                 # Load config from client config file
-                config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "client_config.json")
+                config_path = os.path.join(
+                    os.path.dirname(os.path.dirname(__file__)), "client_config.json"
+                )
                 if os.path.exists(config_path):
-                    with open(config_path, "r", encoding="utf-8") as f:
+                    with open(config_path, encoding="utf-8") as f:
                         config = json.load(f)
                         api_key = config.get("api_keys", {}).get("openai")
             except Exception as e:
                 logger.warning(f"Could not load API key from client config: {e}")
-                
+
         if not api_key:
             try:
                 from config import _config
+
                 api_key = _config.get("API_KEYS", {}).get("OPENAI_API_KEY")
             except Exception:
                 api_key = None
@@ -179,11 +207,21 @@ class TTSModule:
                 ) as response:
                     self.cancel()
                     self.current_process = subprocess.Popen(
-                        ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", "-volume", str(self.volume), "-i", "-"] ,
+                        [
+                            "ffplay",
+                            "-nodisp",
+                            "-autoexit",
+                            "-loglevel",
+                            "quiet",
+                            "-volume",
+                            str(self.volume),
+                            "-i",
+                            "-",
+                        ],
                         stdin=subprocess.PIPE,
                         stdout=subprocess.DEVNULL,
                         stderr=subprocess.DEVNULL,
-                        start_new_session=True  # Prevent signal propagation
+                        start_new_session=True,  # Prevent signal propagation
                     )
                     for chunk in response.iter_bytes():
                         if self.current_process.stdin:
@@ -202,8 +240,10 @@ class TTSModule:
 
         await asyncio.to_thread(_stream_and_play)
 
+
 # Create a global instance of TTSModule
 _tts_module_instance = TTSModule()
+
 
 # Define a module-level async speak function
 async def speak(text: str):

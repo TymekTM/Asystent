@@ -11,7 +11,6 @@ import logging
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 import aiofiles
 
@@ -24,9 +23,9 @@ class Dependency:
 
     name: str
     version: str
-    url: Optional[str] = None
-    size_mb: Optional[float] = None
-    checksum: Optional[str] = None
+    url: str | None = None
+    size_mb: float | None = None
+    checksum: str | None = None
     essential: bool = True
     description: str = ""
 
@@ -90,7 +89,7 @@ class DependencyManager:
         ),
     }
 
-    def __init__(self, app_dir: Optional[Path] = None):
+    def __init__(self, app_dir: Path | None = None):
         """Initialize dependency manager."""
         self.app_dir = app_dir or Path.cwd()
         self.dependencies_dir = self.app_dir / "dependencies"
@@ -116,7 +115,7 @@ class DependencyManager:
             return True
 
         try:
-            async with aiofiles.open(self.manifest_file, "r") as f:
+            async with aiofiles.open(self.manifest_file) as f:
                 manifest = json.loads(await f.read())
 
             # Verify essential dependencies are listed
@@ -283,7 +282,7 @@ class DependencyManager:
 
 
 # Singleton instance for global access
-_dependency_manager: Optional[DependencyManager] = None
+_dependency_manager: DependencyManager | None = None
 
 
 def get_dependency_manager() -> DependencyManager:

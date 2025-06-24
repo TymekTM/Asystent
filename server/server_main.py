@@ -5,33 +5,61 @@ import asyncio
 import json
 import os
 import sys
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import uvicorn
 from environment_manager import EnvironmentManager
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from loguru import logger
+from pydantic import BaseModel
 
 from server import onboarding_module as server_onboarding
 from server.ai_module import AIModule
 from server.config_loader import load_config
-from server.database_manager import initialize_database_manager
-from server.function_calling_system import FunctionCallingSystem
-from server.plugin_manager import plugin_manager
-
-OnboardingModule = server_onboarding.OnboardingModule
 from server.daily_briefing_module import DailyBriefingModule
+from server.database_manager import initialize_database_manager
 from server.day_narrative_module import DayNarrativeModule
 from server.day_summary_module import DaySummaryModule
 from server.extended_webui import ExtendedWebUI
+from server.function_calling_system import FunctionCallingSystem
+from server.plugin_manager import plugin_manager
 from server.plugin_monitor import plugin_monitor
 from server.proactive_assistant_simple import get_proactive_assistant
 from server.routines_learner_module import RoutinesLearnerModule
 from server.user_behavior_module import UserBehaviorModule
+
+OnboardingModule = server_onboarding.OnboardingModule
+
+
+# Data models for REST API
+
+
+# Data models for REST API
+class AIQueryRequest(BaseModel):
+    user_id: str
+    query: str
+    context: dict = {}
+
+
+class UserHistoryRequest(BaseModel):
+    user_id: str
+    limit: int = 50
+
+
+class AIQueryResponse(BaseModel):
+    ai_response: str
+    function_calls: list = []
+    plugins_used: list = []
+
+
+class UserHistoryResponse(BaseModel):
+    history: list
+    total_count: int
 
 
 class ConnectionManager:
@@ -68,7 +96,7 @@ class ConnectionManager:
                 logger.error(f"Error sending message to {user_id}: {e}")
                 self.disconnect(user_id)
 
-    async def broadcast(self, message: dict, exclude_user: Optional[str] = None):
+    async def broadcast(self, message: dict, exclude_user: str | None = None):
         """Wyślij wiadomość do wszystkich podłączonych użytkowników."""
         for user_id, websocket in self.active_connections.items():
             if exclude_user and user_id == exclude_user:
@@ -398,13 +426,19 @@ class ServerApp:
             query = request_data.get("query", "")
             context = request_data.get("context", {})
 
-            user_level = self.db_manager.get_user_level(int(user_id))
-            monthly = await asyncio.to_thread(
-                self.db_manager.count_api_calls, int(user_id), days=30
-            )
-            daily = await asyncio.to_thread(
-                self.db_manager.count_api_calls, int(user_id), days=1
-            )
+            # Handle both string and numeric user_id
+            try:
+                numeric_user_id = int(user_id)
+            except (ValueError, TypeError):
+                # For string user_id, generate a numeric hash for database compatibility
+                numeric_user_id = abs(hash(user_id)) % (10**9)
+                logger.debug(
+                    f"String user_id '{user_id}' converted to numeric: {numeric_user_id}"
+                )
+
+            user_level = self.db_manager.get_user_level(numeric_user_id)
+            monthly = self.db_manager.count_api_calls(numeric_user_id, days=30)
+            daily = self.db_manager.count_api_calls(numeric_user_id, days=1)
             limits = {
                 "free": {"monthly": 1000, "daily": 100},
                 "plus": {"monthly": 10000, "daily": None},
@@ -420,14 +454,25 @@ class ServerApp:
                 }
 
             # Pobierz historię użytkownika z bazy
-            user_history = await self.db_manager.get_user_history(
-                user_id
-            )  # Przygotuj kontekst dla AI
+            logger.debug("About to call get_user_history")
+            user_history = await self.db_manager.get_user_history(user_id)
+            logger.debug(f"get_user_history returned: {type(user_history)}")
+
+            # Przygotuj kontekst dla AI
+            logger.debug("About to call get_available_functions")
             available_plugins = list(
                 plugin_manager.get_available_functions(user_id).keys()
             )
-            modules = plugin_manager.get_modules_for_user(user_id)
+            logger.debug(f"get_available_functions returned: {type(available_plugins)}")
 
+            logger.debug("About to call get_modules_for_user")
+            modules = plugin_manager.get_modules_for_user(user_id)
+            logger.debug(f"get_modules_for_user returned: {type(modules)}")
+
+            logger.info(f"DEBUG: user_history = {user_history}")
+            logger.info(
+                f"DEBUG: user_history length = {len(user_history) if user_history else 'None'}"
+            )
             logger.info(f"DEBUG: available_plugins = {available_plugins}")
             logger.info(
                 f"DEBUG: modules keys = {list(modules.keys()) if modules else 'None'}"
@@ -453,12 +498,15 @@ class ServerApp:
             logger.info(f"AI response received: {response[:100]}...")
 
             # Zapisz interakcję w bazie
-            await self.db_manager.save_interaction(user_id, query, response)
+            save_result = await self.db_manager.save_interaction(
+                user_id, query, response
+            )
+            logger.info(f"DEBUG: save_interaction result = {save_result}")
 
             return {
                 "type": "ai_response",
                 "response": response,
-                "timestamp": asyncio.get_event_loop().time(),
+                "timestamp": time.time(),
                 "tts_engine": "edge" if user_level == "free" else "openai",
             }
 
@@ -498,8 +546,14 @@ class ServerApp:
 
             # Wykonaj funkcję
             if hasattr(plugin_module, "execute_function"):
+                # Handle both string and numeric user_id
+                try:
+                    numeric_user_id = int(user_id)
+                except (ValueError, TypeError):
+                    numeric_user_id = abs(hash(user_id)) % (10**9)
+
                 result = await plugin_module.execute_function(
-                    function_name, parameters, int(user_id)
+                    function_name, parameters, numeric_user_id
                 )
 
                 return {
@@ -829,6 +883,56 @@ async def health_check():
     }
 
 
+@app.post("/api/ai_query")
+async def api_ai_query(request: AIQueryRequest):
+    """REST API endpoint for AI queries."""
+    try:
+        logger.info(f"API AI query from user {request.user_id}: {request.query}")
+
+        # Prepare request data in WebSocket format
+        request_data = {
+            "type": "ai_query",
+            "query": request.query,
+            "context": request.context,
+        }
+
+        # Process the request
+        response = await server_app.process_user_request(request.user_id, request_data)
+
+        if response.get("type") == "error":
+            raise HTTPException(
+                status_code=500, detail=response.get("message", "Unknown error")
+            )
+
+        return {
+            "ai_response": response.get("response", ""),
+            "function_calls": response.get("function_calls", []),
+            "plugins_used": response.get("plugins_used", []),
+        }
+
+    except Exception as e:
+        logger.error(f"Error in API AI query: {e}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@app.post("/api/get_user_history")
+async def api_get_user_history(request: UserHistoryRequest):
+    """REST API endpoint for getting user history."""
+    try:
+        logger.info(f"API history request for user {request.user_id}")
+
+        # Get history from database
+        history = await server_app.db_manager.get_user_history(
+            request.user_id, limit=request.limit
+        )
+
+        return {"history": history, "total_count": len(history)}
+
+    except Exception as e:
+        logger.error(f"Error getting user history: {e}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
 @app.websocket("/ws/{user_id}")
 async def websocket_endpoint(websocket: WebSocket, user_id: str):
     """WebSocket endpoint dla komunikacji z klientami."""
@@ -961,8 +1065,6 @@ def run_server():
 
     # Sanitize and log server config
     server_config = config.get("server", {})
-    host = server_config.get("host", "localhost")
-    port = server_config.get("port", 8001)
 
     # Use environment manager to sanitize sensitive data in logs
     sanitized_config = env_manager.sanitize_config_for_logging(config)
