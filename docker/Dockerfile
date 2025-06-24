@@ -1,6 +1,9 @@
 # Multi-stage Dockerfile for Gaja Assistant Server
 # Supports both CPU and GPU variants with comprehensive resource management
 
+# Build arguments (must be declared before use in FROM)
+ARG CUDA_TAG=12.1-runtime-ubuntu20.04
+
 # ==============================================================================
 # Base stage - common dependencies with system resource management
 # ==============================================================================
@@ -164,7 +167,7 @@ CMD ["python", "server/server_main.py"]
 # ==============================================================================
 # GPU Base stage - CUDA-enabled for AI acceleration
 # ==============================================================================
-FROM nvidia/cuda:12.1-runtime-ubuntu20.04 AS gpu-base
+FROM nvidia/cuda:${CUDA_TAG:-12.1-runtime-ubuntu20.04} AS gpu-base
 
 # Set comprehensive environment variables for GPU resource management
 ENV PYTHONUNBUFFERED=1 \
@@ -240,7 +243,7 @@ RUN apt-get update && apt-get install -y \
     logrotate \
     # Cleanup
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp*
 
 # Update alternatives to use Python 3.11
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1 \

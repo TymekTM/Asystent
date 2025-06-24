@@ -82,7 +82,8 @@ class ResourceMonitor:
     async def take_snapshot(self) -> ResourceSnapshot:
         """Take a single resource snapshot."""
         # CPU and memory
-        cpu_percent = psutil.cpu_percent(interval=1)  # 1-second interval
+        cpu_percent = psutil.cpu_percent(interval=None)  # Non-blocking call
+        await asyncio.sleep(1)  # Wait for 1 second for accurate reading
         memory = psutil.virtual_memory()
 
         # Disk usage for the current directory

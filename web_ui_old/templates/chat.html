@@ -50,7 +50,7 @@ function appendMessage(role, content, timestamp) {
     lastMessageKey = key;
     const chatHistory = document.getElementById('chat-history');
     const msgDiv = document.createElement('div');
-    
+
     // Parse timestamp: handle full datetime and simple HH:MM
     let dateObj;
     if (timestamp) {
@@ -72,11 +72,11 @@ function appendMessage(role, content, timestamp) {
         dateObj = new Date();
     }
     const msgDate = dateObj.toLocaleDateString();
-    
+
     // Add date separator if this is the first message of the day
     const lastDateSep = chatHistory.querySelector('.date-separator:last-child');
     const lastDateText = lastDateSep ? lastDateSep.getAttribute('data-date') : null;
-    
+
     if (!lastDateText || lastDateText !== msgDate) {
         const dateSep = document.createElement('div');
         dateSep.className = 'date-separator';
@@ -84,23 +84,23 @@ function appendMessage(role, content, timestamp) {
         dateSep.innerHTML = `<span>${msgDate}</span>`;
         chatHistory.appendChild(dateSep);
     }
-    
+
     // Create message bubble with new styling
     msgDiv.className = role === 'user' ? 'bubble bubble-user' : 'bubble bubble-ai';
-    
+
     // Always show formatted time based on parsed dateObj
     const timeHtml = `<div class='timestamp'>${dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>`;
-    
+
     // Add custom icon to AI messages
     const leafIcon = role === 'assistant' ? assistantIcon : '';
-    
+
     msgDiv.innerHTML = `
         <div class="bubble-content">
             ${leafIcon}<span>${content}</span>
             ${timeHtml}
         </div>
     `;
-    
+
     chatHistory.appendChild(msgDiv);
     chatHistory.scrollTop = chatHistory.scrollHeight;
 }
@@ -202,7 +202,7 @@ document.getElementById('clear-chat-btn').onclick = function() {
     // Create a custom modal instead of using the default confirm dialog
     const modalBackdrop = document.createElement('div');
     modalBackdrop.className = 'custom-modal-backdrop';
-    
+
     const modalDialog = document.createElement('div');
     modalDialog.className = 'custom-modal-dialog';
     modalDialog.innerHTML = `
@@ -215,10 +215,10 @@ document.getElementById('clear-chat-btn').onclick = function() {
             </div>
         </div>
     `;
-    
+
     document.body.appendChild(modalBackdrop);
     document.body.appendChild(modalDialog);
-    
+
     // Add modal styles if not already in the document
     if (!document.getElementById('modal-styles')) {
         const modalStyles = document.createElement('style');
@@ -265,29 +265,29 @@ document.getElementById('clear-chat-btn').onclick = function() {
         `;
         document.head.appendChild(modalStyles);
     }
-    
+
     // Handle button clicks
     const cancelBtn = modalDialog.querySelector('.modal-cancel-btn');
     const confirmBtn = modalDialog.querySelector('.modal-confirm-btn');
-    
+
     cancelBtn.onclick = function() {
         modalBackdrop.remove();
         modalDialog.remove();
     };
-    
+
     confirmBtn.onclick = function() {
         modalBackdrop.remove();
         modalDialog.remove();
-        
+
         // Show loading state
         const clearBtn = document.getElementById('clear-chat-btn');
         const originalText = clearBtn.innerHTML;
         clearBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Czyszczę...';
         clearBtn.disabled = true;
-        
+
         fetch('/api/chat/clear', { method: 'POST' })
             .then(r => r.json())
-            .then(data => { 
+            .then(data => {
                 if (data.success) {
                     loadHistory();
                     // Show success message
@@ -313,11 +313,11 @@ if (manualActivateBtn) {
         // Change button appearance
         manualActivateBtn.innerHTML = '<i class="fas fa-leaf fa-pulse"></i> Gaja słucha...';
         manualActivateBtn.classList.add('listening');
-        
+
         manualActivateStatus.innerHTML = '<div class="listening-animation"><i class="fas fa-leaf leaf-pulse"></i> Wysyłanie żądania aktywacji...</div>';
         manualActivateStatus.className = 'mt-2 text-center status-info';
         manualActivateBtn.disabled = true;
-        
+
         fetch('/api/activate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
@@ -423,13 +423,13 @@ if (mobileRecordBtn) {
                 };                mediaRecorder.start();
                 mobileRecordBtn.innerHTML = '<i class="fas fa-stop-circle"></i> Zatrzymaj';
                 mobileRecordBtn.classList.add('recording');
-                
+
                 // Add visual recording indicator
                 const recordingIndicator = document.createElement('div');
                 recordingIndicator.className = 'recording-indicator';
                 recordingIndicator.innerHTML = '<div class="recording-pulse"></div> Nagrywanie...';
                 document.querySelector('.input-container').appendChild(recordingIndicator);
-                
+
                 setTimeout(() => {
                     if (mediaRecorder && mediaRecorder.state === 'recording') {
                         mediaRecorder.stop();
@@ -460,7 +460,7 @@ document.querySelector('.chat-title').addEventListener('click', function(e) {
         notification.className = 'dev-mode-notification ' + (devMode ? 'active' : 'inactive');
         notification.textContent = devMode ? '🔧 Dev Mode Active: Showing debugging info' : 'Dev Mode Disabled';
         document.body.appendChild(notification);
-        
+
         // Show token counts and response times if enabled
         if (devMode) {
             document.querySelectorAll('.bubble-ai').forEach(bubble => {
@@ -476,7 +476,7 @@ document.querySelector('.chat-title').addEventListener('click', function(e) {
         } else {
             document.querySelectorAll('.debug-info').forEach(el => el.remove());
         }
-        
+
         setTimeout(() => {
             notification.remove();
         }, 3000);
@@ -567,7 +567,7 @@ body {
     color: #1F2028;
     border-radius: 1.5rem 1.5rem 1.5rem 0;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    background-image: 
+    background-image:
         url("{{ url_for('static', filename='img/leaf-bg.svg') }}"),
         linear-gradient(to bottom, #F5F7FA, #F0F5F3);
     background-position: right bottom;
@@ -818,25 +818,25 @@ button.recording {
         min-height: 300px;
         max-height: 50vh;
     }
-    
+
     .bubble {
         max-width: 95%;
     }
-    
+
     .bubble-content {
         padding: 0.8rem 1rem;
     }
-    
+
     .input-group {
         flex-wrap: nowrap;
         position: relative;
     }
-    
+
     .action-buttons {
         flex-wrap: wrap;
         justify-content: center !important;
     }
-    
+
     .action-buttons button {
         margin: 0.2rem;
     }

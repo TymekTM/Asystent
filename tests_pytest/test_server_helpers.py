@@ -246,10 +246,25 @@ def pytest_collection_modifyitems(config, items):
         if "integration" in item.keywords:
             # Check if server is available
             try:
-                import requests
+                import asyncio
 
-                response = requests.get(TEST_SERVER_URL, timeout=2)
-                if response.status_code != 200:
-                    item.add_marker(skip_integration)
+                import httpx
+
+                async def check_server():
+                    async with httpx.AsyncClient() as client:
+                        response = await client.get(TEST_SERVER_URL, timeout=2)
+                        return response.status_code == 200
+
+                try:
+                    loop = asyncio.get_event_loop()
+                    if loop.is_running():
+                        # If already in async context, skip the check
+                        pass
+                    else:
+                        if not asyncio.run(check_server()):
+                            item.add_marker(skip_integration)
+                except RuntimeError:
+                    # Fallback to synchronous check if async fails
+                    pass
             except Exception:
                 item.add_marker(skip_integration)

@@ -76,7 +76,7 @@
         <h1 class="display-4 mb-3">📘 Dokumentacja</h1>
         <p class="lead">Witaj w dokumentacji Gai. Wybierz interesującą sekcję poniżej.</p>
     </div>
-    
+
     {% if section == 'main' or not section %}
     <!-- Main documentation landing page with cards -->
     <div class="row g-4 mb-5">
@@ -89,7 +89,7 @@
                 </div>
             </a>
         </div>
-        
+
         <div class="col-lg-4">
             <a href="{{ url_for('documentation_section', section='developer', path='README') }}" class="text-decoration-none">
                 <div class="card doc-section-card">
@@ -99,7 +99,7 @@
                 </div>
             </a>
         </div>
-        
+
         <div class="col-lg-4">
             <a href="{{ url_for('documentation_section', section='api', path='README') }}" class="text-decoration-none">
                 <div class="card doc-section-card">
@@ -110,7 +110,7 @@
             </a>
         </div>
     </div>
-    
+
     <div class="card mb-5">
         <h4 class="mb-3">🔗 Szybkie linki:</h4>
         <div class="row quick-links">
@@ -136,40 +136,40 @@
                 <div class="card-body">
                     <h5 class="mb-3"><i class="fas fa-book me-2"></i>Navigation</h5>
                     <a href="{{ url_for('documentation_main') }}" class="btn btn-outline-secondary btn-sm mb-3 w-100">← Back to Main</a>
-                    
+
                     <h6 class="text-muted mt-3 mb-2">User Guide</h6>
                     <div class="list-group mb-3">
-                        <a href="{{ url_for('documentation_section', section='user-guide', path='README') }}" 
+                        <a href="{{ url_for('documentation_section', section='user-guide', path='README') }}"
                            class="list-group-item list-group-item-action {% if section == 'user-guide' and path == 'README' %}active{% endif %}">Overview</a>
-                        <a href="{{ url_for('documentation_section', section='user-guide', path='web-ui') }}" 
+                        <a href="{{ url_for('documentation_section', section='user-guide', path='web-ui') }}"
                            class="list-group-item list-group-item-action {% if section == 'user-guide' and path == 'web-ui' %}active{% endif %}">Web Interface</a>
-                        <a href="{{ url_for('documentation_section', section='user-guide', path='voice-interaction') }}" 
+                        <a href="{{ url_for('documentation_section', section='user-guide', path='voice-interaction') }}"
                            class="list-group-item list-group-item-action {% if section == 'user-guide' and path == 'voice-interaction' %}active{% endif %}">Voice Interaction</a>
                     </div>
-                    
+
                     <h6 class="text-muted mt-3 mb-2">Developer Guide</h6>
                     <div class="list-group mb-3">
-                        <a href="{{ url_for('documentation_section', section='developer', path='README') }}" 
+                        <a href="{{ url_for('documentation_section', section='developer', path='README') }}"
                            class="list-group-item list-group-item-action {% if section == 'developer' and path == 'README' %}active{% endif %}">Setup</a>
-                        <a href="{{ url_for('documentation_section', section='developer', path='ai-architecture') }}" 
+                        <a href="{{ url_for('documentation_section', section='developer', path='ai-architecture') }}"
                            class="list-group-item list-group-item-action {% if section == 'developer' and path == 'ai-architecture' %}active{% endif %}">AI Architecture</a>
-                        <a href="{{ url_for('documentation_section', section='developer', path='plugin-development') }}" 
+                        <a href="{{ url_for('documentation_section', section='developer', path='plugin-development') }}"
                            class="list-group-item list-group-item-action {% if section == 'developer' and path == 'plugin-development' %}active{% endif %}">Plugin Development</a>
-                        <a href="{{ url_for('documentation_section', section='developer', path='integrating-docs') }}" 
+                        <a href="{{ url_for('documentation_section', section='developer', path='integrating-docs') }}"
                            class="list-group-item list-group-item-action {% if section == 'developer' and path == 'integrating-docs' %}active{% endif %}">Integrating Docs</a>
                     </div>
-                    
+
                     <h6 class="text-muted mt-3 mb-2">API Reference</h6>
                     <div class="list-group">
-                        <a href="{{ url_for('documentation_section', section='api', path='README') }}" 
+                        <a href="{{ url_for('documentation_section', section='api', path='README') }}"
                            class="list-group-item list-group-item-action {% if section == 'api' and path == 'README' %}active{% endif %}">Overview</a>
-                        <a href="{{ url_for('documentation_section', section='api', path='rest-endpoints') }}" 
+                        <a href="{{ url_for('documentation_section', section='api', path='rest-endpoints') }}"
                            class="list-group-item list-group-item-action {% if section == 'api' and path == 'rest-endpoints' %}active{% endif %}">REST Endpoints</a>
                     </div>
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-9">
             <div class="card">
                 <div class="card-body">

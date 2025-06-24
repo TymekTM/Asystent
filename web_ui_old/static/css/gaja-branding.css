@@ -8,18 +8,18 @@
   --gaja-rose: #F4B6B6;
   --gaja-charcoal: #2E2E2E;
   --gaja-soft: #F6F6F6;
-  
+
   /* Design system variables */
   --bg: var(--gaja-soft);
   --text: var(--gaja-charcoal);
   --card: rgba(255, 255, 255, 0.7);
-  
+
   /* Styling variables */
   --gaja-border-radius-xl: 1.5rem;
   --gaja-border-radius-2xl: 2rem;
   --gaja-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   --gaja-font-family: 'Poppins', 'Inter', sans-serif;
-  
+
   /* Container sizing */
   --gaja-container-max: 1440px;
   --gaja-container-padding: 2rem;

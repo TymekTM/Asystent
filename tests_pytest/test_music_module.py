@@ -22,7 +22,7 @@ import pytest
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 # Import music module
-from server.modules import music_module_new as music_module
+from server.modules import music_module
 
 
 class TestMusicModulePluginInterface:
@@ -151,8 +151,8 @@ class TestSpotifyIntegration:
         assert result["status"]["is_playing"] is True
 
     @pytest.mark.asyncio
-    @patch("server.modules.music_module_new.SPOTIFY_AVAILABLE", True)
-    @patch("server.modules.music_module_new._get_spotify_client")
+    @patch("server.modules.music_module.SPOTIFY_AVAILABLE", True)
+    @patch("server.modules.music_module._get_spotify_client")
     async def test_spotify_control_success(self, mock_client_func):
         """Test successful Spotify control."""
         # Mock Spotify client
@@ -171,8 +171,8 @@ class TestSpotifyIntegration:
         mock_client.start_playback.assert_called_once()
 
     @pytest.mark.asyncio
-    @patch("server.modules.music_module_new.SPOTIFY_AVAILABLE", True)
-    @patch("server.modules.music_module_new._get_spotify_client")
+    @patch("server.modules.music_module.SPOTIFY_AVAILABLE", True)
+    @patch("server.modules.music_module._get_spotify_client")
     async def test_spotify_no_devices(self, mock_client_func):
         """Test Spotify control with no active devices."""
         mock_client = Mock()
@@ -185,8 +185,8 @@ class TestSpotifyIntegration:
         assert "no active device" in result["message"].lower()
 
     @pytest.mark.asyncio
-    @patch("server.modules.music_module_new.SPOTIFY_AVAILABLE", True)
-    @patch("server.modules.music_module_new._get_spotify_client")
+    @patch("server.modules.music_module.SPOTIFY_AVAILABLE", True)
+    @patch("server.modules.music_module._get_spotify_client")
     async def test_spotify_client_unavailable(self, mock_client_func):
         """Test Spotify control when client is unavailable."""
         mock_client_func.return_value = None
@@ -197,8 +197,8 @@ class TestSpotifyIntegration:
         assert "unavailable" in result["message"].lower()
 
     @pytest.mark.asyncio
-    @patch("server.modules.music_module_new.SPOTIFY_AVAILABLE", True)
-    @patch("server.modules.music_module_new._get_spotify_client")
+    @patch("server.modules.music_module.SPOTIFY_AVAILABLE", True)
+    @patch("server.modules.music_module._get_spotify_client")
     async def test_get_spotify_status_success(self, mock_client_func):
         """Test successful Spotify status retrieval."""
         mock_client = Mock()
@@ -221,8 +221,8 @@ class TestSpotifyIntegration:
         assert result["status"]["artist"] == "Test Artist"
 
     @pytest.mark.asyncio
-    @patch("server.modules.music_module_new.SPOTIFY_AVAILABLE", True)
-    @patch("server.modules.music_module_new._get_spotify_client")
+    @patch("server.modules.music_module.SPOTIFY_AVAILABLE", True)
+    @patch("server.modules.music_module._get_spotify_client")
     async def test_get_spotify_status_no_playback(self, mock_client_func):
         """Test Spotify status with no active playback."""
         mock_client = Mock()
@@ -240,8 +240,8 @@ class TestSystemMediaKeys:
     """Test system media key functionality."""
 
     @pytest.mark.asyncio
-    @patch("server.modules.music_module_new._keyboard_available", True)
-    @patch("server.modules.music_module_new.keyboard")
+    @patch("server.modules.music_module._keyboard_available", True)
+    @patch("server.modules.music_module.keyboard")
     async def test_system_media_key_success(self, mock_keyboard):
         """Test successful media key simulation."""
         mock_keyboard.send = Mock()
@@ -254,7 +254,7 @@ class TestSystemMediaKeys:
         mock_keyboard.send.assert_called_once()
 
     @pytest.mark.asyncio
-    @patch("server.modules.music_module_new._keyboard_available", False)
+    @patch("server.modules.music_module._keyboard_available", False)
     async def test_system_media_key_unavailable(self):
         """Test media key control when keyboard library unavailable."""
         result = await music_module._system_media_key_async("play")
@@ -263,8 +263,8 @@ class TestSystemMediaKeys:
         assert "unavailable" in result["message"].lower()
 
     @pytest.mark.asyncio
-    @patch("server.modules.music_module_new._keyboard_available", True)
-    @patch("server.modules.music_module_new.keyboard")
+    @patch("server.modules.music_module._keyboard_available", True)
+    @patch("server.modules.music_module.keyboard")
     async def test_system_media_key_exception(self, mock_keyboard):
         """Test media key control with keyboard exception."""
         mock_keyboard.send.side_effect = Exception("Keyboard error")
@@ -303,8 +303,8 @@ class TestErrorHandling:
     @pytest.mark.asyncio
     async def test_control_music_no_methods_available(self):
         """Test music control when no methods are available."""
-        with patch("server.modules.music_module_new.SPOTIFY_AVAILABLE", False):
-            with patch("server.modules.music_module_new._keyboard_available", False):
+        with patch("server.modules.music_module.SPOTIFY_AVAILABLE", False):
+            with patch("server.modules.music_module._keyboard_available", False):
                 result = await music_module._control_music_async("play", "auto")
 
                 assert result["success"] is False
@@ -329,7 +329,7 @@ class TestHelperFunctions:
         assert music_module._normalize_action("stop") == "pause"
         assert music_module._normalize_action("invalid") == "unknown"
 
-    @patch("server.modules.music_module_new.SPOTIFY_AVAILABLE", False)
+    @patch("server.modules.music_module.SPOTIFY_AVAILABLE", False)
     def test_get_spotify_client_unavailable(self):
         """Test _get_spotify_client when Spotify is unavailable."""
         client = music_module._get_spotify_client()

@@ -87,7 +87,7 @@
 {% block content %}
 <div class="container mt-4">
     <h1 class="mb-4">📒 Pamięć Długoterminowa</h1>
-    
+
     <!-- Memory Form -->
     <div class="card mb-5 memory-form">
         <div class="card-body">
@@ -107,7 +107,7 @@
             <div id="add-memory-status" class="mt-2"></div>
         </div>
     </div>
-    
+
     <!-- Search Memories -->
     <div class="mb-4 d-flex">
         <input type="text" id="search-memory-input" class="form-control me-2" placeholder="Szukaj wspomnień..." value="{{ search_query }}">
@@ -121,14 +121,14 @@
             {% set current_date = None %}
             {% for memory in memories %}
                 {% set memory_date = memory.timestamp.strftime('%Y-%m-%d') if memory.timestamp else 'Nieznana data' %}
-                
+
                 {% if current_date != memory_date %}
                     {% set current_date = memory_date %}
                     <div class="date-divider">
                         <span>🗓️ {{ memory_date }}</span>
                     </div>
                 {% endif %}
-                
+
                 <div class="memory-entry" data-id="{{ memory.id }}">
                     <div class="memory-content">{{ memory.content }}</div>
                     <div class="memory-meta">
@@ -157,16 +157,16 @@
 document.addEventListener('DOMContentLoaded', function() {
     const addForm = document.getElementById('add-memory-form');
     const deleteButtons = document.querySelectorAll('.delete-memory-button');
-    
+
     // Add memory form handler
     addForm.addEventListener('submit', function(e) {
         e.preventDefault();
         const content = document.getElementById('memory-content').value.trim();
         const user = document.getElementById('memory-user').value.trim() || 'assistant';
         const statusContainer = document.getElementById('add-memory-status');
-        
+
         statusContainer.innerHTML = '<div class="spinner-border spinner-border-sm text-primary" role="status"><span class="visually-hidden">Loading...</span></div> Dodawanie...';
-        
+
         fetch('/api/ltm/add', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -186,16 +186,16 @@ document.addEventListener('DOMContentLoaded', function() {
             statusContainer.innerHTML = `<div class="alert alert-danger">Błąd: ${error.message}</div>`;
         });
     });
-    
+
     // Delete memory handlers
     deleteButtons.forEach(button => {
         button.addEventListener('click', function() {
             const memoryId = this.getAttribute('data-id');
             const statusContainer = document.getElementById('delete-memory-status');
-            
+
             if (confirm('Czy na pewno chcesz usunąć to wspomnienie?')) {
                 statusContainer.innerHTML = '<div class="spinner-border spinner-border-sm text-primary" role="status"><span class="visually-hidden">Loading...</span></div> Usuwanie...';
-                
+
                 fetch(`/api/ltm/delete/${memoryId}`, {
                     method: 'DELETE'
                 })

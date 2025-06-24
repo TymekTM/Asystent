@@ -84,6 +84,8 @@ services:
       context: .
       dockerfile: docker/Dockerfile
       target: gpu
+      args:
+        CUDA_TAG: ${CUDA_TAG:-12.1-runtime-ubuntu20.04}
     container_name: gaja-server-gpu
     ports:
       - "8001:8001" # API server

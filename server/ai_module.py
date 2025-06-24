@@ -12,10 +12,16 @@ from collections.abc import Callable
 from functools import lru_cache
 from typing import Any
 
-import requests  # Added requests import
+import httpx  # Async HTTP client replacing requests
 from config_loader import MAIN_MODEL, PROVIDER, _config, load_config
 from performance_monitor import measure_performance
 from prompt_builder import build_convert_query_prompt, build_full_system_prompt
+
+# -----------------------------------------------------------------------------
+# Konfiguracja logów
+# -----------------------------------------------------------------------------
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 # Lazy import for transformers to speed up startup
 pipeline = None
@@ -28,7 +34,7 @@ try:
     env_manager = EnvironmentManager(env_file=env_file_path)
 except ImportError as e:
     env_manager = None
-    print(f"Warning: Could not import EnvironmentManager: {e}")
+    logger.warning(f"Could not import EnvironmentManager: {e}")
 
 
 def _load_pipeline():
@@ -41,16 +47,10 @@ def _load_pipeline():
         except ImportError:
             pipeline = None
             logger.warning(
-                "⚠️  transformers nie jest dostępny - będzie automatycznie doinstalowany przy pierwszym użyciu"
+                "⚠️  transformers nie jest dostępny - "
+                "będzie automatycznie doinstalowany przy pierwszym użyciu"
             )
     return pipeline
-
-
-# -----------------------------------------------------------------------------
-# Konfiguracja logów
-# -----------------------------------------------------------------------------
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 
 # -----------------------------------------------------------------------------
@@ -60,8 +60,8 @@ class AIProviders:
     """Rejestr wszystkich obsługiwanych dostawców + metody pomocnicze."""
 
     def __init__(self) -> None:
-        # Własne HTTP session dla LM Studio (redukcja latency handshake)
-        self._lmstudio_session = requests.Session()
+        # Async HTTP client for LM Studio (reduced latency)
+        self._httpx_client = httpx.AsyncClient(timeout=30.0)
 
         # Cached clients to avoid reinitialization overhead
         self._openai_client = None
@@ -108,7 +108,8 @@ class AIProviders:
 
     # ---------------------------------------------------------------------
     # Helpery
-    # ---------------------------------------------------------------------    @staticmethod
+    # ---------------------------------------------------------------------
+    @staticmethod
     def _safe_import(module_name: str) -> Any | None:
         try:
             return importlib.import_module(module_name)
@@ -129,19 +130,23 @@ class AIProviders:
     # ---------------------------------------------------------------------
     # Check‑i (zwracają bool, nic nie rzucają)
     # ---------------------------------------------------------------------
-    def check_ollama(self) -> bool:
+    async def check_ollama(self) -> bool:
         try:
-            return requests.get("http://localhost:11434", timeout=5).status_code == 200
-        except requests.RequestException:
+            response = await self._httpx_client.get(
+                "http://localhost:11434", timeout=5.0
+            )
+            return response.status_code == 200
+        except httpx.RequestError:
             return False
 
-    def check_lmstudio(self) -> bool:
+    async def check_lmstudio(self) -> bool:
         # Force disable LMStudio to use OpenAI instead
         return False
         # try:
         #     url = _config.get("LMSTUDIO_URL", "http://localhost:1234/v1/models")
-        #     return self._lmstudio_session.get(url, timeout=5).status_code == 200
-        # except requests.RequestException:
+        #     response = await self._httpx_client.get(url, timeout=5.0)
+        #     return response.status_code == 200
+        # except httpx.RequestError:
         #     return False
 
     def check_openai(self) -> bool:
@@ -267,7 +272,13 @@ class AIProviders:
                 tool_results = []
                 for tool_call in resp.choices[0].message.tool_calls:
                     function_name = tool_call.function.name
-                    function_args = json.loads(tool_call.function.arguments)
+                    try:
+                        function_args = json.loads(tool_call.function.arguments)
+                    except json.JSONDecodeError as e:
+                        logger.error(
+                            f"Failed to parse function arguments for {function_name}: {e}"
+                        )
+                        function_args = {}
 
                     if function_calling_system:
                         result = await function_calling_system.execute_function(
@@ -429,6 +440,10 @@ class AIProviders:
         except Exception as exc:  # pragma: no cover
             logger.error("Transformers error: %s", exc)
             return None
+
+    async def cleanup(self) -> None:
+        """Clean up async resources."""
+        await self._httpx_client.aclose()
 
 
 _ai_providers: AIProviders | None = None
@@ -850,7 +865,8 @@ async def generate_response(
                         ensure_ascii=False,
                     )
             except json.JSONDecodeError:
-                # Content is plain text, wrap it in JSON
+                # Content is not JSON, wrap it in our expected format
+                logger.debug(f"Content is not JSON, wrapping: {content[:100]}...")
                 return json.dumps(
                     {
                         "text": content,

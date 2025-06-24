@@ -7,6 +7,7 @@ import os
 import sys
 import time
 from contextlib import asynccontextmanager
+from enum import Enum
 from pathlib import Path
 from typing import Any
 
@@ -37,9 +38,6 @@ OnboardingModule = server_onboarding.OnboardingModule
 
 
 # Data models for REST API
-
-
-# Data models for REST API
 class AIQueryRequest(BaseModel):
     user_id: str
     query: str
@@ -60,6 +58,34 @@ class AIQueryResponse(BaseModel):
 class UserHistoryResponse(BaseModel):
     history: list
     total_count: int
+
+
+class RequestType(str, Enum):
+    HANDSHAKE = "handshake"
+    QUERY = "query"
+    AUDIO = "audio"
+    FUNCTION_CALL = "function_call"
+
+
+class WebSocketRequest(BaseModel):
+    type: RequestType
+    version: str | None = None
+    data: dict[str, Any] | None = None
+    query: str | None = None
+    user_id: str | None = None
+    audio_data: str | None = None
+    function_name: str | None = None
+    parameters: dict[str, Any] | None = None
+
+
+class WebSocketResponse(BaseModel):
+    type: str
+    success: bool = True
+    data: dict[str, Any] | None = None
+    error: str | None = None
+    server_version: str | None = None
+    ai_response: str | None = None
+    result: Any | None = None
 
 
 class ConnectionManager:
@@ -943,6 +969,76 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
     try:
         await server_app.connection_manager.connect(websocket, user_id)
         logger.info(f"WebSocket connected for user: {user_id}")
+
+        # Wait for version handshake as first message
+        try:
+            first_data = await asyncio.wait_for(websocket.receive_text(), timeout=5.0)
+
+            # Validate JSON structure using pydantic
+            try:
+                first_request = WebSocketRequest.model_validate(json.loads(first_data))
+            except Exception as validation_error:
+                logger.error(
+                    f"Invalid request format from user {user_id}: {validation_error}"
+                )
+                await websocket.send_text(
+                    json.dumps(
+                        {
+                            "type": "error",
+                            "success": False,
+                            "error": f"Invalid request format: {str(validation_error)}",
+                        }
+                    )
+                )
+                await websocket.close()
+                return
+
+            # Check if this is a version handshake
+            if first_request.type == RequestType.HANDSHAKE:
+                client_version = first_request.version or "unknown"
+                server_version = "1.0.0"  # TODO: Get from config
+
+                if client_version != server_version:
+                    logger.warning(
+                        f"Version mismatch: client={client_version}, server={server_version}"
+                    )
+                    response = WebSocketResponse(
+                        type="handshake_response",
+                        success=False,
+                        error="Version mismatch",
+                        server_version=server_version,
+                    )
+                    await websocket.send_text(response.model_dump_json())
+                    await websocket.close()
+                    return
+
+                # Send successful handshake response
+                response = WebSocketResponse(
+                    type="handshake_response",
+                    success=True,
+                    server_version=server_version,
+                )
+                await websocket.send_text(response.model_dump_json())
+            else:
+                # If no handshake, process as regular message but log warning
+                logger.warning(f"No version handshake received from client {user_id}")
+                # Process the message as normal
+                response = await server_app.process_validated_request(
+                    user_id, first_request
+                )
+                await server_app.connection_manager.send_personal_message(
+                    response, user_id
+                )
+
+        except TimeoutError:
+            logger.error(f"Handshake timeout for user {user_id}")
+            await websocket.close()
+            return
+        except json.JSONDecodeError:
+            logger.error(f"Invalid handshake JSON from user {user_id}")
+            await websocket.close()
+            return
+
     except Exception as e:
         logger.error(f"Failed to connect WebSocket for user {user_id}: {e}")
         return
@@ -953,20 +1049,30 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
             data = await websocket.receive_text()
 
             try:
-                request_data = json.loads(data)
+                # Validate using pydantic
+                request_data = WebSocketRequest.model_validate(json.loads(data))
 
                 # Przetwórz request
-                response = await server_app.process_user_request(user_id, request_data)
+                response = await server_app.process_validated_request(
+                    user_id, request_data
+                )
 
                 # Wyślij odpowiedź
                 await server_app.connection_manager.send_personal_message(
                     response, user_id
                 )
 
-            except json.JSONDecodeError:
-                error_response = {"type": "error", "message": "Invalid JSON format"}
+            except Exception as validation_error:
+                logger.error(
+                    f"Request validation/processing error for user {user_id}: {validation_error}"
+                )
+                error_response = WebSocketResponse(
+                    type="error",
+                    success=False,
+                    error=f"Request error: {str(validation_error)}",
+                )
                 await server_app.connection_manager.send_personal_message(
-                    error_response, user_id
+                    error_response.model_dump(), user_id
                 )
 
     except WebSocketDisconnect:
@@ -1040,9 +1146,15 @@ def run_server():
     config = load_config()
     # Configure CORS middleware with security validation
     env_manager = EnvironmentManager()
-    cors_origins = config.get("security", {}).get(
-        "cors_origins", ["http://localhost:3000", "http://localhost:8080"]
-    )
+
+    # Get CORS origins from environment variable first, then config, then defaults
+    env_cors = os.getenv("ALLOWED_ORIGINS")
+    if env_cors:
+        cors_origins = [origin.strip() for origin in env_cors.split(",")]
+    else:
+        cors_origins = config.get("security", {}).get(
+            "cors_origins", ["http://localhost:3000", "http://localhost:8080"]
+        )
 
     # Sprawdź czy używamy niebezpiecznej konfiguracji
     if "*" in cors_origins:
@@ -1064,9 +1176,6 @@ def run_server():
         allow_headers=["*"],
     )
     logger.info(f"CORS configured for origins: {cors_origins}")
-
-    # Sanitize and log server config
-    server_config = config.get("server", {})
 
     # Use environment manager to sanitize sensitive data in logs
     sanitized_config = env_manager.sanitize_config_for_logging(config)

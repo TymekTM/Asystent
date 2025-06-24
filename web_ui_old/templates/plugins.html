@@ -18,7 +18,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <span><i class="fas fa-puzzle-piece me-2"></i>Moduły systemowe</span>
@@ -53,7 +53,7 @@ let allPlugins = {};
 
 function renderPluginList(plugins, showOnlyActive = false) {
     allPlugins = plugins;
-    
+
     const pluginListSection = document.getElementById('plugin-list-section');
     if (!pluginListSection) {
         console.error("Element 'plugin-list-section' not found.");
@@ -64,16 +64,16 @@ function renderPluginList(plugins, showOnlyActive = false) {
         pluginListSection.innerHTML = '<div class="alert alert-warning">Brak modułów do wyświetlenia.</div>';
         return;
     }
-    
-    let filteredPlugins = showOnlyActive 
-        ? Object.fromEntries(Object.entries(plugins).filter(([_, info]) => info.enabled)) 
+
+    let filteredPlugins = showOnlyActive
+        ? Object.fromEntries(Object.entries(plugins).filter(([_, info]) => info.enabled))
         : plugins;
-    
+
     if (showOnlyActive && Object.keys(filteredPlugins).length === 0) {
         pluginListSection.innerHTML = '<div class="alert alert-info">Brak aktywnych modułów. Zmień filtr, aby zobaczyć wszystkie dostępne moduły.</div>';
         return;
     }
-    
+
     let html = '<div class="row">';
     for (const [name, info] of Object.entries(filteredPlugins)) {
         html += `
@@ -82,10 +82,10 @@ function renderPluginList(plugins, showOnlyActive = false) {
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span><i class="fas fa-${getModuleIcon(name)} me-2"></i>${name}</span>
                     <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="switch-${name}" 
-                            ${info.enabled ? 'checked' : ''} 
+                        <input class="form-check-input" type="checkbox" id="switch-${name}"
+                            ${info.enabled ? 'checked' : ''}
                             onchange="togglePlugin('${name}', ${info.enabled})"
-                            data-bs-toggle="tooltip" 
+                            data-bs-toggle="tooltip"
                             title="${info.enabled ? 'Dezaktywuj moduł' : 'Aktywuj moduł'}">
                     </div>
                 </div>
@@ -115,7 +115,7 @@ function getModuleIcon(name) {
         'open_web_module': 'globe',
         'api_module': 'plug'
     };
-    
+
     // Return appropriate icon or default to puzzle-piece
     return iconMap[name] || 'puzzle-piece';
 }
@@ -147,7 +147,7 @@ function initModuleFilters() {
         renderPluginList(allPlugins, false);
         initTooltips();
     });
-    
+
     document.getElementById('filter-active').addEventListener('click', function() {
         this.classList.add('active');
         document.getElementById('filter-all').classList.remove('active');

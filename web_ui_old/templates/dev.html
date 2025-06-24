@@ -98,8 +98,8 @@
     width: 100%;
     overflow-x: auto;
   }
-  
-  .table-responsive-custom td, 
+
+  .table-responsive-custom td,
   .table-responsive-custom th {
     white-space: nowrap;
   }
@@ -142,12 +142,12 @@
                 <span id="test-status-label">Status: Idle</span>
             </div>
         </div>
-        
+
         <div id="test-summary" class="alert alert-light"></div>
         <div id="ai-summary" class="alert alert-info" style="display: none;"></div>
-        
+
         <div id="test-list" class="mb-3"></div>
-        
+
         <details>
             <summary class="mb-2">Pokaż pełny log testów</summary>
             <div id="test-log" class="log-container"></div>
@@ -166,9 +166,9 @@
                 <span id="bench-status-label">Status: Idle</span>
             </div>
         </div>
-        
+
         <div id="bench-summary" class="alert alert-light"></div>
-        
+
         <details>
             <summary class="mb-2">Pokaż pełny log benchmarku</summary>
             <div id="bench-log" class="log-container"></div>
@@ -197,7 +197,7 @@
             </table>
         </div>
     </div>
-    
+
     <!-- User Management Section -->
     <div class="dev-section">
         <h2><i class="fas fa-users-cog"></i> 👤 Zarządzanie użytkownikami</h2>
@@ -218,7 +218,7 @@
             </form>
             <div id="add-user-status" class="mt-2"></div>
         </div>
-        
+
         <div class="table-responsive-custom">
             <table class="table table-sm" id="users-table">
                 <thead>
@@ -250,7 +250,7 @@
             </table>
         </div>
     </div>
-    
+
     <!-- Testing History Section -->
     <div class="dev-section">
         <h2><i class="fas fa-history"></i> 📅 Historia i planowanie testów</h2>
@@ -261,7 +261,7 @@
             </button>
             <span id="schedule-status-label" class="ms-2">Brak harmonogramu</span>
         </form>
-        
+
         <div class="table-responsive-custom">
             <table class="table table-sm" id="test-history-table">
                 <thead>
@@ -278,7 +278,7 @@
         </div>    </div>    <!-- Usage Heatmap Section -->
     <div class="dev-section">
         <h2><i class="fas fa-fire"></i> 🔥 Analiza użycia systemu</h2>
-        
+
         <!-- Stats cards -->
         <div class="row mb-4">
             <div class="col-md-4">
@@ -309,7 +309,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Charts row -->
         <div class="row">
             <div class="col-lg-8">
@@ -374,7 +374,7 @@ document.getElementById('run-tests-btn').addEventListener('click', function() {
     const testLog = document.getElementById('test-log');
     const testSummary = document.getElementById('test-summary');
     const aiSummary = document.getElementById('ai-summary');
-    
+
     // Reset UI
     statusDot.className = 'status-indicator running';
     statusLabel.textContent = 'Status: Uruchomiono...';
@@ -383,7 +383,7 @@ document.getElementById('run-tests-btn').addEventListener('click', function() {
     testSummary.textContent = '';
     testSummary.className = 'alert alert-light';
     aiSummary.style.display = 'none';
-    
+
     // Start tests
     fetch('/api/run_tests', { method: 'POST' })
         .then(response => {
@@ -415,16 +415,16 @@ function pollTestStatus() {
     const testSummary = document.getElementById('test-summary');
     const aiSummary = document.getElementById('ai-summary');
     const runButton = document.getElementById('run-tests-btn');
-    
+
     fetch('/api/test_status')
         .then(response => response.json())
         .then(data => {
             // Update log
             testLog.textContent = data.log || 'Brak logów';
-            
+
             // Update test list
             updateTestList(testList, data.tests || []);
-            
+
             // Update status
             if (data.running) {
                 statusDot.className = 'status-indicator running';
@@ -443,13 +443,13 @@ function pollTestStatus() {
                     testSummary.textContent = data.summary || 'Niektóre testy nie przeszły';
                     testSummary.className = 'alert alert-danger';
                 }
-                
+
                 // Show AI summary if available
                 if (data.ai_summary) {
                     aiSummary.textContent = data.ai_summary;
                     aiSummary.style.display = 'block';
                 }
-                
+
                 runButton.disabled = false;
                 fetchTestHistory(); // Update history
             }
@@ -462,18 +462,18 @@ function pollTestStatus() {
 
 function updateTestList(container, tests) {
     if (!tests.length) return;
-    
+
     let html = '';
     tests.forEach(test => {
-        const statusClass = test.status === 'ok' ? 'test-ok' : 
+        const statusClass = test.status === 'ok' ? 'test-ok' :
                            (test.status === 'FAIL' ? 'test-fail' : 'test-error');
-        
+
         html += `<div class="test-item ${statusClass}">
                     <div><b>${test.name}</b> ${test.class ? `(${test.class})` : ''}</div>
                     ${test.details ? `<div class="test-details mt-2">${test.details}</div>` : ''}
                 </div>`;
     });
-    
+
     container.innerHTML = html;
 }
 
@@ -484,14 +484,14 @@ document.getElementById('run-bench-btn').addEventListener('click', function() {
     const statusLabel = document.getElementById('bench-status-label');
     const benchLog = document.getElementById('bench-log');
     const benchSummary = document.getElementById('bench-summary');
-    
+
     // Reset UI
     statusDot.className = 'status-indicator running';
     statusLabel.textContent = 'Status: Uruchomiono...';
     benchLog.textContent = 'Uruchamianie benchmarku...';
     benchSummary.textContent = '';
     benchSummary.className = 'alert alert-light';
-    
+
     // Start benchmark
     fetch('/api/run_benchmarks', { method: 'POST' })
         .then(response => {
@@ -521,13 +521,13 @@ function pollBenchStatus() {
     const benchLog = document.getElementById('bench-log');
     const benchSummary = document.getElementById('bench-summary');
     const runButton = document.getElementById('run-bench-btn');
-    
+
     fetch('/api/bench_status')
         .then(response => response.json())
         .then(data => {
             // Update log
             benchLog.textContent = data.log || 'Brak logów';
-            
+
             // Update status
             if (data.running) {
                 statusDot.className = 'status-indicator running';
@@ -540,7 +540,7 @@ function pollBenchStatus() {
                 benchSummary.textContent = data.summary || 'Benchmark zakończony';
                 benchSummary.className = 'alert alert-info';
                 runButton.disabled = false;
-                
+
                 updateBenchmarkResults(data.result || {});
             }
         })
@@ -579,30 +579,30 @@ function fetchPerfStats() {
                 return;
             }
             tableBody.innerHTML = '';
-            
+
             console.log('Performance stats data:', data);
-            
+
             // Check if we have data
             if (data && Object.keys(data).length > 0) {
                 // Convert the object format to an array for display
                 Object.entries(data).forEach(([functionName, statInfo]) => {
                     const row = document.createElement('tr');
-                    
+
                     const nameCell = document.createElement('td');
                     nameCell.textContent = functionName;
-                    
+
                     const avgTimeCell = document.createElement('td');
                     const avgTime = parseFloat(statInfo.average_ms || 0);
                     avgTimeCell.textContent = avgTime.toFixed(2);
-                    
+
                     const countCell = document.createElement('td');
                     countCell.textContent = statInfo.count || 0;
-                    
+
                     const totalTimeCell = document.createElement('td');
                     // Calculate total time in seconds
                     const totalTime = (avgTime * (statInfo.count || 0)) / 1000;
                     totalTimeCell.textContent = totalTime.toFixed(3);
-                    
+
                     row.appendChild(nameCell);
                     row.appendChild(avgTimeCell);
                     row.appendChild(countCell);
@@ -638,16 +638,16 @@ function fetchPerfStats() {
 // User management
 document.getElementById('add-user-form').addEventListener('submit', function(e) {
     e.preventDefault();
-    
+
     const statusContainer = document.getElementById('add-user-status');
     statusContainer.innerHTML = '<div class="spinner-border spinner-border-sm text-light me-2" role="status"></div> Dodawanie użytkownika...';
-    
+
     const formData = new FormData(this);
     const userData = {};
     formData.forEach((value, key) => {
         userData[key] = value;
     });
-    
+
     fetch('/api/users', {
         method: 'POST',
         headers: {
@@ -674,7 +674,7 @@ function setupDeleteUserButtons() {
     document.querySelectorAll('.delete-user-btn').forEach(button => {
         button.addEventListener('click', function() {
             const username = this.getAttribute('data-username');
-            
+
             if (confirm(`Czy na pewno chcesz usunąć użytkownika "${username}"?`)) {
                 fetch(`/api/users/${username}`, {
                     method: 'DELETE'
@@ -683,15 +683,15 @@ function setupDeleteUserButtons() {
                 .then(data => {
                     if (data.success) {
                         fetchUsers(); // Refresh user list
-                        document.getElementById('add-user-status').innerHTML = 
+                        document.getElementById('add-user-status').innerHTML =
                             `<div class="alert alert-success">Użytkownik "${username}" został usunięty.</div>`;
                     } else {
-                        document.getElementById('add-user-status').innerHTML = 
+                        document.getElementById('add-user-status').innerHTML =
                             `<div class="alert alert-danger">Błąd: ${data.error || 'Nie udało się usunąć użytkownika'}</div>`;
                     }
                 })
                 .catch(error => {
-                    document.getElementById('add-user-status').innerHTML = 
+                    document.getElementById('add-user-status').innerHTML =
                         `<div class="alert alert-danger">Błąd: ${error.message || 'Wystąpił nieoczekiwany błąd'}</div>`;
                 });
             }
@@ -705,25 +705,25 @@ function fetchUsers() {
         .then(data => {
             const tableBody = document.querySelector('#users-table tbody');
             tableBody.innerHTML = '';
-            
+
             data.forEach(user => {
                 const row = document.createElement('tr');
-                
+
                 const usernameCell = document.createElement('td');
                 usernameCell.textContent = user.username;
-                
+
                 const roleCell = document.createElement('td');
                 roleCell.textContent = user.role;
-                
+
                 const displayNameCell = document.createElement('td');
                 displayNameCell.textContent = user.display_name || '';
-                
+
                 const aiPersonaCell = document.createElement('td');
                 aiPersonaCell.textContent = user.ai_persona || '';
-                
+
                 const personalizationCell = document.createElement('td');
                 personalizationCell.textContent = user.personalization || '';
-                
+
                 const actionsCell = document.createElement('td');
                 if (user.username !== 'dev') {
                     const deleteBtn = document.createElement('button');
@@ -732,7 +732,7 @@ function fetchUsers() {
                     deleteBtn.setAttribute('data-username', user.username);
                     actionsCell.appendChild(deleteBtn);
                 }
-                
+
                 row.appendChild(usernameCell);
                 row.appendChild(roleCell);
                 row.appendChild(displayNameCell);
@@ -741,7 +741,7 @@ function fetchUsers() {
                 row.appendChild(actionsCell);
                 tableBody.appendChild(row);
             });
-            
+
             setupDeleteUserButtons();
         })
         .catch(error => console.error('Error fetching users:', error));
@@ -750,12 +750,12 @@ function fetchUsers() {
 // Test history and scheduling
 document.getElementById('schedule-tests-form').addEventListener('submit', function(e) {
     e.preventDefault();
-    
+
     const interval = document.getElementById('schedule-interval').value;
     const statusLabel = document.getElementById('schedule-status-label');
-    
+
     statusLabel.textContent = 'Ustawianie harmonogramu...';
-    
+
     fetch('/api/schedule_tests', {
         method: 'POST',
         headers: {
@@ -797,22 +797,22 @@ function fetchTestHistory() {
         .then(data => {
             const tableBody = document.querySelector('#test-history-table tbody');
             tableBody.innerHTML = '';
-            
+
             if (data && data.length > 0) {
                 data.forEach(entry => {
                     const row = document.createElement('tr');
-                    
+
                     const timeCell = document.createElement('td');
                     const date = new Date(entry.timestamp);
                     timeCell.textContent = date.toLocaleString();
-                    
+
                     const resultCell = document.createElement('td');
                     resultCell.textContent = entry.result === 'passed' ? 'Sukces' : 'Błąd';
                     resultCell.className = entry.result === 'passed' ? 'text-success' : 'text-danger';
-                    
+
                     const summaryCell = document.createElement('td');
                     summaryCell.textContent = entry.summary || '';
-                    
+
                     row.appendChild(timeCell);
                     row.appendChild(resultCell);
                     row.appendChild(summaryCell);
@@ -838,11 +838,11 @@ let currentPlugins = {};
 function loadPlugins() {
     fetch('/api/playground/plugins')
         .then(response => response.json())
-        .then(data => {    
+        .then(data => {
     // Load usage stats
     fetchUsageStats();
-    
-    // Refresh stats every 30 seconds  
+
+    // Refresh stats every 30 seconds
     setInterval(fetchUsageStats, 30000);
     const selectedPlugin = this.value;
     const subcommandSection = document.getElementById('subcommand-section');
@@ -851,10 +851,10 @@ function loadPlugins() {
     const pluginInfo = document.getElementById('plugin-info');
     const executeBtn = document.getElementById('execute-plugin-btn');
     const viewSourceBtn = document.getElementById('view-source-btn');
-    
+
     if (selectedPlugin && currentPlugins[selectedPlugin]) {
         const plugin = currentPlugins[selectedPlugin];
-        
+
         // Show plugin info
         pluginInfo.style.display = 'block';
         const subCommandCount = plugin.sub_commands ? plugin.sub_commands.length : 0;
@@ -864,7 +864,7 @@ function loadPlugins() {
             <strong>Podkomendy:</strong> ${subCommandCount}<br>
             <strong>Ma handler:</strong> ${plugin.has_handler ? 'Tak' : 'Nie'}
         `;
-        
+
         // Setup subcommands
         subcommandSelect.innerHTML = '<option value="">-- Wybierz podkomendę --</option>';
         if (plugin.sub_commands && plugin.sub_commands.length > 0) {
@@ -885,7 +885,7 @@ function loadPlugins() {
             // Enable execute button for plugins without subcommands
             executeBtn.disabled = false;
         }
-        
+
         viewSourceBtn.disabled = false;
     } else {
         subcommandSection.style.display = 'none';
@@ -894,7 +894,7 @@ function loadPlugins() {
         executeBtn.disabled = true;
         viewSourceBtn.disabled = true;
     }
-    
+
     // Clear params when changing plugin
     document.getElementById('params-container').innerHTML = '';
 });
@@ -906,17 +906,17 @@ document.getElementById('subcommand-select').addEventListener('change', function
     const paramsSection = document.getElementById('params-section');
     const paramsContainer = document.getElementById('params-container');
     const executeBtn = document.getElementById('execute-plugin-btn');
-    
+
     paramsContainer.innerHTML = '';
-    
+
     if (selectedPlugin && selectedSubcommand && currentPlugins[selectedPlugin]) {
         const plugin = currentPlugins[selectedPlugin];
         // Find subcommand in array
         const subcmd = plugin.sub_commands?.find(sc => sc.name === selectedSubcommand);
-        
+
         if (subcmd && (subcmd.params_desc || subcmd.parameters)) {
             paramsSection.style.display = 'block';
-            
+
             // Handle both params_desc and parameters format
             if (subcmd.params_desc) {
                 createParameterInputs(subcmd.params_desc, paramsContainer);
@@ -926,7 +926,7 @@ document.getElementById('subcommand-select').addEventListener('change', function
         } else {
             paramsSection.style.display = 'none';
         }
-        
+
         executeBtn.disabled = false;
     } else if (selectedPlugin && !selectedSubcommand && currentPlugins[selectedPlugin]) {
         // Plugin selected but no subcommand - show generic parameter input for main handler
@@ -948,10 +948,10 @@ document.getElementById('subcommand-select').addEventListener('change', function
 function createParameterInputs(paramsDesc, container) {
     const paramDiv = document.createElement('div');
     paramDiv.className = 'param-group';
-    
+
     let inputHtml = '';
     let placeholder = paramsDesc;
-    
+
     // Detect common parameter patterns and create appropriate inputs
     if (paramsDesc.toLowerCase().includes('url') || paramsDesc.toLowerCase().includes('link')) {
         inputHtml = `<input type="url" class="form-control param-input" placeholder="${placeholder}" name="param_value">`;
@@ -966,12 +966,12 @@ function createParameterInputs(paramsDesc, container) {
     } else {
         inputHtml = `<input type="text" class="form-control param-input" placeholder="${placeholder}" name="param_value">`;
     }
-    
+
     paramDiv.innerHTML = `
         <label class="form-label">${paramsDesc}:</label>
         ${inputHtml}
     `;
-    
+
     container.appendChild(paramDiv);
 }
 
@@ -982,14 +982,14 @@ function createParameterInputsFromObject(parameters, container) {
         createGenericParameterInput(container);
         return;
     }
-    
+
     parameters.forEach(param => {
         const paramDiv = document.createElement('div');
         paramDiv.className = 'param-group mb-3';
-        
+
         let inputHtml = '';
         let inputType = 'text';
-        
+
         // Determine input type based on parameter type
         switch (param.type) {
             case 'number':
@@ -1018,11 +1018,11 @@ function createParameterInputsFromObject(parameters, container) {
                     inputType = 'text';
                 }
         }
-        
+
         if (!inputHtml) {
             inputHtml = `<input type="${inputType}" class="form-control param-input" placeholder="${param.description || param.name}" name="${param.name}" ${param.required ? 'required' : ''}>`;
         }
-        
+
         if (param.type !== 'boolean') {
             paramDiv.innerHTML = `
                 <label class="form-label">${param.name}${param.required ? ' *' : ''}:</label>
@@ -1032,7 +1032,7 @@ function createParameterInputsFromObject(parameters, container) {
         } else {
             paramDiv.innerHTML = inputHtml;
         }
-        
+
         container.appendChild(paramDiv);
     });
 }
@@ -1041,36 +1041,36 @@ function createParameterInputsFromObject(parameters, container) {
 function createGenericParameterInput(container) {
     const paramDiv = document.createElement('div');
     paramDiv.className = 'param-group';
-    
+
     paramDiv.innerHTML = `
         <label class="form-label">Parametry (opcjonalne):</label>
         <textarea class="form-control param-input" rows="3" placeholder="Wprowadź parametry dla pluginu..." name="param_value"></textarea>
         <small class="form-text text-muted">Można wprowadzić dowolny tekst lub pary klucz=wartość oddzielone spacjami</small>
     `;
-    
+
     container.appendChild(paramDiv);
 }
 
 // Usage heatmap rendering - fixed to use supported chart type
 function renderUsageHeatmap(data) {
     console.log('renderUsageHeatmap called with data:', data);
-    
+
     if (!data || Object.keys(data).length === 0) {
         console.log('No data for heatmap rendering');
         return;
     }
-    
+
     const ctx = document.getElementById('usageHeatmap').getContext('2d');
     const days = Object.keys(data).sort();
     console.log('Processing days:', days);
-    
+
     // Convert data to bar chart format since matrix type is not supported
     const chartData = days.map(day => data[day].requests);
     const chartLabels = days.map(day => {
         const date = new Date(day);
         return date.toLocaleDateString('pl-PL', { month: 'short', day: 'numeric' });
     });
-    
+
     new Chart(ctx, {
         type: 'bar',
         data: {
@@ -1108,11 +1108,11 @@ function renderUsageHeatmap(data) {
                         title: (ctx) => {
                             const dayKey = days[ctx[0].dataIndex];
                             const date = new Date(dayKey);
-                            return date.toLocaleDateString('pl-PL', { 
-                                weekday: 'long', 
-                                year: 'numeric', 
-                                month: 'long', 
-                                day: 'numeric' 
+                            return date.toLocaleDateString('pl-PL', {
+                                weekday: 'long',
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
                             });
                         },
                         label: (ctx) => {
@@ -1130,12 +1130,12 @@ function renderUsageHeatmap(data) {
 }
 function renderModuleUsage(data) {
     console.log('renderModuleUsage called with data:', data);
-    
+
     const days = Object.keys(data).sort();
     const modCounts = {};
     let totalRequests = 0;
     let totalTokens = 0;
-    
+
     days.forEach(d => {
         totalRequests += data[d].requests || 0;
         totalTokens += data[d].tokens || 0;
@@ -1144,13 +1144,13 @@ function renderModuleUsage(data) {
             modCounts[m] = (modCounts[m] || 0) + mods[m];
         }
     });
-    
+
     console.log('Module counts calculated:', modCounts);
     console.log('Totals:', { totalRequests, totalTokens });
-    
+
     const sorted = Object.entries(modCounts).sort((a,b) => b[1]-a[1]);
     let html = '<div class="list-group list-group-flush">';
-    sorted.slice(0, 8).forEach(([m,c]) => { 
+    sorted.slice(0, 8).forEach(([m,c]) => {
         const percentage = totalRequests > 0 ? Math.round((c / totalRequests) * 100) : 0;
         html += `
             <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-secondary">
@@ -1160,16 +1160,16 @@ function renderModuleUsage(data) {
                     <small class="text-muted d-block">${percentage}%</small>
                 </div>
             </div>
-        `; 
+        `;
     });
     html += '</div>';
-    
+
     if (sorted.length === 0) {
         html = '<div class="text-muted text-center p-3">Brak danych o użyciu modułów</div>';
     }
-    
+
     document.getElementById('moduleUsage').innerHTML = html;
-    
+
     // Update stats cards
     document.getElementById('totalRequests').textContent = totalRequests.toLocaleString();
     document.getElementById('tokenCount').textContent = totalTokens.toLocaleString();
@@ -1203,13 +1203,13 @@ document.addEventListener('DOMContentLoaded', function() {
     fetchTestHistory();
     fetchScheduleStatus();
     fetchUsageStats();
-    
+
     // Refresh usage stats every 30 seconds
     setInterval(fetchUsageStats, 30000);
 });
 </script>
 {% endblock %}
-        
+
         paramInputs.forEach(input => {
             if (input.type === 'checkbox') {
                 if (input.checked) {
@@ -1221,21 +1221,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 hasValues = true;
             }
         });
-        
+
         if (hasValues) {
             // Try to format as key=value pairs for simple cases
             const pairs = Object.entries(paramObj).map(([k, v]) => `${k}=${v}`);
             params = pairs.join(' ');
         }
     }
-    
+
     console.log('Collected params:', params);
-    
+
     // Update status
     statusDot.className = 'status-indicator running';
     statusLabel.textContent = 'Status: Wykonywanie...';
     resultDiv.innerHTML = '<div class="alert alert-info">Wykonywanie pluginu...</div>';
-    
+
     // Prepare request data
     const requestData = {
         plugin: selectedPlugin,
@@ -1243,9 +1243,9 @@ document.addEventListener('DOMContentLoaded', function() {
         params: params,
         include_history: useContext
     };
-    
+
     console.log('Executing plugin with data:', requestData);
-    
+
     // Execute plugin
     fetch('/api/playground/execute', {
         method: 'POST',
@@ -1257,10 +1257,10 @@ document.addEventListener('DOMContentLoaded', function() {
     .then(response => response.json())
     .then(data => {
         console.log('Plugin execution result:', data);
-        
+
         statusDot.className = data.success ? 'status-indicator success' : 'status-indicator failed';
         statusLabel.textContent = data.success ? 'Status: Sukces' : 'Status: Błąd';
-        
+
         if (data.success) {
             let resultText = '';
             if (typeof data.result === 'object') {
@@ -1268,7 +1268,7 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 resultText = String(data.result || '');
             }
-            
+
             resultDiv.innerHTML = `
                 <div class="alert alert-success mb-2">✅ Plugin wykonany pomyślnie</div>
                 <strong>Wynik:</strong><br>
@@ -1297,22 +1297,22 @@ document.addEventListener('DOMContentLoaded', function() {
 // View source code
 document.getElementById('view-source-btn').addEventListener('click', function() {
     const selectedPlugin = document.getElementById('plugin-select').value;
-    
+
     if (!selectedPlugin) {
         alert('Wybierz plugin aby zobaczyć kod źródłowy');
         return;
     }
-    
+
     fetch(`/api/playground/plugin/${selectedPlugin}/info`)
         .then(response => response.json())
         .then(data => {
             if (data.source_code) {
                 document.getElementById('source-code-content').textContent = data.source_code;
-                
+
                 // Show modal
                 const modal = new bootstrap.Modal(document.getElementById('sourceCodeModal'));
                 modal.show();
-                
+
                 // Apply syntax highlighting if Prism.js is available
                 if (typeof Prism !== 'undefined') {
                     Prism.highlightElement(document.getElementById('source-code-content'));
@@ -1334,7 +1334,7 @@ document.addEventListener('DOMContentLoaded', function() {
     fetchTestHistory();
     fetchScheduleStatus();
     fetchUsageStats();
-    
+
     // Refresh usage stats every 30 seconds
     setInterval(fetchUsageStats, 30000);
 });

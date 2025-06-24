@@ -1,10 +1,10 @@
 """Proactive Assistant Module Automatically suggests actions, predicts user needs and
 sends notifications."""
 
+import asyncio
 import json
 import logging
 import sqlite3
-import threading
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 
@@ -53,7 +53,7 @@ class ProactiveAssistantModule:
         self.notification_queue = []
         self.user_context = UserContext()
         self.is_active = False
-        self.lock = threading.Lock()
+        self.lock = asyncio.Lock()
 
         # Konfiguracja domyślna
         self.default_config = {
@@ -264,8 +264,6 @@ class ProactiveAssistantModule:
         try:
             if not self.is_active:
                 return
-
-            current_time = datetime.now()
 
             # Sprawdź czy potrzebna przerwa
             if (
@@ -767,7 +765,7 @@ class ProactiveAssistantModule:
             self.logger.error(f"Error dismissing notification: {e}")
             return False
 
-    async def update_user_context(self, user_id: str, context_data: dict):
+    async def update_user_context_async(self, user_id: str, context_data: dict):
         """Aktualizuj kontekst użytkownika (async interface)"""
         try:
             # Update the user context object

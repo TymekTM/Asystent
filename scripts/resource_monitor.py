@@ -82,7 +82,8 @@ class ResourceMonitor:
     def get_cpu_metrics(self) -> dict:
         """Get CPU usage metrics."""
         try:
-            cpu_percent = psutil.cpu_percent(interval=1)
+            # Get CPU percent with blocking call to ensure accuracy
+            cpu_percent = psutil.cpu_percent(interval=0.1)  # Short blocking interval
             load_avg = os.getloadavg()[0] if hasattr(os, "getloadavg") else 0.0
             cpu_count = psutil.cpu_count()
 

@@ -121,7 +121,7 @@
         <h1>🧾 Logi systemowe</h1>
         <p class="text-muted">Monitorowanie procesów AI i systemu</p>
     </div>
-    
+
     <div class="log-toolbar mb-3">
         <div class="log-filters">
             <select id="log-level" class="form-select form-select-sm">
@@ -148,7 +148,7 @@
             </button>
         </div>
     </div>
-    
+
     <div class="log-container timeline-connector">
         <div id="logs-content"></div>
     </div>
@@ -165,16 +165,16 @@ function formatLogEntry(logEntry) {
     // Extract timestamp, level and message using regex
     const regex = /\[(.*?)\]\s+(\w+)\s+(.*)/;
     const match = logEntry.match(regex);
-    
+
     if (match) {
         const timestamp = match[1];
         const level = match[2];
         const message = match[3];
-        
+
         // Get hour from timestamp to create timeline sections
         const hourMatch = timestamp.match(/\d{2}:\d{2}/);
         const timeHour = hourMatch ? hourMatch[0] : null;
-        
+
         return {
             formattedEntry: `<div class="log-entry ${level}">
                                 <span class="log-timestamp">${timestamp}</span>
@@ -196,35 +196,35 @@ function filterLogs(page = 1) {
         <div class="d-flex justify-content-center p-5">
             <div class="spinner-border text-light" role="status"></div>
         </div>`;
-    
+
     const level = document.getElementById('log-level').value;
     fetch(`/api/logs?level=${level}&page=${page}&page_size=${pageSize}`)
         .then(res => res.json())
         .then(data => {
             if (!data.logs || data.logs.length === 0) {
-                document.getElementById('logs-content').innerHTML = 
+                document.getElementById('logs-content').innerHTML =
                     '<div class="p-4 text-center text-light">Brak logów do wyświetlenia</div>';
                 return;
             }
-            
+
             // Process logs to create timeline sections
             let currentHour = null;
             let html = '';
-            
+
             data.logs.forEach(logEntry => {
                 const {formattedEntry, timeHour} = formatLogEntry(logEntry);
-                
+
                 // Add hour divider when hour changes
                 if (timeHour && timeHour !== currentHour) {
                     currentHour = timeHour;
                     html += `<div class="timeline-hour">${timeHour}</div>`;
                 }
-                
+
                 html += formattedEntry;
             });
-            
+
             document.getElementById('logs-content').innerHTML = html;
-            
+
             // Update pagination info
             currentPage = data.page;
             totalPages = data.total_pages;
@@ -233,7 +233,7 @@ function filterLogs(page = 1) {
             document.getElementById('next-page').disabled = currentPage >= totalPages;
         })
         .catch(err => {
-            document.getElementById('logs-content').innerHTML = 
+            document.getElementById('logs-content').innerHTML =
                 `<div class="p-4 text-center text-danger">Błąd ładowania logów: ${err.message}</div>`;
         });
 }
@@ -251,10 +251,10 @@ function downloadLogs() {
 
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('log-level').addEventListener('change', () => filterLogs(1));
-    
+
     // Initial logs load
     filterLogs(1);
-    
+
     // Set up auto-refresh every 30 seconds
     setInterval(() => {
         if (document.visibilityState === 'visible') {

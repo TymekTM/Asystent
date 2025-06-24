@@ -258,7 +258,7 @@ class ClientValidator:
             )
         except ImportError:
             try:
-                import requests
+                import httpx
 
                 results.append(
                     {

@@ -9,8 +9,8 @@ import sys
 import time
 from pathlib import Path
 
+import httpx
 import pytest
-import requests
 from loguru import logger
 
 
@@ -24,8 +24,9 @@ class ServerTestRunner:
     async def check_server_availability(self) -> bool:
         """Check if server is running and available."""
         try:
-            response = requests.get(f"{self.server_url}/", timeout=5)
-            return True
+            async with httpx.AsyncClient() as client:
+                response = await client.get(f"{self.server_url}/", timeout=5)
+                return response.status_code == 200
         except Exception as e:
             logger.error(f"Server not available at {self.server_url}: {e}")
             return False

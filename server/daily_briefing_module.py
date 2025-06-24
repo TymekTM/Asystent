@@ -790,7 +790,7 @@ async def test_ai_briefing():
 
     briefing = DailyBriefingModule(config)
     result = await briefing.deliver_briefing(force_delivery=True)
-    print(f"AI Briefing: {result}")
+    logger.info(f"AI Briefing: {result}")
 
 
 async def test_template_briefing():
@@ -811,7 +811,7 @@ async def test_template_briefing():
 
     briefing = DailyBriefingModule(config)
     result = await briefing.deliver_briefing(force_delivery=True)
-    print(f"Template Briefing: {result}")
+    logger.info(f"Template Briefing: {result}")
 
 
 def register():

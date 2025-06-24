@@ -1,0 +1,4198 @@
+{
+  "metadata": {
+    "monitoring_start": "2025-06-24T21:30:33.963242",
+    "monitoring_end": "2025-06-24T22:30:29.838475",
+    "interval_seconds": 5.0,
+    "total_snapshots": 463
+  },
+  "statistics": {
+    "monitoring_duration_minutes": 59.93125388333333,
+    "total_snapshots": 463,
+    "cpu_usage": {
+      "average": 15.094600431965443,
+      "maximum": 44.2,
+      "minimum": 7.3,
+      "over_80_percent": 0
+    },
+    "memory_usage": {
+      "average": 67.54730021598273,
+      "maximum": 81.4,
+      "minimum": 63.0,
+      "over_80_percent": 40
+    },
+    "peak_memory_gb": 25.920799255371094,
+    "process_count_range": {
+      "minimum": 461,
+      "maximum": 492
+    }
+  },
+  "snapshots": [
+    {
+      "timestamp": "2025-06-24T21:30:33.963242",
+      "cpu_percent": 12.8,
+      "memory_percent": 81.1,
+      "memory_used_gb": 25.81,
+      "disk_percent": 72.2,
+      "process_count": 471,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:30:41.540012",
+      "cpu_percent": 11.8,
+      "memory_percent": 80.0,
+      "memory_used_gb": 25.46,
+      "disk_percent": 72.2,
+      "process_count": 461,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:30:49.127420",
+      "cpu_percent": 15.9,
+      "memory_percent": 80.8,
+      "memory_used_gb": 25.74,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:30:56.710604",
+      "cpu_percent": 13.3,
+      "memory_percent": 80.8,
+      "memory_used_gb": 25.73,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:31:05.003145",
+      "cpu_percent": 19.2,
+      "memory_percent": 81.0,
+      "memory_used_gb": 25.79,
+      "disk_percent": 72.2,
+      "process_count": 471,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:31:13.013975",
+      "cpu_percent": 8.7,
+      "memory_percent": 80.9,
+      "memory_used_gb": 25.77,
+      "disk_percent": 72.2,
+      "process_count": 475,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:31:20.598464",
+      "cpu_percent": 14.6,
+      "memory_percent": 80.7,
+      "memory_used_gb": 25.71,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:31:28.198734",
+      "cpu_percent": 12.3,
+      "memory_percent": 80.7,
+      "memory_used_gb": 25.7,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:31:35.770812",
+      "cpu_percent": 15.0,
+      "memory_percent": 80.7,
+      "memory_used_gb": 25.69,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:31:44.022690",
+      "cpu_percent": 11.5,
+      "memory_percent": 80.7,
+      "memory_used_gb": 25.7,
+      "disk_percent": 72.2,
+      "process_count": 473,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:31:51.601340",
+      "cpu_percent": 7.3,
+      "memory_percent": 80.7,
+      "memory_used_gb": 25.69,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:31:59.179548",
+      "cpu_percent": 12.2,
+      "memory_percent": 81.4,
+      "memory_used_gb": 25.91,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:32:06.763224",
+      "cpu_percent": 11.2,
+      "memory_percent": 80.7,
+      "memory_used_gb": 25.69,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:32:15.052258",
+      "cpu_percent": 16.3,
+      "memory_percent": 80.5,
+      "memory_used_gb": 25.62,
+      "disk_percent": 72.2,
+      "process_count": 472,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:32:23.068651",
+      "cpu_percent": 10.5,
+      "memory_percent": 80.4,
+      "memory_used_gb": 25.62,
+      "disk_percent": 72.2,
+      "process_count": 473,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:32:30.654624",
+      "cpu_percent": 15.9,
+      "memory_percent": 80.5,
+      "memory_used_gb": 25.63,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:32:38.225551",
+      "cpu_percent": 16.5,
+      "memory_percent": 80.6,
+      "memory_used_gb": 25.67,
+      "disk_percent": 72.2,
+      "process_count": 466,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:32:45.827444",
+      "cpu_percent": 13.5,
+      "memory_percent": 80.1,
+      "memory_used_gb": 25.49,
+      "disk_percent": 72.2,
+      "process_count": 465,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:32:54.096636",
+      "cpu_percent": 13.0,
+      "memory_percent": 80.9,
+      "memory_used_gb": 25.77,
+      "disk_percent": 72.2,
+      "process_count": 474,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:33:01.678969",
+      "cpu_percent": 11.5,
+      "memory_percent": 80.8,
+      "memory_used_gb": 25.72,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:33:09.248519",
+      "cpu_percent": 12.7,
+      "memory_percent": 80.7,
+      "memory_used_gb": 25.7,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:33:16.838238",
+      "cpu_percent": 15.5,
+      "memory_percent": 80.7,
+      "memory_used_gb": 25.71,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:33:25.118007",
+      "cpu_percent": 20.8,
+      "memory_percent": 80.5,
+      "memory_used_gb": 25.65,
+      "disk_percent": 72.2,
+      "process_count": 472,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:33:33.124357",
+      "cpu_percent": 14.3,
+      "memory_percent": 81.0,
+      "memory_used_gb": 25.79,
+      "disk_percent": 72.2,
+      "process_count": 476,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:33:40.701913",
+      "cpu_percent": 11.4,
+      "memory_percent": 81.1,
+      "memory_used_gb": 25.83,
+      "disk_percent": 72.2,
+      "process_count": 471,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:33:48.279237",
+      "cpu_percent": 15.0,
+      "memory_percent": 81.1,
+      "memory_used_gb": 25.83,
+      "disk_percent": 72.2,
+      "process_count": 471,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:33:55.866156",
+      "cpu_percent": 14.3,
+      "memory_percent": 81.1,
+      "memory_used_gb": 25.82,
+      "disk_percent": 72.2,
+      "process_count": 472,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:34:04.183068",
+      "cpu_percent": 10.6,
+      "memory_percent": 81.2,
+      "memory_used_gb": 25.86,
+      "disk_percent": 72.2,
+      "process_count": 478,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:34:11.780884",
+      "cpu_percent": 10.0,
+      "memory_percent": 81.4,
+      "memory_used_gb": 25.92,
+      "disk_percent": 72.2,
+      "process_count": 472,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:34:19.370026",
+      "cpu_percent": 15.7,
+      "memory_percent": 81.0,
+      "memory_used_gb": 25.78,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:34:26.966380",
+      "cpu_percent": 13.9,
+      "memory_percent": 80.9,
+      "memory_used_gb": 25.77,
+      "disk_percent": 72.2,
+      "process_count": 466,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:34:35.215128",
+      "cpu_percent": 11.5,
+      "memory_percent": 81.0,
+      "memory_used_gb": 25.81,
+      "disk_percent": 72.2,
+      "process_count": 470,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:34:43.214347",
+      "cpu_percent": 10.6,
+      "memory_percent": 81.0,
+      "memory_used_gb": 25.79,
+      "disk_percent": 72.2,
+      "process_count": 476,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:34:50.785660",
+      "cpu_percent": 9.3,
+      "memory_percent": 80.8,
+      "memory_used_gb": 25.74,
+      "disk_percent": 72.2,
+      "process_count": 466,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:34:58.377938",
+      "cpu_percent": 11.9,
+      "memory_percent": 80.9,
+      "memory_used_gb": 25.76,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:35:05.986724",
+      "cpu_percent": 18.5,
+      "memory_percent": 80.9,
+      "memory_used_gb": 25.78,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:35:14.215305",
+      "cpu_percent": 12.5,
+      "memory_percent": 80.9,
+      "memory_used_gb": 25.75,
+      "disk_percent": 72.2,
+      "process_count": 477,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:35:21.809797",
+      "cpu_percent": 9.9,
+      "memory_percent": 80.7,
+      "memory_used_gb": 25.71,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:35:29.417126",
+      "cpu_percent": 12.4,
+      "memory_percent": 80.7,
+      "memory_used_gb": 25.71,
+      "disk_percent": 72.2,
+      "process_count": 470,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:35:36.996155",
+      "cpu_percent": 14.2,
+      "memory_percent": 80.6,
+      "memory_used_gb": 25.67,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:35:45.244183",
+      "cpu_percent": 16.2,
+      "memory_percent": 80.7,
+      "memory_used_gb": 25.69,
+      "disk_percent": 72.2,
+      "process_count": 475,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:35:53.227828",
+      "cpu_percent": 15.4,
+      "memory_percent": 77.3,
+      "memory_used_gb": 24.62,
+      "disk_percent": 72.2,
+      "process_count": 479,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:36:00.812924",
+      "cpu_percent": 10.7,
+      "memory_percent": 69.4,
+      "memory_used_gb": 22.11,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:36:08.394767",
+      "cpu_percent": 12.3,
+      "memory_percent": 69.4,
+      "memory_used_gb": 22.09,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:36:15.983268",
+      "cpu_percent": 14.0,
+      "memory_percent": 63.9,
+      "memory_used_gb": 20.34,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:36:24.271376",
+      "cpu_percent": 14.4,
+      "memory_percent": 63.9,
+      "memory_used_gb": 20.36,
+      "disk_percent": 72.2,
+      "process_count": 477,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:36:31.859940",
+      "cpu_percent": 15.4,
+      "memory_percent": 64.1,
+      "memory_used_gb": 20.4,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:36:39.454008",
+      "cpu_percent": 10.9,
+      "memory_percent": 64.0,
+      "memory_used_gb": 20.37,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:36:47.046686",
+      "cpu_percent": 10.8,
+      "memory_percent": 63.9,
+      "memory_used_gb": 20.35,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:36:55.303321",
+      "cpu_percent": 22.2,
+      "memory_percent": 64.1,
+      "memory_used_gb": 20.4,
+      "disk_percent": 72.2,
+      "process_count": 476,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:37:03.301387",
+      "cpu_percent": 12.2,
+      "memory_percent": 64.1,
+      "memory_used_gb": 20.42,
+      "disk_percent": 72.2,
+      "process_count": 478,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:37:10.880686",
+      "cpu_percent": 12.0,
+      "memory_percent": 63.9,
+      "memory_used_gb": 20.35,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:37:18.485760",
+      "cpu_percent": 11.7,
+      "memory_percent": 63.9,
+      "memory_used_gb": 20.34,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:37:26.103362",
+      "cpu_percent": 18.8,
+      "memory_percent": 63.6,
+      "memory_used_gb": 20.25,
+      "disk_percent": 72.2,
+      "process_count": 465,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:37:34.359025",
+      "cpu_percent": 11.3,
+      "memory_percent": 64.0,
+      "memory_used_gb": 20.38,
+      "disk_percent": 72.2,
+      "process_count": 475,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:37:41.967577",
+      "cpu_percent": 10.9,
+      "memory_percent": 63.7,
+      "memory_used_gb": 20.27,
+      "disk_percent": 72.2,
+      "process_count": 465,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:37:49.563446",
+      "cpu_percent": 11.9,
+      "memory_percent": 63.7,
+      "memory_used_gb": 20.28,
+      "disk_percent": 72.2,
+      "process_count": 465,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:37:57.167501",
+      "cpu_percent": 10.4,
+      "memory_percent": 63.9,
+      "memory_used_gb": 20.34,
+      "disk_percent": 72.2,
+      "process_count": 466,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:38:05.388630",
+      "cpu_percent": 16.3,
+      "memory_percent": 64.2,
+      "memory_used_gb": 20.46,
+      "disk_percent": 72.2,
+      "process_count": 475,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:38:13.408749",
+      "cpu_percent": 15.6,
+      "memory_percent": 64.1,
+      "memory_used_gb": 20.41,
+      "disk_percent": 72.2,
+      "process_count": 477,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:38:21.014451",
+      "cpu_percent": 12.1,
+      "memory_percent": 63.9,
+      "memory_used_gb": 20.36,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:38:28.632045",
+      "cpu_percent": 11.5,
+      "memory_percent": 64.0,
+      "memory_used_gb": 20.38,
+      "disk_percent": 72.2,
+      "process_count": 473,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:38:36.222493",
+      "cpu_percent": 10.9,
+      "memory_percent": 63.8,
+      "memory_used_gb": 20.32,
+      "disk_percent": 72.2,
+      "process_count": 470,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:38:44.427691",
+      "cpu_percent": 12.5,
+      "memory_percent": 63.6,
+      "memory_used_gb": 20.27,
+      "disk_percent": 72.2,
+      "process_count": 479,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:38:52.018805",
+      "cpu_percent": 20.3,
+      "memory_percent": 63.9,
+      "memory_used_gb": 20.34,
+      "disk_percent": 72.2,
+      "process_count": 472,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:38:59.624757",
+      "cpu_percent": 12.7,
+      "memory_percent": 64.2,
+      "memory_used_gb": 20.46,
+      "disk_percent": 72.2,
+      "process_count": 471,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:39:07.303445",
+      "cpu_percent": 10.1,
+      "memory_percent": 64.2,
+      "memory_used_gb": 20.46,
+      "disk_percent": 72.2,
+      "process_count": 471,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:39:15.441996",
+      "cpu_percent": 14.6,
+      "memory_percent": 64.4,
+      "memory_used_gb": 20.5,
+      "disk_percent": 72.2,
+      "process_count": 479,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:39:23.452687",
+      "cpu_percent": 15.4,
+      "memory_percent": 64.8,
+      "memory_used_gb": 20.63,
+      "disk_percent": 72.2,
+      "process_count": 484,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:39:31.040555",
+      "cpu_percent": 18.7,
+      "memory_percent": 64.3,
+      "memory_used_gb": 20.48,
+      "disk_percent": 72.2,
+      "process_count": 470,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:39:38.668699",
+      "cpu_percent": 8.7,
+      "memory_percent": 64.7,
+      "memory_used_gb": 20.61,
+      "disk_percent": 72.2,
+      "process_count": 471,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:39:46.257054",
+      "cpu_percent": 9.3,
+      "memory_percent": 64.5,
+      "memory_used_gb": 20.53,
+      "disk_percent": 72.2,
+      "process_count": 471,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:39:54.500059",
+      "cpu_percent": 12.7,
+      "memory_percent": 65.1,
+      "memory_used_gb": 20.73,
+      "disk_percent": 72.2,
+      "process_count": 482,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:40:02.085262",
+      "cpu_percent": 11.5,
+      "memory_percent": 64.8,
+      "memory_used_gb": 20.64,
+      "disk_percent": 72.2,
+      "process_count": 471,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:40:09.684227",
+      "cpu_percent": 12.1,
+      "memory_percent": 64.8,
+      "memory_used_gb": 20.64,
+      "disk_percent": 72.2,
+      "process_count": 471,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:40:17.275105",
+      "cpu_percent": 9.5,
+      "memory_percent": 64.7,
+      "memory_used_gb": 20.6,
+      "disk_percent": 72.2,
+      "process_count": 471,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:40:25.509814",
+      "cpu_percent": 7.6,
+      "memory_percent": 65.0,
+      "memory_used_gb": 20.69,
+      "disk_percent": 72.2,
+      "process_count": 478,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:40:33.544951",
+      "cpu_percent": 14.5,
+      "memory_percent": 65.2,
+      "memory_used_gb": 20.77,
+      "disk_percent": 72.2,
+      "process_count": 479,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:40:41.141873",
+      "cpu_percent": 15.0,
+      "memory_percent": 64.9,
+      "memory_used_gb": 20.66,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:40:48.725342",
+      "cpu_percent": 9.0,
+      "memory_percent": 64.9,
+      "memory_used_gb": 20.66,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:40:56.300010",
+      "cpu_percent": 9.4,
+      "memory_percent": 65.2,
+      "memory_used_gb": 20.77,
+      "disk_percent": 72.2,
+      "process_count": 470,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:41:04.546980",
+      "cpu_percent": 11.6,
+      "memory_percent": 65.5,
+      "memory_used_gb": 20.87,
+      "disk_percent": 72.2,
+      "process_count": 480,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:41:12.155213",
+      "cpu_percent": 20.1,
+      "memory_percent": 65.3,
+      "memory_used_gb": 20.78,
+      "disk_percent": 72.2,
+      "process_count": 470,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:41:19.761351",
+      "cpu_percent": 11.4,
+      "memory_percent": 65.2,
+      "memory_used_gb": 20.76,
+      "disk_percent": 72.2,
+      "process_count": 472,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:41:27.340579",
+      "cpu_percent": 8.5,
+      "memory_percent": 65.1,
+      "memory_used_gb": 20.74,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:41:35.590824",
+      "cpu_percent": 11.2,
+      "memory_percent": 65.3,
+      "memory_used_gb": 20.78,
+      "disk_percent": 72.2,
+      "process_count": 475,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:41:43.590840",
+      "cpu_percent": 12.0,
+      "memory_percent": 65.2,
+      "memory_used_gb": 20.76,
+      "disk_percent": 72.2,
+      "process_count": 477,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:41:51.186634",
+      "cpu_percent": 11.6,
+      "memory_percent": 65.0,
+      "memory_used_gb": 20.7,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:41:58.786592",
+      "cpu_percent": 14.1,
+      "memory_percent": 65.2,
+      "memory_used_gb": 20.75,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:42:06.373584",
+      "cpu_percent": 9.8,
+      "memory_percent": 65.4,
+      "memory_used_gb": 20.83,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:42:14.600108",
+      "cpu_percent": 14.5,
+      "memory_percent": 65.5,
+      "memory_used_gb": 20.84,
+      "disk_percent": 72.2,
+      "process_count": 479,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:42:22.194230",
+      "cpu_percent": 12.7,
+      "memory_percent": 65.3,
+      "memory_used_gb": 20.79,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:42:29.766699",
+      "cpu_percent": 11.8,
+      "memory_percent": 65.3,
+      "memory_used_gb": 20.8,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:42:37.346466",
+      "cpu_percent": 9.4,
+      "memory_percent": 65.2,
+      "memory_used_gb": 20.76,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:42:45.648451",
+      "cpu_percent": 11.3,
+      "memory_percent": 65.3,
+      "memory_used_gb": 20.78,
+      "disk_percent": 72.2,
+      "process_count": 476,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:42:53.626779",
+      "cpu_percent": 12.9,
+      "memory_percent": 65.5,
+      "memory_used_gb": 20.85,
+      "disk_percent": 72.2,
+      "process_count": 479,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:43:01.210198",
+      "cpu_percent": 12.5,
+      "memory_percent": 65.1,
+      "memory_used_gb": 20.74,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:43:08.789142",
+      "cpu_percent": 20.9,
+      "memory_percent": 65.5,
+      "memory_used_gb": 20.87,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:43:16.365516",
+      "cpu_percent": 11.1,
+      "memory_percent": 65.4,
+      "memory_used_gb": 20.82,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:43:24.651652",
+      "cpu_percent": 7.4,
+      "memory_percent": 65.3,
+      "memory_used_gb": 20.8,
+      "disk_percent": 72.2,
+      "process_count": 477,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:43:32.243051",
+      "cpu_percent": 11.4,
+      "memory_percent": 65.5,
+      "memory_used_gb": 20.87,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:43:39.825295",
+      "cpu_percent": 14.5,
+      "memory_percent": 65.1,
+      "memory_used_gb": 20.74,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:43:47.429366",
+      "cpu_percent": 12.0,
+      "memory_percent": 64.8,
+      "memory_used_gb": 20.64,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:43:55.686581",
+      "cpu_percent": 12.4,
+      "memory_percent": 65.2,
+      "memory_used_gb": 20.76,
+      "disk_percent": 72.2,
+      "process_count": 476,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:44:03.692599",
+      "cpu_percent": 12.0,
+      "memory_percent": 65.8,
+      "memory_used_gb": 20.95,
+      "disk_percent": 72.2,
+      "process_count": 479,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:44:11.278914",
+      "cpu_percent": 12.3,
+      "memory_percent": 65.6,
+      "memory_used_gb": 20.89,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:44:18.853173",
+      "cpu_percent": 17.3,
+      "memory_percent": 65.6,
+      "memory_used_gb": 20.89,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:44:26.448298",
+      "cpu_percent": 11.9,
+      "memory_percent": 65.6,
+      "memory_used_gb": 20.9,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:44:34.722531",
+      "cpu_percent": 18.5,
+      "memory_percent": 67.0,
+      "memory_used_gb": 21.34,
+      "disk_percent": 72.2,
+      "process_count": 481,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:44:42.307257",
+      "cpu_percent": 16.0,
+      "memory_percent": 66.4,
+      "memory_used_gb": 21.13,
+      "disk_percent": 72.2,
+      "process_count": 471,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:44:49.888667",
+      "cpu_percent": 16.4,
+      "memory_percent": 66.4,
+      "memory_used_gb": 21.16,
+      "disk_percent": 72.2,
+      "process_count": 471,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:44:57.514209",
+      "cpu_percent": 14.9,
+      "memory_percent": 66.5,
+      "memory_used_gb": 21.17,
+      "disk_percent": 72.2,
+      "process_count": 472,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:45:05.769238",
+      "cpu_percent": 17.0,
+      "memory_percent": 66.1,
+      "memory_used_gb": 21.04,
+      "disk_percent": 72.2,
+      "process_count": 480,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:45:13.761288",
+      "cpu_percent": 11.0,
+      "memory_percent": 66.3,
+      "memory_used_gb": 21.12,
+      "disk_percent": 72.2,
+      "process_count": 482,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:45:21.358635",
+      "cpu_percent": 16.9,
+      "memory_percent": 65.9,
+      "memory_used_gb": 20.99,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:45:28.946532",
+      "cpu_percent": 15.8,
+      "memory_percent": 65.9,
+      "memory_used_gb": 20.99,
+      "disk_percent": 72.2,
+      "process_count": 466,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:45:36.538757",
+      "cpu_percent": 44.2,
+      "memory_percent": 66.8,
+      "memory_used_gb": 21.28,
+      "disk_percent": 72.2,
+      "process_count": 473,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:45:44.781544",
+      "cpu_percent": 14.8,
+      "memory_percent": 67.1,
+      "memory_used_gb": 21.38,
+      "disk_percent": 72.2,
+      "process_count": 483,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:45:52.366950",
+      "cpu_percent": 10.9,
+      "memory_percent": 66.5,
+      "memory_used_gb": 21.18,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:45:59.972555",
+      "cpu_percent": 11.9,
+      "memory_percent": 66.2,
+      "memory_used_gb": 21.09,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:46:07.575418",
+      "cpu_percent": 14.5,
+      "memory_percent": 66.5,
+      "memory_used_gb": 21.18,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:46:15.833565",
+      "cpu_percent": 16.2,
+      "memory_percent": 66.5,
+      "memory_used_gb": 21.17,
+      "disk_percent": 72.2,
+      "process_count": 474,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:46:23.813194",
+      "cpu_percent": 11.6,
+      "memory_percent": 66.7,
+      "memory_used_gb": 21.25,
+      "disk_percent": 72.2,
+      "process_count": 477,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:46:31.394657",
+      "cpu_percent": 17.5,
+      "memory_percent": 67.0,
+      "memory_used_gb": 21.32,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:46:38.996403",
+      "cpu_percent": 21.5,
+      "memory_percent": 67.0,
+      "memory_used_gb": 21.34,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:46:46.565494",
+      "cpu_percent": 12.4,
+      "memory_percent": 67.8,
+      "memory_used_gb": 21.59,
+      "disk_percent": 72.2,
+      "process_count": 473,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:46:54.833821",
+      "cpu_percent": 9.4,
+      "memory_percent": 67.6,
+      "memory_used_gb": 21.51,
+      "disk_percent": 72.2,
+      "process_count": 478,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:47:02.415191",
+      "cpu_percent": 18.2,
+      "memory_percent": 67.1,
+      "memory_used_gb": 21.36,
+      "disk_percent": 72.2,
+      "process_count": 471,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:47:10.021385",
+      "cpu_percent": 16.0,
+      "memory_percent": 66.4,
+      "memory_used_gb": 21.15,
+      "disk_percent": 72.2,
+      "process_count": 471,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:47:17.627384",
+      "cpu_percent": 21.0,
+      "memory_percent": 66.9,
+      "memory_used_gb": 21.31,
+      "disk_percent": 72.2,
+      "process_count": 471,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:47:25.875022",
+      "cpu_percent": 14.2,
+      "memory_percent": 66.7,
+      "memory_used_gb": 21.23,
+      "disk_percent": 72.2,
+      "process_count": 478,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:47:33.878872",
+      "cpu_percent": 11.6,
+      "memory_percent": 67.5,
+      "memory_used_gb": 21.5,
+      "disk_percent": 72.2,
+      "process_count": 486,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:47:41.450048",
+      "cpu_percent": 14.2,
+      "memory_percent": 66.7,
+      "memory_used_gb": 21.22,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:47:49.042611",
+      "cpu_percent": 21.4,
+      "memory_percent": 67.1,
+      "memory_used_gb": 21.35,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:47:56.634372",
+      "cpu_percent": 16.9,
+      "memory_percent": 67.3,
+      "memory_used_gb": 21.42,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:48:04.929673",
+      "cpu_percent": 12.5,
+      "memory_percent": 67.2,
+      "memory_used_gb": 21.39,
+      "disk_percent": 72.2,
+      "process_count": 480,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:48:12.517798",
+      "cpu_percent": 16.3,
+      "memory_percent": 67.1,
+      "memory_used_gb": 21.37,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:48:20.100856",
+      "cpu_percent": 14.6,
+      "memory_percent": 67.3,
+      "memory_used_gb": 21.42,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:48:27.686360",
+      "cpu_percent": 15.1,
+      "memory_percent": 67.0,
+      "memory_used_gb": 21.34,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:48:35.977855",
+      "cpu_percent": 15.4,
+      "memory_percent": 67.3,
+      "memory_used_gb": 21.44,
+      "disk_percent": 72.2,
+      "process_count": 475,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:48:43.965558",
+      "cpu_percent": 14.2,
+      "memory_percent": 67.0,
+      "memory_used_gb": 21.32,
+      "disk_percent": 72.2,
+      "process_count": 478,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:48:51.550595",
+      "cpu_percent": 12.3,
+      "memory_percent": 67.5,
+      "memory_used_gb": 21.5,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:48:59.125021",
+      "cpu_percent": 13.9,
+      "memory_percent": 67.6,
+      "memory_used_gb": 21.53,
+      "disk_percent": 72.2,
+      "process_count": 470,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:49:06.708281",
+      "cpu_percent": 15.5,
+      "memory_percent": 67.8,
+      "memory_used_gb": 21.59,
+      "disk_percent": 72.2,
+      "process_count": 470,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:49:14.973503",
+      "cpu_percent": 10.9,
+      "memory_percent": 68.4,
+      "memory_used_gb": 21.79,
+      "disk_percent": 72.2,
+      "process_count": 485,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:49:22.562406",
+      "cpu_percent": 11.3,
+      "memory_percent": 68.2,
+      "memory_used_gb": 21.73,
+      "disk_percent": 72.2,
+      "process_count": 472,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:49:30.168502",
+      "cpu_percent": 12.2,
+      "memory_percent": 67.9,
+      "memory_used_gb": 21.63,
+      "disk_percent": 72.2,
+      "process_count": 472,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:49:37.751700",
+      "cpu_percent": 16.0,
+      "memory_percent": 68.0,
+      "memory_used_gb": 21.66,
+      "disk_percent": 72.2,
+      "process_count": 471,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:49:45.998592",
+      "cpu_percent": 12.2,
+      "memory_percent": 67.7,
+      "memory_used_gb": 21.55,
+      "disk_percent": 72.2,
+      "process_count": 478,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:49:54.042514",
+      "cpu_percent": 20.2,
+      "memory_percent": 68.2,
+      "memory_used_gb": 21.71,
+      "disk_percent": 72.2,
+      "process_count": 483,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:50:01.627811",
+      "cpu_percent": 13.1,
+      "memory_percent": 67.8,
+      "memory_used_gb": 21.61,
+      "disk_percent": 72.2,
+      "process_count": 473,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:50:09.207326",
+      "cpu_percent": 10.5,
+      "memory_percent": 67.9,
+      "memory_used_gb": 21.61,
+      "disk_percent": 72.2,
+      "process_count": 473,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:50:16.787708",
+      "cpu_percent": 19.7,
+      "memory_percent": 67.8,
+      "memory_used_gb": 21.6,
+      "disk_percent": 72.2,
+      "process_count": 473,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:50:25.046856",
+      "cpu_percent": 17.9,
+      "memory_percent": 67.8,
+      "memory_used_gb": 21.6,
+      "disk_percent": 72.2,
+      "process_count": 479,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:50:32.646438",
+      "cpu_percent": 20.4,
+      "memory_percent": 68.9,
+      "memory_used_gb": 21.93,
+      "disk_percent": 72.2,
+      "process_count": 472,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:50:40.254824",
+      "cpu_percent": 15.4,
+      "memory_percent": 68.3,
+      "memory_used_gb": 21.74,
+      "disk_percent": 72.2,
+      "process_count": 472,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:50:47.873971",
+      "cpu_percent": 17.3,
+      "memory_percent": 68.4,
+      "memory_used_gb": 21.79,
+      "disk_percent": 72.2,
+      "process_count": 472,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:50:56.071495",
+      "cpu_percent": 16.3,
+      "memory_percent": 68.4,
+      "memory_used_gb": 21.78,
+      "disk_percent": 72.2,
+      "process_count": 481,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:51:04.099149",
+      "cpu_percent": 17.7,
+      "memory_percent": 68.5,
+      "memory_used_gb": 21.8,
+      "disk_percent": 72.2,
+      "process_count": 483,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:51:11.721129",
+      "cpu_percent": 11.7,
+      "memory_percent": 68.3,
+      "memory_used_gb": 21.76,
+      "disk_percent": 72.2,
+      "process_count": 473,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:51:19.317690",
+      "cpu_percent": 9.7,
+      "memory_percent": 68.1,
+      "memory_used_gb": 21.68,
+      "disk_percent": 72.2,
+      "process_count": 471,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:51:26.920414",
+      "cpu_percent": 15.6,
+      "memory_percent": 69.0,
+      "memory_used_gb": 21.97,
+      "disk_percent": 72.2,
+      "process_count": 470,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:51:35.132647",
+      "cpu_percent": 16.2,
+      "memory_percent": 68.5,
+      "memory_used_gb": 21.8,
+      "disk_percent": 72.2,
+      "process_count": 480,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:51:42.734576",
+      "cpu_percent": 12.6,
+      "memory_percent": 68.1,
+      "memory_used_gb": 21.69,
+      "disk_percent": 72.2,
+      "process_count": 470,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:51:50.322536",
+      "cpu_percent": 9.7,
+      "memory_percent": 68.1,
+      "memory_used_gb": 21.68,
+      "disk_percent": 72.2,
+      "process_count": 470,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:51:57.924448",
+      "cpu_percent": 13.1,
+      "memory_percent": 68.2,
+      "memory_used_gb": 21.71,
+      "disk_percent": 72.2,
+      "process_count": 471,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:52:06.146202",
+      "cpu_percent": 14.1,
+      "memory_percent": 68.3,
+      "memory_used_gb": 21.74,
+      "disk_percent": 72.2,
+      "process_count": 479,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:52:14.189236",
+      "cpu_percent": 16.7,
+      "memory_percent": 68.0,
+      "memory_used_gb": 21.64,
+      "disk_percent": 72.2,
+      "process_count": 480,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:52:21.780606",
+      "cpu_percent": 13.2,
+      "memory_percent": 67.7,
+      "memory_used_gb": 21.55,
+      "disk_percent": 72.2,
+      "process_count": 470,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:52:29.397546",
+      "cpu_percent": 13.5,
+      "memory_percent": 67.7,
+      "memory_used_gb": 21.55,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:52:36.996299",
+      "cpu_percent": 16.6,
+      "memory_percent": 67.8,
+      "memory_used_gb": 21.59,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:52:45.230329",
+      "cpu_percent": 20.2,
+      "memory_percent": 68.0,
+      "memory_used_gb": 21.66,
+      "disk_percent": 72.2,
+      "process_count": 482,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:52:52.819224",
+      "cpu_percent": 13.7,
+      "memory_percent": 68.1,
+      "memory_used_gb": 21.68,
+      "disk_percent": 72.2,
+      "process_count": 473,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:53:00.418385",
+      "cpu_percent": 10.1,
+      "memory_percent": 67.8,
+      "memory_used_gb": 21.6,
+      "disk_percent": 72.2,
+      "process_count": 473,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:53:08.016533",
+      "cpu_percent": 11.4,
+      "memory_percent": 68.0,
+      "memory_used_gb": 21.64,
+      "disk_percent": 72.2,
+      "process_count": 473,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:53:16.237262",
+      "cpu_percent": 12.8,
+      "memory_percent": 67.8,
+      "memory_used_gb": 21.58,
+      "disk_percent": 72.2,
+      "process_count": 475,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:53:24.221107",
+      "cpu_percent": 17.8,
+      "memory_percent": 67.8,
+      "memory_used_gb": 21.59,
+      "disk_percent": 72.2,
+      "process_count": 478,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:53:31.810873",
+      "cpu_percent": 16.0,
+      "memory_percent": 67.8,
+      "memory_used_gb": 21.59,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:53:39.423492",
+      "cpu_percent": 22.4,
+      "memory_percent": 67.6,
+      "memory_used_gb": 21.53,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:53:47.017681",
+      "cpu_percent": 10.2,
+      "memory_percent": 67.7,
+      "memory_used_gb": 21.54,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:53:55.250988",
+      "cpu_percent": 14.6,
+      "memory_percent": 67.9,
+      "memory_used_gb": 21.62,
+      "disk_percent": 72.2,
+      "process_count": 479,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:54:02.856000",
+      "cpu_percent": 16.5,
+      "memory_percent": 67.8,
+      "memory_used_gb": 21.58,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:54:10.464685",
+      "cpu_percent": 11.8,
+      "memory_percent": 67.7,
+      "memory_used_gb": 21.56,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:54:18.063560",
+      "cpu_percent": 10.3,
+      "memory_percent": 67.7,
+      "memory_used_gb": 21.55,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:54:26.293019",
+      "cpu_percent": 21.9,
+      "memory_percent": 67.8,
+      "memory_used_gb": 21.59,
+      "disk_percent": 72.2,
+      "process_count": 475,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:54:34.249564",
+      "cpu_percent": 16.4,
+      "memory_percent": 68.0,
+      "memory_used_gb": 21.66,
+      "disk_percent": 72.2,
+      "process_count": 479,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:54:41.859720",
+      "cpu_percent": 18.5,
+      "memory_percent": 67.6,
+      "memory_used_gb": 21.54,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:54:49.468738",
+      "cpu_percent": 15.7,
+      "memory_percent": 67.6,
+      "memory_used_gb": 21.54,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:54:57.072600",
+      "cpu_percent": 16.5,
+      "memory_percent": 67.8,
+      "memory_used_gb": 21.58,
+      "disk_percent": 72.2,
+      "process_count": 470,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:55:05.284993",
+      "cpu_percent": 12.7,
+      "memory_percent": 68.3,
+      "memory_used_gb": 21.74,
+      "disk_percent": 72.2,
+      "process_count": 483,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:55:12.883310",
+      "cpu_percent": 16.2,
+      "memory_percent": 68.1,
+      "memory_used_gb": 21.69,
+      "disk_percent": 72.2,
+      "process_count": 473,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:55:20.474014",
+      "cpu_percent": 18.4,
+      "memory_percent": 68.2,
+      "memory_used_gb": 21.7,
+      "disk_percent": 72.2,
+      "process_count": 473,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:55:28.089749",
+      "cpu_percent": 14.6,
+      "memory_percent": 68.0,
+      "memory_used_gb": 21.65,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:55:36.303132",
+      "cpu_percent": 13.0,
+      "memory_percent": 68.5,
+      "memory_used_gb": 21.83,
+      "disk_percent": 72.2,
+      "process_count": 478,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:55:44.324042",
+      "cpu_percent": 23.6,
+      "memory_percent": 68.4,
+      "memory_used_gb": 21.8,
+      "disk_percent": 72.2,
+      "process_count": 482,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:55:51.906487",
+      "cpu_percent": 16.2,
+      "memory_percent": 68.7,
+      "memory_used_gb": 21.87,
+      "disk_percent": 72.2,
+      "process_count": 471,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:55:59.483326",
+      "cpu_percent": 10.7,
+      "memory_percent": 68.4,
+      "memory_used_gb": 21.79,
+      "disk_percent": 72.2,
+      "process_count": 471,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:56:07.057036",
+      "cpu_percent": 23.5,
+      "memory_percent": 68.3,
+      "memory_used_gb": 21.75,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:56:15.325486",
+      "cpu_percent": 9.5,
+      "memory_percent": 68.7,
+      "memory_used_gb": 21.88,
+      "disk_percent": 72.2,
+      "process_count": 478,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:56:22.910005",
+      "cpu_percent": 19.1,
+      "memory_percent": 68.4,
+      "memory_used_gb": 21.78,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:56:30.482452",
+      "cpu_percent": 14.2,
+      "memory_percent": 68.4,
+      "memory_used_gb": 21.77,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:56:38.057534",
+      "cpu_percent": 15.4,
+      "memory_percent": 68.6,
+      "memory_used_gb": 21.84,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:56:46.346004",
+      "cpu_percent": 14.2,
+      "memory_percent": 69.0,
+      "memory_used_gb": 21.96,
+      "disk_percent": 72.2,
+      "process_count": 475,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:56:54.354033",
+      "cpu_percent": 20.2,
+      "memory_percent": 69.3,
+      "memory_used_gb": 22.06,
+      "disk_percent": 72.2,
+      "process_count": 485,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:57:01.938288",
+      "cpu_percent": 15.4,
+      "memory_percent": 69.3,
+      "memory_used_gb": 22.06,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:57:09.522101",
+      "cpu_percent": 12.2,
+      "memory_percent": 69.4,
+      "memory_used_gb": 22.08,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:57:17.104791",
+      "cpu_percent": 10.9,
+      "memory_percent": 69.3,
+      "memory_used_gb": 22.07,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:57:25.403273",
+      "cpu_percent": 34.2,
+      "memory_percent": 69.7,
+      "memory_used_gb": 22.18,
+      "disk_percent": 72.2,
+      "process_count": 483,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:57:32.997548",
+      "cpu_percent": 17.4,
+      "memory_percent": 69.2,
+      "memory_used_gb": 22.04,
+      "disk_percent": 72.2,
+      "process_count": 466,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:57:40.590156",
+      "cpu_percent": 16.8,
+      "memory_percent": 67.8,
+      "memory_used_gb": 21.6,
+      "disk_percent": 72.2,
+      "process_count": 470,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:57:48.176798",
+      "cpu_percent": 13.1,
+      "memory_percent": 67.4,
+      "memory_used_gb": 21.48,
+      "disk_percent": 72.2,
+      "process_count": 470,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:57:56.385132",
+      "cpu_percent": 13.0,
+      "memory_percent": 67.7,
+      "memory_used_gb": 21.57,
+      "disk_percent": 72.2,
+      "process_count": 479,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:58:04.418558",
+      "cpu_percent": 11.6,
+      "memory_percent": 67.8,
+      "memory_used_gb": 21.59,
+      "disk_percent": 72.2,
+      "process_count": 481,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:58:11.999841",
+      "cpu_percent": 17.5,
+      "memory_percent": 67.3,
+      "memory_used_gb": 21.44,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:58:19.588936",
+      "cpu_percent": 24.6,
+      "memory_percent": 67.8,
+      "memory_used_gb": 21.6,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:58:27.186654",
+      "cpu_percent": 18.5,
+      "memory_percent": 68.1,
+      "memory_used_gb": 21.7,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:58:35.407564",
+      "cpu_percent": 14.2,
+      "memory_percent": 68.8,
+      "memory_used_gb": 21.92,
+      "disk_percent": 72.2,
+      "process_count": 482,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:58:43.007370",
+      "cpu_percent": 10.0,
+      "memory_percent": 68.6,
+      "memory_used_gb": 21.84,
+      "disk_percent": 72.2,
+      "process_count": 472,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:58:50.605982",
+      "cpu_percent": 13.8,
+      "memory_percent": 68.3,
+      "memory_used_gb": 21.74,
+      "disk_percent": 72.2,
+      "process_count": 472,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:58:58.180471",
+      "cpu_percent": 16.5,
+      "memory_percent": 68.4,
+      "memory_used_gb": 21.79,
+      "disk_percent": 72.2,
+      "process_count": 472,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:59:06.437232",
+      "cpu_percent": 12.5,
+      "memory_percent": 68.3,
+      "memory_used_gb": 21.74,
+      "disk_percent": 72.2,
+      "process_count": 477,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:59:14.472769",
+      "cpu_percent": 10.0,
+      "memory_percent": 68.3,
+      "memory_used_gb": 21.75,
+      "disk_percent": 72.2,
+      "process_count": 478,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:59:22.069503",
+      "cpu_percent": 15.9,
+      "memory_percent": 68.0,
+      "memory_used_gb": 21.65,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:59:29.660114",
+      "cpu_percent": 18.7,
+      "memory_percent": 68.0,
+      "memory_used_gb": 21.66,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:59:37.236923",
+      "cpu_percent": 12.9,
+      "memory_percent": 68.0,
+      "memory_used_gb": 21.65,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:59:45.484037",
+      "cpu_percent": 13.3,
+      "memory_percent": 68.2,
+      "memory_used_gb": 21.7,
+      "disk_percent": 72.2,
+      "process_count": 479,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T21:59:53.082792",
+      "cpu_percent": 18.0,
+      "memory_percent": 68.2,
+      "memory_used_gb": 21.72,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:00:00.672970",
+      "cpu_percent": 14.7,
+      "memory_percent": 67.9,
+      "memory_used_gb": 21.63,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:00:08.264327",
+      "cpu_percent": 17.2,
+      "memory_percent": 68.2,
+      "memory_used_gb": 21.71,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:00:16.512961",
+      "cpu_percent": 15.3,
+      "memory_percent": 67.9,
+      "memory_used_gb": 21.63,
+      "disk_percent": 72.2,
+      "process_count": 475,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:00:24.513485",
+      "cpu_percent": 14.3,
+      "memory_percent": 67.7,
+      "memory_used_gb": 21.54,
+      "disk_percent": 72.2,
+      "process_count": 476,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:00:32.091258",
+      "cpu_percent": 9.0,
+      "memory_percent": 67.5,
+      "memory_used_gb": 21.48,
+      "disk_percent": 72.2,
+      "process_count": 466,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:00:39.676760",
+      "cpu_percent": 17.4,
+      "memory_percent": 67.5,
+      "memory_used_gb": 21.51,
+      "disk_percent": 72.2,
+      "process_count": 466,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:00:47.264980",
+      "cpu_percent": 13.5,
+      "memory_percent": 67.4,
+      "memory_used_gb": 21.48,
+      "disk_percent": 72.2,
+      "process_count": 466,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:00:55.520306",
+      "cpu_percent": 15.1,
+      "memory_percent": 68.4,
+      "memory_used_gb": 21.77,
+      "disk_percent": 72.2,
+      "process_count": 478,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:01:03.091916",
+      "cpu_percent": 10.5,
+      "memory_percent": 68.5,
+      "memory_used_gb": 21.8,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:01:10.658360",
+      "cpu_percent": 12.3,
+      "memory_percent": 68.5,
+      "memory_used_gb": 21.81,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:01:18.240910",
+      "cpu_percent": 19.3,
+      "memory_percent": 68.2,
+      "memory_used_gb": 21.72,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:01:26.547738",
+      "cpu_percent": 23.0,
+      "memory_percent": 68.3,
+      "memory_used_gb": 21.74,
+      "disk_percent": 72.2,
+      "process_count": 475,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:01:34.552573",
+      "cpu_percent": 10.3,
+      "memory_percent": 68.0,
+      "memory_used_gb": 21.66,
+      "disk_percent": 72.2,
+      "process_count": 476,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:01:42.123871",
+      "cpu_percent": 9.2,
+      "memory_percent": 68.2,
+      "memory_used_gb": 21.73,
+      "disk_percent": 72.2,
+      "process_count": 466,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:01:49.713276",
+      "cpu_percent": 14.3,
+      "memory_percent": 68.2,
+      "memory_used_gb": 21.73,
+      "disk_percent": 72.2,
+      "process_count": 466,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:01:57.304418",
+      "cpu_percent": 16.1,
+      "memory_percent": 68.4,
+      "memory_used_gb": 21.78,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:02:05.589970",
+      "cpu_percent": 14.8,
+      "memory_percent": 69.1,
+      "memory_used_gb": 21.99,
+      "disk_percent": 72.2,
+      "process_count": 480,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:02:13.171548",
+      "cpu_percent": 11.4,
+      "memory_percent": 68.7,
+      "memory_used_gb": 21.87,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:02:20.761894",
+      "cpu_percent": 12.2,
+      "memory_percent": 68.7,
+      "memory_used_gb": 21.89,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:02:28.353619",
+      "cpu_percent": 18.0,
+      "memory_percent": 68.7,
+      "memory_used_gb": 21.87,
+      "disk_percent": 72.2,
+      "process_count": 470,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:02:36.601298",
+      "cpu_percent": 15.2,
+      "memory_percent": 68.5,
+      "memory_used_gb": 21.83,
+      "disk_percent": 72.2,
+      "process_count": 473,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:02:44.608706",
+      "cpu_percent": 13.6,
+      "memory_percent": 66.8,
+      "memory_used_gb": 21.27,
+      "disk_percent": 72.2,
+      "process_count": 477,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:02:52.192787",
+      "cpu_percent": 18.2,
+      "memory_percent": 66.8,
+      "memory_used_gb": 21.28,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:02:59.791006",
+      "cpu_percent": 16.1,
+      "memory_percent": 67.1,
+      "memory_used_gb": 21.35,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:03:07.381939",
+      "cpu_percent": 15.7,
+      "memory_percent": 67.2,
+      "memory_used_gb": 21.4,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:03:15.652555",
+      "cpu_percent": 13.0,
+      "memory_percent": 67.3,
+      "memory_used_gb": 21.42,
+      "disk_percent": 72.2,
+      "process_count": 479,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:03:23.240541",
+      "cpu_percent": 12.7,
+      "memory_percent": 67.3,
+      "memory_used_gb": 21.42,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:03:30.815547",
+      "cpu_percent": 11.0,
+      "memory_percent": 66.1,
+      "memory_used_gb": 21.05,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:03:38.405585",
+      "cpu_percent": 13.3,
+      "memory_percent": 66.5,
+      "memory_used_gb": 21.16,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:03:46.678755",
+      "cpu_percent": 13.7,
+      "memory_percent": 66.3,
+      "memory_used_gb": 21.1,
+      "disk_percent": 72.2,
+      "process_count": 473,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:03:54.685054",
+      "cpu_percent": 15.0,
+      "memory_percent": 66.4,
+      "memory_used_gb": 21.15,
+      "disk_percent": 72.2,
+      "process_count": 478,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:04:02.262005",
+      "cpu_percent": 19.2,
+      "memory_percent": 66.2,
+      "memory_used_gb": 21.08,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:04:09.840198",
+      "cpu_percent": 24.3,
+      "memory_percent": 67.3,
+      "memory_used_gb": 21.44,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:04:17.427253",
+      "cpu_percent": 24.3,
+      "memory_percent": 68.5,
+      "memory_used_gb": 21.82,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:04:25.725230",
+      "cpu_percent": 18.7,
+      "memory_percent": 69.6,
+      "memory_used_gb": 22.15,
+      "disk_percent": 72.2,
+      "process_count": 477,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:04:33.322360",
+      "cpu_percent": 12.6,
+      "memory_percent": 69.3,
+      "memory_used_gb": 22.06,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:04:40.913054",
+      "cpu_percent": 11.7,
+      "memory_percent": 69.3,
+      "memory_used_gb": 22.05,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:04:48.516318",
+      "cpu_percent": 14.8,
+      "memory_percent": 69.3,
+      "memory_used_gb": 22.07,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:04:56.761783",
+      "cpu_percent": 20.3,
+      "memory_percent": 69.9,
+      "memory_used_gb": 22.27,
+      "disk_percent": 72.2,
+      "process_count": 475,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:05:04.754805",
+      "cpu_percent": 11.8,
+      "memory_percent": 69.9,
+      "memory_used_gb": 22.26,
+      "disk_percent": 72.2,
+      "process_count": 479,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:05:12.340449",
+      "cpu_percent": 10.4,
+      "memory_percent": 69.7,
+      "memory_used_gb": 22.2,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:05:19.949469",
+      "cpu_percent": 10.7,
+      "memory_percent": 69.7,
+      "memory_used_gb": 22.19,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:05:27.554820",
+      "cpu_percent": 12.1,
+      "memory_percent": 69.4,
+      "memory_used_gb": 22.11,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:05:35.771230",
+      "cpu_percent": 19.7,
+      "memory_percent": 69.6,
+      "memory_used_gb": 22.15,
+      "disk_percent": 72.2,
+      "process_count": 478,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:05:43.355784",
+      "cpu_percent": 17.7,
+      "memory_percent": 69.3,
+      "memory_used_gb": 22.06,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:05:50.969434",
+      "cpu_percent": 11.8,
+      "memory_percent": 69.4,
+      "memory_used_gb": 22.1,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:05:58.559561",
+      "cpu_percent": 13.2,
+      "memory_percent": 69.3,
+      "memory_used_gb": 22.05,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:06:06.791636",
+      "cpu_percent": 12.8,
+      "memory_percent": 69.4,
+      "memory_used_gb": 22.09,
+      "disk_percent": 72.2,
+      "process_count": 479,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:06:14.827202",
+      "cpu_percent": 15.2,
+      "memory_percent": 68.2,
+      "memory_used_gb": 21.73,
+      "disk_percent": 72.2,
+      "process_count": 479,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:06:22.405070",
+      "cpu_percent": 15.3,
+      "memory_percent": 68.1,
+      "memory_used_gb": 21.67,
+      "disk_percent": 72.2,
+      "process_count": 470,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:06:30.007781",
+      "cpu_percent": 10.6,
+      "memory_percent": 68.0,
+      "memory_used_gb": 21.66,
+      "disk_percent": 72.2,
+      "process_count": 470,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:06:37.591498",
+      "cpu_percent": 11.7,
+      "memory_percent": 66.0,
+      "memory_used_gb": 21.01,
+      "disk_percent": 72.2,
+      "process_count": 470,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:06:45.829165",
+      "cpu_percent": 15.2,
+      "memory_percent": 66.3,
+      "memory_used_gb": 21.12,
+      "disk_percent": 72.2,
+      "process_count": 480,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:06:53.414467",
+      "cpu_percent": 17.3,
+      "memory_percent": 65.0,
+      "memory_used_gb": 20.69,
+      "disk_percent": 72.2,
+      "process_count": 471,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:07:01.011692",
+      "cpu_percent": 16.8,
+      "memory_percent": 64.8,
+      "memory_used_gb": 20.64,
+      "disk_percent": 72.2,
+      "process_count": 470,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:07:08.614999",
+      "cpu_percent": 10.9,
+      "memory_percent": 64.9,
+      "memory_used_gb": 20.65,
+      "disk_percent": 72.2,
+      "process_count": 472,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:07:16.884116",
+      "cpu_percent": 11.2,
+      "memory_percent": 64.9,
+      "memory_used_gb": 20.66,
+      "disk_percent": 72.2,
+      "process_count": 477,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:07:24.887924",
+      "cpu_percent": 24.5,
+      "memory_percent": 64.9,
+      "memory_used_gb": 20.68,
+      "disk_percent": 72.2,
+      "process_count": 478,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:07:32.483344",
+      "cpu_percent": 19.5,
+      "memory_percent": 64.5,
+      "memory_used_gb": 20.53,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:07:40.089233",
+      "cpu_percent": 18.5,
+      "memory_percent": 64.6,
+      "memory_used_gb": 20.58,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:07:47.687697",
+      "cpu_percent": 10.4,
+      "memory_percent": 64.5,
+      "memory_used_gb": 20.54,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:07:55.912997",
+      "cpu_percent": 21.4,
+      "memory_percent": 65.0,
+      "memory_used_gb": 20.7,
+      "disk_percent": 72.2,
+      "process_count": 478,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:08:03.498258",
+      "cpu_percent": 16.9,
+      "memory_percent": 65.0,
+      "memory_used_gb": 20.71,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:08:11.110051",
+      "cpu_percent": 17.5,
+      "memory_percent": 64.9,
+      "memory_used_gb": 20.68,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:08:18.710590",
+      "cpu_percent": 15.4,
+      "memory_percent": 64.6,
+      "memory_used_gb": 20.57,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:08:26.949787",
+      "cpu_percent": 10.9,
+      "memory_percent": 65.0,
+      "memory_used_gb": 20.7,
+      "disk_percent": 72.2,
+      "process_count": 476,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:08:34.950287",
+      "cpu_percent": 17.8,
+      "memory_percent": 64.9,
+      "memory_used_gb": 20.68,
+      "disk_percent": 72.2,
+      "process_count": 478,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:08:42.549706",
+      "cpu_percent": 21.3,
+      "memory_percent": 65.1,
+      "memory_used_gb": 20.73,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:08:50.131825",
+      "cpu_percent": 19.2,
+      "memory_percent": 65.2,
+      "memory_used_gb": 20.76,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:08:57.727124",
+      "cpu_percent": 10.2,
+      "memory_percent": 65.7,
+      "memory_used_gb": 20.91,
+      "disk_percent": 72.2,
+      "process_count": 470,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:09:05.966699",
+      "cpu_percent": 14.8,
+      "memory_percent": 65.6,
+      "memory_used_gb": 20.9,
+      "disk_percent": 72.2,
+      "process_count": 480,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:09:13.536056",
+      "cpu_percent": 23.3,
+      "memory_percent": 65.4,
+      "memory_used_gb": 20.83,
+      "disk_percent": 72.2,
+      "process_count": 470,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:09:21.125573",
+      "cpu_percent": 14.4,
+      "memory_percent": 65.4,
+      "memory_used_gb": 20.83,
+      "disk_percent": 72.2,
+      "process_count": 471,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:09:28.701316",
+      "cpu_percent": 12.4,
+      "memory_percent": 65.5,
+      "memory_used_gb": 20.86,
+      "disk_percent": 72.2,
+      "process_count": 470,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:09:36.981997",
+      "cpu_percent": 12.7,
+      "memory_percent": 65.2,
+      "memory_used_gb": 20.77,
+      "disk_percent": 72.2,
+      "process_count": 475,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:09:44.994179",
+      "cpu_percent": 18.1,
+      "memory_percent": 65.4,
+      "memory_used_gb": 20.84,
+      "disk_percent": 72.2,
+      "process_count": 479,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:09:52.583246",
+      "cpu_percent": 21.7,
+      "memory_percent": 65.6,
+      "memory_used_gb": 20.9,
+      "disk_percent": 72.2,
+      "process_count": 471,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:10:00.174309",
+      "cpu_percent": 19.3,
+      "memory_percent": 65.7,
+      "memory_used_gb": 20.91,
+      "disk_percent": 72.2,
+      "process_count": 472,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:10:07.771171",
+      "cpu_percent": 18.6,
+      "memory_percent": 65.7,
+      "memory_used_gb": 20.93,
+      "disk_percent": 72.2,
+      "process_count": 471,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:10:16.006174",
+      "cpu_percent": 9.8,
+      "memory_percent": 65.8,
+      "memory_used_gb": 20.96,
+      "disk_percent": 72.2,
+      "process_count": 481,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:10:23.634509",
+      "cpu_percent": 17.8,
+      "memory_percent": 65.9,
+      "memory_used_gb": 20.98,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:10:31.216573",
+      "cpu_percent": 24.3,
+      "memory_percent": 65.7,
+      "memory_used_gb": 20.93,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:10:38.799912",
+      "cpu_percent": 12.6,
+      "memory_percent": 65.9,
+      "memory_used_gb": 20.98,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:10:47.042578",
+      "cpu_percent": 16.4,
+      "memory_percent": 65.6,
+      "memory_used_gb": 20.89,
+      "disk_percent": 72.2,
+      "process_count": 474,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:10:55.052058",
+      "cpu_percent": 17.2,
+      "memory_percent": 66.0,
+      "memory_used_gb": 21.0,
+      "disk_percent": 72.2,
+      "process_count": 480,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:11:02.640035",
+      "cpu_percent": 19.7,
+      "memory_percent": 65.7,
+      "memory_used_gb": 20.94,
+      "disk_percent": 72.2,
+      "process_count": 470,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:11:10.245478",
+      "cpu_percent": 14.3,
+      "memory_percent": 65.8,
+      "memory_used_gb": 20.96,
+      "disk_percent": 72.2,
+      "process_count": 470,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:11:17.831153",
+      "cpu_percent": 12.3,
+      "memory_percent": 65.6,
+      "memory_used_gb": 20.89,
+      "disk_percent": 72.2,
+      "process_count": 470,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:11:26.057279",
+      "cpu_percent": 13.6,
+      "memory_percent": 65.7,
+      "memory_used_gb": 20.93,
+      "disk_percent": 72.2,
+      "process_count": 479,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:11:33.649484",
+      "cpu_percent": 12.8,
+      "memory_percent": 65.5,
+      "memory_used_gb": 20.85,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:11:41.239760",
+      "cpu_percent": 18.5,
+      "memory_percent": 65.6,
+      "memory_used_gb": 20.88,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:11:48.846877",
+      "cpu_percent": 21.8,
+      "memory_percent": 65.6,
+      "memory_used_gb": 20.89,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:11:57.090209",
+      "cpu_percent": 14.6,
+      "memory_percent": 65.9,
+      "memory_used_gb": 20.97,
+      "disk_percent": 72.2,
+      "process_count": 477,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:12:05.126287",
+      "cpu_percent": 18.4,
+      "memory_percent": 65.8,
+      "memory_used_gb": 20.97,
+      "disk_percent": 72.2,
+      "process_count": 479,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:12:12.710109",
+      "cpu_percent": 18.2,
+      "memory_percent": 65.7,
+      "memory_used_gb": 20.91,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:12:20.294102",
+      "cpu_percent": 19.1,
+      "memory_percent": 65.5,
+      "memory_used_gb": 20.87,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:12:27.906219",
+      "cpu_percent": 16.6,
+      "memory_percent": 65.5,
+      "memory_used_gb": 20.84,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:12:36.143153",
+      "cpu_percent": 15.9,
+      "memory_percent": 65.5,
+      "memory_used_gb": 20.87,
+      "disk_percent": 72.2,
+      "process_count": 478,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:12:43.720011",
+      "cpu_percent": 14.4,
+      "memory_percent": 63.0,
+      "memory_used_gb": 20.05,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:12:51.304307",
+      "cpu_percent": 18.5,
+      "memory_percent": 63.0,
+      "memory_used_gb": 20.07,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:12:58.905936",
+      "cpu_percent": 21.4,
+      "memory_percent": 63.2,
+      "memory_used_gb": 20.13,
+      "disk_percent": 72.2,
+      "process_count": 470,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:13:07.162172",
+      "cpu_percent": 20.1,
+      "memory_percent": 63.3,
+      "memory_used_gb": 20.14,
+      "disk_percent": 72.2,
+      "process_count": 476,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:13:15.166723",
+      "cpu_percent": 16.8,
+      "memory_percent": 63.3,
+      "memory_used_gb": 20.17,
+      "disk_percent": 72.2,
+      "process_count": 480,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:13:22.744632",
+      "cpu_percent": 16.1,
+      "memory_percent": 63.1,
+      "memory_used_gb": 20.1,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:13:30.337099",
+      "cpu_percent": 19.4,
+      "memory_percent": 63.1,
+      "memory_used_gb": 20.11,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:13:37.941557",
+      "cpu_percent": 17.3,
+      "memory_percent": 63.2,
+      "memory_used_gb": 20.12,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:13:46.208926",
+      "cpu_percent": 28.2,
+      "memory_percent": 63.3,
+      "memory_used_gb": 20.17,
+      "disk_percent": 72.2,
+      "process_count": 477,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:13:53.814018",
+      "cpu_percent": 30.9,
+      "memory_percent": 64.2,
+      "memory_used_gb": 20.43,
+      "disk_percent": 72.2,
+      "process_count": 470,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:14:01.432031",
+      "cpu_percent": 25.6,
+      "memory_percent": 65.2,
+      "memory_used_gb": 20.75,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:14:09.031510",
+      "cpu_percent": 21.2,
+      "memory_percent": 66.7,
+      "memory_used_gb": 21.24,
+      "disk_percent": 72.2,
+      "process_count": 468,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:14:17.241589",
+      "cpu_percent": 19.5,
+      "memory_percent": 66.7,
+      "memory_used_gb": 21.23,
+      "disk_percent": 72.2,
+      "process_count": 476,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:14:25.221533",
+      "cpu_percent": 21.3,
+      "memory_percent": 66.6,
+      "memory_used_gb": 21.22,
+      "disk_percent": 72.2,
+      "process_count": 477,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:14:32.804638",
+      "cpu_percent": 12.6,
+      "memory_percent": 66.5,
+      "memory_used_gb": 21.19,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:14:40.387776",
+      "cpu_percent": 17.0,
+      "memory_percent": 66.6,
+      "memory_used_gb": 21.22,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:14:47.971034",
+      "cpu_percent": 18.4,
+      "memory_percent": 66.6,
+      "memory_used_gb": 21.2,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:14:56.284269",
+      "cpu_percent": 14.7,
+      "memory_percent": 67.4,
+      "memory_used_gb": 21.47,
+      "disk_percent": 72.2,
+      "process_count": 480,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:15:03.895434",
+      "cpu_percent": 10.8,
+      "memory_percent": 66.9,
+      "memory_used_gb": 21.29,
+      "disk_percent": 72.2,
+      "process_count": 471,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:15:11.495679",
+      "cpu_percent": 13.1,
+      "memory_percent": 66.6,
+      "memory_used_gb": 21.22,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:15:19.074182",
+      "cpu_percent": 27.3,
+      "memory_percent": 66.8,
+      "memory_used_gb": 21.28,
+      "disk_percent": 72.2,
+      "process_count": 469,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:15:27.301061",
+      "cpu_percent": 24.4,
+      "memory_percent": 66.9,
+      "memory_used_gb": 21.3,
+      "disk_percent": 72.2,
+      "process_count": 473,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:15:35.303582",
+      "cpu_percent": 17.9,
+      "memory_percent": 68.0,
+      "memory_used_gb": 21.66,
+      "disk_percent": 72.2,
+      "process_count": 476,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:15:42.903590",
+      "cpu_percent": 13.0,
+      "memory_percent": 67.7,
+      "memory_used_gb": 21.57,
+      "disk_percent": 72.2,
+      "process_count": 466,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:15:50.489068",
+      "cpu_percent": 13.8,
+      "memory_percent": 67.7,
+      "memory_used_gb": 21.57,
+      "disk_percent": 72.2,
+      "process_count": 466,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:15:58.080391",
+      "cpu_percent": 26.1,
+      "memory_percent": 67.9,
+      "memory_used_gb": 21.61,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:16:06.372713",
+      "cpu_percent": 17.0,
+      "memory_percent": 68.0,
+      "memory_used_gb": 21.66,
+      "disk_percent": 72.2,
+      "process_count": 477,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:16:13.948799",
+      "cpu_percent": 15.6,
+      "memory_percent": 66.5,
+      "memory_used_gb": 21.17,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:16:21.539264",
+      "cpu_percent": 15.4,
+      "memory_percent": 66.4,
+      "memory_used_gb": 21.14,
+      "disk_percent": 72.2,
+      "process_count": 467,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:16:29.130091",
+      "cpu_percent": 21.3,
+      "memory_percent": 66.5,
+      "memory_used_gb": 21.19,
+      "disk_percent": 72.2,
+      "process_count": 466,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:16:37.368177",
+      "cpu_percent": 18.0,
+      "memory_percent": 66.7,
+      "memory_used_gb": 21.23,
+      "disk_percent": 72.2,
+      "process_count": 474,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:16:45.445833",
+      "cpu_percent": 23.2,
+      "memory_percent": 67.5,
+      "memory_used_gb": 21.51,
+      "disk_percent": 72.2,
+      "process_count": 480,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:16:53.027680",
+      "cpu_percent": 11.9,
+      "memory_percent": 67.3,
+      "memory_used_gb": 21.42,
+      "disk_percent": 72.2,
+      "process_count": 471,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:17:00.612399",
+      "cpu_percent": 11.7,
+      "memory_percent": 67.1,
+      "memory_used_gb": 21.38,
+      "disk_percent": 72.2,
+      "process_count": 471,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:17:08.188286",
+      "cpu_percent": 24.5,
+      "memory_percent": 67.5,
+      "memory_used_gb": 21.5,
+      "disk_percent": 72.2,
+      "process_count": 471,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:17:16.443085",
+      "cpu_percent": 16.8,
+      "memory_percent": 66.9,
+      "memory_used_gb": 21.31,
+      "disk_percent": 72.2,
+      "process_count": 481,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:17:24.032857",
+      "cpu_percent": 18.3,
+      "memory_percent": 66.6,
+      "memory_used_gb": 21.22,
+      "disk_percent": 72.2,
+      "process_count": 470,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:17:31.618279",
+      "cpu_percent": 12.9,
+      "memory_percent": 66.8,
+      "memory_used_gb": 21.26,
+      "disk_percent": 72.2,
+      "process_count": 470,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:17:39.203768",
+      "cpu_percent": 12.7,
+      "memory_percent": 66.9,
+      "memory_used_gb": 21.31,
+      "disk_percent": 72.2,
+      "process_count": 471,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:17:47.456925",
+      "cpu_percent": 20.1,
+      "memory_percent": 65.9,
+      "memory_used_gb": 20.98,
+      "disk_percent": 72.2,
+      "process_count": 477,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:17:55.464743",
+      "cpu_percent": 18.4,
+      "memory_percent": 65.2,
+      "memory_used_gb": 20.78,
+      "disk_percent": 72.2,
+      "process_count": 481,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:18:03.064536",
+      "cpu_percent": 13.6,
+      "memory_percent": 65.4,
+      "memory_used_gb": 20.83,
+      "disk_percent": 72.2,
+      "process_count": 472,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:18:10.683290",
+      "cpu_percent": 16.6,
+      "memory_percent": 65.3,
+      "memory_used_gb": 20.8,
+      "disk_percent": 72.2,
+      "process_count": 472,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:18:18.286007",
+      "cpu_percent": 14.6,
+      "memory_percent": 65.3,
+      "memory_used_gb": 20.78,
+      "disk_percent": 72.2,
+      "process_count": 472,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:18:26.507300",
+      "cpu_percent": 15.5,
+      "memory_percent": 65.4,
+      "memory_used_gb": 20.82,
+      "disk_percent": 72.2,
+      "process_count": 481,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:18:34.098964",
+      "cpu_percent": 13.5,
+      "memory_percent": 65.1,
+      "memory_used_gb": 20.74,
+      "disk_percent": 72.2,
+      "process_count": 471,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:18:41.727270",
+      "cpu_percent": 15.0,
+      "memory_percent": 65.3,
+      "memory_used_gb": 20.81,
+      "disk_percent": 72.2,
+      "process_count": 471,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:18:49.330304",
+      "cpu_percent": 11.9,
+      "memory_percent": 65.4,
+      "memory_used_gb": 20.81,
+      "disk_percent": 72.2,
+      "process_count": 474,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:18:57.623225",
+      "cpu_percent": 24.0,
+      "memory_percent": 65.4,
+      "memory_used_gb": 20.82,
+      "disk_percent": 72.2,
+      "process_count": 478,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:19:05.530833",
+      "cpu_percent": 23.1,
+      "memory_percent": 65.6,
+      "memory_used_gb": 20.88,
+      "disk_percent": 72.2,
+      "process_count": 482,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:19:13.152608",
+      "cpu_percent": 21.3,
+      "memory_percent": 65.5,
+      "memory_used_gb": 20.84,
+      "disk_percent": 72.2,
+      "process_count": 472,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:19:20.756566",
+      "cpu_percent": 8.5,
+      "memory_percent": 65.8,
+      "memory_used_gb": 20.96,
+      "disk_percent": 72.2,
+      "process_count": 479,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:19:28.346774",
+      "cpu_percent": 11.3,
+      "memory_percent": 65.6,
+      "memory_used_gb": 20.9,
+      "disk_percent": 72.2,
+      "process_count": 478,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:19:36.557300",
+      "cpu_percent": 18.3,
+      "memory_percent": 64.2,
+      "memory_used_gb": 20.44,
+      "disk_percent": 72.2,
+      "process_count": 488,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:19:44.159637",
+      "cpu_percent": 24.4,
+      "memory_percent": 64.1,
+      "memory_used_gb": 20.43,
+      "disk_percent": 72.2,
+      "process_count": 478,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:19:51.748954",
+      "cpu_percent": 14.2,
+      "memory_percent": 64.6,
+      "memory_used_gb": 20.58,
+      "disk_percent": 72.2,
+      "process_count": 478,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:19:59.354389",
+      "cpu_percent": 9.0,
+      "memory_percent": 64.9,
+      "memory_used_gb": 20.67,
+      "disk_percent": 72.2,
+      "process_count": 479,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:20:07.594323",
+      "cpu_percent": 16.0,
+      "memory_percent": 65.4,
+      "memory_used_gb": 20.83,
+      "disk_percent": 72.2,
+      "process_count": 487,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:20:15.624872",
+      "cpu_percent": 21.9,
+      "memory_percent": 65.3,
+      "memory_used_gb": 20.79,
+      "disk_percent": 72.2,
+      "process_count": 489,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:20:23.214922",
+      "cpu_percent": 15.6,
+      "memory_percent": 64.9,
+      "memory_used_gb": 20.66,
+      "disk_percent": 72.2,
+      "process_count": 480,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:20:30.805137",
+      "cpu_percent": 12.8,
+      "memory_percent": 65.2,
+      "memory_used_gb": 20.75,
+      "disk_percent": 72.2,
+      "process_count": 480,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:20:38.391768",
+      "cpu_percent": 11.0,
+      "memory_percent": 65.2,
+      "memory_used_gb": 20.78,
+      "disk_percent": 72.2,
+      "process_count": 479,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:20:46.637832",
+      "cpu_percent": 18.2,
+      "memory_percent": 65.4,
+      "memory_used_gb": 20.82,
+      "disk_percent": 72.2,
+      "process_count": 489,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:20:54.247714",
+      "cpu_percent": 14.6,
+      "memory_percent": 65.4,
+      "memory_used_gb": 20.81,
+      "disk_percent": 72.2,
+      "process_count": 480,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:21:01.841314",
+      "cpu_percent": 14.4,
+      "memory_percent": 65.4,
+      "memory_used_gb": 20.81,
+      "disk_percent": 72.2,
+      "process_count": 480,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:21:09.440846",
+      "cpu_percent": 11.3,
+      "memory_percent": 65.4,
+      "memory_used_gb": 20.82,
+      "disk_percent": 72.2,
+      "process_count": 480,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:21:17.653647",
+      "cpu_percent": 12.2,
+      "memory_percent": 65.5,
+      "memory_used_gb": 20.85,
+      "disk_percent": 72.2,
+      "process_count": 488,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:21:25.717949",
+      "cpu_percent": 24.7,
+      "memory_percent": 65.2,
+      "memory_used_gb": 20.77,
+      "disk_percent": 72.2,
+      "process_count": 490,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:21:33.312048",
+      "cpu_percent": 22.3,
+      "memory_percent": 64.9,
+      "memory_used_gb": 20.68,
+      "disk_percent": 72.2,
+      "process_count": 476,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:21:40.912534",
+      "cpu_percent": 11.9,
+      "memory_percent": 65.0,
+      "memory_used_gb": 20.71,
+      "disk_percent": 72.2,
+      "process_count": 476,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:21:48.523330",
+      "cpu_percent": 12.1,
+      "memory_percent": 65.0,
+      "memory_used_gb": 20.69,
+      "disk_percent": 72.2,
+      "process_count": 476,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:21:56.667935",
+      "cpu_percent": 15.0,
+      "memory_percent": 65.5,
+      "memory_used_gb": 20.85,
+      "disk_percent": 72.2,
+      "process_count": 489,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:22:04.263388",
+      "cpu_percent": 19.5,
+      "memory_percent": 66.5,
+      "memory_used_gb": 21.16,
+      "disk_percent": 72.2,
+      "process_count": 479,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:22:11.851895",
+      "cpu_percent": 19.2,
+      "memory_percent": 65.2,
+      "memory_used_gb": 20.75,
+      "disk_percent": 72.2,
+      "process_count": 478,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:22:19.443309",
+      "cpu_percent": 14.9,
+      "memory_percent": 65.2,
+      "memory_used_gb": 20.77,
+      "disk_percent": 72.2,
+      "process_count": 479,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:22:27.677245",
+      "cpu_percent": 14.1,
+      "memory_percent": 65.2,
+      "memory_used_gb": 20.77,
+      "disk_percent": 72.2,
+      "process_count": 485,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:22:35.676726",
+      "cpu_percent": 17.1,
+      "memory_percent": 65.8,
+      "memory_used_gb": 20.95,
+      "disk_percent": 72.2,
+      "process_count": 490,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:22:43.275447",
+      "cpu_percent": 17.9,
+      "memory_percent": 64.1,
+      "memory_used_gb": 20.42,
+      "disk_percent": 72.2,
+      "process_count": 480,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:22:50.849287",
+      "cpu_percent": 12.9,
+      "memory_percent": 63.9,
+      "memory_used_gb": 20.34,
+      "disk_percent": 72.2,
+      "process_count": 480,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:22:58.430062",
+      "cpu_percent": 23.4,
+      "memory_percent": 64.2,
+      "memory_used_gb": 20.43,
+      "disk_percent": 72.2,
+      "process_count": 481,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:23:06.719110",
+      "cpu_percent": 13.5,
+      "memory_percent": 64.3,
+      "memory_used_gb": 20.49,
+      "disk_percent": 72.2,
+      "process_count": 491,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:23:14.299545",
+      "cpu_percent": 16.6,
+      "memory_percent": 64.2,
+      "memory_used_gb": 20.43,
+      "disk_percent": 72.2,
+      "process_count": 480,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:23:21.880664",
+      "cpu_percent": 24.1,
+      "memory_percent": 66.0,
+      "memory_used_gb": 21.01,
+      "disk_percent": 72.2,
+      "process_count": 481,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:23:29.458888",
+      "cpu_percent": 12.0,
+      "memory_percent": 65.9,
+      "memory_used_gb": 20.99,
+      "disk_percent": 72.2,
+      "process_count": 480,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:23:37.704123",
+      "cpu_percent": 15.0,
+      "memory_percent": 64.4,
+      "memory_used_gb": 20.52,
+      "disk_percent": 72.2,
+      "process_count": 487,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:23:45.746463",
+      "cpu_percent": 14.2,
+      "memory_percent": 64.6,
+      "memory_used_gb": 20.56,
+      "disk_percent": 72.2,
+      "process_count": 489,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:23:53.347550",
+      "cpu_percent": 19.9,
+      "memory_percent": 64.4,
+      "memory_used_gb": 20.52,
+      "disk_percent": 72.2,
+      "process_count": 479,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:24:00.944144",
+      "cpu_percent": 11.4,
+      "memory_percent": 64.6,
+      "memory_used_gb": 20.56,
+      "disk_percent": 72.2,
+      "process_count": 481,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:24:08.527712",
+      "cpu_percent": 12.5,
+      "memory_percent": 64.6,
+      "memory_used_gb": 20.58,
+      "disk_percent": 72.2,
+      "process_count": 480,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:24:16.718184",
+      "cpu_percent": 8.7,
+      "memory_percent": 64.6,
+      "memory_used_gb": 20.57,
+      "disk_percent": 72.2,
+      "process_count": 492,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:24:24.315760",
+      "cpu_percent": 12.0,
+      "memory_percent": 64.4,
+      "memory_used_gb": 20.51,
+      "disk_percent": 72.2,
+      "process_count": 480,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:24:31.903135",
+      "cpu_percent": 20.2,
+      "memory_percent": 63.9,
+      "memory_used_gb": 20.36,
+      "disk_percent": 72.2,
+      "process_count": 477,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:24:39.486690",
+      "cpu_percent": 11.3,
+      "memory_percent": 64.6,
+      "memory_used_gb": 20.58,
+      "disk_percent": 72.2,
+      "process_count": 480,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:24:47.752359",
+      "cpu_percent": 10.2,
+      "memory_percent": 64.7,
+      "memory_used_gb": 20.61,
+      "disk_percent": 72.2,
+      "process_count": 487,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:24:55.761189",
+      "cpu_percent": 10.4,
+      "memory_percent": 65.0,
+      "memory_used_gb": 20.7,
+      "disk_percent": 72.2,
+      "process_count": 490,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:25:03.344352",
+      "cpu_percent": 13.4,
+      "memory_percent": 64.6,
+      "memory_used_gb": 20.58,
+      "disk_percent": 72.2,
+      "process_count": 480,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:25:10.962884",
+      "cpu_percent": 14.0,
+      "memory_percent": 64.4,
+      "memory_used_gb": 20.5,
+      "disk_percent": 72.2,
+      "process_count": 480,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:25:18.563850",
+      "cpu_percent": 15.6,
+      "memory_percent": 64.3,
+      "memory_used_gb": 20.48,
+      "disk_percent": 72.2,
+      "process_count": 478,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:25:26.772972",
+      "cpu_percent": 8.9,
+      "memory_percent": 64.5,
+      "memory_used_gb": 20.53,
+      "disk_percent": 72.2,
+      "process_count": 487,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:25:34.360568",
+      "cpu_percent": 13.6,
+      "memory_percent": 64.4,
+      "memory_used_gb": 20.5,
+      "disk_percent": 72.2,
+      "process_count": 478,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:25:41.946751",
+      "cpu_percent": 13.5,
+      "memory_percent": 64.3,
+      "memory_used_gb": 20.48,
+      "disk_percent": 72.2,
+      "process_count": 477,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:25:49.534180",
+      "cpu_percent": 12.7,
+      "memory_percent": 64.1,
+      "memory_used_gb": 20.43,
+      "disk_percent": 72.2,
+      "process_count": 474,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:25:57.815859",
+      "cpu_percent": 15.0,
+      "memory_percent": 64.3,
+      "memory_used_gb": 20.49,
+      "disk_percent": 72.2,
+      "process_count": 483,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:26:05.832322",
+      "cpu_percent": 11.1,
+      "memory_percent": 64.3,
+      "memory_used_gb": 20.49,
+      "disk_percent": 72.2,
+      "process_count": 485,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:26:13.433091",
+      "cpu_percent": 18.6,
+      "memory_percent": 64.1,
+      "memory_used_gb": 20.43,
+      "disk_percent": 72.2,
+      "process_count": 475,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:26:21.029292",
+      "cpu_percent": 17.2,
+      "memory_percent": 64.1,
+      "memory_used_gb": 20.41,
+      "disk_percent": 72.2,
+      "process_count": 475,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:26:28.605898",
+      "cpu_percent": 18.0,
+      "memory_percent": 64.4,
+      "memory_used_gb": 20.5,
+      "disk_percent": 72.2,
+      "process_count": 474,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:26:36.848228",
+      "cpu_percent": 10.9,
+      "memory_percent": 64.8,
+      "memory_used_gb": 20.65,
+      "disk_percent": 72.2,
+      "process_count": 487,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:26:44.432713",
+      "cpu_percent": 9.0,
+      "memory_percent": 64.7,
+      "memory_used_gb": 20.61,
+      "disk_percent": 72.2,
+      "process_count": 477,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:26:52.033811",
+      "cpu_percent": 19.4,
+      "memory_percent": 64.9,
+      "memory_used_gb": 20.67,
+      "disk_percent": 72.2,
+      "process_count": 478,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:26:59.637845",
+      "cpu_percent": 14.6,
+      "memory_percent": 64.8,
+      "memory_used_gb": 20.65,
+      "disk_percent": 72.2,
+      "process_count": 478,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:27:07.885555",
+      "cpu_percent": 14.3,
+      "memory_percent": 64.8,
+      "memory_used_gb": 20.64,
+      "disk_percent": 72.2,
+      "process_count": 483,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:27:15.867789",
+      "cpu_percent": 11.9,
+      "memory_percent": 64.4,
+      "memory_used_gb": 20.52,
+      "disk_percent": 72.2,
+      "process_count": 485,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:27:23.468801",
+      "cpu_percent": 10.2,
+      "memory_percent": 64.3,
+      "memory_used_gb": 20.49,
+      "disk_percent": 72.2,
+      "process_count": 473,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:27:31.071121",
+      "cpu_percent": 14.7,
+      "memory_percent": 64.3,
+      "memory_used_gb": 20.46,
+      "disk_percent": 72.2,
+      "process_count": 473,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:27:38.666260",
+      "cpu_percent": 17.9,
+      "memory_percent": 64.3,
+      "memory_used_gb": 20.46,
+      "disk_percent": 72.2,
+      "process_count": 473,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:27:46.931666",
+      "cpu_percent": 14.3,
+      "memory_percent": 63.8,
+      "memory_used_gb": 20.31,
+      "disk_percent": 72.2,
+      "process_count": 483,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:27:54.529451",
+      "cpu_percent": 11.4,
+      "memory_percent": 63.8,
+      "memory_used_gb": 20.3,
+      "disk_percent": 72.2,
+      "process_count": 474,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:28:02.149717",
+      "cpu_percent": 15.4,
+      "memory_percent": 64.0,
+      "memory_used_gb": 20.38,
+      "disk_percent": 72.2,
+      "process_count": 477,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:28:09.747237",
+      "cpu_percent": 19.9,
+      "memory_percent": 63.9,
+      "memory_used_gb": 20.34,
+      "disk_percent": 72.2,
+      "process_count": 477,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:28:17.928677",
+      "cpu_percent": 14.0,
+      "memory_percent": 64.0,
+      "memory_used_gb": 20.4,
+      "disk_percent": 72.2,
+      "process_count": 485,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:28:25.949786",
+      "cpu_percent": 14.2,
+      "memory_percent": 64.1,
+      "memory_used_gb": 20.43,
+      "disk_percent": 72.2,
+      "process_count": 486,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:28:33.564358",
+      "cpu_percent": 10.5,
+      "memory_percent": 63.8,
+      "memory_used_gb": 20.31,
+      "disk_percent": 72.2,
+      "process_count": 474,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:28:41.157097",
+      "cpu_percent": 13.1,
+      "memory_percent": 64.0,
+      "memory_used_gb": 20.37,
+      "disk_percent": 72.2,
+      "process_count": 474,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:28:48.757063",
+      "cpu_percent": 17.6,
+      "memory_percent": 63.9,
+      "memory_used_gb": 20.35,
+      "disk_percent": 72.2,
+      "process_count": 474,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:28:56.976669",
+      "cpu_percent": 12.0,
+      "memory_percent": 64.2,
+      "memory_used_gb": 20.45,
+      "disk_percent": 72.2,
+      "process_count": 485,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:29:04.570164",
+      "cpu_percent": 18.3,
+      "memory_percent": 64.1,
+      "memory_used_gb": 20.41,
+      "disk_percent": 72.2,
+      "process_count": 475,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:29:12.198655",
+      "cpu_percent": 9.9,
+      "memory_percent": 64.2,
+      "memory_used_gb": 20.44,
+      "disk_percent": 72.2,
+      "process_count": 475,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:29:19.787541",
+      "cpu_percent": 20.5,
+      "memory_percent": 64.2,
+      "memory_used_gb": 20.45,
+      "disk_percent": 72.2,
+      "process_count": 475,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:29:27.972014",
+      "cpu_percent": 14.4,
+      "memory_percent": 64.5,
+      "memory_used_gb": 20.55,
+      "disk_percent": 72.2,
+      "process_count": 485,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:29:36.011575",
+      "cpu_percent": 17.5,
+      "memory_percent": 64.5,
+      "memory_used_gb": 20.53,
+      "disk_percent": 72.2,
+      "process_count": 487,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:29:43.609491",
+      "cpu_percent": 9.8,
+      "memory_percent": 64.4,
+      "memory_used_gb": 20.49,
+      "disk_percent": 72.2,
+      "process_count": 477,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:29:51.191567",
+      "cpu_percent": 12.1,
+      "memory_percent": 64.4,
+      "memory_used_gb": 20.5,
+      "disk_percent": 72.2,
+      "process_count": 477,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:29:58.790315",
+      "cpu_percent": 19.6,
+      "memory_percent": 64.4,
+      "memory_used_gb": 20.5,
+      "disk_percent": 72.2,
+      "process_count": 475,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:30:07.011606",
+      "cpu_percent": 18.7,
+      "memory_percent": 64.7,
+      "memory_used_gb": 20.61,
+      "disk_percent": 72.2,
+      "process_count": 485,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:30:14.630313",
+      "cpu_percent": 14.3,
+      "memory_percent": 64.7,
+      "memory_used_gb": 20.62,
+      "disk_percent": 72.2,
+      "process_count": 475,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:30:22.239441",
+      "cpu_percent": 12.2,
+      "memory_percent": 64.5,
+      "memory_used_gb": 20.55,
+      "disk_percent": 72.2,
+      "process_count": 473,
+      "docker_stats": null
+    },
+    {
+      "timestamp": "2025-06-24T22:30:29.838475",
+      "cpu_percent": 12.9,
+      "memory_percent": 64.6,
+      "memory_used_gb": 20.56,
+      "disk_percent": 72.2,
+      "process_count": 473,
+      "docker_stats": null
+    }
+  ]
+}

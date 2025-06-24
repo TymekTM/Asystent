@@ -1426,7 +1426,7 @@ def setup_additional_api_routes(app):
             try:
                 status["performance"] = {
                     "memory_percent": psutil.virtual_memory().percent,
-                    "cpu_percent": psutil.cpu_percent(interval=1),
+                    "cpu_percent": psutil.cpu_percent(interval=None),
                     "disk_percent": (
                         psutil.disk_usage("/").percent
                         if hasattr(psutil.disk_usage("/"), "percent")
