@@ -495,15 +495,15 @@ class ServerApp:
             modules = plugin_manager.get_modules_for_user(user_id)
             logger.debug(f"get_modules_for_user returned: {type(modules)}")
 
-            logger.info(f"DEBUG: user_history = {user_history}")
-            logger.info(
-                f"DEBUG: user_history length = {len(user_history) if user_history else 'None'}"
+            logger.debug(f"user_history = {user_history}")
+            logger.debug(
+                f"user_history length = {len(user_history) if user_history else 'None'}"
             )
-            logger.info(f"DEBUG: available_plugins = {available_plugins}")
-            logger.info(
-                f"DEBUG: modules keys = {list(modules.keys()) if modules else 'None'}"
+            logger.debug(f"available_plugins = {available_plugins}")
+            logger.debug(
+                f"modules keys = {list(modules.keys()) if modules else 'None'}"
             )
-            logger.info(f"DEBUG: modules = {modules}")
+            logger.debug(f"modules = {modules}")
 
             ai_context = {
                 "user_id": user_id,
@@ -527,7 +527,7 @@ class ServerApp:
             save_result = await self.db_manager.save_interaction(
                 user_id, query, response
             )
-            logger.info(f"DEBUG: save_interaction result = {save_result}")
+            logger.debug(f"save_interaction result = {save_result}")
 
             return {
                 "type": "ai_response",
@@ -1123,18 +1123,23 @@ def main():
 
 def run_server():
     """Uruchom serwer."""
+    # Load configuration first to obtain logging settings
+    config = load_config()
+
+    log_level = config.get("logging", {}).get("level", "INFO").upper()
+
     # Konfiguracja logowania
     logger.remove()
     logger.add(
         "logs/server_{time:YYYY-MM-DD}.log",
         rotation="1 day",
         retention="30 days",
-        level="INFO",
+        level=log_level,
         format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}:{function}:{line} | {message}",
     )
     logger.add(
         sys.stderr,
-        level="INFO",
+        level=log_level,
         format="<green>{time:HH:mm:ss}</green> | <level>{level}</level> | <cyan>{name}:{function}:{line}</cyan> | {message}",
     )
 
@@ -1142,8 +1147,7 @@ def run_server():
     os.makedirs("logs", exist_ok=True)
 
     logger.info("Starting GAJA Assistant Server...")
-    # Load configuration
-    config = load_config()
+    # Configure CORS middleware with security validation
     # Configure CORS middleware with security validation
     env_manager = EnvironmentManager()
 
@@ -1180,6 +1184,16 @@ def run_server():
     # Use environment manager to sanitize sensitive data in logs
     sanitized_config = env_manager.sanitize_config_for_logging(config)
     logger.info(f"Server starting with config: {sanitized_config}")
+
+    # Use uvloop for improved performance if available
+    try:
+        import uvloop
+
+        asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+        logger.debug("uvloop enabled")
+    except Exception:
+        logger.debug("uvloop not available")
+
     # Uruchom serwer
     uvicorn.run(
         app,
@@ -1187,7 +1201,7 @@ def run_server():
             "host", "localhost"
         ),  # Default to localhost for security
         port=config.get("server", {}).get("port", 8001),
-        log_level="info",
+        log_level=log_level.lower(),
         reload=False,  # W produkcji wyłącz reload
     )
 

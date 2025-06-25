@@ -35,7 +35,7 @@
     "max_connections_per_user": 5
   },
   "logging": {
-    "level": "INFO",
+    "level": "WARNING",
     "file": "logs/server_{time:YYYY-MM-DD}.log",
     "sanitize_sensitive_data": true
   },
