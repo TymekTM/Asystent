@@ -733,13 +733,24 @@ class DatabaseManager:
         """Pobiera historię wiadomości użytkownika."""
         # Convert string user_id to integer for database
         try:
-            if user_id.startswith("client"):
+            if isinstance(user_id, str) and user_id.startswith("client"):
                 db_user_id = int(user_id.replace("client", ""))
             else:
                 db_user_id = int(user_id)
-        except ValueError:
-            # If conversion fails, use hash-based ID
-            db_user_id = abs(hash(user_id)) % 1000000
+        except (ValueError, TypeError):
+            # If conversion fails, use consistent hash-based ID
+            if isinstance(user_id, str):
+                db_user_id = abs(hash(user_id)) % (
+                    10**8
+                )  # Smaller range for consistency
+                logger.debug(
+                    f"String user_id '{user_id}' converted to numeric: {db_user_id}"
+                )
+            else:
+                db_user_id = 1
+                logger.warning(
+                    f"Invalid user_id type: {type(user_id)}, using default: 1"
+                )
 
         with self.get_db_connection() as conn:
             cursor = conn.execute(
@@ -771,13 +782,24 @@ class DatabaseManager:
         # Convert string user_id to integer for database
         # For now, use a simple mapping: "client1" -> 1, "client2" -> 2, etc.
         try:
-            if user_id.startswith("client"):
+            if isinstance(user_id, str) and user_id.startswith("client"):
                 db_user_id = int(user_id.replace("client", ""))
             else:
                 db_user_id = int(user_id)
-        except ValueError:
-            # If conversion fails, use hash-based ID
-            db_user_id = abs(hash(user_id)) % 1000000
+        except (ValueError, TypeError):
+            # If conversion fails, use consistent hash-based ID
+            if isinstance(user_id, str):
+                db_user_id = abs(hash(user_id)) % (
+                    10**8
+                )  # Smaller range for consistency
+                logger.debug(
+                    f"String user_id '{user_id}' converted to numeric: {db_user_id}"
+                )
+            else:
+                db_user_id = 1
+                logger.warning(
+                    f"Invalid user_id type: {type(user_id)}, using default: 1"
+                )
 
         with self.get_db_connection() as conn:
             # Najpierw upewnij się że użytkownik istnieje

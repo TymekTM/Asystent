@@ -138,6 +138,8 @@ type SharedState = Arc<Mutex<OverlayState>>;
 
 #[tauri::command]
 async fn show_overlay(window: Window, state: tauri::State<'_, SharedState>) -> Result<(), String> {
+    // Disable click-through when showing overlay so it can be interactive
+    set_click_through(&window, false);
     window.show().map_err(|e| e.to_string())?;
     {
         let mut overlay_state = state.lock().unwrap();
@@ -148,6 +150,8 @@ async fn show_overlay(window: Window, state: tauri::State<'_, SharedState>) -> R
 
 #[tauri::command]
 async fn hide_overlay(window: Window, state: tauri::State<'_, SharedState>) -> Result<(), String> {
+    // Enable click-through when hiding overlay to prevent blocking
+    set_click_through(&window, true);
     window.hide().map_err(|e| e.to_string())?;
     {
         let mut overlay_state = state.lock().unwrap();
@@ -527,6 +531,45 @@ async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, sta
     let mut state_guard = state.lock().unwrap();
     let window = app_handle.get_window("main").unwrap();
 
+    // Check for action commands
+    if let Some(action) = data.get("action").and_then(|v| v.as_str()) {
+        match action {
+            "open_settings" => {
+                println!("[Rust] Opening settings window from client request");
+                drop(state_guard); // Release lock before async call
+                let _ = open_settings(app_handle.clone()).await;
+                return;
+            }
+            "quit" => {
+                println!("[Rust] Quit command received from client");
+                drop(state_guard); // Release lock before exit
+                std::process::exit(0);
+            }
+            _ => {
+                println!("[Rust] Unknown action: {}", action);
+            }
+        }
+    }
+
+    // Check for direct show/hide commands
+    if data.get("show_overlay").and_then(|v| v.as_bool()).unwrap_or(false) {
+        println!("[Rust] Show overlay command received");
+        // Handle show overlay directly without function call
+        set_click_through(&window, false); // Disable click-through when showing overlay
+        let _ = window.show();
+        state_guard.visible = true;
+        return;
+    }
+
+    if data.get("hide_overlay").and_then(|v| v.as_bool()).unwrap_or(false) {
+        println!("[Rust] Hide overlay command received");
+        // Handle hide overlay directly without function call
+        set_click_through(&window, true); // Enable click-through when hiding overlay
+        let _ = window.hide();
+        state_guard.visible = false;
+        return;
+    }
+
     // Extract data from JSON
     let status = data.get("status").and_then(|v| v.as_str()).unwrap_or("Unknown").to_string();
     let current_text = data.get("text").and_then(|v| v.as_str()).unwrap_or("").to_string();
@@ -563,10 +606,12 @@ async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, sta
         // Show/hide window based on calculated visibility
         if should_be_visible && !state_guard.visible {
             println!("[Rust] Showing overlay window");
+            set_click_through(&window, false);  // Disable click-through when showing - overlay should be interactive
             window.show().unwrap_or_else(|e| eprintln!("Failed to show window: {}", e));
             state_guard.visible = true;
         } else if !should_be_visible && state_guard.visible {
             println!("[Rust] Hiding overlay window");
+            set_click_through(&window, true); // Enable click-through when hiding to prevent blocking
             window.hide().unwrap_or_else(|e| eprintln!("Failed to hide window: {}", e));
             state_guard.visible = false;
         }
@@ -590,6 +635,7 @@ async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, sta
         && current_text.is_empty() && !is_listening && !is_speaking && !wake_word_detected && !overlay_visible {
         if window.is_visible().unwrap_or(false) {
             println!("[Rust] Auto-hiding window due to prolonged inactivity and no relevant status.");
+            set_click_through(&window, true); // Enable click-through when auto-hiding to prevent blocking
             window.hide().unwrap_or_else(|e| eprintln!("Failed to hide window: {}", e));
             state_guard.visible = false;
         }
@@ -652,11 +698,13 @@ pub fn run() {
                     }
                     "show" => {
                         if let Some(window) = app.get_window("main") {
+                            set_click_through(&window, false);  // Disable click-through when showing via tray - overlay should be interactive
                             let _ = window.show();
                         }
                     }
                     "hide" => {
                         if let Some(window) = app.get_window("main") {
+                            set_click_through(&window, true); // Enable click-through when hiding via tray to prevent blocking
                             let _ = window.hide();
                         }
                     }
@@ -686,7 +734,8 @@ pub fn run() {
                 Err(e) => {
                     eprintln!("Error getting primary monitor: {}", e);
                 }
-            }            set_click_through(&main_window, true);
+            }            // Initially set click_through to false since overlay starts hidden
+            set_click_through(&main_window, false);
 
             // Start overlay hidden initially - will be shown when client sends status
             main_window.hide().unwrap_or_else(|e| eprintln!("Failed to hide window initially: {}", e));
@@ -758,9 +807,11 @@ fn set_click_through(window: &Window, click_through: bool) {
                 unsafe {
                     let ex_style = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
                     if click_through {
+                        // Enable click-through: add WS_EX_TRANSPARENT and ensure WS_EX_LAYERED is set
                         SetWindowLongPtrW(hwnd, GWL_EXSTYLE, ex_style | WS_EX_TRANSPARENT as isize | WS_EX_LAYERED as isize);
                     } else {
-                        SetWindowLongPtrW(hwnd, GWL_EXSTYLE, ex_style & !(WS_EX_TRANSPARENT as isize) & !(WS_EX_LAYERED as isize));
+                        // Disable click-through: remove WS_EX_TRANSPARENT but keep WS_EX_LAYERED for overlay functionality
+                        SetWindowLongPtrW(hwnd, GWL_EXSTYLE, (ex_style & !(WS_EX_TRANSPARENT as isize)) | WS_EX_LAYERED as isize);
                     }
                 }
             }

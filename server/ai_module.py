@@ -934,7 +934,8 @@ class AIModule:
             conversation_history = deque()
 
             # Add history from database
-            for msg in history[-10:]:  # Last 10 messages
+            logger.info(f"Processing {len(history)} messages from history for context")
+            for msg in history[-20:]:  # Last 20 messages for better context
                 content = msg["content"]
 
                 # If the content is a JSON string (from assistant), extract the text
@@ -952,10 +953,18 @@ class AIModule:
                         # If parsing fails, use content as-is
                         pass
 
-                conversation_history.append({"role": msg["role"], "content": content})
+                # Only add non-empty messages
+                if content and content.strip():
+                    conversation_history.append(
+                        {"role": msg["role"], "content": content}
+                    )
 
             # Add current query
             conversation_history.append({"role": "user", "content": query})
+
+            logger.info(
+                f"Conversation history prepared with {len(conversation_history)} messages"
+            )
 
             # Build tools description
             tools_info = ""

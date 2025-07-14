@@ -1,4 +1,4 @@
-@import "../../web_ui/static/css/gaja-branding.css";
+@import "../../web_ui_old/static/css/gaja-branding.css";
 
 /* Base HTML and Body styles for fullscreen transparent overlay */
 html,
@@ -129,7 +129,7 @@ body {
   border-radius: 50%;
   background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 50%, #81C784 100%);
   border: 3px solid #2E7D32;
-  box-shadow: 
+  box-shadow:
     0 8px 25px rgba(0, 0, 0, 0.3),
     inset 0 2px 4px rgba(255, 255, 255, 0.3);
   position: relative;
@@ -225,7 +225,7 @@ body {
   padding: 16px 20px;
   font-weight: 500;
   color: #2E2E2E;
-  box-shadow: 
+  box-shadow:
     0 8px 25px rgba(0, 0, 0, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(10px);
@@ -280,31 +280,31 @@ body {
     height: 280px;
     top: -40px;
   }
-  
+
   .gaja-response-text {
     max-width: 400px;
   }
-  
+
   .gaja-response-text.short-text {
     font-size: 1.2rem;
   }
-  
+
   .gaja-response-text.medium-text {
     font-size: 1.0rem;
   }
-  
+
   .gaja-response-text.long-text {
     font-size: 0.9rem;
   }
-  
+
   .gaja-response-text.very-long-text {
     font-size: 0.8rem;
   }
-  
+
   .gaja-status-text {
     font-size: 1.2rem;
   }
-  
+
   .gaja-ball {
     width: 80px;
     height: 80px;
@@ -318,32 +318,32 @@ body {
     height: 220px;
     top: -30px;
   }
-  
+
   .gaja-response-text {
     max-width: 300px;
     padding: 12px 16px;
   }
-  
+
   .gaja-response-text.short-text {
     font-size: 1.1rem;
   }
-  
+
   .gaja-response-text.medium-text {
     font-size: 0.9rem;
   }
-  
+
   .gaja-response-text.long-text {
     font-size: 0.8rem;
   }
-  
+
   .gaja-response-text.very-long-text {
     font-size: 0.75rem;
   }
-  
+
   .gaja-status-text {
     font-size: 1.1rem;
   }
-  
+
   .gaja-ball {
     width: 70px;
     height: 70px;

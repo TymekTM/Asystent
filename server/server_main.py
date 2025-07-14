@@ -65,6 +65,14 @@ class RequestType(str, Enum):
     QUERY = "query"
     AUDIO = "audio"
     FUNCTION_CALL = "function_call"
+    STARTUP_BRIEFING = "startup_briefing"
+    PROACTIVE_CHECK = "proactive_check"
+    USER_CONTEXT_UPDATE = "user_context_update"
+    STATUS_UPDATE = "status_update"
+    PLUGIN_TOGGLE = "plugin_toggle"
+    PLUGIN_LIST = "plugin_list"
+    DAY_SUMMARY = "day_summary"
+    DISMISS_NOTIFICATION = "dismiss_notification"
 
 
 class WebSocketRequest(BaseModel):
@@ -411,6 +419,48 @@ class ServerApp:
             logger.error(f"Error loading plugin {plugin_name}: {e}")
             return None
 
+    async def process_validated_request(self, user_id: str, request: WebSocketRequest):
+        """Process a validated WebSocket request."""
+        try:
+            # Convert Pydantic model to dict format expected by process_user_request
+            request_data = {
+                "type": request.type,
+                "data": request.data,
+                "query": request.query,
+                "user_id": request.user_id,
+                "audio_data": request.audio_data,
+                "function_name": request.function_name,
+                "parameters": request.parameters,
+            }
+
+            # Handle message type mapping for backward compatibility
+            if request.type == "query":
+                request_data["type"] = "ai_query"
+                request_data["query"] = (
+                    request.query or request.data.get("query", "")
+                    if request.data
+                    else ""
+                )
+                request_data["context"] = (
+                    request.data.get("context", {}) if request.data else {}
+                )
+            elif request.type == "function_call":
+                request_data["plugin"] = (
+                    request.data.get("plugin") if request.data else None
+                )
+                request_data["function"] = request.function_name or (
+                    request.data.get("function") if request.data else None
+                )
+                request_data["parameters"] = request.parameters or (
+                    request.data.get("parameters", {}) if request.data else {}
+                )
+
+            return await self.process_user_request(user_id, request_data)
+
+        except Exception as e:
+            logger.error(f"Error processing validated request for user {user_id}: {e}")
+            return {"type": "error", "message": f"Request processing failed: {str(e)}"}
+
     async def process_user_request(self, user_id: str, request_data: dict):
         """Przetwórz request od użytkownika."""
         try:
@@ -430,13 +480,16 @@ class ServerApp:
                 return await self.handle_startup_briefing_request(user_id)
             elif request_type == "day_summary":
                 return await self.handle_day_summary_request(user_id, request_data)
-            elif request_type == "get_proactive_notifications":
+            elif request_type in ["get_proactive_notifications", "proactive_check"]:
                 return await self.handle_proactive_notifications(user_id)
             elif request_type == "dismiss_notification":
                 return await self.handle_dismiss_notification(user_id, request_data)
-            elif request_type == "update_user_context":
+            elif request_type in ["update_user_context", "user_context_update"]:
                 return await self.handle_update_user_context(user_id, request_data)
             else:
+                logger.warning(
+                    f"Unknown request type: {request_type} from user {user_id}"
+                )
                 return {
                     "type": "error",
                     "message": f"Unknown request type: {request_type}",
@@ -456,11 +509,21 @@ class ServerApp:
             try:
                 numeric_user_id = int(user_id)
             except (ValueError, TypeError):
-                # For string user_id, generate a numeric hash for database compatibility
-                numeric_user_id = abs(hash(user_id)) % (10**9)
-                logger.debug(
-                    f"String user_id '{user_id}' converted to numeric: {numeric_user_id}"
-                )
+                # For string user_id, generate a consistent numeric hash for database compatibility
+                if isinstance(user_id, str):
+                    # Create a more stable hash for string user_ids
+                    numeric_user_id = abs(hash(user_id)) % (
+                        10**8
+                    )  # Smaller range for consistency
+                    logger.debug(
+                        f"String user_id '{user_id}' converted to numeric: {numeric_user_id}"
+                    )
+                else:
+                    # Fallback to default user id
+                    numeric_user_id = 1
+                    logger.warning(
+                        f"Invalid user_id type: {type(user_id)}, using default user_id: 1"
+                    )
 
             user_level = self.db_manager.get_user_level(numeric_user_id)
             monthly = self.db_manager.count_api_calls(numeric_user_id, days=30)
@@ -578,7 +641,21 @@ class ServerApp:
                 try:
                     numeric_user_id = int(user_id)
                 except (ValueError, TypeError):
-                    numeric_user_id = abs(hash(user_id)) % (10**9)
+                    # For string user_id, generate a consistent numeric hash for database compatibility
+                    if isinstance(user_id, str):
+                        # Create a more stable hash for string user_ids
+                        numeric_user_id = abs(hash(user_id)) % (
+                            10**8
+                        )  # Smaller range for consistency
+                        logger.debug(
+                            f"String user_id '{user_id}' converted to numeric: {numeric_user_id}"
+                        )
+                    else:
+                        # Fallback to default user id
+                        numeric_user_id = 1
+                        logger.warning(
+                            f"Invalid user_id type: {type(user_id)}, using default user_id: 1"
+                        )
 
                 result = await plugin_module.execute_function(
                     function_name, parameters, numeric_user_id

@@ -44,7 +44,18 @@ try:
     logger.info("User Mode System available")
 except ImportError:
     USER_MODE_AVAILABLE = False
+    user_integrator = None
     logger.info("User Mode System not available - using legacy mode")
+
+# Import system tray manager
+try:
+    from modules.tray_manager import TrayManager
+
+    TRAY_AVAILABLE = True
+except ImportError:
+    logger.warning("Tray manager not available")
+    TrayManager = None
+    TRAY_AVAILABLE = False
 
 
 class ClientApp:
@@ -54,9 +65,14 @@ class ClientApp:
         self.config = self.load_client_config()
         self.websocket = None
         self.user_id = self.config.get("user_id", "1")
-        self.server_url = self.config.get(
-            "server_url", "ws://localhost:8001/ws/client1"
-        )
+        # server_url should be set during load_client_config
+        if not hasattr(self, "server_url") or self.server_url is None:
+            self.server_url = self.config.get(
+                "server_url", "ws://localhost:8001/ws/client1"
+            )
+            logger.info(f"🔗 Server URL fallback set to: {self.server_url}")
+        else:
+            logger.info(f"🔗 Server URL already set to: {self.server_url}")
         self.running = False
 
         # Audio components
@@ -80,6 +96,15 @@ class ClientApp:
         self.overlay_visible = False
         self.sse_clients = []
 
+        # Message tracking for system tray
+        self.message_limit = None
+        self.daily_message_count = 0
+
+        # System tray manager
+        self.tray_manager = None
+        if TRAY_AVAILABLE:
+            self.tray_manager = TrayManager(client_app=self)
+
     def load_client_config(self) -> dict:
         """Załaduj konfigurację klienta."""
         # Config file should be in the same directory as this script
@@ -91,12 +116,14 @@ class ClientApp:
             logger.info("📁 Config file found, loading...")
             with open(config_path, encoding="utf-8") as f:
                 config = json.load(f)
+                self.server_url = config.get("server_url")  # Store server URL
                 logger.info(f"✅ Config loaded: server_url={config.get('server_url')}")
+                logger.info(f"🔗 Server URL set to: {self.server_url}")
                 return config
 
         logger.warning("⚠️ Config file not found, using defaults")
         # Default config
-        return {
+        default_config = {
             "server_url": "ws://localhost:8001/ws/client1",
             "user_id": "1",
             "wakeword": {
@@ -114,6 +141,8 @@ class ClientApp:
             },
             "audio": {"sample_rate": 16000, "record_duration": 5.0},
         }
+        self.server_url = default_config["server_url"]  # Store default server URL
+        return default_config
 
     async def initialize_components(self):
         """Inicjalizuj komponenty audio i overlay."""
@@ -415,6 +444,12 @@ class ClientApp:
         """Obsłuż wiadomość od serwera."""
         message_type = data.get("type")
 
+        # Track message limits and counts if provided
+        if "message_limit" in data:
+            self.message_limit = data["message_limit"]
+        if "daily_message_count" in data:
+            self.daily_message_count = data["daily_message_count"]
+
         if message_type == "daily_briefing":
             # Obsłuż daily briefing
             briefing_text = data.get("text", "")
@@ -582,6 +617,7 @@ class ClientApp:
 
             try:
                 self.recording_command = True
+                self.update_status("Nagrywam...")  # ← Dodane
 
                 # If server is available, send query
                 if self.websocket:
@@ -611,8 +647,10 @@ class ClientApp:
 
                     # Simulate TTS
                     self.tts_playing = True
+                    self.update_status("Odpowiadam...")  # ← Dodane
                     await asyncio.sleep(2)  # Simulate speech time
                     self.tts_playing = False
+                    self.update_status("Ready")  # ← Dodane
 
                     # Reset flags and hide overlay
                     self.wake_word_detected = False
@@ -636,27 +674,6 @@ class ClientApp:
             self.wake_word_detected = True
             self.update_status("Listening...")
 
-    async def show_overlay(self):
-        """Pokaż overlay."""
-        try:
-            # Set overlay visible flag and update status
-            self.overlay_visible = True
-            logger.info("Overlay shown - status updated to visible")
-            # Notify SSE clients about the change
-            self.notify_sse_clients()
-        except Exception as e:
-            logger.error(f"Error showing overlay: {e}")
-
-    async def hide_overlay(self):
-        """Ukryj overlay."""
-        try:  # Set overlay hidden flag and update status
-            self.overlay_visible = False
-            logger.info("Overlay hidden - status updated to hidden")
-            # Notify SSE clients about the change
-            self.notify_sse_clients()
-        except Exception as e:
-            logger.error(f"Error hiding overlay: {e}")
-
     async def update_overlay_status(self, status: str):
         """Zaktualizuj status w overlay."""
         logger.debug(f"Overlay status: {status}")
@@ -670,6 +687,10 @@ class ClientApp:
         """Zaktualizuj status i powiadom overlay."""
         self.current_status = status
         self.notify_sse_clients()
+
+        # Update system tray
+        if self.tray_manager:
+            self.tray_manager.update_status(status)
 
     def add_sse_client(self, client):
         """Dodaj klienta SSE."""
@@ -750,19 +771,32 @@ class ClientApp:
         """Uruchom główną pętlę klienta."""
         try:
             self.running = True
+            
+            # Store the current event loop for use by tray manager
+            self.loop = asyncio.get_event_loop()
 
             # Initialize components (includes HTTP server)
             await self.initialize_components()
+
+            # Start system tray
+            if self.tray_manager:
+                if self.tray_manager.start():
+                    logger.info("System tray started successfully")
+                    self.tray_manager.update_status("Starting...")
+                else:
+                    logger.warning("Failed to start system tray")
 
             # Try to connect to server (but don't fail if can't connect)
             try:
                 await self.connect_to_server()
                 logger.info("Connected to server successfully")
+                self.update_status("Connected")
             except Exception as e:
                 logger.warning(f"Could not connect to server: {e}")
                 logger.warning(
                     "Running in standalone mode - overlay and local features will work"
                 )
+                self.update_status("Offline Mode")
 
             # Start wakeword monitoring
             await self.start_wakeword_monitoring()
@@ -887,6 +921,11 @@ class ClientApp:
         """Wyczyść zasoby przed zamknięciem."""
         try:
             self.running = False
+
+            # Stop system tray first
+            if self.tray_manager:
+                self.tray_manager.stop()
+                logger.info("System tray stopped")
 
             # Import required modules at function level
             import os
@@ -1356,11 +1395,13 @@ class ClientApp:
         try:
             self.tts_playing = True
             self.last_tts_text = text
+            self.update_status("Odpowiadam...")  # ← Dodane
             await self.tts.speak(text)
         except Exception as e:
             logger.error(f"TTS error: {e}")
         finally:
             self.tts_playing = False
+            self.update_status("Ready")  # ← Dodane
 
     def list_available_audio_devices(self):
         """List available audio devices."""
@@ -1386,13 +1427,19 @@ class ClientApp:
             if "status" in data:
                 self.current_status = data["status"]
 
-            # Notify SSE clients
-            for client in self.sse_clients.copy():
+            # Notify SSE clients using the existing method
+            message = f"data: {json.dumps(data)}\n\n"
+
+            # Send to all connected SSE clients
+            for client in self.sse_clients[
+                :
+            ]:  # Copy list to avoid modification during iteration
                 try:
-                    client.put_nowait(json.dumps(data))
+                    client.wfile.write(message.encode())
+                    client.wfile.flush()
                 except Exception as e:
-                    logger.warning(f"Failed to notify SSE client: {e}")
-                    self.sse_clients.remove(client)
+                    logger.debug(f"SSE client disconnected: {e}")
+                    self.remove_sse_client(client)
 
         except Exception as e:
             logger.error(f"Error sending overlay update: {e}")
@@ -1453,6 +1500,86 @@ class ClientApp:
 
         return "\n".join(sections) if sections else "No summary data"
 
+    async def show_overlay(self):
+        """Show the overlay (async version)."""
+        try:
+            self.overlay_visible = True
+            self.update_status("Overlay Shown")
+            logger.info("Overlay shown")
+
+            # Send update to overlay via SSE
+            await self.send_overlay_update(
+                {
+                    "status": "Overlay Shown",
+                    "overlay_visible": True,
+                    "show_overlay": True,
+                }
+            )
+        except Exception as e:
+            logger.error(f"Error showing overlay: {e}")
+
+    async def hide_overlay(self):
+        """Hide the overlay."""
+        try:
+            self.overlay_visible = False
+            self.update_status("Overlay Hidden")
+            logger.info("Overlay hidden")
+
+            # Send update to overlay via SSE
+            await self.send_overlay_update(
+                {
+                    "status": "Overlay Hidden",
+                    "overlay_visible": False,
+                    "hide_overlay": True,
+                }
+            )
+        except Exception as e:
+            logger.error(f"Error hiding overlay: {e}")
+
+    def show_overlay_sync(self):
+        """Show the overlay (sync version for tray)."""
+        try:
+            self.overlay_visible = True
+            self.update_status("Overlay Shown")
+            logger.info("Overlay shown from system tray")
+
+            # Send update to overlay via SSE
+            asyncio.create_task(
+                self.send_overlay_update(
+                    {
+                        "status": "Overlay Shown",
+                        "overlay_visible": True,
+                        "show_overlay": True,
+                    }
+                )
+            )
+        except Exception as e:
+            logger.error(f"Error showing overlay: {e}")
+
+    def stop_wakeword_monitoring(self):
+        """Stop wakeword monitoring (called from tray)."""
+        try:
+            if self.wakeword_detector and self.monitoring_wakeword:
+                self.wakeword_detector.stop_detection()
+                self.monitoring_wakeword = False
+                self.update_status("Monitoring Stopped")
+                logger.info("Wakeword monitoring stopped from system tray")
+        except Exception as e:
+            logger.error(f"Error stopping wakeword monitoring: {e}")
+
+    def start_wakeword_monitoring_sync(self):
+        """Start wakeword monitoring synchronously (called from tray)."""
+        try:
+            if self.wakeword_detector and not self.monitoring_wakeword:
+                # Since this is called from tray thread, we need to schedule it
+                if self.running:
+                    asyncio.create_task(self.start_wakeword_monitoring())
+                    logger.info("Wakeword monitoring start scheduled from system tray")
+        except Exception as e:
+            logger.error(f"Error starting wakeword monitoring: {e}")
+
+    # ...existing code...
+
 
 class StatusHTTPHandler(BaseHTTPRequestHandler):
     """HTTP handler dla overlay status API."""
@@ -1471,11 +1598,78 @@ class StatusHTTPHandler(BaseHTTPRequestHandler):
 
             status = {
                 "status": self.client_app.get_current_status(),
+                "text": self.client_app.last_tts_text,
+                "is_listening": self.client_app.recording_command,
+                "is_speaking": self.client_app.tts_playing,
+                "wake_word_detected": self.client_app.wake_word_detected,
+                "overlay_visible": self.client_app.overlay_visible,
                 "monitoring": self.client_app.monitoring_wakeword,
                 "tts_playing": self.client_app.tts_playing,
                 "last_tts": self.client_app.last_tts_text,
             }
             self.wfile.write(json.dumps(status).encode())
+
+        elif self.path == "/status/stream":
+            # SSE endpoint for real-time status updates
+            self.send_response(200)
+            self.send_header("Content-type", "text/event-stream")
+            self.send_header("Cache-Control", "no-cache")
+            self.send_header("Connection", "keep-alive")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+
+            # Add client to SSE list
+            self.client_app.add_sse_client(self)
+
+            # Send initial status
+            initial_status = {
+                "status": self.client_app.current_status,
+                "text": self.client_app.last_tts_text,
+                "is_listening": self.client_app.recording_command,
+                "is_speaking": self.client_app.tts_playing,
+                "wake_word_detected": self.client_app.wake_word_detected,
+                "overlay_visible": self.client_app.overlay_visible,
+            }
+
+            try:
+                message = f"data: {json.dumps(initial_status)}\n\n"
+                self.wfile.write(message.encode())
+                self.wfile.flush()
+
+                logger.info("SSE client connected")
+
+                # Keep connection alive by monitoring for client disconnect
+                import threading
+
+                def monitor_connection():
+                    try:
+                        # Send heartbeat every 30 seconds to detect disconnection
+                        import time
+
+                        while True:
+                            time.sleep(30)
+                            try:
+                                heartbeat = 'data: {"heartbeat": true}\n\n'
+                                self.wfile.write(heartbeat.encode())
+                                self.wfile.flush()
+                            except:
+                                logger.info("SSE client disconnected")
+                                self.client_app.remove_sse_client(self)
+                                break
+                    except:
+                        self.client_app.remove_sse_client(self)
+
+                # Start heartbeat thread to keep connection alive
+                heartbeat_thread = threading.Thread(
+                    target=monitor_connection, daemon=True
+                )
+                heartbeat_thread.start()
+
+                return  # Don't close connection immediately
+
+            except Exception as e:
+                logger.error(f"SSE connection error: {e}")
+                self.client_app.remove_sse_client(self)
 
         elif self.path == "/api/trigger_wakeword":
             self.send_response(200)
@@ -1488,6 +1682,29 @@ class StatusHTTPHandler(BaseHTTPRequestHandler):
             self.client_app.command_queue.put(command)
 
             self.wfile.write(json.dumps({"success": True}).encode())
+
+        elif self.path == "/settings.html":
+            # Serve settings.html file
+            try:
+                settings_path = Path(__file__).parent / "resources" / "settings.html"
+                if settings_path.exists():
+                    self.send_response(200)
+                    self.send_header("Content-type", "text/html")
+                    self.send_header("Access-Control-Allow-Origin", "*")
+                    self.end_headers()
+
+                    with open(settings_path, encoding="utf-8") as f:
+                        content = f.read()
+                    self.wfile.write(content.encode("utf-8"))
+                else:
+                    self.send_response(404)
+                    self.end_headers()
+                    self.wfile.write(b"Settings file not found")
+            except Exception as e:
+                logger.error(f"Error serving settings.html: {e}")
+                self.send_response(500)
+                self.end_headers()
+                self.wfile.write(f"Error: {e}".encode())
 
         else:
             self.send_response(404)
@@ -1545,13 +1762,7 @@ async def main():
     app = ClientApp()
 
     try:
-        await app.initialize_components()
-        await app.connect_to_server()
-
-        # Uruchom monitoring w tle
-        _ = asyncio.create_task(app.periodic_proactive_check())
-
-        await app.listen_for_messages()
+        await app.run()
 
     except asyncio.CancelledError:
         logger.info("Client cancelled")
