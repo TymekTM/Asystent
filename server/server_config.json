@@ -39,5 +39,8 @@
     "level": "WARNING",
     "file": "logs/server_{time:YYYY-MM-DD}.log"
   },
+  "status_logging": {
+    "interval": 300
+  },
   "ui_language": "en"
 }

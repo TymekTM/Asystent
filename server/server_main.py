@@ -9,7 +9,10 @@ import time
 from contextlib import asynccontextmanager
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict
+from datetime import datetime
+
+import psutil
 
 import uvicorn
 from environment_manager import EnvironmentManager
@@ -177,6 +180,37 @@ class ServerApp:
         self.routines_learner = None
         self.day_narrative = None
         self.proactive_assistant = None
+
+    def get_status_summary(self) -> Dict[str, Any]:
+        """Return current server status information."""
+        process = psutil.Process()
+        mem_mb = process.memory_info().rss / (1024 * 1024)
+        cpu_percent = psutil.cpu_percent(interval=None)
+        uptime = (datetime.now() - self.start_time).total_seconds() if self.start_time else 0
+        return {
+            "connected_users": len(self.connection_manager.active_connections),
+            "memory_mb": round(mem_mb, 2),
+            "cpu_percent": cpu_percent,
+            "uptime_seconds": int(uptime),
+        }
+
+    async def periodic_status_logging(self) -> None:
+        """Periodically log aggregated server status."""
+        interval = self.config.get("status_logging", {}).get("interval", 300)
+        try:
+            while True:
+                await asyncio.sleep(interval)
+                stats = self.get_status_summary()
+                logger.info(
+                    "Status: users=%s cpu=%s%% mem=%sMB uptime=%ss",
+                    stats["connected_users"],
+                    stats["cpu_percent"],
+                    stats["memory_mb"],
+                    stats["uptime_seconds"],
+                )
+        except asyncio.CancelledError:
+            logger.debug("Status logging task cancelled")
+            raise
 
     async def initialize(self):
         """Inicjalizuj wszystkie komponenty serwera."""
@@ -958,9 +992,13 @@ async def lifespan(app: FastAPI):
     """Zarządzanie cyklem życia aplikacji FastAPI."""
     # Startup
     await server_app.initialize()
-    yield
-    # Shutdown
-    logger.info("Server shutting down...")
+    status_task = asyncio.create_task(server_app.periodic_status_logging())
+    try:
+        yield
+    finally:
+        status_task.cancel()
+        await asyncio.gather(status_task, return_exceptions=True)
+        logger.info("Server shutting down...")
 
 
 # Inicjalizuj FastAPI
@@ -1279,6 +1317,8 @@ def run_server():
         ),  # Default to localhost for security
         port=config.get("server", {}).get("port", 8001),
         log_level=log_level.lower(),
+        access_log=False,
+        log_config=None,
         reload=False,  # W produkcji wyłącz reload
     )
 

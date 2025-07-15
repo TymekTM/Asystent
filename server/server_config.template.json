@@ -39,5 +39,8 @@
     "file": "logs/server_{time:YYYY-MM-DD}.log",
     "sanitize_sensitive_data": true
   },
+  "status_logging": {
+    "interval": 300
+  },
   "ui_language": "en"
 }
