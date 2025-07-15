@@ -4,23 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gaja - Ustawienia</title>
-    <script>
-        // Tauri API initialization
-        window.__TAURI_METADATA__ = {"bundle":{"identifier":"com.gaja.overlay"}};
-
-        // Enhanced debug function
-        function debugLog(message, data = null) {
-            const timestamp = new Date().toISOString();
-            console.log(`[${timestamp}] [Settings] ${message}`, data || '');
-
-            // Try to also send to Rust console if possible
-            if (window.__TAURI__ && window.__TAURI__.invoke) {
-                window.__TAURI__.invoke('debug_log', { message: `[Settings] ${message}` }).catch(() => {});
-            }
-        }
-
-        debugLog('settings.html script loaded', { location: window.location.href, protocol: window.location.protocol });
-    </script>
+    <link rel="icon" type="image/x-icon" href="/gaja.ico">
+    <link rel="shortcut icon" type="image/x-icon" href="/gaja.ico">
     <style>
         * {
             margin: 0;
@@ -345,8 +330,26 @@
     </div>
 
     <script>
+        // Enhanced debug function
+        function debugLog(message, data = null) {
+            const timestamp = new Date().toISOString();
+            console.log(`[${timestamp}] [Settings] ${message}`, data || '');
+        }
+
+        debugLog('settings.html script loaded', { location: window.location.href, protocol: window.location.protocol });
+
+        // Check if we're running via HTTP server (fallback mode)
+        function isHTTPMode() {
+            return window.location.protocol === 'http:' || window.location.protocol === 'https:';
+        }
+
         // Check if Tauri API is available
         function checkTauriAPI() {
+            if (isHTTPMode()) {
+                debugLog('Running in HTTP mode - using HTTP API instead of Tauri');
+                return false;
+            }
+
             debugLog('Checking Tauri API availability...');
             debugLog('window.__TAURI__ exists: ' + (typeof window.__TAURI__ !== 'undefined'));
 
@@ -356,24 +359,49 @@
                 return true;
             } else {
                 debugLog('BŁĄD: window.__TAURI__ nie jest dostępne!');
-                document.getElementById('connection-text').textContent = 'BŁĄD: Tauri API niedostępne';
-                alert('BŁĄD: Tauri API nie jest dostępne w oknie ustawień!');
                 return false;
             }
+        }
+
+        // HTTP API functions for fallback mode
+        async function httpApiCall(endpoint, method = 'GET', data = null) {
+            const baseUrl = window.location.origin;
+            const url = `${baseUrl}${endpoint}`;
+
+            debugLog(`HTTP API call: ${method} ${url}`, data);
+
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            };
+
+            if (data) {
+                options.body = JSON.stringify(data);
+            }
+
+            const response = await fetch(url, options);
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            return await response.json();
         }
 
         // Initialize settings when page loads
         window.addEventListener('DOMContentLoaded', async () => {
             debugLog('DOM loaded, initializing...');
 
-            // Check Tauri API first
-            if (!checkTauriAPI()) {
-                document.getElementById('connection-status').className = 'status-indicator status-offline';
-                document.getElementById('connection-text').textContent = 'BŁĄD: Tauri API niedostępne';
-                return;
+            const useTauri = checkTauriAPI();
+
+            if (!useTauri) {
+                debugLog('Using HTTP API mode');
+                document.getElementById('connection-status').className = 'status-indicator status-online';
+                document.getElementById('connection-text').textContent = 'HTTP API Mode';
             }
 
-            debugLog('Tauri API available, proceeding...');
             await loadConnectionStatus();
             await loadAudioDevices();
             await loadCurrentSettings();
@@ -388,10 +416,15 @@
             const statusText = document.getElementById('connection-text');
 
             try {
-                debugLog('Calling window.__TAURI__.invoke(get_connection_status)...');
-                const connectionStatus = await window.__TAURI__.invoke('get_connection_status');
+                let connectionStatus;
+
+                if (isHTTPMode()) {
+                    connectionStatus = await httpApiCall('/api/connection_status');
+                } else {
+                    connectionStatus = await window.__TAURI__.invoke('get_connection_status');
+                }
+
                 debugLog('Connection status received:', connectionStatus);
-                alert('Tauri API działa! Status: ' + JSON.stringify(connectionStatus, null, 2));
 
                 if (connectionStatus.connected) {
                     statusIndicator.className = 'status-indicator status-online';
@@ -440,7 +473,13 @@
         // Load audio devices from system
         async function loadAudioDevices() {
             try {
-                const devices = await window.__TAURI__.invoke('get_audio_devices');
+                let devices;
+
+                if (isHTTPMode()) {
+                    devices = await httpApiCall('/api/audio_devices');
+                } else {
+                    devices = await window.__TAURI__.invoke('get_audio_devices');
+                }
 
                 // Update input devices
                 const inputSelect = document.getElementById('input-device');
@@ -449,6 +488,9 @@
                     const option = document.createElement('option');
                     option.value = device.id;
                     option.textContent = device.name;
+                    if (device.is_default) {
+                        option.selected = true;
+                    }
                     inputSelect.appendChild(option);
                 });
 
@@ -459,6 +501,9 @@
                     const option = document.createElement('option');
                     option.value = device.id;
                     option.textContent = device.name;
+                    if (device.is_default) {
+                        option.selected = true;
+                    }
                     outputSelect.appendChild(option);
                 });
 
@@ -482,41 +527,70 @@
             await loadAudioDevices();
         }
 
-        // Load current settings (real implementation)
+        // Load current settings
         async function loadCurrentSettings() {
             try {
-                const settings = await window.__TAURI__.invoke('get_current_settings');
+                let settings;
+
+                if (isHTTPMode()) {
+                    settings = await httpApiCall('/api/current_settings');
+                } else {
+                    settings = await window.__TAURI__.invoke('get_current_settings');
+                }
 
                 // Audio settings
-                if (settings.audio.input_device) {
+                if (settings.audio && settings.audio.input_device) {
                     document.getElementById('input-device').value = settings.audio.input_device;
                 }
-                if (settings.audio.output_device) {
+                if (settings.audio && settings.audio.output_device) {
                     document.getElementById('output-device').value = settings.audio.output_device;
                 }
 
                 // Voice settings
-                document.getElementById('wake-word').value = settings.voice.wake_word;
-                document.getElementById('sensitivity').value = settings.voice.sensitivity;
-                document.getElementById('sensitivity-value').textContent = settings.voice.sensitivity;
-                document.getElementById('language').value = settings.voice.language;
+                if (settings.voice) {
+                    document.getElementById('wake-word').value = settings.voice.wake_word || 'gaja';
+                    document.getElementById('sensitivity').value = settings.voice.sensitivity || 0.6;
+                    document.getElementById('sensitivity-value').textContent = settings.voice.sensitivity || 0.6;
+                    document.getElementById('language').value = settings.voice.language || 'pl-PL';
+                } else if (settings.wakeword) {
+                    // Fallback to wakeword settings
+                    document.getElementById('wake-word').value = settings.wakeword.keyword || 'gaja';
+                    document.getElementById('sensitivity').value = settings.wakeword.sensitivity || 0.6;
+                    document.getElementById('sensitivity-value').textContent = settings.wakeword.sensitivity || 0.6;
+                }
 
                 // Overlay settings
-                document.getElementById('overlay-enabled').checked = settings.overlay.enabled;
-                document.getElementById('overlay-position').value = settings.overlay.position;
-                document.getElementById('overlay-opacity').value = settings.overlay.opacity;
-                document.getElementById('opacity-value').textContent = settings.overlay.opacity;
+                if (settings.overlay) {
+                    document.getElementById('overlay-enabled').checked = settings.overlay.enabled !== false;
+                    document.getElementById('overlay-position').value = settings.overlay.position || 'top-right';
+                    document.getElementById('overlay-opacity').value = settings.overlay.opacity || 0.9;
+                    document.getElementById('opacity-value').textContent = settings.overlay.opacity || 0.9;
+                }
 
                 // Daily briefing settings
-                document.getElementById('briefing-enabled').checked = settings.daily_briefing.enabled;
-                document.getElementById('startup-briefing').checked = settings.daily_briefing.startup_briefing;
-                document.getElementById('briefing-time').value = settings.daily_briefing.briefing_time;
-                document.getElementById('location').value = settings.daily_briefing.location;
+                if (settings.daily_briefing) {
+                    document.getElementById('briefing-enabled').checked = settings.daily_briefing.enabled !== false;
+                    document.getElementById('startup-briefing').checked = settings.daily_briefing.startup_briefing !== false;
+                    document.getElementById('briefing-time').value = settings.daily_briefing.briefing_time || '08:00';
+                    document.getElementById('location').value = settings.daily_briefing.location || 'Sosnowiec,PL';
+                }
 
                 console.log('Ustawienia załadowane pomyślnie');
             } catch (error) {
                 console.error('Błąd ładowania ustawień:', error);
-                alert('Błąd ładowania ustawień. Używane będą wartości domyślne.');
+                // Use defaults if loading fails
+                document.getElementById('wake-word').value = 'gaja';
+                document.getElementById('sensitivity').value = 0.6;
+                document.getElementById('sensitivity-value').textContent = 0.6;
+                document.getElementById('language').value = 'pl-PL';
+                document.getElementById('overlay-enabled').checked = true;
+                document.getElementById('overlay-position').value = 'top-right';
+                document.getElementById('overlay-opacity').value = 0.9;
+                document.getElementById('opacity-value').textContent = 0.9;
+                document.getElementById('briefing-enabled').checked = true;
+                document.getElementById('startup-briefing').checked = true;
+                document.getElementById('briefing-time').value = '08:00';
+                document.getElementById('location').value = 'Sosnowiec,PL';
             }
         }
 
@@ -546,21 +620,39 @@
             };
 
             try {
-                await window.__TAURI__.invoke('save_settings', { settings });
-                alert('Ustawienia zostały zapisane!');
-                closeSettings();
+                let result;
+
+                if (isHTTPMode()) {
+                    result = await httpApiCall('/api/save_settings', 'POST', { settings });
+                } else {
+                    await window.__TAURI__.invoke('save_settings', { settings });
+                    result = { success: true };
+                }
+
+                if (result.success) {
+                    alert('Ustawienia zostały zapisane!');
+                    closeSettings();
+                } else {
+                    alert('Błąd podczas zapisywania ustawień!');
+                }
             } catch (error) {
                 console.error('Błąd zapisywania ustawień:', error);
-                alert('Błąd podczas zapisywania ustawień!');
+                alert('Błąd podczas zapisywania ustawień: ' + error.message);
             }
         }
 
         // Close settings window
         async function closeSettings() {
             try {
-                await window.__TAURI__.invoke('close_settings');
+                if (isHTTPMode()) {
+                    // HTTP mode - just close the window/tab
+                    window.close();
+                } else {
+                    await window.__TAURI__.invoke('close_settings');
+                }
             } catch (error) {
                 console.error('Błąd zamykania okna ustawień:', error);
+                window.close(); // Fallback
             }
         }
     </script>

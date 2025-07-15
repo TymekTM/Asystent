@@ -66,7 +66,7 @@ def main():
         # Now start the actual client
         from client.client_main import main as client_main
 
-        return client_main()
+        return loop.run_until_complete(client_main())
 
     except KeyboardInterrupt:
         print("\n👋 Client shutdown by user")

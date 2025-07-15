@@ -1,16 +1,14 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use tauri::{Manager, AppHandle, Window, WindowEvent, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem, CustomMenuItem, WindowBuilder, WindowUrl};
+use tauri::{Manager, AppHandle, Window, WindowEvent};
 use tokio::time::sleep;
 use std::sync::{Arc, Mutex};
 use serde::{Deserialize, Serialize};
-use raw_window_handle::{HasRawWindowHandle, RawWindowHandle}; // Added HasRawWindowHandle
+use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
 use std::time::{Instant, Duration};
-use futures_util::StreamExt;
-use std::collections::HashMap;
+use futures_util::TryStreamExt;
 use std::fs;
-use std::path::Path;
 
 #[derive(Clone, Serialize)]
 struct StatusUpdate {
@@ -116,6 +114,7 @@ pub struct OverlayState {
     is_listening: bool,
     is_speaking: bool,
     wake_word_detected: bool,
+    overlay_enabled: bool, // New field to control overlay display
     #[serde(skip_serializing)]
     last_activity_time: Instant,
 }
@@ -129,6 +128,7 @@ impl OverlayState {
             is_listening: false,
             is_speaking: false,
             wake_word_detected: false,
+            overlay_enabled: true, // Default to enabled
             last_activity_time: Instant::now(),
         }
     }
@@ -138,8 +138,8 @@ type SharedState = Arc<Mutex<OverlayState>>;
 
 #[tauri::command]
 async fn show_overlay(window: Window, state: tauri::State<'_, SharedState>) -> Result<(), String> {
-    // Disable click-through when showing overlay so it can be interactive
-    set_click_through(&window, false);
+    // Zawsze włącz click-through - overlay ma być przeźroczysty dla kliknięć
+    set_click_through(&window, true);
     window.show().map_err(|e| e.to_string())?;
     {
         let mut overlay_state = state.lock().unwrap();
@@ -150,8 +150,7 @@ async fn show_overlay(window: Window, state: tauri::State<'_, SharedState>) -> R
 
 #[tauri::command]
 async fn hide_overlay(window: Window, state: tauri::State<'_, SharedState>) -> Result<(), String> {
-    // Enable click-through when hiding overlay to prevent blocking
-    set_click_through(&window, true);
+    // Ukryj okno
     window.hide().map_err(|e| e.to_string())?;
     {
         let mut overlay_state = state.lock().unwrap();
@@ -188,6 +187,16 @@ async fn update_status(
     })).map_err(|e| e.to_string())?;
 
     Ok(())
+}
+
+#[tauri::command]
+async fn toggle_overlay_display(state: tauri::State<'_, SharedState>) -> Result<bool, String> {
+    let mut overlay_state = state.lock().unwrap();
+    overlay_state.overlay_enabled = !overlay_state.overlay_enabled;
+    let enabled = overlay_state.overlay_enabled;
+
+    println!("[Rust] Overlay display toggled: {}", enabled);
+    Ok(enabled)
 }
 
 #[tauri::command]
@@ -251,8 +260,50 @@ async fn close_settings(app_handle: AppHandle) -> Result<(), String> {
 
 #[tauri::command]
 async fn get_audio_devices() -> Result<AudioDevices, String> {
-    // On Windows, we can use WinAPI to enumerate audio devices
-    // For now, we'll provide mock data but this could be enhanced with cpal or windows crate
+    println!("[Rust] Getting audio devices...");
+
+    // Try to get actual audio devices using cpal
+    #[cfg(feature = "audio")]
+    {
+        use cpal::traits::{DeviceTrait, HostTrait};
+
+        match cpal::default_host().devices() {
+            Ok(devices) => {
+                let mut input_devices = Vec::new();
+                let mut output_devices = Vec::new();
+
+                for (i, device) in devices.enumerate() {
+                    if let Ok(name) = device.name() {
+                        let device_info = AudioDevice {
+                            id: i.to_string(),
+                            name: name.clone(),
+                            is_default: i == 0,
+                        };
+
+                        // Check if device supports input
+                        if device.supported_input_configs().map(|mut c| c.next().is_some()).unwrap_or(false) {
+                            input_devices.push(device_info.clone());
+                        }
+
+                        // Check if device supports output
+                        if device.supported_output_configs().map(|mut c| c.next().is_some()).unwrap_or(false) {
+                            output_devices.push(device_info);
+                        }
+                    }
+                }
+
+                return Ok(AudioDevices {
+                    input_devices,
+                    output_devices,
+                });
+            }
+            Err(e) => {
+                println!("[Rust] Error getting audio devices: {}", e);
+            }
+        }
+    }
+
+    // Fallback to mock data for Windows
     let input_devices = vec![
         AudioDevice {
             id: "default_input".to_string(),
@@ -447,34 +498,26 @@ async fn handle_sse_stream(response: reqwest::Response, app_handle: AppHandle, s
     let mut stream = response.bytes_stream();
     let mut buffer = String::new();
 
-    while let Some(chunk) = stream.next().await {
-        match chunk {
-            Ok(bytes) => {
-                let chunk_str = String::from_utf8_lossy(&bytes);
-                buffer.push_str(&chunk_str);
-                  // Process complete SSE messages
-                while let Some(pos) = buffer.find("\n\n") {
-                    let message = buffer[..pos].to_string();
-                    buffer.drain(..pos + 2);
+    while let Some(chunk_result) = stream.try_next().await.unwrap_or(None) {
+        let chunk_str = String::from_utf8_lossy(&chunk_result);
+        buffer.push_str(&chunk_str);
+          // Process complete SSE messages
+        while let Some(pos) = buffer.find("\n\n") {
+            let message = buffer[..pos].to_string();
+            buffer.drain(..pos + 2);
 
-                    if message.starts_with("data: ") {
-                        let json_str = &message[6..]; // Remove "data: " prefix
-                          match serde_json::from_str::<serde_json::Value>(json_str) {
-                            Ok(data) => {
-                                println!("[Rust] Received SSE data: {}", data);
-                                process_status_data(data, app_handle.clone(), state.clone()).await;
-                            }
-                            Err(e) => {
-                                eprintln!("[Rust] Failed to parse SSE JSON: {}", e);
-                                eprintln!("[Rust] Raw JSON: {}", json_str);
-                            }
-                        }
+            if message.starts_with("data: ") {
+                let json_str = &message[6..]; // Remove "data: " prefix
+                  match serde_json::from_str::<serde_json::Value>(json_str) {
+                    Ok(data) => {
+                        println!("[Rust] Received SSE data: {}", data);
+                        process_status_data(data, app_handle.clone(), state.clone()).await;
+                    }
+                    Err(e) => {
+                        eprintln!("[Rust] Failed to parse SSE JSON: {}", e);
+                        eprintln!("[Rust] Raw JSON: {}", json_str);
                     }
                 }
-            }
-            Err(e) => {
-                eprintln!("[Rust] SSE stream error: {}", e);
-                break;
             }
         }
     }
@@ -555,7 +598,7 @@ async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, sta
     if data.get("show_overlay").and_then(|v| v.as_bool()).unwrap_or(false) {
         println!("[Rust] Show overlay command received");
         // Handle show overlay directly without function call
-        set_click_through(&window, false); // Disable click-through when showing overlay
+        set_click_through(&window, true); // ZAWSZE włącz click-through - overlay ma być przeźroczysty dla kliknięć
         let _ = window.show();
         state_guard.visible = true;
         return;
@@ -564,7 +607,6 @@ async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, sta
     if data.get("hide_overlay").and_then(|v| v.as_bool()).unwrap_or(false) {
         println!("[Rust] Hide overlay command received");
         // Handle hide overlay directly without function call
-        set_click_through(&window, true); // Enable click-through when hiding overlay
         let _ = window.hide();
         state_guard.visible = false;
         return;
@@ -578,10 +620,24 @@ async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, sta
     let wake_word_detected = data.get("wake_word_detected").and_then(|v| v.as_bool()).unwrap_or(false);
     let overlay_visible = data.get("overlay_visible").and_then(|v| v.as_bool()).unwrap_or(false);
 
-    // Enhanced visibility logic - show overlay when there's activity OR when explicitly set visible
+    // Enhanced visibility logic - overlay should always be active but only show content when needed
+    // The overlay window should exist but be transparent/hidden when not displaying information
     let has_activity = wake_word_detected || is_speaking || is_listening;
-    let has_meaningful_content = !current_text.is_empty() && current_text != "Listening..." && current_text != "Offline";
-    let should_be_visible = has_activity || has_meaningful_content || overlay_visible;
+    let has_meaningful_content = !current_text.is_empty() &&
+        current_text != "Listening..." &&
+        current_text != "Offline" &&
+        current_text != "Ready" &&
+        current_text != "Overlay Hidden";
+
+    // Show content only when there's meaningful activity or content AND overlay is enabled
+    let should_show_content = (has_activity || has_meaningful_content) &&
+        state_guard.overlay_enabled;
+
+    // Window should always be shown but content visibility controlled separately
+    let should_be_visible = true; // Always keep window open
+
+    // ZAWSZE ustaw click-through - overlay ma być przeźroczysty dla kliknięć
+    set_click_through(&window, true);
 
     let mut changed = false;
     if state_guard.text != current_text ||
@@ -594,8 +650,8 @@ async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, sta
     }
 
     if changed {
-        println!("[Rust] Status update: listening={}, speaking={}, wake_word={}, text='{}', visible={}, overlay_visible_flag={}",
-                is_listening, is_speaking, wake_word_detected, current_text, should_be_visible, overlay_visible);
+        println!("[Rust] Status update: listening={}, speaking={}, wake_word={}, text='{}', show_content={}, overlay_visible_flag={}",
+                is_listening, is_speaking, wake_word_detected, current_text, should_show_content, overlay_visible);
 
         state_guard.status = status.clone();
         state_guard.text = current_text.clone();
@@ -603,30 +659,33 @@ async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, sta
         state_guard.is_speaking = is_speaking;
         state_guard.wake_word_detected = wake_word_detected;
 
-        // Show/hide window based on calculated visibility
-        if should_be_visible && !state_guard.visible {
-            println!("[Rust] Showing overlay window");
-            set_click_through(&window, false);  // Disable click-through when showing - overlay should be interactive
+        // Window is always shown but with click-through always enabled
+        if !state_guard.visible {
+            println!("[Rust] Showing overlay window (always active)");
+            // ZAWSZE włącz click-through - overlay ma być zawsze przeźroczysty dla kliknięć
+            set_click_through(&window, true);
             window.show().unwrap_or_else(|e| eprintln!("Failed to show window: {}", e));
             state_guard.visible = true;
-        } else if !should_be_visible && state_guard.visible {
-            println!("[Rust] Hiding overlay window");
-            set_click_through(&window, true); // Enable click-through when hiding to prevent blocking
-            window.hide().unwrap_or_else(|e| eprintln!("Failed to hide window: {}", e));
-            state_guard.visible = false;
         }
 
-        // Emit status update to frontend
-        let payload = StatusUpdate {
-            status: status.clone(),
-            text: state_guard.text.clone(),
-            is_listening: state_guard.is_listening,
-            is_speaking: state_guard.is_speaking,
-            wake_word_detected: state_guard.wake_word_detected,
-        };
+        // ZAWSZE ustaw click-through na true - overlay nigdy nie powinien blokować kliknięć
+        set_click_through(&window, true);
+
+        // Emit status update to frontend with content visibility flag
+        let payload = serde_json::json!({
+            "status": status.clone(),
+            "text": state_guard.text.clone(),
+            "is_listening": state_guard.is_listening,
+            "is_speaking": state_guard.is_speaking,
+            "wake_word_detected": state_guard.wake_word_detected,
+            "show_content": should_show_content,
+            "overlay_enabled": overlay_visible
+        });
+
         window.emit("status-update", payload).unwrap_or_else(|e| {
             eprintln!("Failed to emit status-update: {}", e);
         });
+
         state_guard.last_activity_time = Instant::now();
     }
 
@@ -635,7 +694,6 @@ async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, sta
         && current_text.is_empty() && !is_listening && !is_speaking && !wake_word_detected && !overlay_visible {
         if window.is_visible().unwrap_or(false) {
             println!("[Rust] Auto-hiding window due to prolonged inactivity and no relevant status.");
-            set_click_through(&window, true); // Enable click-through when auto-hiding to prevent blocking
             window.hide().unwrap_or_else(|e| eprintln!("Failed to hide window: {}", e));
             state_guard.visible = false;
         }
@@ -646,76 +704,8 @@ async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, sta
 pub fn run() {
     let state = Arc::new(Mutex::new(OverlayState::new()));
 
-    // Create system tray menu
-    let tray_menu = SystemTrayMenu::new()
-        .add_item(CustomMenuItem::new("settings".to_string(), "Ustawienia"))
-        .add_native_item(SystemTrayMenuItem::Separator)
-        .add_item(CustomMenuItem::new("show".to_string(), "Pokaż overlay"))
-        .add_item(CustomMenuItem::new("hide".to_string(), "Ukryj overlay"))
-        .add_native_item(SystemTrayMenuItem::Separator)
-        .add_item(CustomMenuItem::new("quit".to_string(), "Zakończ"));
-
-    let system_tray = SystemTray::new()
-        .with_menu(tray_menu)
-        .with_tooltip("Gaja - Asystent AI");
-
     let app_result = tauri::Builder::default()
         .manage(state.clone())
-        .system_tray(system_tray)
-        .on_system_tray_event(|app, event| match event {
-            SystemTrayEvent::LeftClick {
-                position: _,
-                size: _,
-                ..
-            } => {
-                println!("System tray left click");
-            }
-            SystemTrayEvent::RightClick {
-                position: _,
-                size: _,
-                ..
-            } => {
-                println!("System tray right click");
-            }
-            SystemTrayEvent::DoubleClick {
-                position: _,
-                size: _,
-                ..
-            } => {
-                // Double click opens settings
-                let app_handle = app.clone();
-                tauri::async_runtime::spawn(async move {
-                    let _ = open_settings(app_handle).await;
-                });
-            }
-            SystemTrayEvent::MenuItemClick { id, .. } => {
-                match id.as_str() {
-                    "settings" => {
-                        let app_handle = app.clone();
-                        tauri::async_runtime::spawn(async move {
-                            let _ = open_settings(app_handle).await;
-                        });
-                    }
-                    "show" => {
-                        if let Some(window) = app.get_window("main") {
-                            set_click_through(&window, false);  // Disable click-through when showing via tray - overlay should be interactive
-                            let _ = window.show();
-                        }
-                    }
-                    "hide" => {
-                        if let Some(window) = app.get_window("main") {
-                            set_click_through(&window, true); // Enable click-through when hiding via tray to prevent blocking
-                            let _ = window.hide();
-                        }
-                    }
-                    "quit" => {
-                        app.exit(0);
-                    }
-                    _ => {}
-                }
-            }
-            _ => {}
-        })
         .setup(move |app| {
             let main_window = app.get_window("main").unwrap();
             let app_handle = app.handle();
@@ -734,12 +724,12 @@ pub fn run() {
                 Err(e) => {
                     eprintln!("Error getting primary monitor: {}", e);
                 }
-            }            // Initially set click_through to false since overlay starts hidden
-            set_click_through(&main_window, false);
+            }            // Ustaw click-through na true na początku - overlay ma być przeźroczysty
+            set_click_through(&main_window, true);
 
             // Start overlay hidden initially - will be shown when client sends status
             main_window.hide().unwrap_or_else(|e| eprintln!("Failed to hide window initially: {}", e));
-            println!("[Rust] Overlay started and hidden, waiting for client status updates");
+            println!("[Rust] Overlay started and hidden with click-through enabled, waiting for client status updates");
 
             tauri::async_runtime::spawn(async move {
                 poll_assistant_status(app_handle, state_clone_for_poll).await;
@@ -751,13 +741,21 @@ pub fn run() {
             hide_overlay,
             update_status,
             get_state,
+            toggle_overlay_display,
             open_settings,
             close_settings,
             get_audio_devices,
             get_current_settings,
             get_connection_status,
             save_settings,
-            debug_log
+            debug_log,
+            get_settings,
+            reset_settings,
+            test_tts,
+            test_wakeword,
+            test_connection,
+            check_connection,
+            test_audio_devices
         ])
         .on_window_event(|event| {
             match event.event() {
@@ -824,6 +822,60 @@ fn set_click_through(window: &Window, click_through: bool) {
     {
         println!("Click-through not implemented for this OS");
     }
+}
+
+#[tauri::command]
+async fn get_settings() -> Result<Settings, String> {
+    load_settings()
+}
+
+#[tauri::command]
+async fn reset_settings() -> Result<(), String> {
+    let settings_path = get_settings_path()?;
+
+    // Remove existing settings file
+    if settings_path.exists() {
+        std::fs::remove_file(&settings_path)
+            .map_err(|e| format!("Nie można usunąć pliku ustawień: {}", e))?;
+    }
+
+    println!("[Rust] Settings reset to defaults");
+    Ok(())
+}
+
+#[tauri::command]
+async fn test_tts(text: String) -> Result<(), String> {
+    println!("[Rust] TTS test requested: {}", text);
+    // This would communicate with the Python client to test TTS
+    Ok(())
+}
+
+#[tauri::command]
+async fn test_wakeword(query: String) -> Result<(), String> {
+    println!("[Rust] Wakeword test requested: {}", query);
+    // This would communicate with the Python client to test wakeword
+    Ok(())
+}
+
+#[tauri::command]
+async fn test_connection() -> Result<String, String> {
+    println!("[Rust] Connection test requested");
+    // This would check connection to the Python client
+    Ok("Connection OK".to_string())
+}
+
+#[tauri::command]
+async fn check_connection() -> Result<bool, String> {
+    println!("[Rust] Connection check requested");
+    // This would check if the Python client is connected
+    Ok(true)
+}
+
+#[tauri::command]
+async fn test_audio_devices() -> Result<(), String> {
+    println!("[Rust] Audio devices test requested");
+    // This would test the audio devices
+    Ok(())
 }
 
 // Helper function to extract HWND

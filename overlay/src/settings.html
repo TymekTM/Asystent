@@ -1,280 +1,190 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gaja - Ustawienia</title>
-    <script>
-        // Tauri API initialization
-        window.__TAURI_METADATA__ = {"bundle":{"identifier":"com.gaja.overlay"}};
-
-        // Enhanced debug function
-        function debugLog(message, data = null) {
-            const timestamp = new Date().toISOString();
-            console.log(`[${timestamp}] [Settings] ${message}`, data || '');
-
-            // Try to also send to Rust console if possible
-            if (window.__TAURI__ && window.__TAURI__.invoke) {
-                window.__TAURI__.invoke('debug_log', { message: `[Settings] ${message}` }).catch(() => {});
-            }
-        }
-
-        debugLog('settings.html script loaded', { location: window.location.href, protocol: window.location.protocol });
-    </script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #333;
+            margin: 0;
             padding: 20px;
-            min-height: 100vh;
+            background-color: #f5f5f5;
+            color: #333;
         }
-
         .container {
             max-width: 800px;
             margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
+            background-color: white;
             padding: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-
         h1 {
+            color: #2c3e50;
             text-align: center;
-            color: #4a5568;
             margin-bottom: 30px;
-            font-size: 2rem;
-            font-weight: 600;
         }
-
-        .logo {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .logo h2 {
-            color: #667eea;
-            font-size: 1.5rem;
-            font-weight: 700;
-        }
-
-        .settings-section {
+        .section {
             margin-bottom: 30px;
             padding: 20px;
-            background: rgba(255, 255, 255, 0.8);
-            border-radius: 10px;
-            border-left: 4px solid #667eea;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
         }
-
-        .settings-section h3 {
-            color: #2d3748;
+        .section h2 {
+            color: #2c3e50;
+            margin-top: 0;
             margin-bottom: 15px;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
         }
-
-        .icon {
-            margin-right: 10px;
-            font-size: 1.3rem;
-        }
-
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
-
         label {
             display: block;
-            margin-bottom: 8px;
-            color: #4a5568;
+            margin-bottom: 5px;
             font-weight: 500;
+            color: #555;
         }
-
-        select, input, textarea {
+        select, input[type="text"], input[type="number"], input[type="range"] {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
             font-size: 14px;
-            transition: border-color 0.3s, box-shadow 0.3s;
-            background: white;
+            transition: border-color 0.3s;
         }
-
-        select:focus, input:focus, textarea:focus {
+        select:focus, input:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: #3498db;
         }
-
         .checkbox-group {
             display: flex;
             align-items: center;
-            margin-bottom: 15px;
+            gap: 10px;
         }
-
-        .checkbox-group input[type="checkbox"] {
+        input[type="checkbox"] {
             width: auto;
-            margin-right: 10px;
-            transform: scale(1.2);
         }
-
+        .range-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .range-value {
+            min-width: 50px;
+            text-align: center;
+            font-weight: bold;
+            color: #3498db;
+        }
         .button-group {
             display: flex;
-            gap: 15px;
-            justify-content: flex-end;
+            gap: 10px;
+            justify-content: center;
             margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #e2e8f0;
         }
-
-        .btn {
+        button {
             padding: 12px 24px;
             border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
+            border-radius: 5px;
+            font-size: 16px;
             cursor: pointer;
-            transition: all 0.3s;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            transition: background-color 0.3s;
         }
-
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-color: #3498db;
             color: white;
         }
-
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            background-color: #2980b9;
         }
-
         .btn-secondary {
-            background: #e2e8f0;
-            color: #4a5568;
+            background-color: #95a5a6;
+            color: white;
         }
-
         .btn-secondary:hover {
-            background: #cbd5e0;
-            transform: translateY(-1px);
+            background-color: #7f8c8d;
         }
-
+        .btn-test {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .btn-test:hover {
+            background-color: #c0392b;
+        }
         .status-indicator {
             display: inline-block;
-            width: 12px;
-            height: 12px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
             margin-right: 8px;
         }
-
-        .status-online {
-            background: #48bb78;
+        .status-connected {
+            background-color: #27ae60;
         }
-
-        .status-offline {
-            background: #f56565;
+        .status-disconnected {
+            background-color: #e74c3c;
         }
-
-        .refresh-btn {
-            padding: 8px 16px;
-            margin-left: 10px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
+        .info-box {
+            background-color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
         }
-
-        .refresh-btn:hover {
-            background: #5a67d8;
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
         }
-
-        .device-list {
-            background: #f7fafc;
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
             padding: 10px;
-            border-radius: 6px;
-            font-size: 12px;
-            color: #718096;
-            margin-top: 8px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="logo">
-            <h2>🤖 GAJA</h2>
-        </div>
-        <h1>Ustawienia Asystenta</h1>
+        <h1>🎙️ Gaja - Ustawienia</h1>
 
-        <!-- Status Section -->
-        <div class="settings-section">
-            <h3><span class="icon">📊</span>Status Systemu</h3>
-            <div class="form-group">
-                <label>Stan połączenia:</label>
-                <div style="display: flex; align-items: center; justify-content: space-between;">
-                    <div>
-                        <span class="status-indicator status-offline" id="connection-status"></span>
-                        <span id="connection-text">Sprawdzanie połączenia...</span>
-                    </div>
-                    <button class="refresh-btn" onclick="loadConnectionStatus()">🔄 Odśwież</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Audio Settings -->
-        <div class="settings-section">
-            <h3><span class="icon">🎤</span>Ustawienia Audio</h3>
-
+        <div class="section">
+            <h2>🔊 Ustawienia audio</h2>
             <div class="form-group">
                 <label for="input-device">Urządzenie wejściowe (mikrofon):</label>
-                <div style="display: flex; align-items: center;">
-                    <select id="input-device">
-                        <option value="">Ładowanie urządzeń...</option>
-                    </select>
-                    <button class="refresh-btn" onclick="refreshAudioDevices()">🔄</button>
-                </div>
-                <div class="device-list" id="input-devices-info">
-                    Dostępne urządzenia wejściowe zostaną załadowane automatycznie
-                </div>
+                <select id="input-device">
+                    <option value="">Ładowanie...</option>
+                </select>
             </div>
-
             <div class="form-group">
                 <label for="output-device">Urządzenie wyjściowe (głośniki):</label>
-                <div style="display: flex; align-items: center;">
-                    <select id="output-device">
-                        <option value="">Ładowanie urządzeń...</option>
-                    </select>
-                    <button class="refresh-btn" onclick="refreshAudioDevices()">🔄</button>
-                </div>
-                <div class="device-list" id="output-devices-info">
-                    Dostępne urządzenia wyjściowe zostaną załadowane automatycznie
-                </div>
+                <select id="output-device">
+                    <option value="">Ładowanie...</option>
+                </select>
             </div>
+            <button class="btn-test" onclick="testAudioDevices()">🎤 Testuj urządzenia</button>
         </div>
 
-        <!-- Voice Settings -->
-        <div class="settings-section">
-            <h3><span class="icon">🗣️</span>Ustawienia Głosu</h3>
-
+        <div class="section">
+            <h2>🗣️ Ustawienia głosu</h2>
             <div class="form-group">
-                <label for="wake-word">Słowo aktywacyjne:</label>
-                <input type="text" id="wake-word" value="gaja" placeholder="np. gaja, asystent">
+                <label for="wake-word">Słowo aktywujące:</label>
+                <input type="text" id="wake-word" placeholder="gaja">
             </div>
-
             <div class="form-group">
-                <label for="sensitivity">Czułość wykrywania (0.1 - 1.0):</label>
-                <input type="range" id="sensitivity" min="0.1" max="1.0" step="0.05" value="0.6">
-                <span id="sensitivity-value">0.6</span>
+                <label for="sensitivity">Czułość detekcji:</label>
+                <div class="range-group">
+                    <input type="range" id="sensitivity" min="0.1" max="1.0" step="0.1">
+                    <span class="range-value" id="sensitivity-value">0.6</span>
+                </div>
             </div>
-
             <div class="form-group">
                 <label for="language">Język:</label>
                 <select id="language">
@@ -285,284 +195,326 @@
             </div>
         </div>
 
-        <!-- Overlay Settings -->
-        <div class="settings-section">
-            <h3><span class="icon">🖥️</span>Ustawienia Overlay</h3>
-
-            <div class="checkbox-group">
-                <input type="checkbox" id="overlay-enabled" checked>
-                <label for="overlay-enabled">Włącz overlay</label>
+        <div class="section">
+            <h2>👁️ Ustawienia overlay</h2>
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="overlay-enabled">
+                    <label for="overlay-enabled">Włącz overlay</label>
+                </div>
             </div>
-
             <div class="form-group">
                 <label for="overlay-position">Pozycja overlay:</label>
                 <select id="overlay-position">
-                    <option value="top-right">Prawy górny róg</option>
-                    <option value="top-left">Lewy górny róg</option>
-                    <option value="bottom-right">Prawy dolny róg</option>
-                    <option value="bottom-left">Lewy dolny róg</option>
-                    <option value="center">Centrum</option>
+                    <option value="top-left">Góra-lewo</option>
+                    <option value="top-right">Góra-prawo</option>
+                    <option value="bottom-left">Dół-lewo</option>
+                    <option value="bottom-right">Dół-prawo</option>
                 </select>
             </div>
-
             <div class="form-group">
-                <label for="overlay-opacity">Przezroczystość (0.1 - 1.0):</label>
-                <input type="range" id="overlay-opacity" min="0.1" max="1.0" step="0.1" value="0.9">
-                <span id="opacity-value">0.9</span>
+                <label for="overlay-opacity">Przezroczystość overlay:</label>
+                <div class="range-group">
+                    <input type="range" id="overlay-opacity" min="0.1" max="1.0" step="0.1">
+                    <span class="range-value" id="overlay-opacity-value">0.9</span>
+                </div>
             </div>
         </div>
 
-        <!-- Daily Briefing Settings -->
-        <div class="settings-section">
-            <h3><span class="icon">📅</span>Ustawienia Daily Briefing</h3>
-
-            <div class="checkbox-group">
-                <input type="checkbox" id="briefing-enabled" checked>
-                <label for="briefing-enabled">Włącz daily briefing</label>
-            </div>
-
-            <div class="checkbox-group">
-                <input type="checkbox" id="startup-briefing" checked>
-                <label for="startup-briefing">Briefing przy starcie aplikacji</label>
-            </div>
-
+        <div class="section">
+            <h2>📅 Ustawienia daily briefing</h2>
             <div class="form-group">
-                <label for="briefing-time">Godzina zaplanowanego briefingu:</label>
-                <input type="time" id="briefing-time" value="08:00">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="daily-briefing-enabled">
+                    <label for="daily-briefing-enabled">Włącz daily briefing</label>
+                </div>
             </div>
-
             <div class="form-group">
-                <label for="location">Lokalizacja (dla pogody):</label>
-                <input type="text" id="location" value="Sosnowiec,PL" placeholder="np. Warszawa,PL">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="startup-briefing">
+                    <label for="startup-briefing">Briefing przy starcie</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="briefing-time">Czas briefingu:</label>
+                <input type="text" id="briefing-time" placeholder="08:00">
+            </div>
+            <div class="form-group">
+                <label for="location">Lokalizacja:</label>
+                <input type="text" id="location" placeholder="Warszawa">
             </div>
         </div>
 
-        <!-- Button Group -->
+        <div class="section">
+            <h2>🔧 Testy systemu</h2>
+            <div class="form-group">
+                <button class="btn-test" onclick="testTTS()">🗣️ Testuj TTS</button>
+                <button class="btn-test" onclick="testWakeword()">🎤 Testuj słowo aktywujące</button>
+                <button class="btn-test" onclick="testConnection()">🌐 Testuj połączenie</button>
+            </div>
+            <div class="info-box">
+                <p><strong>Status połączenia:</strong>
+                    <span class="status-indicator" id="connection-status"></span>
+                    <span id="connection-text">Sprawdzanie...</span>
+                </p>
+                <p><strong>Wersja klienta:</strong> <span id="client-version">Nieznana</span></p>
+            </div>
+        </div>
+
         <div class="button-group">
-            <button class="btn btn-secondary" onclick="closeSettings()">Anuluj</button>
-            <button class="btn btn-primary" onclick="saveSettings()">Zapisz ustawienia</button>
+            <button class="btn-primary" onclick="saveSettings()">💾 Zapisz ustawienia</button>
+            <button class="btn-secondary" onclick="resetSettings()">🔄 Resetuj do domyślnych</button>
+            <button class="btn-secondary" onclick="closeSettings()">❌ Zamknij</button>
         </div>
+
+        <div id="message-area"></div>
     </div>
 
     <script>
-        // Check if Tauri API is available
-        function checkTauriAPI() {
-            debugLog('Checking Tauri API availability...');
-            debugLog('window.__TAURI__ exists: ' + (typeof window.__TAURI__ !== 'undefined'));
+        // Initialize Tauri API
+        const { invoke } = window.__TAURI__.tauri;
+        const { emit, listen } = window.__TAURI__.event;
 
-            if (typeof window.__TAURI__ !== 'undefined') {
-                debugLog('Available Tauri methods: ' + Object.keys(window.__TAURI__).join(', '));
-                debugLog('invoke available: ' + (typeof window.__TAURI__.invoke !== 'undefined'));
-                return true;
-            } else {
-                debugLog('BŁĄD: window.__TAURI__ nie jest dostępne!');
-                document.getElementById('connection-text').textContent = 'BŁĄD: Tauri API niedostępne';
-                alert('BŁĄD: Tauri API nie jest dostępne w oknie ustawień!');
-                return false;
-            }
-        }
+        let currentSettings = {};
+        let audioDevices = { input_devices: [], output_devices: [] };
 
-        // Initialize settings when page loads
-        window.addEventListener('DOMContentLoaded', async () => {
-            debugLog('DOM loaded, initializing...');
-
-            // Check Tauri API first
-            if (!checkTauriAPI()) {
-                document.getElementById('connection-status').className = 'status-indicator status-offline';
-                document.getElementById('connection-text').textContent = 'BŁĄD: Tauri API niedostępne';
-                return;
-            }
-
-            debugLog('Tauri API available, proceeding...');
-            await loadConnectionStatus();
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadSettings();
             await loadAudioDevices();
-            await loadCurrentSettings();
+            await checkConnection();
             setupEventListeners();
         });
 
-        // Load connection status
-        async function loadConnectionStatus() {
-            debugLog('Loading connection status...');
+        // Setup event listeners
+        function setupEventListeners() {
+            // Range inputs
+            document.getElementById('sensitivity').addEventListener('input', (e) => {
+                document.getElementById('sensitivity-value').textContent = e.target.value;
+            });
 
-            const statusIndicator = document.getElementById('connection-status');
-            const statusText = document.getElementById('connection-text');
+            document.getElementById('overlay-opacity').addEventListener('input', (e) => {
+                document.getElementById('overlay-opacity-value').textContent = e.target.value;
+            });
+        }
 
+        // Load settings from backend
+        async function loadSettings() {
             try {
-                debugLog('Calling window.__TAURI__.invoke(get_connection_status)...');
-                const connectionStatus = await window.__TAURI__.invoke('get_connection_status');
-                debugLog('Connection status received:', connectionStatus);
-                alert('Tauri API działa! Status: ' + JSON.stringify(connectionStatus, null, 2));
-
-                if (connectionStatus.connected) {
-                    statusIndicator.className = 'status-indicator status-online';
-                    statusText.textContent = `Połączony z serwerem (port ${connectionStatus.port})`;
-
-                    // Update server status if available
-                    if (connectionStatus.server_status) {
-                        const serverStatus = connectionStatus.server_status.status;
-                        console.log('Server status:', serverStatus);
-                        if (serverStatus === 'Error') {
-                            statusText.textContent += ' - Serwer w stanie błędu';
-                        } else if (serverStatus === 'Ready') {
-                            statusText.textContent += ' - Serwer gotowy';
-                        } else if (serverStatus === 'Initializing...') {
-                            statusText.textContent += ' - Serwer inicjalizuje';
-                        }
-                    }
-                } else {
-                    statusIndicator.className = 'status-indicator status-offline';
-                    statusText.textContent = connectionStatus.error || 'Brak połączenia z serwerem';
-                }
+                const settings = await invoke('get_settings');
+                currentSettings = settings;
+                updateUI(settings);
             } catch (error) {
-                console.error('Błąd sprawdzania stanu połączenia:', error);
-                statusIndicator.className = 'status-indicator status-offline';
-                statusText.textContent = 'Błąd: ' + error.toString();
+                console.error('Error loading settings:', error);
+                showMessage('Błąd ładowania ustawień: ' + error, 'error');
             }
         }
 
-        // Setup event listeners for real-time updates
-        function setupEventListeners() {
-            // Sensitivity slider
-            const sensitivitySlider = document.getElementById('sensitivity');
-            const sensitivityValue = document.getElementById('sensitivity-value');
-            sensitivitySlider.addEventListener('input', (e) => {
-                sensitivityValue.textContent = e.target.value;
-            });
-
-            // Opacity slider
-            const opacitySlider = document.getElementById('overlay-opacity');
-            const opacityValue = document.getElementById('opacity-value');
-            opacitySlider.addEventListener('input', (e) => {
-                opacityValue.textContent = e.target.value;
-            });
-        }
-
-        // Load audio devices from system
+        // Load audio devices
         async function loadAudioDevices() {
             try {
-                const devices = await window.__TAURI__.invoke('get_audio_devices');
-
-                // Update input devices
-                const inputSelect = document.getElementById('input-device');
-                inputSelect.innerHTML = '<option value="">Wybierz urządzenie wejściowe</option>';
-                devices.input_devices.forEach(device => {
-                    const option = document.createElement('option');
-                    option.value = device.id;
-                    option.textContent = device.name;
-                    inputSelect.appendChild(option);
-                });
-
-                // Update output devices
-                const outputSelect = document.getElementById('output-device');
-                outputSelect.innerHTML = '<option value="">Wybierz urządzenie wyjściowe</option>';
-                devices.output_devices.forEach(device => {
-                    const option = document.createElement('option');
-                    option.value = device.id;
-                    option.textContent = device.name;
-                    outputSelect.appendChild(option);
-                });
-
-                // Update device info
-                document.getElementById('input-devices-info').textContent =
-                    `Znaleziono ${devices.input_devices.length} urządzeń wejściowych`;
-                document.getElementById('output-devices-info').textContent =
-                    `Znaleziono ${devices.output_devices.length} urządzeń wyjściowych`;
-
+                const devices = await invoke('get_audio_devices');
+                audioDevices = devices;
+                updateAudioDeviceOptions();
             } catch (error) {
-                console.error('Błąd ładowania urządzeń audio:', error);
-                document.getElementById('input-devices-info').textContent =
-                    'Błąd ładowania urządzeń wejściowych';
-                document.getElementById('output-devices-info').textContent =
-                    'Błąd ładowania urządzeń wyjściowych';
+                console.error('Error loading audio devices:', error);
+                showMessage('Błąd ładowania urządzeń audio: ' + error, 'error');
             }
         }
 
-        // Refresh audio devices
-        async function refreshAudioDevices() {
-            await loadAudioDevices();
+        // Update UI with settings
+        function updateUI(settings) {
+            // Audio settings
+            document.getElementById('input-device').value = settings.audio.input_device || '';
+            document.getElementById('output-device').value = settings.audio.output_device || '';
+
+            // Voice settings
+            document.getElementById('wake-word').value = settings.voice.wake_word || 'gaja';
+            document.getElementById('sensitivity').value = settings.voice.sensitivity || 0.6;
+            document.getElementById('sensitivity-value').textContent = settings.voice.sensitivity || 0.6;
+            document.getElementById('language').value = settings.voice.language || 'pl-PL';
+
+            // Overlay settings
+            document.getElementById('overlay-enabled').checked = settings.overlay.enabled;
+            document.getElementById('overlay-position').value = settings.overlay.position || 'top-right';
+            document.getElementById('overlay-opacity').value = settings.overlay.opacity || 0.9;
+            document.getElementById('overlay-opacity-value').textContent = settings.overlay.opacity || 0.9;
+
+            // Daily briefing settings
+            document.getElementById('daily-briefing-enabled').checked = settings.daily_briefing.enabled;
+            document.getElementById('startup-briefing').checked = settings.daily_briefing.startup_briefing;
+            document.getElementById('briefing-time').value = settings.daily_briefing.briefing_time || '08:00';
+            document.getElementById('location').value = settings.daily_briefing.location || 'Warszawa';
         }
 
-        // Load current settings (real implementation)
-        async function loadCurrentSettings() {
-            try {
-                const settings = await window.__TAURI__.invoke('get_current_settings');
+        // Update audio device options
+        function updateAudioDeviceOptions() {
+            const inputSelect = document.getElementById('input-device');
+            const outputSelect = document.getElementById('output-device');
 
-                // Audio settings
-                if (settings.audio.input_device) {
-                    document.getElementById('input-device').value = settings.audio.input_device;
-                }
-                if (settings.audio.output_device) {
-                    document.getElementById('output-device').value = settings.audio.output_device;
-                }
+            // Clear existing options
+            inputSelect.innerHTML = '<option value="">Wybierz urządzenie wejściowe...</option>';
+            outputSelect.innerHTML = '<option value="">Wybierz urządzenie wyjściowe...</option>';
 
-                // Voice settings
-                document.getElementById('wake-word').value = settings.voice.wake_word;
-                document.getElementById('sensitivity').value = settings.voice.sensitivity;
-                document.getElementById('sensitivity-value').textContent = settings.voice.sensitivity;
-                document.getElementById('language').value = settings.voice.language;
+            // Add input devices
+            audioDevices.input_devices.forEach(device => {
+                const option = document.createElement('option');
+                option.value = device.id;
+                option.textContent = device.name + (device.is_default ? ' (domyślny)' : '');
+                inputSelect.appendChild(option);
+            });
 
-                // Overlay settings
-                document.getElementById('overlay-enabled').checked = settings.overlay.enabled;
-                document.getElementById('overlay-position').value = settings.overlay.position;
-                document.getElementById('overlay-opacity').value = settings.overlay.opacity;
-                document.getElementById('opacity-value').textContent = settings.overlay.opacity;
-
-                // Daily briefing settings
-                document.getElementById('briefing-enabled').checked = settings.daily_briefing.enabled;
-                document.getElementById('startup-briefing').checked = settings.daily_briefing.startup_briefing;
-                document.getElementById('briefing-time').value = settings.daily_briefing.briefing_time;
-                document.getElementById('location').value = settings.daily_briefing.location;
-
-                console.log('Ustawienia załadowane pomyślnie');
-            } catch (error) {
-                console.error('Błąd ładowania ustawień:', error);
-                alert('Błąd ładowania ustawień. Używane będą wartości domyślne.');
-            }
+            // Add output devices
+            audioDevices.output_devices.forEach(device => {
+                const option = document.createElement('option');
+                option.value = device.id;
+                option.textContent = device.name + (device.is_default ? ' (domyślny)' : '');
+                outputSelect.appendChild(option);
+            });
         }
 
         // Save settings
         async function saveSettings() {
-            const settings = {
-                audio: {
-                    input_device: document.getElementById('input-device').value,
-                    output_device: document.getElementById('output-device').value
-                },
-                voice: {
-                    wake_word: document.getElementById('wake-word').value,
-                    sensitivity: parseFloat(document.getElementById('sensitivity').value),
-                    language: document.getElementById('language').value
-                },
-                overlay: {
-                    enabled: document.getElementById('overlay-enabled').checked,
-                    position: document.getElementById('overlay-position').value,
-                    opacity: parseFloat(document.getElementById('overlay-opacity').value)
-                },
-                daily_briefing: {
-                    enabled: document.getElementById('briefing-enabled').checked,
-                    startup_briefing: document.getElementById('startup-briefing').checked,
-                    briefing_time: document.getElementById('briefing-time').value,
-                    location: document.getElementById('location').value
-                }
-            };
-
             try {
-                await window.__TAURI__.invoke('save_settings', { settings });
-                alert('Ustawienia zostały zapisane!');
-                closeSettings();
+                const settings = {
+                    audio: {
+                        input_device: document.getElementById('input-device').value || null,
+                        output_device: document.getElementById('output-device').value || null
+                    },
+                    voice: {
+                        wake_word: document.getElementById('wake-word').value,
+                        sensitivity: parseFloat(document.getElementById('sensitivity').value),
+                        language: document.getElementById('language').value
+                    },
+                    overlay: {
+                        enabled: document.getElementById('overlay-enabled').checked,
+                        position: document.getElementById('overlay-position').value,
+                        opacity: parseFloat(document.getElementById('overlay-opacity').value)
+                    },
+                    daily_briefing: {
+                        enabled: document.getElementById('daily-briefing-enabled').checked,
+                        startup_briefing: document.getElementById('startup-briefing').checked,
+                        briefing_time: document.getElementById('briefing-time').value,
+                        location: document.getElementById('location').value
+                    }
+                };
+
+                await invoke('save_settings', { settings });
+                showMessage('Ustawienia zostały zapisane pomyślnie!', 'success');
+
+                // Update current settings
+                currentSettings = settings;
+
             } catch (error) {
-                console.error('Błąd zapisywania ustawień:', error);
-                alert('Błąd podczas zapisywania ustawień!');
+                console.error('Error saving settings:', error);
+                showMessage('Błąd zapisywania ustawień: ' + error, 'error');
+            }
+        }
+
+        // Reset settings to defaults
+        async function resetSettings() {
+            if (confirm('Czy na pewno chcesz przywrócić ustawienia domyślne?')) {
+                try {
+                    await invoke('reset_settings');
+                    await loadSettings();
+                    showMessage('Ustawienia zostały przywrócone do domyślnych', 'success');
+                } catch (error) {
+                    console.error('Error resetting settings:', error);
+                    showMessage('Błąd resetowania ustawień: ' + error, 'error');
+                }
+            }
+        }
+
+        // Test functions
+        async function testTTS() {
+            try {
+                await invoke('test_tts', { text: 'Test syntezatora mowy działa poprawnie.' });
+                showMessage('Test TTS uruchomiony', 'success');
+            } catch (error) {
+                console.error('Error testing TTS:', error);
+                showMessage('Błąd testu TTS: ' + error, 'error');
+            }
+        }
+
+        async function testWakeword() {
+            try {
+                await invoke('test_wakeword', { query: 'Powiedz mi coś o sobie.' });
+                showMessage('Test słowa aktywującego uruchomiony', 'success');
+            } catch (error) {
+                console.error('Error testing wakeword:', error);
+                showMessage('Błąd testu słowa aktywującego: ' + error, 'error');
+            }
+        }
+
+        async function testConnection() {
+            try {
+                const status = await invoke('test_connection');
+                showMessage('Test połączenia: ' + status, 'success');
+                await checkConnection();
+            } catch (error) {
+                console.error('Error testing connection:', error);
+                showMessage('Błąd testu połączenia: ' + error, 'error');
+            }
+        }
+
+        async function testAudioDevices() {
+            try {
+                await invoke('test_audio_devices');
+                showMessage('Test urządzeń audio uruchomiony', 'success');
+            } catch (error) {
+                console.error('Error testing audio devices:', error);
+                showMessage('Błąd testu urządzeń audio: ' + error, 'error');
+            }
+        }
+
+        // Check connection status
+        async function checkConnection() {
+            try {
+                const connected = await invoke('check_connection');
+                const statusElement = document.getElementById('connection-status');
+                const textElement = document.getElementById('connection-text');
+
+                if (connected) {
+                    statusElement.className = 'status-indicator status-connected';
+                    textElement.textContent = 'Połączono';
+                } else {
+                    statusElement.className = 'status-indicator status-disconnected';
+                    textElement.textContent = 'Rozłączono';
+                }
+            } catch (error) {
+                console.error('Error checking connection:', error);
+                const statusElement = document.getElementById('connection-status');
+                const textElement = document.getElementById('connection-text');
+                statusElement.className = 'status-indicator status-disconnected';
+                textElement.textContent = 'Błąd sprawdzania';
             }
         }
 
         // Close settings window
         async function closeSettings() {
             try {
-                await window.__TAURI__.invoke('close_settings');
+                await invoke('close_settings');
             } catch (error) {
-                console.error('Błąd zamykania okna ustawień:', error);
+                console.error('Error closing settings:', error);
+                // Fallback - try to close via window
+                window.close();
             }
         }
+
+        // Show message
+        function showMessage(message, type) {
+            const messageArea = document.getElementById('message-area');
+            messageArea.innerHTML = `<div class="${type}">${message}</div>`;
+            setTimeout(() => {
+                messageArea.innerHTML = '';
+            }, 5000);
+        }
+
+        // Error handling
+        window.addEventListener('error', (event) => {
+            console.error('JavaScript error:', event.error);
+            showMessage('Błąd aplikacji: ' + event.error.message, 'error');
+        });
     </script>
 </body>
 </html>

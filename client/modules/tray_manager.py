@@ -182,9 +182,7 @@ class TrayManager:
         # Overlay status
         if hasattr(self.client_app, "overlay_visible"):
             overlay_status = (
-                "👁️ Overlay ON"
-                if self.client_app.overlay_visible
-                else "👁️ Overlay OFF"
+                "👁️ Overlay ON" if self.client_app.overlay_visible else "👁️ Overlay OFF"
             )
             status_parts.append(overlay_status)
 
@@ -201,7 +199,7 @@ class TrayManager:
             # Truncate if too long
             status_parts = status_parts[:3]  # Keep only first 3 items
             tooltip_text = "GAJA Assistant\n" + "\n".join(status_parts)
-        
+
         return tooltip_text
 
     def update_status(self, status: str):
@@ -238,7 +236,7 @@ class TrayManager:
                     self.icon.menu = new_menu
         except Exception as e:
             logger.error(f"Error updating tray menu: {e}")
-        
+
         # Update the client app status as well if available
         if self.client_app and hasattr(self.client_app, "current_status"):
             self.client_app.current_status = status
@@ -270,9 +268,9 @@ class TrayManager:
                         self.client_app.send_overlay_update(
                             {"action": "quit", "quit": True}
                         ),
-                        loop
+                        loop,
                     )
-                    
+
                     # Wait for the coroutine to complete with timeout
                     try:
                         future.result(timeout=2.0)
@@ -280,7 +278,9 @@ class TrayManager:
                     except Exception as e:
                         logger.error(f"Error sending quit signal to overlay: {e}")
                 else:
-                    logger.warning("Could not send quit signal to overlay - no event loop")
+                    logger.warning(
+                        "Could not send quit signal to overlay - no event loop"
+                    )
             except Exception as e:
                 logger.error(f"Error sending quit signal to overlay: {e}")
 
@@ -358,91 +358,109 @@ class TrayManager:
         """Handle open settings action from tray menu."""
         logger.info("Settings requested from system tray")
 
-        # Open settings window via Tauri overlay
+        # Direct app-like settings opening instead of overlay
+        try:
+            # Try to open settings HTML as application window (not browser)
+            import os
+            import subprocess
+
+            if os.name == "nt":  # Windows
+                # Try Edge in app mode first (most app-like)
+                try:
+                    edge_path = (
+                        r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+                    )
+                    if not os.path.exists(edge_path):
+                        edge_path = (
+                            r"C:\Program Files\Microsoft\Edge\Application\msedge.exe"
+                        )
+
+                    if os.path.exists(edge_path):
+                        subprocess.run(
+                            [
+                                edge_path,
+                                "--app=http://localhost:5001/settings.html",
+                                "--window-size=800,600",
+                                "--disable-web-security",
+                                "--disable-features=TranslateUI",
+                                "--no-default-browser-check",
+                                "--no-first-run",
+                                "--disable-background-mode",
+                            ],
+                            check=True,
+                        )
+                        logger.info("Opened settings in Edge app mode")
+                        return
+                except Exception as e:
+                    logger.debug(f"Edge app mode failed: {e}")
+
+                # Try Chrome app mode as fallback
+                try:
+                    chrome_path = (
+                        r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+                    )
+                    if not os.path.exists(chrome_path):
+                        chrome_path = r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
+
+                    if os.path.exists(chrome_path):
+                        subprocess.run(
+                            [
+                                chrome_path,
+                                "--app=http://localhost:5001/settings.html",
+                                "--window-size=800,600",
+                                "--disable-web-security",
+                                "--no-first-run",
+                                "--disable-background-mode",
+                            ],
+                            check=True,
+                        )
+                        logger.info("Opened settings in Chrome app mode")
+                        return
+                except Exception as e:
+                    logger.debug(f"Chrome app mode failed: {e}")
+
+                # Try Firefox app mode
+                try:
+                    firefox_path = r"C:\Program Files\Mozilla Firefox\firefox.exe"
+                    if not os.path.exists(firefox_path):
+                        firefox_path = (
+                            r"C:\Program Files (x86)\Mozilla Firefox\firefox.exe"
+                        )
+
+                    if os.path.exists(firefox_path):
+                        subprocess.run(
+                            [
+                                firefox_path,
+                                "--new-window",
+                                "--width=800",
+                                "--height=600",
+                                "http://localhost:5001/settings.html",
+                            ],
+                            check=True,
+                        )
+                        logger.info("Opened settings in Firefox")
+                        return
+                except Exception as e:
+                    logger.debug(f"Firefox failed: {e}")
+
+            # Final fallback - regular browser
+            import webbrowser
+
+            webbrowser.open("http://localhost:5001/settings.html")
+            logger.info("Opened settings via default browser")
+
+        except Exception as e:
+            logger.error(f"Could not open settings interface: {e}")
+
+        # Also try to send overlay update for settings if client app is available
         if self.client_app:
             try:
-                # Try to get the main event loop from the client app
-                loop = None
-                if hasattr(self.client_app, "loop") and self.client_app.loop:
-                    loop = self.client_app.loop
-                else:
-                    # Try to get the running loop
-                    try:
-                        loop = asyncio.get_running_loop()
-                    except RuntimeError:
-                        # No running loop, create a new one
-                        logger.warning("No running event loop found, creating new one")
-                        loop = asyncio.new_event_loop()
-                        asyncio.set_event_loop(loop)
-
-                if loop:
-                    # Send request to overlay to open settings window
-                    future = asyncio.run_coroutine_threadsafe(
-                        self.client_app.send_overlay_update(
-                            {"action": "open_settings", "open_settings": True}
-                        ),
-                        loop
-                    )
-                    
-                    # Wait for the coroutine to complete with timeout
-                    try:
-                        future.result(timeout=2.0)
-                        logger.info("Settings window requested via overlay")
-                        return  # Success, don't try fallback
-                    except Exception as e:
-                        logger.error(f"Error sending settings request to overlay: {e}")
-                        # Fall through to fallback methods
-                else:
-                    raise RuntimeError("Could not get event loop")
-
+                # Add settings request to command queue
+                command = {"type": "open_settings"}
+                self.client_app.command_queue.put(command)
+                logger.info("Added settings request to command queue")
             except Exception as e:
-                logger.error(f"Error opening settings via overlay: {e}")
-                # Fall through to fallback methods
-
-            # Fallback methods
-            try:
-                # First try: Open settings via HTTP server if available
-                if hasattr(self.client_app, "http_server") and self.client_app.http_server:
-                    import webbrowser
-                    settings_url = "http://localhost:5001/settings.html"
-                    webbrowser.open(settings_url)
-                    logger.info("Opened settings via HTTP server")
-                    return
-                
-                # Second try: Open settings HTML directly as native file
-                settings_path = Path(__file__).parent.parent / "resources" / "settings.html"
-                if settings_path.exists():
-                    import subprocess
-                    import os
-                    
-                    if os.name == 'nt':  # Windows
-                        # Try to open with default app
-                        try:
-                            os.startfile(str(settings_path))
-                            logger.info("Opened settings as native file")
-                            return
-                        except Exception as e:
-                            logger.error(f"Error opening settings as native file: {e}")
-                    else:  # Unix-like systems
-                        try:
-                            subprocess.run(['xdg-open', str(settings_path)])
-                            logger.info("Opened settings as native file")
-                            return
-                        except Exception as e:
-                            logger.error(f"Error opening settings as native file: {e}")
-                
-                # Last resort: Open with default browser
-                import webbrowser
-                if settings_path.exists():
-                    webbrowser.open(f"file://{settings_path.absolute()}")
-                    logger.info("Opened settings file in browser")
-                else:
-                    logger.error("Settings file not found")
-                    
-            except Exception as e2:
-                logger.error(f"Could not open settings interface: {e2}")
-        else:
-            logger.warning("Client app not available for settings")
+                logger.error(f"Failed to add settings request to queue: {e}")
 
     def on_connect_to_server(self, icon, item):
         """Handle connect to server action from tray menu."""
@@ -573,7 +591,7 @@ Status: """
                     except RuntimeError:
                         logger.warning("No running event loop found for overlay toggle")
                         return
-                
+
                 # Toggle overlay visibility
                 if (
                     hasattr(self.client_app, "overlay_visible")
@@ -582,10 +600,9 @@ Status: """
                     logger.info("Hiding overlay from tray")
                     # Call hide_overlay method to properly hide overlay
                     future = asyncio.run_coroutine_threadsafe(
-                        self.client_app.hide_overlay(),
-                        loop
+                        self.client_app.hide_overlay(), loop
                     )
-                    
+
                     # Wait for the coroutine to complete with timeout
                     try:
                         future.result(timeout=2.0)
@@ -597,10 +614,9 @@ Status: """
                     logger.info("Showing overlay from tray")
                     # Call show_overlay method to properly show overlay
                     future = asyncio.run_coroutine_threadsafe(
-                        self.client_app.show_overlay(),
-                        loop
+                        self.client_app.show_overlay(), loop
                     )
-                    
+
                     # Wait for the coroutine to complete with timeout
                     try:
                         future.result(timeout=2.0)

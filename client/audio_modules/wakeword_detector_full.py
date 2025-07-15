@@ -164,6 +164,10 @@ def _run_advanced_detection(
     SILENCE_CHUNKS = 0
     MAX_SILENCE_CHUNKS = int(stt_silence_threshold_ms / (CHUNK_DURATION * 1000))
 
+    # Cooldown to prevent continuous triggering
+    COOLDOWN_PERIOD = 3.0  # 3 seconds between detections
+    last_detection_time = 0
+
     # Audio buffer for processing
     audio_buffer = np.zeros(BUFFER_SIZE, dtype=np.float32)
     buffer_index = 0
@@ -180,9 +184,9 @@ def _run_advanced_detection(
         logger.warning(f"Could not load advanced wake word model: {e}")
         wakeword_model = "basic"
 
-    def audio_callback(indata, frames, time, status):
+    def audio_callback(indata, frames, time_info, status):
         """Process incoming audio chunks."""
-        nonlocal buffer_index, audio_buffer
+        nonlocal buffer_index, audio_buffer, last_detection_time
 
         if status:
             logger.warning(f"Audio callback status: {status}")
@@ -208,6 +212,13 @@ def _run_advanced_detection(
 
             # Voice activity detection
             amplitude = np.sqrt(np.mean(audio_data**2))
+            import time as time_module
+
+            current_time = time_module.time()
+
+            # Check cooldown period
+            if current_time - last_detection_time < COOLDOWN_PERIOD:
+                return
 
             if amplitude > VOICE_THRESHOLD or (
                 manual_listen_event and manual_listen_event.is_set()
@@ -216,10 +227,12 @@ def _run_advanced_detection(
                 if manual_listen_event and manual_listen_event.is_set():
                     logger.info("Manual listen triggered")
                     manual_listen_event.clear()
+                    last_detection_time = current_time
 
                 # Check for wake word
                 if _detect_wakeword(audio_buffer, keyword, sensitivity, wakeword_model):
                     logger.info(f"Wake word '{keyword}' detected!")
+                    last_detection_time = current_time
 
                     # Start listening for query
                     if whisper_asr and process_query_callback:
@@ -406,9 +419,28 @@ def _simple_energy_detection(audio_buffer: np.ndarray, sensitivity: float) -> bo
         # Check for voice patterns
         std_dev = np.std(audio_buffer)
 
-        if total_energy > (sensitivity * 0.1) and std_dev > 0.005:
-            detection_score = min(total_energy * 10, 1.0)
-            return detection_score > sensitivity
+        # Calculate RMS amplitude
+        rms_amplitude = np.sqrt(np.mean(audio_buffer**2))
+
+        # More strict thresholds to avoid false positives
+        energy_threshold = sensitivity * 0.05  # Lower threshold
+        variation_threshold = 0.01  # Higher variation threshold
+        rms_threshold = 0.02  # Higher RMS threshold
+
+        # Require ALL conditions to be met
+        if (
+            total_energy > energy_threshold
+            and std_dev > variation_threshold
+            and rms_amplitude > rms_threshold
+        ):
+            detection_score = min(total_energy * 5, 1.0)  # Reduced multiplier
+
+            # Add additional check for energy consistency
+            if detection_score > (sensitivity * 1.5):  # Require higher score
+                logger.debug(
+                    f"Wake word detection: energy={total_energy:.4f}, std={std_dev:.4f}, rms={rms_amplitude:.4f}, score={detection_score:.4f}"
+                )
+                return True
 
         return False
 
@@ -444,9 +476,38 @@ def _process_speech_query(
     logger.info("Processing speech query...")
 
     try:
-        # This would use the actual Whisper ASR to transcribe speech
-        # For now, we'll simulate it
-        query = "Hello"  # Placeholder
+        # Record audio for transcription
+        import sounddevice as sd
+
+        # Record for a few seconds to capture the user's query
+        SAMPLE_RATE = 16000
+        RECORD_DURATION = 3.0  # Record for 3 seconds
+
+        logger.info(f"Recording audio for {RECORD_DURATION} seconds...")
+
+        # Record audio
+        audio_data = sd.rec(
+            int(SAMPLE_RATE * RECORD_DURATION),
+            samplerate=SAMPLE_RATE,
+            channels=1,
+            dtype=np.float32,
+            device=device_id,
+        )
+        sd.wait()  # Wait for recording to complete
+
+        # Use Whisper ASR to transcribe if available
+        if whisper_asr:
+            try:
+                # Convert to the format expected by Whisper
+                audio_data_flat = audio_data.flatten()
+                query = whisper_asr.transcribe(audio_data_flat, sample_rate=SAMPLE_RATE)
+                logger.info(f"Transcribed query: {query}")
+            except Exception as e:
+                logger.error(f"Error transcribing with Whisper: {e}")
+                query = ""
+        else:
+            logger.warning("No Whisper ASR available - cannot transcribe query")
+            query = ""
 
         if query and query.strip():
             logger.info(f"Transcribed query: {query}")

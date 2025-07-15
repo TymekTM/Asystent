@@ -1,52 +1,21 @@
 {
-  "$schema": "./node_modules/@tauri-apps/cli/schema.json",
   "build": {
-    "beforeBuildCommand": "npm run build",
-    "beforeDevCommand": "npm run dev",
+    "distDir": "../dist",
     "devPath": "http://localhost:1420",
-    "distDir": "./dist"
+    "beforeBuildCommand": "",
+    "beforeDevCommand": ""
   },
   "package": {
-    "productName": "Asystent Overlay",
+    "productName": "Gaja Overlay",
     "version": "0.1.0"
   },
   "tauri": {
     "allowlist": {
-      "all": false,
-      "shell": {
-        "all": false,
-        "open": true
-      },
-      "window": {
-        "all": false,
-        "close": true,
-        "hide": true,
-        "show": true,
-        "maximize": false,
-        "minimize": false,
-        "unmaximize": false,
-        "unminimize": false,
-        "startDragging": false,
-        "print": false
-      },
-      "http": {
-        "all": true,
-        "request": true
-      },
-      "protocol": {
-        "all": true,
-        "asset": true,
-        "assetScope": ["**"]
-      }
+      "all": true
     },
     "bundle": {
       "active": true,
-      "category": "DeveloperTool",
-      "copyright": "",
-      "deb": {
-        "depends": []
-      },
-      "externalBin": [],
+      "identifier": "com.gaja.overlay",
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
@@ -54,53 +23,44 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "com.gaja.overlay",
-      "longDescription": "",
-      "macOS": {
-        "entitlements": null,
-        "exceptionDomain": "",
-        "frameworks": [],
-        "providerShortName": null,
-        "signingIdentity": null
-      },
       "resources": [],
+      "externalBin": [],
+      "copyright": "",
+      "category": "DeveloperTool",
       "shortDescription": "",
-      "targets": "all",
+      "longDescription": "",
+      "deb": {
+        "depends": []
+      },
+      "macOS": {
+        "frameworks": [],
+        "minimumSystemVersion": "",
+        "exceptionDomain": "",
+        "signingIdentity": null,
+        "providerShortName": null,
+        "entitlements": null
+      },
       "windows": {
         "certificateThumbprint": null,
         "digestAlgorithm": "sha256",
-        "timestampUrl": "",
-        "wix": null
+        "timestampUrl": ""
       }
     },
     "security": {
       "csp": null
     },
-    "updater": {
-      "active": false
-    },
-    "systemTray": {
-      "iconPath": "icons/icon.ico",
-      "iconAsTemplate": false
-    },
     "windows": [
       {
         "fullscreen": false,
-        "height": 1080,
         "resizable": false,
         "title": "Gaja Overlay",
         "width": 1920,
+        "height": 1080,
         "decorations": false,
         "transparent": true,
         "alwaysOnTop": true,
         "skipTaskbar": true,
-        "focus": false,
-        "maximized": true,
-        "visible": true,
-        "center": false,
-        "label": "main",
-        "x": 0,
-        "y": 0
+        "visible": true
       }
     ]
   }

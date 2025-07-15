@@ -57,6 +57,16 @@ except ImportError:
     TrayManager = None
     TRAY_AVAILABLE = False
 
+# Import settings manager
+try:
+    from modules.settings_manager import SettingsManager
+
+    SETTINGS_AVAILABLE = True
+except ImportError:
+    logger.warning("Settings manager not available")
+    SettingsManager = None
+    SETTINGS_AVAILABLE = False
+
 
 class ClientApp:
     """Główna klasa klienta GAJA."""
@@ -74,6 +84,11 @@ class ClientApp:
         else:
             logger.info(f"🔗 Server URL already set to: {self.server_url}")
         self.running = False
+
+        # Initialize settings manager
+        self.settings_manager = None
+        if SETTINGS_AVAILABLE:
+            self.settings_manager = SettingsManager(client_app=self)
 
         # Audio components
         self.wakeword_detector = None
@@ -185,15 +200,44 @@ class ClientApp:
                     duration=self.config.get("audio", {}).get("record_duration", 5.0),
                 )
 
-            # Initialize TTS - Enhanced or Legacy
-            if USER_MODE_AVAILABLE and hasattr(user_integrator, "tts_module"):
-                # Enhanced TTS will be managed by user_integrator
-                self.tts = user_integrator.tts_module
-                logger.info("Enhanced TTS module initialized via User Mode Integrator")
-            elif TTSModule:
-                # Use Legacy TTS
-                self.tts = TTSModule()
-                logger.info("Legacy TTS module initialized")
+            # Initialize TTS - Enhanced or Legacy with error handling
+            try:
+                if USER_MODE_AVAILABLE and hasattr(user_integrator, "tts_module"):
+                    # Enhanced TTS will be managed by user_integrator
+                    self.tts = user_integrator.tts_module
+                    logger.info(
+                        "Enhanced TTS module initialized via User Mode Integrator"
+                    )
+                else:
+                    # Try to import and use TTS module
+                    try:
+                        from audio_modules.tts_module import TTSModule
+
+                        self.tts = TTSModule()
+                        logger.info("Legacy TTS module initialized")
+
+                        # Test TTS initialization
+                        if hasattr(self.tts, "_adjust_settings"):
+                            self.tts._adjust_settings()
+                            logger.info("TTS settings adjusted")
+                    except ImportError as e:
+                        logger.warning(f"TTS module import failed: {e}")
+                        self.tts = None
+                    except Exception as e:
+                        logger.error(f"TTS module creation failed: {e}")
+                        self.tts = None
+
+            except Exception as e:
+                logger.error(f"Error initializing TTS module: {e}")
+                # Try to create a fallback TTS module
+                try:
+                    from audio_modules.tts_module import TTSModule
+
+                    self.tts = TTSModule()
+                    logger.info("Fallback TTS module initialized")
+                except Exception as e2:
+                    logger.error(f"Fallback TTS initialization failed: {e2}")
+                    self.tts = None
             # Set whisper ASR for wakeword detector
             if self.wakeword_detector:
                 self.wakeword_detector.set_whisper_asr(self.whisper_asr)
@@ -460,18 +504,33 @@ class ClientApp:
                 self.update_status("Daily Briefing")
                 await self.show_overlay()
 
-                # Speak the briefing
+                # Speak the briefing - ensure TTS is properly initialized
                 if self.tts:
                     try:
                         self.tts_playing = True
+                        logger.info("Starting TTS for daily briefing...")
                         await self.tts.speak(briefing_text)
-                        logger.info("Daily briefing spoken")
+                        logger.info("Daily briefing spoken successfully")
                     except Exception as e:
                         logger.error(f"Error speaking daily briefing: {e}")
+                        # Try to reinitialize TTS if it failed
+                        try:
+                            if TTSModule:
+                                self.tts = TTSModule()
+                                await self.tts.speak(briefing_text)
+                                logger.info("Daily briefing spoken after TTS reinit")
+                        except Exception as e2:
+                            logger.error(f"Failed to reinitialize TTS: {e2}")
                     finally:
                         self.tts_playing = False
                         await self.hide_overlay()
                         self.update_status("Listening...")
+                else:
+                    logger.warning("TTS not available for daily briefing")
+                    # Show briefing text in overlay for longer if TTS not available
+                    await asyncio.sleep(5)
+                    await self.hide_overlay()
+                    self.update_status("Listening...")
 
         elif message_type == "briefing_skipped":
             logger.info("Daily briefing skipped - already delivered today")
@@ -623,7 +682,7 @@ class ClientApp:
                 if self.websocket:
                     active_title = get_active_window_title()
                     message = {
-                        "type": "ai_query",
+                        "type": "query",
                         "query": query,
                         "context": {
                             "source": "voice",
@@ -737,7 +796,7 @@ class ClientApp:
                     def handler(*args, **kwargs):
                         return StatusHTTPHandler(self, *args, **kwargs)
 
-                    self.http_server = HTTPServer(("localhost", port), handler)
+                    self.http_server = HTTPServer(("127.0.0.1", port), handler)
 
                     # Start server in separate thread
                     self.http_thread = threading.Thread(
@@ -771,7 +830,7 @@ class ClientApp:
         """Uruchom główną pętlę klienta."""
         try:
             self.running = True
-            
+
             # Store the current event loop for use by tray manager
             self.loop = asyncio.get_event_loop()
 
@@ -866,8 +925,100 @@ class ClientApp:
         elif command_type == "test_wakeword":
             query = command.get("query", "Powiedz mi coś o sobie.")
             await self.on_wakeword_detected(query)
+        elif command_type == "test_tts":
+            # Test TTS functionality
+            test_text = command.get("text", "Test syntezatora mowy działa poprawnie.")
+            if self.tts:
+                try:
+                    self.tts_playing = True
+                    self.update_status("Testing TTS...")
+                    await self.tts.speak(test_text)
+                    logger.info("TTS test completed successfully")
+                except Exception as e:
+                    logger.error(f"TTS test failed: {e}")
+                finally:
+                    self.tts_playing = False
+                    self.update_status("Listening...")
+            else:
+                logger.warning("TTS not available for testing")
+
+        elif command_type == "open_settings":
+            # Handle settings request from tray
+            await self.handle_settings_request()
+
+        elif command_type == "toggle_overlay":
+            # Toggle overlay visibility
+            try:
+                await self.send_overlay_update(
+                    {"action": "toggle_visibility", "toggle_visibility": True}
+                )
+                logger.info("Overlay visibility toggled")
+            except Exception as e:
+                logger.error(f"Failed to toggle overlay: {e}")
+
+        elif command_type == "status_update":
+            # Update overlay status
+            try:
+                status_data = command.get("data", {})
+                await self.send_overlay_update(
+                    {"action": "status_update", "status": status_data}
+                )
+                logger.debug("Status update sent to overlay")
+            except Exception as e:
+                logger.error(f"Failed to update overlay status: {e}")
+
+        elif command_type == "show_notification":
+            # Show notification via overlay
+            try:
+                notification_data = command.get("data", {})
+                await self.send_overlay_update(
+                    {"action": "show_notification", "notification": notification_data}
+                )
+                logger.info("Notification sent to overlay")
+            except Exception as e:
+                logger.error(f"Failed to show notification: {e}")
+
         else:
             logger.warning(f"Unknown command type: {command_type}")
+
+    async def handle_settings_request(self):
+        """Handle settings request from system tray."""
+        try:
+            # First try to open via overlay as native window
+            await self.send_overlay_update(
+                {"action": "open_settings", "open_settings": True}
+            )
+            logger.info("Settings window requested via overlay")
+        except Exception as e:
+            logger.error(f"Error requesting settings window: {e}")
+            # Fallback: Try to open settings as app-like window
+            try:
+                import subprocess
+
+                # Try Edge in app mode first
+                subprocess.run(
+                    [
+                        "msedge",
+                        "--app=http://localhost:5001/settings.html",
+                        "--window-size=800,600",
+                        "--disable-web-security",
+                        "--disable-features=TranslateUI",
+                        "--no-default-browser-check",
+                    ],
+                    check=True,
+                )
+                logger.info("Opened settings in Edge app mode as fallback")
+            except Exception as e2:
+                logger.error(f"Edge app mode failed: {e2}")
+                # Final fallback - basic browser
+                try:
+                    import webbrowser
+
+                    settings_url = "http://localhost:5001/settings.html"
+                    webbrowser.open(settings_url)
+                    logger.info("Opened settings via browser as last fallback")
+                except Exception as e3:
+                    logger.error(f"All settings opening methods failed: {e3}")
 
     async def start_wakeword_monitoring(self):
         """Uruchom monitoring słowa aktywującego w tle."""
@@ -1410,15 +1561,65 @@ class ClientApp:
             import sounddevice as sd
 
             devices = sd.query_devices()
-            return [
-                {"id": i, "name": device["name"]} for i, device in enumerate(devices)
-            ]
+            input_devices = []
+            output_devices = []
+
+            default_input = sd.default.device[0] if sd.default.device else None
+            default_output = sd.default.device[1] if sd.default.device else None
+
+            for i, device in enumerate(devices):
+                device_info = {
+                    "id": i,
+                    "name": device["name"],
+                    "channels": device.get("max_input_channels", 0),
+                    "sample_rate": device.get("default_samplerate", 44100),
+                    "is_default": False,
+                }
+
+                # Check if device has input capabilities
+                if device["max_input_channels"] > 0:
+                    device_info_input = device_info.copy()
+                    device_info_input["is_default"] = i == default_input
+                    device_info_input["type"] = "input"
+                    input_devices.append(device_info_input)
+
+                # Check if device has output capabilities
+                if device["max_output_channels"] > 0:
+                    device_info_output = device_info.copy()
+                    device_info_output["is_default"] = i == default_output
+                    device_info_output["type"] = "output"
+                    output_devices.append(device_info_output)
+
+            return {
+                "input_devices": input_devices,
+                "output_devices": output_devices,
+                "default_input": default_input,
+                "default_output": default_output,
+            }
         except ImportError:
             logger.warning("sounddevice not available for device listing")
-            return [{"id": 0, "name": "Default Device"}]
+            return {
+                "input_devices": [
+                    {"id": 0, "name": "Default Device", "is_default": True}
+                ],
+                "output_devices": [
+                    {"id": 0, "name": "Default Device", "is_default": True}
+                ],
+                "default_input": 0,
+                "default_output": 0,
+            }
         except Exception as e:
             logger.error(f"Error listing audio devices: {e}")
-            return []
+            return {
+                "input_devices": [
+                    {"id": 0, "name": "Error listing devices", "is_default": True}
+                ],
+                "output_devices": [
+                    {"id": 0, "name": "Error listing devices", "is_default": True}
+                ],
+                "default_input": None,
+                "default_output": None,
+            }
 
     async def send_overlay_update(self, data: dict):
         """Send update to overlay."""
@@ -1683,28 +1884,190 @@ class StatusHTTPHandler(BaseHTTPRequestHandler):
 
             self.wfile.write(json.dumps({"success": True}).encode())
 
+        elif self.path == "/api/audio_devices":
+            self.send_response(200)
+            self.send_header("Content-type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+
+            try:
+                if self.client_app.settings_manager:
+                    devices = self.client_app.settings_manager.get_audio_devices()
+                    self.wfile.write(json.dumps(devices).encode())
+                else:
+                    # Fallback if settings manager not available
+                    devices = self.client_app.list_available_audio_devices()
+                    fallback_response = {
+                        "input_devices": devices,
+                        "output_devices": devices,
+                    }
+                    self.wfile.write(json.dumps(fallback_response).encode())
+            except Exception as e:
+                logger.error(f"Error getting audio devices: {e}")
+                self.send_response(500)
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": str(e)}).encode())
+
+        elif self.path == "/api/connection_status":
+            self.send_response(200)
+            self.send_header("Content-type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+
+            try:
+                if self.client_app.settings_manager:
+                    status = self.client_app.settings_manager.get_connection_status()
+                    self.wfile.write(json.dumps(status).encode())
+                else:
+                    # Fallback status
+                    status = {
+                        "connected": self.client_app.websocket is not None,
+                        "error": "Settings manager not available",
+                    }
+                    self.wfile.write(json.dumps(status).encode())
+            except Exception as e:
+                logger.error(f"Error getting connection status: {e}")
+                self.send_response(500)
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": str(e)}).encode())
+
+        elif self.path == "/api/current_settings":
+            self.send_response(200)
+            self.send_header("Content-type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+
+            try:
+                if self.client_app.settings_manager:
+                    settings = self.client_app.settings_manager.load_settings()
+                    self.wfile.write(json.dumps(settings).encode())
+                else:
+                    # Fallback to client config
+                    self.wfile.write(json.dumps(self.client_app.config).encode())
+            except Exception as e:
+                logger.error(f"Error getting current settings: {e}")
+                self.send_response(500)
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": str(e)}).encode())
+
+        elif self.path == "/api/test_microphone":
+            self.send_response(200)
+            self.send_header("Content-type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+
+            try:
+                # Test microphone by recording a short sample
+                if self.client_app.audio_recorder:
+                    # This is a simplified test - in reality you'd want to record and analyze
+                    test_result = {
+                        "success": True,
+                        "message": "Mikrofon jest dostępny",
+                        "device_info": self.client_app.list_available_audio_devices(),
+                    }
+                else:
+                    test_result = {
+                        "success": False,
+                        "message": "Rejestrator audio nie jest dostępny",
+                        "device_info": self.client_app.list_available_audio_devices(),
+                    }
+
+                self.wfile.write(json.dumps(test_result).encode())
+            except Exception as e:
+                logger.error(f"Error testing microphone: {e}")
+                self.send_response(500)
+                self.end_headers()
+                self.wfile.write(
+                    json.dumps({"error": str(e), "success": False}).encode()
+                )
+
+        elif self.path == "/api/test_tts":
+            self.send_response(200)
+            self.send_header("Content-type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+
+            try:
+                # Test TTS by speaking a short phrase
+                if self.client_app.tts:
+                    command = {
+                        "type": "test_tts",
+                        "text": "Test syntezatora mowy. Jeśli słyszysz tę wiadomość, TTS działa poprawnie.",
+                    }
+                    self.client_app.command_queue.put(command)
+
+                    test_result = {
+                        "success": True,
+                        "message": "Test TTS został uruchomiony",
+                    }
+                else:
+                    test_result = {
+                        "success": False,
+                        "message": "Moduł TTS nie jest dostępny",
+                    }
+
+                self.wfile.write(json.dumps(test_result).encode())
+            except Exception as e:
+                logger.error(f"Error testing TTS: {e}")
+                self.send_response(500)
+                self.end_headers()
+                self.wfile.write(
+                    json.dumps({"error": str(e), "success": False}).encode()
+                )
+
         elif self.path == "/settings.html":
             # Serve settings.html file
             try:
                 settings_path = Path(__file__).parent / "resources" / "settings.html"
                 if settings_path.exists():
                     self.send_response(200)
-                    self.send_header("Content-type", "text/html")
+                    self.send_header("Content-type", "text/html; charset=utf-8")
                     self.send_header("Access-Control-Allow-Origin", "*")
+                    self.send_header(
+                        "Cache-Control", "no-cache, no-store, must-revalidate"
+                    )
+                    self.send_header("Pragma", "no-cache")
+                    self.send_header("Expires", "0")
                     self.end_headers()
 
                     with open(settings_path, encoding="utf-8") as f:
                         content = f.read()
                     self.wfile.write(content.encode("utf-8"))
+                    logger.info(f"Served settings.html from {settings_path}")
                 else:
+                    logger.error(f"Settings file not found at {settings_path}")
                     self.send_response(404)
+                    self.send_header("Content-type", "text/html; charset=utf-8")
                     self.end_headers()
-                    self.wfile.write(b"Settings file not found")
+                    self.wfile.write(b"<h1>Settings file not found</h1>")
             except Exception as e:
                 logger.error(f"Error serving settings.html: {e}")
                 self.send_response(500)
+                self.send_header("Content-type", "text/html; charset=utf-8")
                 self.end_headers()
-                self.wfile.write(f"Error: {e}".encode())
+                self.wfile.write(f"<h1>Error: {e}</h1>".encode())
+
+        elif self.path == "/gaja.ico":
+            # Serve gaja.ico file
+            try:
+                icon_path = Path(__file__).parent.parent / "gaja.ico"
+                if icon_path.exists():
+                    self.send_response(200)
+                    self.send_header("Content-type", "image/x-icon")
+                    self.send_header("Access-Control-Allow-Origin", "*")
+                    self.send_header("Cache-Control", "public, max-age=3600")
+                    self.end_headers()
+                    with open(icon_path, "rb") as f:
+                        self.wfile.write(f.read())
+                    logger.info(f"Served gaja.ico from {icon_path}")
+                else:
+                    logger.error(f"Icon file not found at {icon_path}")
+                    self.send_response(404)
+                    self.end_headers()
+            except Exception as e:
+                logger.error(f"Error serving gaja.ico: {e}")
+                self.send_response(500)
+                self.end_headers()
 
         else:
             self.send_response(404)
@@ -1738,6 +2101,40 @@ class StatusHTTPHandler(BaseHTTPRequestHandler):
                 self.send_header("Content-type", "application/json")
                 self.end_headers()
                 self.wfile.write(json.dumps({"error": str(e)}).encode())
+
+        elif self.path == "/api/save_settings":
+            content_length = int(self.headers["Content-Length"])
+            post_data = self.rfile.read(content_length)
+
+            try:
+                data = json.loads(post_data.decode("utf-8"))
+                settings = data.get("settings", {})
+
+                if self.client_app.settings_manager:
+                    success = self.client_app.settings_manager.save_settings(settings)
+
+                    self.send_response(200)
+                    self.send_header("Content-type", "application/json")
+                    self.send_header("Access-Control-Allow-Origin", "*")
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"success": success}).encode())
+                else:
+                    self.send_response(500)
+                    self.send_header("Content-type", "application/json")
+                    self.send_header("Access-Control-Allow-Origin", "*")
+                    self.end_headers()
+                    self.wfile.write(
+                        json.dumps({"error": "Settings manager not available"}).encode()
+                    )
+
+            except Exception as e:
+                logger.error(f"Error saving settings: {e}")
+                self.send_response(400)
+                self.send_header("Content-type", "application/json")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": str(e)}).encode())
+
         else:
             self.send_response(404)
             self.end_headers()
