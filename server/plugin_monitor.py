@@ -7,10 +7,9 @@ import time
 from pathlib import Path
 from typing import Any
 
+from plugin_manager import plugin_manager
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
-
-from .plugin_manager import plugin_manager
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +19,7 @@ class PluginFileHandler(FileSystemEventHandler):
 
     def __init__(self, plugin_monitor: "PluginMonitor"):
         self.plugin_monitor = plugin_monitor
-        self.last_reload_time = {}
+        self.last_reload_time: dict[str, float] = {}
         self.reload_delay = (
             2.0  # Sekundy opóźnienia dla uniknięcia wielokrotnych przeładowań
         )
@@ -65,15 +64,21 @@ class PluginMonitor:
     """System monitorowania i automatycznego przeładowywania pluginów."""
 
     def __init__(self, modules_path: str = "modules"):
-        self.modules_path = Path(modules_path)
+        # Ensure absolute path relative to server directory
+        if not Path(modules_path).is_absolute():
+            server_dir = Path(__file__).parent  # server directory
+            self.modules_path = server_dir / modules_path
+        else:
+            self.modules_path = Path(modules_path)
+
         self.observer = None
         self.running = False
-        self.reload_queue = asyncio.Queue()
-        self.unload_queue = asyncio.Queue()
+        self.reload_queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
+        self.unload_queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
         self.reload_task = None
 
         # Statistics
-        self.stats = {
+        self.stats: dict[str, Any] = {
             "reloads_count": 0,
             "successful_reloads": 0,
             "failed_reloads": 0,
@@ -232,7 +237,7 @@ class PluginMonitor:
         is_new = task.get("is_new", False)
 
         try:
-            self.stats["reloads_count"] += 1
+            self.stats["reloads_count"] = self.stats.get("reloads_count", 0) + 1
 
             logger.info(
                 f"{'Loading new' if is_new else 'Reloading'} plugin: {plugin_name}"
@@ -246,13 +251,18 @@ class PluginMonitor:
             success = await self._load_plugin(plugin_name)
 
             if success:
-                self.stats["successful_reloads"] += 1
-                self.stats["active_plugins"].add(plugin_name)
+                self.stats["successful_reloads"] = (
+                    self.stats.get("successful_reloads", 0) + 1
+                )
+                active_plugins = self.stats.get("active_plugins", set())
+                if isinstance(active_plugins, set):
+                    active_plugins.add(plugin_name)
+                    self.stats["active_plugins"] = active_plugins
                 logger.info(
                     f"Successfully {'loaded' if is_new else 'reloaded'} plugin: {plugin_name}"
                 )
             else:
-                self.stats["failed_reloads"] += 1
+                self.stats["failed_reloads"] = self.stats.get("failed_reloads", 0) + 1
                 logger.error(
                     f"Failed to {'load' if is_new else 'reload'} plugin: {plugin_name}"
                 )
@@ -260,7 +270,7 @@ class PluginMonitor:
             self.stats["last_reload_time"] = time.time()
 
         except Exception as e:
-            self.stats["failed_reloads"] += 1
+            self.stats["failed_reloads"] = self.stats.get("failed_reloads", 0) + 1
             logger.error(
                 f"Error {'loading' if is_new else 'reloading'} plugin {plugin_name}: {e}"
             )
@@ -273,8 +283,10 @@ class PluginMonitor:
             logger.info(f"Unloading plugin: {plugin_name}")
             await self._unload_plugin(plugin_name)
 
-            if plugin_name in self.stats["active_plugins"]:
-                self.stats["active_plugins"].remove(plugin_name)
+            active_plugins = self.stats.get("active_plugins", set())
+            if isinstance(active_plugins, set) and plugin_name in active_plugins:
+                active_plugins.remove(plugin_name)
+                self.stats["active_plugins"] = active_plugins
 
             logger.info(f"Successfully unloaded plugin: {plugin_name}")
 
@@ -333,15 +345,24 @@ class PluginMonitor:
 
     async def get_monitoring_status(self) -> dict[str, Any]:
         """Pobierz status monitorowania."""
+        active_plugins = self.stats.get("active_plugins", set())
+        monitored_files = self.stats.get("monitored_files", set())
+
         return {
             "running": self.running,
             "modules_path": str(self.modules_path),
             "stats": {
                 **self.stats,
-                "active_plugins": list(self.stats["active_plugins"]),
-                "monitored_files": list(self.stats["monitored_files"]),
+                "active_plugins": list(active_plugins)
+                if isinstance(active_plugins, set)
+                else [],
+                "monitored_files": list(monitored_files)
+                if isinstance(monitored_files, set)
+                else [],
             },
-            "observer_alive": self.observer.is_alive() if self.observer else False,
+            "observer_alive": (
+                self.observer.is_alive() if self.observer is not None else False
+            ),
         }
 
     async def reload_plugin_manually(self, plugin_name: str) -> dict[str, Any]:

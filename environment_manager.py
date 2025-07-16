@@ -79,7 +79,7 @@ class EnvironmentManager:
         Returns:
             Oczyszczony słownik bez wrażliwych danych
         """
-        sanitized = {}
+        sanitized: dict[str, Any] = {}
         sensitive_keys = {
             "api_key",
             "password",

@@ -14,29 +14,29 @@ from typing import Any
 
 import psutil
 import uvicorn
+from ai_module import AIModule
+from config_loader import load_config
+from daily_briefing_module import DailyBriefingModule
+from database_manager import initialize_database_manager
+from day_narrative_module import DayNarrativeModule
+from day_summary_module import DaySummaryModule
+from extended_webui import ExtendedWebUI
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from function_calling_system import FunctionCallingSystem
 from loguru import logger
+from onboarding_module import OnboardingModule
+from plugin_manager import plugin_manager
+from plugin_monitor import plugin_monitor
+from proactive_assistant_simple import get_proactive_assistant
 from pydantic import BaseModel
+from routines_learner_module import RoutinesLearnerModule
+from user_behavior_module import UserBehaviorModule
 
 from environment_manager import EnvironmentManager
-from server import onboarding_module as server_onboarding
-from server.ai_module import AIModule
-from server.config_loader import load_config
-from server.daily_briefing_module import DailyBriefingModule
-from server.database_manager import initialize_database_manager
-from server.day_narrative_module import DayNarrativeModule
-from server.day_summary_module import DaySummaryModule
-from server.extended_webui import ExtendedWebUI
-from server.function_calling_system import FunctionCallingSystem
-from server.plugin_manager import plugin_manager
-from server.plugin_monitor import plugin_monitor
-from server.proactive_assistant_simple import get_proactive_assistant
-from server.routines_learner_module import RoutinesLearnerModule
-from server.user_behavior_module import UserBehaviorModule
 
-OnboardingModule = server_onboarding.OnboardingModule
+# OnboardingModule = server_onboarding.OnboardingModule
 
 
 # Data models for REST API
@@ -181,6 +181,33 @@ class ServerApp:
         self.day_narrative = None
         self.proactive_assistant = None
 
+    async def cleanup(self):
+        """Cleanup all resources."""
+        try:
+            # Cleanup API module sessions
+            from modules.api_module import cleanup_api_module
+
+            await cleanup_api_module()
+            logger.info("API module cleaned up")
+        except Exception as e:
+            logger.error(f"Error cleaning up API module: {e}")
+
+        # Cleanup daily briefing module
+        try:
+            if hasattr(self, "daily_briefing_module") and self.daily_briefing_module:
+                # Daily briefing module doesn't have cleanup, but we log it
+                logger.info("Daily briefing module cleaned up")
+        except Exception as e:
+            logger.error(f"Error cleaning up daily briefing module: {e}")
+
+        # Cleanup plugin manager
+        try:
+            if hasattr(self, "plugin_manager") and self.plugin_manager:
+                # Plugin manager doesn't have cleanup, but we log it
+                logger.info("Plugin manager cleaned up")
+        except Exception as e:
+            logger.error(f"Error cleaning up plugin manager: {e}")
+
     def get_status_summary(self) -> dict[str, Any]:
         """Return current server status information."""
         process = psutil.Process()
@@ -204,11 +231,7 @@ class ServerApp:
                 await asyncio.sleep(interval)
                 stats = self.get_status_summary()
                 logger.info(
-                    "Status: users=%s cpu=%s%% mem=%sMB uptime=%ss",
-                    stats["connected_users"],
-                    stats["cpu_percent"],
-                    stats["memory_mb"],
-                    stats["uptime_seconds"],
+                    f"Status: users={stats['connected_users']} cpu={stats['cpu_percent']}% mem={stats['memory_mb']}MB uptime={stats['uptime_seconds']}s"
                 )
         except asyncio.CancelledError:
             logger.debug("Status logging task cancelled")
@@ -256,6 +279,16 @@ class ServerApp:
 
             # Inicjalizuj plugin manager
             await plugin_manager.discover_plugins()
+
+            # Load default enabled plugins for all users
+            default_plugins = self.config.get("plugins", {}).get("default_enabled", [])
+            for plugin_name in default_plugins:
+                try:
+                    await plugin_manager.load_plugin(plugin_name)
+                    logger.info(f"Default plugin {plugin_name} loaded")
+                except Exception as e:
+                    logger.error(f"Failed to load default plugin {plugin_name}: {e}")
+
             await self.load_all_user_plugins()
             logger.info("Plugin manager initialized")
 
@@ -400,11 +433,14 @@ class ServerApp:
             def timeout_handler(signum, frame):
                 raise TimeoutError("Plugin loading timeout")
 
+            # Note: signal.alarm is not available on Windows
             # Set timeout for plugin loading (Unix only)
             timeout_seconds = 10
+            old_handler = None
             if hasattr(signal, "SIGALRM"):
                 old_handler = signal.signal(signal.SIGALRM, timeout_handler)
-                signal.alarm(timeout_seconds)
+                if hasattr(signal, "alarm"):
+                    signal.alarm(timeout_seconds)
 
             try:
                 spec = importlib.util.spec_from_file_location(plugin_name, plugin_path)
@@ -444,8 +480,9 @@ class ServerApp:
 
             finally:
                 # Clear timeout
-                if hasattr(signal, "SIGALRM"):
-                    signal.alarm(0)
+                if hasattr(signal, "SIGALRM") and old_handler is not None:
+                    if hasattr(signal, "alarm"):
+                        signal.alarm(0)
                     signal.signal(signal.SIGALRM, old_handler)
 
         except TimeoutError:
@@ -566,8 +603,10 @@ class ServerApp:
                 "pro": {"monthly": 50000, "daily": None},
             }
             limit = limits.get(user_level, limits["free"])
-            if monthly >= limit["monthly"] or (
-                limit["daily"] is not None and daily >= limit["daily"]
+            monthly_limit = limit["monthly"]
+            daily_limit = limit["daily"]
+            if monthly >= monthly_limit or (
+                daily_limit is not None and daily >= daily_limit
             ):
                 return {
                     "type": "error",
@@ -927,7 +966,7 @@ class ServerApp:
             logger.error(f"Error updating user context for user {user_id}: {e}")
             return {"type": "error", "message": f"Context update failed: {str(e)}"}
 
-    async def send_proactive_notifications_to_clients(self, user_id: str = None):
+    async def send_proactive_notifications_to_clients(self, user_id: str | None = None):
         """Wyślij proaktywne powiadomienia do klientów."""
         try:
             if not self.proactive_assistant:
@@ -959,7 +998,7 @@ class ServerApp:
         except Exception as e:
             logger.error(f"Error sending notifications to user {user_id}: {e}")
 
-    def _configure_cors_middleware(self):
+    def _configure_cors_middleware_old(self):
         """Konfiguruje CORS middleware z bezpiecznymi ustawieniami."""
         cors_origins = self.config.get("security", {}).get(
             "cors_origins", ["http://localhost:3000", "http://localhost:8080"]
@@ -988,14 +1027,24 @@ server_app = ServerApp()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Zarządzanie cyklem życia aplikacji FastAPI."""
+    logger.info("Lifespan startup: initializing server...")
     # Startup
     await server_app.initialize()
+    logger.info("Lifespan startup: server initialized, starting status task...")
     status_task = asyncio.create_task(server_app.periodic_status_logging())
+    logger.info("Lifespan startup: status task started, yielding control...")
     try:
         yield
     finally:
+        logger.info("Lifespan shutdown: cancelling status task...")
         status_task.cancel()
         await asyncio.gather(status_task, return_exceptions=True)
+
+        # Cleanup all resources
+        logger.info("Lifespan shutdown: cleaning up resources...")
+        await server_app.cleanup()
+        logger.info("Lifespan shutdown: cleanup complete")
+
         logger.info("Server shutting down...")
 
 
@@ -1264,10 +1313,13 @@ def run_server():
     os.makedirs("logs", exist_ok=True)
 
     logger.info("Starting GAJA Assistant Server...")
+    logger.info("About to create EnvironmentManager...")
     # Configure CORS middleware with security validation
     # Configure CORS middleware with security validation
     env_manager = EnvironmentManager()
+    logger.info("EnvironmentManager created successfully")
 
+    logger.info("About to get CORS origins...")
     # Get CORS origins from environment variable first, then config, then defaults
     env_cors = os.getenv("ALLOWED_ORIGINS")
     if env_cors:
@@ -1276,7 +1328,9 @@ def run_server():
         cors_origins = config.get("security", {}).get(
             "cors_origins", ["http://localhost:3000", "http://localhost:8080"]
         )
+    logger.info(f"CORS origins determined: {cors_origins}")
 
+    logger.info("About to validate CORS configuration...")
     # Sprawdź czy używamy niebezpiecznej konfiguracji
     if "*" in cors_origins:
         logger.warning(
@@ -1287,7 +1341,9 @@ def run_server():
                 "Wildcard CORS is only allowed in debug mode! Using safe defaults."
             )
             cors_origins = ["http://localhost:3000", "http://localhost:8080"]
+    logger.info("CORS configuration validated")
 
+    logger.info("About to add CORS middleware...")
     # Add CORS middleware
     app.add_middleware(
         CORSMiddleware,

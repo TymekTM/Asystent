@@ -259,9 +259,14 @@ class DailyBriefingModule:
         try:
             year = datetime.now().year
             url = f"{self.holidays_api_url}/{year}/PL"
+            headers = {
+                "User-Agent": "GAJA Assistant/1.0 (https://github.com/TymekTM/Asystent)"
+            }
 
             async with aiohttp.ClientSession() as session:
-                async with session.get(url, timeout=5) as response:
+                async with session.get(
+                    url, timeout=aiohttp.ClientTimeout(total=5), headers=headers
+                ) as response:
                     response.raise_for_status()
                     holidays = await response.json()
 
@@ -290,7 +295,7 @@ class DailyBriefingModule:
             # Import core module functions
             from modules.core_module import get_reminders_for_today
 
-            reminders = get_reminders_for_today()
+            reminders = await get_reminders_for_today({})
             return reminders or []
         except Exception as e:
             logger.error(f"Could not get calendar events: {e}")
@@ -332,8 +337,16 @@ class DailyBriefingModule:
             return None
 
         try:
+            headers = {
+                "User-Agent": "GAJA Assistant/1.0 (https://github.com/TymekTM/Asystent)"
+            }
             async with aiohttp.ClientSession() as session:
-                async with session.get(self.quote_api_url, timeout=5) as r:
+                async with session.get(
+                    self.quote_api_url,
+                    timeout=aiohttp.ClientTimeout(total=5),
+                    headers=headers,
+                    ssl=False,
+                ) as r:
                     if r.status == 200:
                         data = await r.json()
                         if data.get("content"):
@@ -451,11 +464,19 @@ class DailyBriefingModule:
         content = {
             "greeting": f"Hej {self.user_name}",
             "date": self._format_date_polish(now),
-            "weather": self._format_weather_info(weather_data),
-            "holidays": self._format_holidays_info(holidays),
-            "events": self._format_events_info(events),
-            "memories": memories,
-            "quote": self._format_quote_info(quote),
+            "weather": self._format_weather_info(
+                weather_data if isinstance(weather_data, dict) else None
+            ),
+            "holidays": self._format_holidays_info(
+                holidays if isinstance(holidays, list) else []
+            ),
+            "events": self._format_events_info(
+                events if isinstance(events, list) else []
+            ),
+            "memories": memories if isinstance(memories, list) else [],
+            "quote": self._format_quote_info(
+                quote if isinstance(quote, dict) else None
+            ),
             "timestamp": now.isoformat(),
         }
 
@@ -490,7 +511,7 @@ class DailyBriefingModule:
             import json
             from collections import deque
 
-            response_json = generate_response(
+            response_json = await generate_response(
                 conversation_history=deque([{"role": "user", "content": ai_prompt}]),
                 detected_language="pl",
                 user_name=self.user_name,
