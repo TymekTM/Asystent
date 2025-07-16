@@ -33,7 +33,14 @@ class PluginManager:
     """Enhanced plugin manager with per-user control."""
 
     def __init__(self, plugins_directory: str = "modules"):
-        self.plugins_directory = Path(plugins_directory)
+        # Handle both relative and absolute paths
+        if not Path(plugins_directory).is_absolute():
+            # If we're running from the main directory, plugins are in server/modules
+            current_file_dir = Path(__file__).parent
+            self.plugins_directory = current_file_dir / plugins_directory
+        else:
+            self.plugins_directory = Path(plugins_directory)
+        
         self.plugins: dict[str, PluginInfo] = {}
         self.user_plugins: dict[
             str, dict[str, bool]
@@ -441,4 +448,4 @@ class PluginManager:
 
 
 # Global plugin manager instance
-plugin_manager = PluginManager("server/modules")
+plugin_manager = PluginManager("modules")
