@@ -3,6 +3,7 @@ Whisper ASR) i komunikujący się z serwerem przez WebSocket."""
 
 import asyncio
 import json
+import os
 import queue
 import subprocess
 import sys
@@ -18,6 +19,32 @@ from loguru import logger
 # Dodaj ścieżkę główną projektu do PYTHONPATH
 sys.path.insert(0, str(Path(__file__).parent.parent))
 sys.path.insert(0, str(Path(__file__).parent))
+
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+
+    env_path = Path(__file__).parent.parent / ".env"
+    if env_path.exists():
+        load_dotenv(env_path)
+        logger.info(f"Loaded environment variables from {env_path}")
+    else:
+        logger.warning(f"No .env file found at {env_path}")
+except ImportError:
+    logger.warning("python-dotenv not installed, skipping .env loading")
+    # Try to load manually
+    env_path = Path(__file__).parent.parent / ".env"
+    if env_path.exists():
+        logger.info(f"Loading .env manually from {env_path}")
+        with open(env_path, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    key, value = line.split("=", 1)
+                    os.environ[key.strip()] = value.strip()
+        logger.info("Environment variables loaded manually")
+    else:
+        logger.warning(f"No .env file found at {env_path}")
 
 # Import local modules - lazy loading after dependency check
 # Audio modules will be imported dynamically after dependency installation
@@ -252,30 +279,27 @@ class ClientApp:
     async def start_overlay(self):
         """Uruchom zewnętrzny overlay Tauri."""
         try:
-            # Możliwe ścieżki do overlay exe
+            # Możliwe ścieżki do overlay exe - najpierw sprawdzamy nowy naprawiony overlay
             overlay_paths = [
-                Path(__file__).parent
+                # Nowy naprawiony overlay z katalogu głównego (debug)
+                Path(__file__).parent.parent
                 / "overlay"
                 / "target"
-                / "release"
+                / "debug"
                 / "gaja-overlay.exe",
+                # Nowy naprawiony overlay z katalogu głównego (release)
                 Path(__file__).parent.parent
                 / "overlay"
                 / "target"
                 / "release"
                 / "gaja-overlay.exe",
+                # Fallback do starych lokalizacji
                 Path(__file__).parent
-                / ".."
                 / "overlay"
                 / "target"
                 / "release"
                 / "gaja-overlay.exe",
-                # Add direct path to the actual overlay location
-                Path(__file__).parent.parent
-                / "overlay"
-                / "target"
-                / "release"
-                / "gaja-overlay.exe",
+                Path(__file__).parent / "overlay" / "gaja-overlay.exe",
             ]
 
             overlay_path = None
@@ -565,13 +589,20 @@ class ClientApp:
                 if text:
                     logger.info(f"AI text response: {text}")
 
-                    # Update overlay with AI response
+                    # Update overlay with AI response - set text BEFORE showing overlay
                     self.last_tts_text = text
-                    self.update_status(f"Response: {text[:50]}...")  # Play TTS response
+                    self.update_status(f"Response: {text[:50]}...")
+
+                    # Show overlay immediately when starting TTS
+                    await self.show_overlay()
+
+                    # Play TTS response
                     if self.tts:
                         try:
                             self.tts_playing = True
-                            self.update_status("Speaking...")
+                            self.update_status("Mówię...")
+                            # Ensure text is set during TTS playback
+                            self.last_tts_text = text
                             await self.tts.speak(text)
                             logger.info("TTS response played")
                         except Exception as tts_e:
@@ -604,15 +635,20 @@ class ClientApp:
                     text = response.strip()
                     logger.info(f"Using response as plain text: {text}")
 
-                    # Update overlay
+                    # Update overlay - set text BEFORE showing overlay
                     self.last_tts_text = text
                     self.update_status(f"Response: {text[:50]}...")
+
+                    # Show overlay immediately when starting TTS
+                    await self.show_overlay()
 
                     # Play TTS
                     if self.tts:
                         try:
                             self.tts_playing = True
-                            self.update_status("Speaking...")
+                            self.update_status("Mówię...")
+                            # Ensure text is set during TTS playback
+                            self.last_tts_text = text
                             await self.tts.speak(text)
                             logger.info("TTS response played (plain text)")
                         except Exception as tts_e:
@@ -667,7 +703,7 @@ class ClientApp:
             self.wake_word_detected = True
             self.update_status("Przetwarzam...")
 
-            # Show overlay immediately when wake word is detected
+            # Show overlay immediately when wake word is detected - BEFORE processing
             await self.show_overlay()
 
             if self.recording_command:
@@ -676,7 +712,7 @@ class ClientApp:
 
             try:
                 self.recording_command = True
-                self.update_status("Nagrywam...")  # ← Dodane
+                self.update_status("Przetwarzam zapytanie...")
 
                 # If server is available, send query
                 if self.websocket:
@@ -706,10 +742,10 @@ class ClientApp:
 
                     # Simulate TTS
                     self.tts_playing = True
-                    self.update_status("Odpowiadam...")  # ← Dodane
+                    self.update_status("Mówię...")
                     await asyncio.sleep(2)  # Simulate speech time
                     self.tts_playing = False
-                    self.update_status("Ready")  # ← Dodane
+                    self.update_status("Ready")
 
                     # Reset flags and hide overlay
                     self.wake_word_detected = False
@@ -729,7 +765,10 @@ class ClientApp:
                 # Note: recording_command and wake_word_detected are reset in TTS completion
                 pass
         else:
-            # Legacy support - wakeword detected without transcription            logger.info("Wakeword detected! Recording and transcription handled by wakeword detector.")
+            # Legacy support - wakeword detected without transcription
+            logger.info(
+                "Wakeword detected! Recording and transcription handled by wakeword detector."
+            )
             self.wake_word_detected = True
             self.update_status("Listening...")
 
@@ -762,13 +801,43 @@ class ClientApp:
 
     def notify_sse_clients(self):
         """Powiadom wszystkich klientów SSE o zmianie statusu."""
+        # Determine if we should show content based on current state
+        has_meaningful_text = self.last_tts_text and self.last_tts_text not in [
+            "",
+            "Listening...",
+            "Ready",
+            "Offline",
+        ]
+
+        should_show_content = (
+            self.wake_word_detected
+            or self.tts_playing
+            or self.recording_command
+            or has_meaningful_text
+        )
+
+        # When just listening (no wake word detected), show only the orb
+        show_just_orb = (
+            not self.wake_word_detected
+            and not self.tts_playing
+            and not self.recording_command
+            and not has_meaningful_text
+        )
+
         status_data = {
             "status": self.current_status,
-            "text": self.last_tts_text,
-            "is_listening": self.recording_command,
+            "text": self.last_tts_text if self.last_tts_text else self.current_status,
+            "is_listening": not self.recording_command
+            and not self.tts_playing
+            and not self.wake_word_detected,
             "is_speaking": self.tts_playing,
             "wake_word_detected": self.wake_word_detected,
             "overlay_visible": self.overlay_visible,
+            "show_content": should_show_content,
+            "show_just_orb": show_just_orb,
+            "overlay_enabled": True,  # Always enabled unless explicitly disabled
+            # Add timing information to help with overlay display
+            "timestamp": time.time(),
         }
 
         message = f"data: {json.dumps(status_data)}\n\n"
@@ -1314,6 +1383,15 @@ class ClientApp:
                 return
 
             logger.info(f"Startup briefing received: {briefing_content[:100]}...")
+
+            # Check if briefing was already delivered today
+            if (
+                "już został dzisiaj" in briefing_content.lower()
+                or "dostarczony" in briefing_content.lower()
+            ):
+                logger.info("Startup briefing already delivered today - skipping TTS")
+                self.update_status("Ready")
+                return
 
             # Update overlay status
             self.update_status("Startup Briefing")

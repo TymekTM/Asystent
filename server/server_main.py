@@ -7,21 +7,20 @@ import os
 import sys
 import time
 from contextlib import asynccontextmanager
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict
-from datetime import datetime
+from typing import Any
 
 import psutil
-
 import uvicorn
-from environment_manager import EnvironmentManager
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from loguru import logger
 from pydantic import BaseModel
 
+from environment_manager import EnvironmentManager
 from server import onboarding_module as server_onboarding
 from server.ai_module import AIModule
 from server.config_loader import load_config
@@ -87,6 +86,7 @@ class WebSocketRequest(BaseModel):
     audio_data: str | None = None
     function_name: str | None = None
     parameters: dict[str, Any] | None = None
+    context: dict[str, Any] | None = None  # Add context field to handle client messages
 
 
 class WebSocketResponse(BaseModel):
@@ -181,12 +181,14 @@ class ServerApp:
         self.day_narrative = None
         self.proactive_assistant = None
 
-    def get_status_summary(self) -> Dict[str, Any]:
+    def get_status_summary(self) -> dict[str, Any]:
         """Return current server status information."""
         process = psutil.Process()
         mem_mb = process.memory_info().rss / (1024 * 1024)
         cpu_percent = psutil.cpu_percent(interval=None)
-        uptime = (datetime.now() - self.start_time).total_seconds() if self.start_time else 0
+        uptime = (
+            (datetime.now() - self.start_time).total_seconds() if self.start_time else 0
+        )
         return {
             "connected_users": len(self.connection_manager.active_connections),
             "memory_mb": round(mem_mb, 2),
@@ -470,14 +472,10 @@ class ServerApp:
             # Handle message type mapping for backward compatibility
             if request.type == "query":
                 request_data["type"] = "ai_query"
-                request_data["query"] = (
-                    request.query or request.data.get("query", "")
-                    if request.data
-                    else ""
-                )
-                request_data["context"] = (
-                    request.data.get("context", {}) if request.data else {}
-                )
+                # Extract query from the message (client sends it as top-level field)
+                request_data["query"] = request.query or ""
+                # Extract context from the message (client sends it as top-level field)
+                request_data["context"] = request.context or {}
             elif request.type == "function_call":
                 request_data["plugin"] = (
                     request.data.get("plugin") if request.data else None
@@ -1162,10 +1160,14 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
         while True:
             # Odbierz wiadomość od klienta
             data = await websocket.receive_text()
+            logger.info(f"🔍 [DEBUG] Raw message received: {data}")
 
             try:
                 # Validate using pydantic
                 request_data = WebSocketRequest.model_validate(json.loads(data))
+                logger.info(
+                    f"🔍 [DEBUG] Parsed WebSocketRequest: query='{request_data.query}' context={request_data.context}"
+                )
 
                 # Przetwórz request
                 response = await server_app.process_validated_request(

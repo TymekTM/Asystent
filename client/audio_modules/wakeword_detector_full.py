@@ -172,16 +172,16 @@ def _run_advanced_detection(
     audio_buffer = np.zeros(BUFFER_SIZE, dtype=np.float32)
     buffer_index = 0
 
-    # Wake word model (placeholder - would load actual model here)
+    # Wake word model - real OpenWakeWord implementation
     wakeword_model = None
     try:
-        # This would load an actual wake word model like OpenWakeWord
-        # For now, we'll use a simple energy-based detection
-        logger.info("Loading wake word model...")
-        # wakeword_model = load_wakeword_model(keyword)
-        wakeword_model = "basic"  # Placeholder
+        logger.info("Loading OpenWakeWord model...")
+        wakeword_model = _load_openwakeword_model(keyword)
+        if wakeword_model is None:
+            logger.warning("OpenWakeWord model failed to load, using basic detection")
+            wakeword_model = "basic"
     except Exception as e:
-        logger.warning(f"Could not load advanced wake word model: {e}")
+        logger.warning(f"Could not load OpenWakeWord model: {e}")
         wakeword_model = "basic"
 
     def audio_callback(indata, frames, time_info, status):
@@ -245,9 +245,11 @@ def _run_advanced_detection(
                             stop_event=stop_event,
                         )
                     else:
-                        # Just trigger callback without query
-                        if process_query_callback:
-                            _trigger_callback(process_query_callback, "", event_loop)
+                        # Log warning if no Whisper ASR available
+                        logger.warning(
+                            "Wake word detected but no Whisper ASR available - cannot process query"
+                        )
+                        # Don't trigger callback with empty query
 
         except Exception as e:
             logger.error(f"Error in audio callback: {e}")
@@ -378,6 +380,58 @@ def _run_basic_detection(
         logger.info("Basic wake word detection stopped")
 
 
+def _load_openwakeword_model(keyword: str) -> Any:
+    """Load OpenWakeWord model for the specified keyword."""
+    try:
+        import os
+        from pathlib import Path
+
+        from openwakeword import Model
+
+        # Get the base directory of the project
+        current_dir = Path(__file__).parent
+        project_root = current_dir.parent.parent  # Go up to f:\Asystent\
+
+        # First try client/resources/openWakeWord
+        model_dir = project_root / "client" / "resources" / "openWakeWord"
+        if not model_dir.exists():
+            # Fallback to resources/openWakeWord
+            model_dir = project_root / "resources" / "openWakeWord"
+
+        if not model_dir.exists():
+            logger.error(f"OpenWakeWord model directory not found at {model_dir}")
+            return None
+
+        # Find models for the keyword
+        model_files = []
+        for file in os.listdir(model_dir):
+            if file.endswith(".tflite") and keyword.lower() in file.lower():
+                model_files.append(str(model_dir / file))
+
+        if not model_files:
+            logger.error(
+                f"No OpenWakeWord models found for keyword '{keyword}' in {model_dir}"
+            )
+            return None
+
+        logger.info(
+            f"Found {len(model_files)} OpenWakeWord models for '{keyword}': {[os.path.basename(f) for f in model_files]}"
+        )
+
+        # Initialize OpenWakeWord model
+        model = Model(wakeword_models=model_files, inference_framework="tflite")
+
+        logger.info(f"OpenWakeWord model loaded successfully for '{keyword}'")
+        return model
+
+    except ImportError:
+        logger.error("OpenWakeWord library not available")
+        return None
+    except Exception as e:
+        logger.error(f"Error loading OpenWakeWord model: {e}")
+        return None
+
+
 def _detect_wakeword(
     audio_buffer: np.ndarray, keyword: str, sensitivity: float, model: Any
 ) -> bool:
@@ -397,12 +451,34 @@ def _detect_wakeword(
             # Use simple energy-based detection
             return _simple_energy_detection(audio_buffer, sensitivity)
 
-        # Here we would use the actual ML model
-        # For example, with OpenWakeWord:
-        # predictions = model.predict(audio_buffer)
-        # return predictions[keyword] > sensitivity
+        # Use actual OpenWakeWord model
+        if model and hasattr(model, "predict"):
+            try:
+                # OpenWakeWord expects int16 PCM audio
+                # Convert from float32 to int16
+                audio_int16 = (audio_buffer * 32767).astype(np.int16)
 
-        # For now, fallback to basic detection
+                # Get prediction scores
+                prediction_scores = model.predict(audio_int16)
+
+                # Check if any keyword in the model was detected
+                detected = False
+                for keyword_name, score in prediction_scores.items():
+                    if score > sensitivity:
+                        logger.info(
+                            f"OpenWakeWord detected '{keyword_name}' with score {score:.4f} (threshold: {sensitivity})"
+                        )
+                        detected = True
+                        break
+
+                return detected
+
+            except Exception as e:
+                logger.error(f"Error in OpenWakeWord prediction: {e}")
+                # Fallback to basic detection
+                return _simple_energy_detection(audio_buffer, sensitivity)
+
+        # If no model available, fallback to basic detection
         return _simple_energy_detection(audio_buffer, sensitivity)
 
     except Exception as e:
@@ -525,6 +601,13 @@ def _trigger_callback(
     """Trigger the callback function with the detected query."""
     if not callback:
         return
+
+    # Don't trigger callback if query is empty or only whitespace
+    if not query or not query.strip():
+        logger.warning(f"Not triggering callback - query is empty: '{query}'")
+        return
+
+    logger.info(f"Triggering callback with query: '{query}'")
 
     try:
         if asyncio.iscoroutinefunction(callback):

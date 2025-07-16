@@ -138,8 +138,8 @@ type SharedState = Arc<Mutex<OverlayState>>;
 
 #[tauri::command]
 async fn show_overlay(window: Window, state: tauri::State<'_, SharedState>) -> Result<(), String> {
-    // Zawsze włącz click-through - overlay ma być przeźroczysty dla kliknięć
-    set_click_through(&window, true);
+    // Ensure click-through is enabled
+    ensure_click_through(&window);
     window.show().map_err(|e| e.to_string())?;
     {
         let mut overlay_state = state.lock().unwrap();
@@ -570,7 +570,6 @@ async fn handle_polling(client: reqwest::Client, mut current_port: String, app_h
 }
 
 async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, state: Arc<Mutex<OverlayState>>) {
-    println!("[Rust] Processing status data: {}", data);
     let mut state_guard = state.lock().unwrap();
     let window = app_handle.get_window("main").unwrap();
 
@@ -597,8 +596,7 @@ async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, sta
     // Check for direct show/hide commands
     if data.get("show_overlay").and_then(|v| v.as_bool()).unwrap_or(false) {
         println!("[Rust] Show overlay command received");
-        // Handle show overlay directly without function call
-        set_click_through(&window, true); // ZAWSZE włącz click-through - overlay ma być przeźroczysty dla kliknięć
+        ensure_click_through(&window);
         let _ = window.show();
         state_guard.visible = true;
         return;
@@ -606,7 +604,6 @@ async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, sta
 
     if data.get("hide_overlay").and_then(|v| v.as_bool()).unwrap_or(false) {
         println!("[Rust] Hide overlay command received");
-        // Handle hide overlay directly without function call
         let _ = window.hide();
         state_guard.visible = false;
         return;
@@ -619,39 +616,36 @@ async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, sta
     let is_speaking = data.get("is_speaking").and_then(|v| v.as_bool()).unwrap_or(false);
     let wake_word_detected = data.get("wake_word_detected").and_then(|v| v.as_bool()).unwrap_or(false);
     let overlay_visible = data.get("overlay_visible").and_then(|v| v.as_bool()).unwrap_or(false);
+    let show_content = data.get("show_content").and_then(|v| v.as_bool()).unwrap_or(false);
 
-    // Enhanced visibility logic - overlay should always be active but only show content when needed
-    // The overlay window should exist but be transparent/hidden when not displaying information
-    let has_activity = wake_word_detected || is_speaking || is_listening;
-    let has_meaningful_content = !current_text.is_empty() &&
-        current_text != "Listening..." &&
-        current_text != "Offline" &&
-        current_text != "Ready" &&
-        current_text != "Overlay Hidden";
-
-    // Show content only when there's meaningful activity or content AND overlay is enabled
-    let should_show_content = (has_activity || has_meaningful_content) &&
-        state_guard.overlay_enabled;
-
-    // Window should always be shown but content visibility controlled separately
-    let should_be_visible = true; // Always keep window open
-
-    // ZAWSZE ustaw click-through - overlay ma być przeźroczysty dla kliknięć
-    set_click_through(&window, true);
+    // Determine if overlay should be visible based on state
+    let should_show_overlay = wake_word_detected || is_speaking || show_content || overlay_visible ||
+                              (is_listening && (
+                                  current_text.contains("Przetwarzam") ||
+                                  current_text.contains("Mówię") ||
+                                  current_text.contains("Response:") ||
+                                  current_text.contains("Notification:")
+                              )) ||
+                              (!current_text.is_empty() &&
+                               current_text != "Ready" &&
+                               current_text != "Listening..." &&
+                               current_text != "Connected" &&
+                               current_text != "Overlay Shown" &&
+                               current_text != "Overlay Hidden");
 
     let mut changed = false;
     if state_guard.text != current_text ||
         state_guard.is_listening != is_listening ||
         state_guard.is_speaking != is_speaking ||
         state_guard.wake_word_detected != wake_word_detected ||
-        state_guard.visible != should_be_visible
+        state_guard.visible != should_show_overlay
     {
         changed = true;
     }
 
     if changed {
-        println!("[Rust] Status update: listening={}, speaking={}, wake_word={}, text='{}', show_content={}, overlay_visible_flag={}",
-                is_listening, is_speaking, wake_word_detected, current_text, should_show_content, overlay_visible);
+        println!("[Rust] Status update: listening={}, speaking={}, wake_word={}, text='{}', show_content={}, should_show={}",
+                is_listening, is_speaking, wake_word_detected, current_text, show_content, should_show_overlay);
 
         state_guard.status = status.clone();
         state_guard.text = current_text.clone();
@@ -659,17 +653,22 @@ async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, sta
         state_guard.is_speaking = is_speaking;
         state_guard.wake_word_detected = wake_word_detected;
 
-        // Window is always shown but with click-through always enabled
-        if !state_guard.visible {
-            println!("[Rust] Showing overlay window (always active)");
-            // ZAWSZE włącz click-through - overlay ma być zawsze przeźroczysty dla kliknięć
-            set_click_through(&window, true);
+        // Show or hide overlay based on state
+        if should_show_overlay && !state_guard.visible {
+            println!("[Rust] Showing overlay window");
+            ensure_click_through(&window);
             window.show().unwrap_or_else(|e| eprintln!("Failed to show window: {}", e));
             state_guard.visible = true;
+        } else if !should_show_overlay && state_guard.visible {
+            println!("[Rust] Hiding overlay window");
+            window.hide().unwrap_or_else(|e| eprintln!("Failed to hide window: {}", e));
+            state_guard.visible = false;
         }
 
-        // ZAWSZE ustaw click-through na true - overlay nigdy nie powinien blokować kliknięć
-        set_click_through(&window, true);
+        // Always ensure click-through is enabled whenever overlay is visible
+        if state_guard.visible {
+            ensure_click_through(&window);
+        }
 
         // Emit status update to frontend with content visibility flag
         let payload = serde_json::json!({
@@ -678,7 +677,7 @@ async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, sta
             "is_listening": state_guard.is_listening,
             "is_speaking": state_guard.is_speaking,
             "wake_word_detected": state_guard.wake_word_detected,
-            "show_content": should_show_content,
+            "show_content": show_content,
             "overlay_enabled": overlay_visible
         });
 
@@ -687,16 +686,6 @@ async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, sta
         });
 
         state_guard.last_activity_time = Instant::now();
-    }
-
-    // Auto-hide logic - only hide after longer period and when truly inactive
-    if state_guard.visible && state_guard.last_activity_time.elapsed() > Duration::from_secs(30)
-        && current_text.is_empty() && !is_listening && !is_speaking && !wake_word_detected && !overlay_visible {
-        if window.is_visible().unwrap_or(false) {
-            println!("[Rust] Auto-hiding window due to prolonged inactivity and no relevant status.");
-            window.hide().unwrap_or_else(|e| eprintln!("Failed to hide window: {}", e));
-            state_guard.visible = false;
-        }
     }
 }
 
@@ -712,7 +701,7 @@ pub fn run() {
             let state_clone_for_poll = state.clone();
 
             // Get primary monitor and set window to its size and position
-            match main_window.primary_monitor() { // Changed from app.get_primary_monitor()
+            match main_window.primary_monitor() {
                 Ok(Some(monitor)) => {
                     main_window.set_size(monitor.size().to_logical::<u32>(monitor.scale_factor())).unwrap_or_else(|e| eprintln!("Failed to set window size: {}",e));
                     main_window.set_position(monitor.position().to_logical::<i32>(monitor.scale_factor())).unwrap_or_else(|e| eprintln!("Failed to set window position: {}",e));
@@ -724,8 +713,11 @@ pub fn run() {
                 Err(e) => {
                     eprintln!("Error getting primary monitor: {}", e);
                 }
-            }            // Ustaw click-through na true na początku - overlay ma być przeźroczysty
-            set_click_through(&main_window, true);
+            }
+
+            // Set click-through immediately on startup
+            ensure_click_through(&main_window);
+            println!("[Rust] Click-through enabled on startup");
 
             // Start overlay hidden initially - will be shown when client sends status
             main_window.hide().unwrap_or_else(|e| eprintln!("Failed to hide window initially: {}", e));
@@ -788,30 +780,53 @@ pub fn run() {
     }
 }
 
+fn ensure_click_through(window: &Window) {
+    static LAST_CLICK_THROUGH_SET: std::sync::Mutex<Option<Instant>> = std::sync::Mutex::new(None);
+
+    let mut last_set = LAST_CLICK_THROUGH_SET.lock().unwrap();
+    let now = Instant::now();
+
+    // Only set click-through if it hasn't been set recently (debounce)
+    if last_set.is_none() || now.duration_since(*last_set.as_ref().unwrap()) > Duration::from_millis(500) {
+        set_click_through(window, true);
+        *last_set = Some(now);
+    }
+}
+
 fn set_click_through(window: &Window, click_through: bool) {
     #[cfg(target_os = "windows")]
     {
         use windows_sys::Win32::UI::WindowsAndMessaging::{
-            WS_EX_TRANSPARENT, WS_EX_LAYERED, GWL_EXSTYLE, SetWindowLongPtrW, GetWindowLongPtrW
+            WS_EX_TRANSPARENT, WS_EX_LAYERED, WS_EX_TOPMOST, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW,
+            GWL_EXSTYLE, SetWindowLongPtrW, GetWindowLongPtrW
         };
-        // HWND import is now in get_hwnd
 
-        match get_hwnd(window) { // Call renamed helper
+        match get_hwnd(window) {
             Ok(hwnd) => {
                 if hwnd == 0 {
                     eprintln!("Invalid HWND for click-through setup");
                     return;
-                }
-                unsafe {
-                    let ex_style = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
-                    if click_through {
-                        // Enable click-through: add WS_EX_TRANSPARENT and ensure WS_EX_LAYERED is set
-                        SetWindowLongPtrW(hwnd, GWL_EXSTYLE, ex_style | WS_EX_TRANSPARENT as isize | WS_EX_LAYERED as isize);
-                    } else {
-                        // Disable click-through: remove WS_EX_TRANSPARENT but keep WS_EX_LAYERED for overlay functionality
-                        SetWindowLongPtrW(hwnd, GWL_EXSTYLE, (ex_style & !(WS_EX_TRANSPARENT as isize)) | WS_EX_LAYERED as isize);
+                }                    unsafe {
+                        let ex_style = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
+                        if click_through {
+                            // Enable click-through: add WS_EX_TRANSPARENT and ensure proper layering
+                            let new_style = ex_style |
+                                           WS_EX_TRANSPARENT as isize |
+                                           WS_EX_LAYERED as isize |
+                                           WS_EX_TOPMOST as isize |
+                                           WS_EX_NOACTIVATE as isize |
+                                           WS_EX_TOOLWINDOW as isize;
+                            SetWindowLongPtrW(hwnd, GWL_EXSTYLE, new_style);
+                        } else {
+                            // Disable click-through: remove WS_EX_TRANSPARENT but keep layering
+                            let new_style = (ex_style & !(WS_EX_TRANSPARENT as isize)) |
+                                           WS_EX_LAYERED as isize |
+                                           WS_EX_TOPMOST as isize |
+                                           WS_EX_NOACTIVATE as isize |
+                                           WS_EX_TOOLWINDOW as isize;
+                            SetWindowLongPtrW(hwnd, GWL_EXSTYLE, new_style);
+                        }
                     }
-                }
             }
             Err(e) => {
                 eprintln!("Could not get HWND for set_click_through: {}", e);

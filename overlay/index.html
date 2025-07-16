@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gaja Overlay</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: transparent;
+            overflow: hidden;
+            pointer-events: none; /* Critical: Make entire overlay click-through */
+            -webkit-app-region: no-drag;
+        }
+
+        .overlay-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none; /* Critical: Make container click-through */
+            z-index: 9999;
+        }
+
+        /* Wake word listening indicator - top center */
+        .wake-word-indicator {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            pointer-events: none;
+            z-index: 10000;
+        }
+
+        .wake-word-orb {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+            animation: pulse 2s infinite;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .wake-word-orb::before {
+            content: '';
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.8;
+        }
+
+        /* Main overlay - center of screen */
+        .main-overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            display: none;
+            pointer-events: none; /* Critical: Make overlay click-through */
+            z-index: 9998;
+        }
+
+        .main-overlay.show {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .status-orb {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            pointer-events: none;
+        }
+
+        .status-orb.listening {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            animation: pulse 2s infinite;
+        }
+
+        .status-orb.processing {
+            background: linear-gradient(45deg, #FF9800, #F57C00);
+            animation: spin 1s linear infinite;
+        }
+
+        .status-orb.speaking {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+            animation: speak 1s ease-in-out infinite;
+        }
+
+        .status-orb.error {
+            background: linear-gradient(45deg, #f44336, #d32f2f);
+            animation: shake 0.5s ease-in-out infinite;
+        }
+
+        .status-text {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 10px;
+            word-wrap: break-word;
+        }
+
+        .status-details {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-top: 10px;
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes speak {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        /* Hide overlay completely when not needed */
+        .overlay-container.hidden {
+            display: none !important;
+        }
+
+        /* Ensure no interference with video playback */
+        .overlay-container * {
+            pointer-events: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay-container" id="overlayContainer">
+        <!-- Wake word listening indicator -->
+        <div class="wake-word-indicator" id="wakeWordIndicator">
+            <div class="wake-word-orb"></div>
+        </div>
+
+        <!-- Main overlay -->
+        <div class="main-overlay" id="mainOverlay">
+            <div class="status-orb listening" id="statusOrb">🎤</div>
+            <div class="status-text" id="statusText">Gotowy...</div>
+            <div class="status-details" id="statusDetails"></div>
+        </div>
+    </div>
+
+    <script>
+        // Fallback variables for non-Tauri environment
+        let invoke, listen;
+        let isTauriEnvironment = false;
+
+        // Check if we have access to Tauri API
+        if (typeof window !== 'undefined' && window.__TAURI__) {
+            try {
+                invoke = window.__TAURI__.tauri.invoke;
+                listen = window.__TAURI__.event.listen;
+                isTauriEnvironment = true;
+                console.log('[Overlay] Tauri API available');
+            } catch (e) {
+                console.log('[Overlay] Tauri API error:', e);
+                isTauriEnvironment = false;
+            }
+        } else {
+            console.log('[Overlay] Tauri API not available - using fallback mode');
+            // Fallback functions for non-Tauri environment
+            invoke = async (cmd, args) => {
+                console.log(`[Overlay] Fallback invoke: ${cmd}`, args);
+                return Promise.resolve({});
+            };
+            listen = (event, callback) => {
+                console.log(`[Overlay] Fallback listen: ${event}`);
+                return Promise.resolve();
+            };
+        }
+
+        const overlayContainer = document.getElementById('overlayContainer');
+        const wakeWordIndicator = document.getElementById('wakeWordIndicator');
+        const mainOverlay = document.getElementById('mainOverlay');
+        const statusOrb = document.getElementById('statusOrb');
+        const statusText = document.getElementById('statusText');
+        const statusDetails = document.getElementById('statusDetails');
+
+            let currentState = {
+                status: 'Ready',
+                text: '',
+                is_listening: false,
+                is_speaking: false,
+                wake_word_detected: false,
+                show_content: false,
+                overlay_enabled: true
+            };
+
+            // Debug function
+            function debugLog(message) {
+                console.log(`[Overlay] ${message}`);
+                if (invoke) {
+                    invoke('debug_log', { message: `[Overlay] ${message}` });
+                }
+            }
+
+            // Update overlay display based on state
+            function updateOverlay(data) {
+                debugLog(`Updating overlay: ${JSON.stringify(data)}`);
+
+                // Update current state
+                Object.assign(currentState, data);
+
+                // Hide entire overlay if disabled
+                if (!currentState.overlay_enabled) {
+                    overlayContainer.classList.add('hidden');
+                    debugLog('Overlay disabled - hiding completely');
+                    return;
+                } else {
+                    overlayContainer.classList.remove('hidden');
+                }
+
+                // Determine what to show based on current state
+                const shouldShowWakeWord = currentState.is_listening &&
+                                          !currentState.wake_word_detected &&
+                                          !currentState.is_speaking &&
+                                          !currentState.show_content &&
+                                          (!currentState.text || currentState.text === 'Listening...' || currentState.text === 'Ready');
+
+                const shouldShowMainOverlay = currentState.show_content ||
+                                             currentState.wake_word_detected ||
+                                             currentState.is_speaking ||
+                                             (currentState.text &&
+                                              currentState.text !== 'Listening...' &&
+                                              currentState.text !== 'Ready' &&
+                                              currentState.text !== 'Offline' &&
+                                              currentState.text !== 'Connected');
+
+                // Show wake word indicator when just listening
+                if (shouldShowWakeWord) {
+                    wakeWordIndicator.style.display = 'block';
+                    mainOverlay.classList.remove('show');
+                    debugLog('Showing wake word indicator');
+                } else {
+                    wakeWordIndicator.style.display = 'none';
+                }
+
+                // Show main overlay when there's meaningful content or activity
+                if (shouldShowMainOverlay) {
+                    mainOverlay.classList.add('show');
+                    updateMainOverlay();
+                    debugLog('Showing main overlay');
+                } else {
+                    mainOverlay.classList.remove('show');
+                    debugLog('Hiding main overlay');
+                }
+            }
+
+            // Update main overlay content and style
+            function updateMainOverlay() {
+                let orbClass = 'listening';
+                let orbIcon = '🎤';
+
+                // Determine state based on current status
+                if (currentState.is_speaking) {
+                    orbClass = 'speaking';
+                    orbIcon = '🗣️';
+                } else if (currentState.wake_word_detected || currentState.status.includes('Przetwarzam')) {
+                    orbClass = 'processing';
+                    orbIcon = '⚡';
+                } else if (currentState.is_listening) {
+                    orbClass = 'listening';
+                    orbIcon = '🎤';
+                } else if (currentState.status.toLowerCase().includes('error')) {
+                    orbClass = 'error';
+                    orbIcon = '❌';
+                } else {
+                    orbClass = 'listening';
+                    orbIcon = '💤'; // Off state
+                }
+
+                statusOrb.className = `status-orb ${orbClass}`;
+                statusOrb.textContent = orbIcon;
+                statusText.textContent = currentState.text || currentState.status;
+
+                // Show additional details if available
+                if (currentState.status !== currentState.text && currentState.status) {
+                    statusDetails.textContent = currentState.status;
+                    statusDetails.style.display = 'block';
+                } else {
+                    statusDetails.style.display = 'none';
+                }
+            }
+
+            // Listen for status updates from Rust
+            if (listen) {
+                listen('status-update', (event) => {
+                    debugLog(`Received status update: ${JSON.stringify(event.payload)}`);
+                    updateOverlay(event.payload);
+                });
+            }
+
+            // Initialize overlay
+            async function init() {
+                debugLog('Initializing overlay...');
+
+                // Ensure overlay is always click-through
+                document.body.style.pointerEvents = 'none';
+
+                // Start with default state - no need to call get_state
+                updateOverlay({
+                    status: 'Ready',
+                    text: 'Waiting for connection...',
+                    is_listening: false,
+                    is_speaking: false,
+                    wake_word_detected: false,
+                    show_content: false,
+                    overlay_enabled: true
+                });
+
+                debugLog('Overlay initialized successfully');
+            }
+
+            // Start initialization when DOM is ready
+            document.addEventListener('DOMContentLoaded', init);
+
+            // Ensure click-through is maintained
+            document.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            });
+
+            // Debug: Log any mouse events to ensure click-through
+            document.addEventListener('mousedown', (e) => {
+                debugLog('Mouse event detected - this should not happen with proper click-through');
+            });
+
+        // Fallback for when Tauri API is not available
+        if (!isTauriEnvironment) {
+            console.log('[Overlay] Running in fallback mode');
+            document.addEventListener('DOMContentLoaded', function() {
+                document.body.style.pointerEvents = 'none';
+                document.getElementById('statusText').textContent = 'Overlay Ready';
+                console.log('[Overlay] Fallback mode initialized');
+            });
+        }
+    </script>
+</body>
+</html>

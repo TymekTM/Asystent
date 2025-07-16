@@ -283,11 +283,11 @@ class WhisperASR:
                 temperature=0.0,  # Deterministyczne wyniki
                 vad_filter=True,  # Voice Activity Detection
                 vad_parameters=dict(
-                    min_silence_duration_ms=300,  # Krótsze pauzy dla lepszej responsywności
-                    speech_pad_ms=400,  # Większy padding dla bezpieczeństwa
-                    threshold=0.5,  # Próg VAD
+                    min_silence_duration_ms=500,  # Dłuższe pauzy żeby nie odrzucać mowy
+                    speech_pad_ms=600,  # Większy padding dla bezpieczeństwa
+                    threshold=0.2,  # Niższy próg VAD - mniej agresywny
                 ),
-                no_speech_threshold=0.5,  # Niższy próg dla lepszej detekcji mowy
+                no_speech_threshold=0.3,  # Niższy próg dla lepszej detekcji mowy
                 log_prob_threshold=-1.2,  # Bardziej restrykcyjny próg
                 compression_ratio_threshold=2.2,  # Lżejsza kompresja
                 repetition_penalty=1.1,  # Kara za powtórzenia

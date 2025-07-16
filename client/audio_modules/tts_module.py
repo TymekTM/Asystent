@@ -203,7 +203,6 @@ class TTSModule:
                     voice=self.voice,
                     input=text,
                     response_format="opus",
-                    voice_prompt=voice_prompt,
                 ) as response:
                     self.cancel()
                     self.current_process = subprocess.Popen(
