@@ -40,7 +40,7 @@ class PluginManager:
             self.plugins_directory = current_file_dir / plugins_directory
         else:
             self.plugins_directory = Path(plugins_directory)
-        
+
         self.plugins: dict[str, PluginInfo] = {}
         self.user_plugins: dict[
             str, dict[str, bool]

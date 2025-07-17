@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""GAJA Assistant Server Główny serwer obsługujący wielu użytkowników, zarządzający AI,
-bazą danych i pluginami."""
+"""GAJA Assistant Server - Working version without lifespan issues."""
 
 import os
 import sys
@@ -46,7 +45,7 @@ class ServerApp:
         self.start_time = None
 
     async def initialize(self):
-        """Initialize all server components."""
+        """Initialize all server components synchronously."""
         try:
             from datetime import datetime
 
@@ -131,15 +130,12 @@ class ServerApp:
 
     async def cleanup(self):
         """Clean up server resources."""
-        try:
-            if self.proactive_assistant:
-                self.proactive_assistant.stop()
-            if self.plugin_monitor:
-                await self.plugin_monitor.stop_monitoring()
-            if self.db_manager and hasattr(self.db_manager, "close"):
-                await self.db_manager.close()
-        except Exception as e:
-            logger.error(f"Error during cleanup: {e}")
+        if self.proactive_assistant:
+            self.proactive_assistant.stop()
+        if self.plugin_monitor:
+            await self.plugin_monitor.stop_monitoring()
+        if self.db_manager:
+            await self.db_manager.close()
 
 
 # Create FastAPI app
@@ -175,7 +171,7 @@ async def root():
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""
-    return {"status": "healthy", "timestamp": "2025-07-16T19:25:00Z"}
+    return {"status": "healthy", "timestamp": "2025-01-16T18:57:00Z"}
 
 
 @app.on_event("startup")
@@ -196,8 +192,7 @@ async def shutdown_event():
     logger.info("Server shutdown complete")
 
 
-def main():
-    """Main server entry point."""
+if __name__ == "__main__":
     # Load configuration
     config = load_config("server_config.json")
 
@@ -229,7 +224,3 @@ def main():
         log_level="info",
         reload=False,
     )
-
-
-if __name__ == "__main__":
-    main()
