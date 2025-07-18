@@ -1,4 +1,0 @@
-{
-  "user": { "password": "password", "role": "user" },
-  "dev": { "password": "devpassword", "role": "dev" }
-}

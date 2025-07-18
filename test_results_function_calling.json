@@ -1,0 +1,61 @@
+{
+  "passed": 10,
+  "failed": 1,
+  "details": [
+    {
+      "test": "Health Endpoint",
+      "success": true,
+      "details": "Status: healthy"
+    },
+    {
+      "test": "OpenAPI Docs",
+      "success": true,
+      "details": "Found 17 endpoints"
+    },
+    {
+      "test": "Error Handling",
+      "success": true,
+      "details": "Properly handles 404 errors"
+    },
+    {
+      "test": "Authentication",
+      "success": true,
+      "details": "Login successful"
+    },
+    {
+      "test": "Protected Endpoint",
+      "success": true,
+      "details": "Found 9 plugins"
+    },
+    {
+      "test": "Function Calling Metadata",
+      "success": true,
+      "details": "0/9 plugins function-ready"
+    },
+    {
+      "test": "AI Query Simple",
+      "success": true,
+      "details": "Response: {\"text\": \"LM Studio error: 'AIProviders' object ha..."
+    },
+    {
+      "test": "AI Query with Function Calling",
+      "success": true,
+      "details": "Response: {\"text\": \"LM Studio error: 'AI..., Functions: 0"
+    },
+    {
+      "test": "WebSocket Connection",
+      "success": false,
+      "details": "WebSocket error: server rejected WebSocket connection: HTTP 403"
+    },
+    {
+      "test": "Memory System",
+      "success": true,
+      "details": "Found 0 memory entries"
+    },
+    {
+      "test": "Server Metrics",
+      "success": true,
+      "details": "Server uptime: 950"
+    }
+  ]
+}

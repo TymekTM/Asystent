@@ -1,0 +1,102 @@
+{
+  "docker_tests": {
+    "container_running": {
+      "status": "PASS",
+      "message": "Container is running"
+    },
+    "container_logs": {
+      "status": "PASS",
+      "message": "No critical errors in logs"
+    },
+    "health_endpoint": {
+      "status": "PASS",
+      "message": "Health check passed"
+    }
+  },
+  "auth_tests": {
+    "admin_login": {
+      "status": "PASS",
+      "message": "Login successful for admin@gaja.app"
+    },
+    "demo_login": {
+      "status": "PASS",
+      "message": "Login successful for demo@mail.com"
+    },
+    "test_login": {
+      "status": "PASS",
+      "message": "Correctly rejected non-existent user test@example.com"
+    },
+    "user_login": {
+      "status": "PASS",
+      "message": "Correctly rejected non-existent user user@nonexistent.com"
+    }
+  },
+  "api_tests": {
+    "user_profile": {
+      "status": "PASS",
+      "message": "/me accessible"
+    },
+    "plugins_list": {
+      "status": "PASS",
+      "message": "/plugins accessible"
+    },
+    "metrics": {
+      "status": "PASS",
+      "message": "/metrics accessible"
+    },
+    "websocket_status": {
+      "status": "PASS",
+      "message": "/ws/status accessible"
+    },
+    "admin_stats": {
+      "status": "PASS",
+      "message": "/admin/stats accessible"
+    }
+  },
+  "function_calling_tests": {
+    "plugin_discovery": {
+      "status": "PASS",
+      "message": "Query processed: What plugins are available?..."
+    },
+    "search_function": {
+      "status": "PASS",
+      "message": "Query processed: Search for information about Python programming..."
+    },
+    "weather_function": {
+      "status": "PASS",
+      "message": "Query processed: What's the weather like today?..."
+    },
+    "direct_ai_response": {
+      "status": "PASS",
+      "message": "Query processed: Tell me a joke..."
+    }
+  },
+  "client_tests": {
+    "client_files": {
+      "status": "PASS",
+      "message": "Client files found"
+    },
+    "client_main": {
+      "status": "PASS",
+      "message": "Client main found"
+    },
+    "client_config": {
+      "status": "PASS",
+      "message": "Client config found"
+    }
+  },
+  "integration_tests": {
+    "system_operational": {
+      "status": "PASS",
+      "message": "System is operational"
+    }
+  },
+  "summary": {
+    "total_tests": 20,
+    "passed": 20,
+    "failed": 0,
+    "warnings": 0,
+    "success_rate": "100.0%",
+    "timestamp": "2025-07-18 20:26:56"
+  }
+}

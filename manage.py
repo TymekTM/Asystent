@@ -16,9 +16,19 @@ def run_command(cmd, description="", shell=False):
 
     try:
         if shell:
-            result = subprocess.run(
-                cmd, check=True, capture_output=True, text=True, shell=True
-            )
+            # For shell commands, ensure proper escaping
+            if isinstance(cmd, str):
+                # Split shell command into components for safety
+                import shlex
+
+                cmd_parts = shlex.split(cmd)
+                result = subprocess.run(
+                    cmd_parts, check=True, capture_output=True, text=True
+                )
+            else:
+                result = subprocess.run(
+                    cmd, check=True, capture_output=True, text=True, shell=False
+                )
         else:
             result = subprocess.run(cmd, check=True, capture_output=True, text=True)
 

@@ -1,0 +1,44 @@
+{
+  "schema_validation": [
+    {
+      "test": "Schema Generation",
+      "success": false,
+      "details": "Exception: 'FunctionCallingSystem' object has no attribute 'register_module'"
+    }
+  ],
+  "execution_tests": [
+    {
+      "test": "Function Execution",
+      "success": false,
+      "details": "Exception: 'FunctionCallingSystem' object has no attribute 'register_module'"
+    },
+    {
+      "test": "Parameter Validation",
+      "success": false,
+      "details": "Exception: 'FunctionCallingSystem' object has no attribute 'register_module'"
+    },
+    {
+      "test": "Async Function Support",
+      "success": false,
+      "details": "Exception: 'FunctionCallingSystem' object has no attribute 'register_module'"
+    }
+  ],
+  "integration_tests": [
+    {
+      "test": "AI Function Call Structure",
+      "success": true,
+      "details": "Valid structure for get_weather"
+    },
+    {
+      "test": "AI Integration Simulation",
+      "success": true,
+      "details": "Processed 1 function calls"
+    }
+  ],
+  "errors": [],
+  "summary": {
+    "total_tests": 6,
+    "passed_tests": 2,
+    "success_rate": 33.33333333333333
+  }
+}

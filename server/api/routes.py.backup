@@ -7,7 +7,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from auth.security import security_manager
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from loguru import logger
@@ -107,6 +106,7 @@ class ApiResponse(BaseModel):
 
 
 # Bezpieczni użytkownicy - hasła są zahashowane
+from auth.security import security_manager
 
 # Przykładowi użytkownicy z zahashowanymi hasłami
 # UWAGA: W produkcji należy używać zewnętrznej bazy danych z właściwą migracją
@@ -115,7 +115,7 @@ SECURE_USERS = {
         "id": "1",
         "email": "admin@gaja.app",
         "role": "admin",
-        "password_hash": "$2b$12$sWZp8vkKmF41Ndi6a5uoQu08GUi3gbpa0hqo1ipDgOSodtrI1KNLu",
+        "password_hash": "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LLk8Z8Z8Z8Z8Z8Z8Z",  # Przykładowy hash
         "is_active": True,
         "created_at": datetime.now().isoformat(),
         "settings": {
@@ -129,7 +129,7 @@ SECURE_USERS = {
         "id": "2",
         "email": "demo@mail.com",
         "role": "user",
-        "password_hash": "$2b$12$Tg.YnWlT4wbt3QnvYI1KCeal.5M0TowXoeAXTHr7ad1ULLabzJhWe",
+        "password_hash": "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LLk8Z8Z8Z8Z8Z8Z8Y",  # Przykładowy hash
         "is_active": True,
         "created_at": datetime.now().isoformat(),
         "settings": {
@@ -158,7 +158,7 @@ def get_current_user(
 
         # Znajdź użytkownika w systemie
         user = None
-        for _, user_data in SECURE_USERS.items():
+        for email, user_data in SECURE_USERS.items():
             if user_data["email"] == user_email or user_data["id"] == user_id:
                 user = user_data
                 break
@@ -176,7 +176,7 @@ def get_current_user(
         raise
     except Exception as e:
         logger.error(f"Token validation error: {e}")
-        raise HTTPException(status_code=401, detail="Invalid authentication") from e
+        raise HTTPException(status_code=401, detail="Invalid authentication")
 
 
 def optional_auth(
@@ -204,7 +204,7 @@ async def login(request: LoginRequest) -> LoginResponse:
             logger.warning(f"Login attempt on locked account: {email}")
             raise HTTPException(
                 status_code=429,
-                detail="Account temporarily locked due to too many failed attempts",
+                detail="Account temporarily locked due to too many failed attempts"
             )
 
         # Znajdź użytkownika
@@ -229,23 +229,17 @@ async def login(request: LoginRequest) -> LoginResponse:
         security_manager.clear_failed_attempts(email)
 
         # Utwórz tokeny
-        token_data = {
-            "userId": user["id"],
-            "email": user["email"],
-            "role": user["role"],
-        }
+        token_data = {"userId": user["id"], "email": user["email"], "role": user["role"]}
         access_token = security_manager.create_access_token(token_data)
-        # refresh_token = security_manager.create_refresh_token(token_data)
+        refresh_token = security_manager.create_refresh_token(token_data)
 
         # Loguj udane logowanie (bez wrażliwych danych)
-        log_data = security_manager.sanitize_log_data(
-            {
-                "email": email,
-                "user_id": user["id"],
-                "role": user["role"],
-                "ip": "unknown",  # TODO: dodaj rzeczywiste IP
-            }
-        )
+        log_data = security_manager.sanitize_log_data({
+            "email": email,
+            "user_id": user["id"],
+            "role": user["role"],
+            "ip": "unknown"  # TODO: dodaj rzeczywiste IP
+        })
         logger.info(f"Successful login: {log_data}")
 
         return LoginResponse(
@@ -264,9 +258,7 @@ async def login(request: LoginRequest) -> LoginResponse:
         raise
     except Exception as e:
         logger.error(f"Login error: {e}")
-        raise HTTPException(
-            status_code=500, detail="Authentication service unavailable"
-        ) from e
+        raise HTTPException(status_code=500, detail="Authentication service unavailable")
 
 
 @router.post("/auth/magic-link")
@@ -310,13 +302,11 @@ async def update_settings(
         SECURE_USERS[user_email]["settings"].update(settings_update)
 
         # Loguj zmianę ustawień
-        log_data = security_manager.sanitize_log_data(
-            {
-                "user_id": current_user["id"],
-                "email": user_email,
-                "updated_settings": list(settings_update.keys()),
-            }
-        )
+        log_data = security_manager.sanitize_log_data({
+            "user_id": current_user["id"],
+            "email": user_email,
+            "updated_settings": list(settings_update.keys())
+        })
         logger.info(f"User settings updated: {log_data}")
 
         return User(
@@ -331,7 +321,7 @@ async def update_settings(
         raise
     except Exception as e:
         logger.error(f"Settings update error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to update settings") from e
+        raise HTTPException(status_code=500, detail="Failed to update settings")
 
 
 # Memory endpoints
@@ -371,7 +361,7 @@ async def get_memories(
 
     except Exception as e:
         logger.error(f"Get memories error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get memories") from e
+        raise HTTPException(status_code=500, detail="Failed to get memories")
 
 
 @router.delete("/memory/{memory_id}")
@@ -430,7 +420,7 @@ async def get_plugins(
 
     except Exception as e:
         logger.error(f"Get plugins error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get plugins") from e
+        raise HTTPException(status_code=500, detail="Failed to get plugins")
 
 
 @router.patch("/plugins/{plugin_slug}")
@@ -480,7 +470,7 @@ async def toggle_plugin(
         raise
     except Exception as e:
         logger.error(f"Toggle plugin error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to toggle plugin") from e
+        raise HTTPException(status_code=500, detail="Failed to toggle plugin")
 
 
 # System metrics endpoints
@@ -509,7 +499,7 @@ async def get_metrics(
 
     except Exception as e:
         logger.error(f"Get metrics error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get metrics") from e
+        raise HTTPException(status_code=500, detail="Failed to get metrics")
 
 
 # Log endpoints
@@ -574,7 +564,7 @@ async def get_logs(
 
     except Exception as e:
         logger.error(f"Get logs error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get logs") from e
+        raise HTTPException(status_code=500, detail="Failed to get logs")
 
 
 # Health check endpoint
@@ -597,7 +587,7 @@ async def health_check(
 
     except Exception as e:
         logger.error(f"Health check error: {e}")
-        raise HTTPException(status_code=500, detail="Health check failed") from e
+        raise HTTPException(status_code=500, detail="Health check failed")
 
 
 # AI Query endpoint for web UI
@@ -613,33 +603,29 @@ async def ai_query(
         if not query:
             raise HTTPException(status_code=400, detail="Query is required")
 
-        # Use AI module directly if server_app has ai_module
-        if hasattr(server_app, "ai_module") and server_app.ai_module:
-            # Prepare context for AI module
-            ai_context = {
-                "user_id": current_user["id"],
-                "history": [],  # Can be enhanced with actual history
-                "available_plugins": [],  # Can be enhanced with user plugins
-                "modules": {},  # Can be enhanced with available modules
-            }
-            ai_context.update(context)
+        # Process query using server's AI module
+        request_data = {"type": "ai_query", "query": query, "context": context}
 
-            # Process query using AI module
-            response = await server_app.ai_module.process_query(query, ai_context)
+        response = await server_app.process_user_request(
+            current_user["id"], request_data
+        )
 
-            return {
-                "success": True,
-                "response": response,
-                "timestamp": datetime.now().timestamp(),
-            }
-        else:
-            raise HTTPException(status_code=500, detail="AI module not available")
+        if response.get("type") == "error":
+            raise HTTPException(
+                status_code=500, detail=response.get("message", "AI query failed")
+            )
+
+        return {
+            "success": True,
+            "response": response.get("response", ""),
+            "timestamp": response.get("timestamp", datetime.now().timestamp()),
+        }
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"AI query error: {e}")
-        raise HTTPException(status_code=500, detail="AI query failed") from e
+        raise HTTPException(status_code=500, detail="AI query failed")
 
 
 # WebSocket status endpoint
@@ -664,7 +650,7 @@ async def ws_status(
 
     except Exception as e:
         logger.error(f"WebSocket status error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get WebSocket status") from e
+        raise HTTPException(status_code=500, detail="Failed to get WebSocket status")
 
 
 # Daily briefing endpoint
@@ -688,7 +674,7 @@ async def get_daily_briefing(
 
     except Exception as e:
         logger.error(f"Daily briefing error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get daily briefing") from e
+        raise HTTPException(status_code=500, detail="Failed to get daily briefing")
 
 
 # Admin endpoints
@@ -731,7 +717,7 @@ async def get_admin_stats(
                             ).date()
                             if item_date == today:
                                 today_interactions += 1
-                        except Exception:
+                        except:
                             continue
             except Exception as e:
                 logger.debug(f"Error getting interaction stats: {e}")
@@ -817,7 +803,7 @@ async def get_admin_stats(
         raise
     except Exception as e:
         logger.error(f"Admin stats error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get admin stats") from e
+        raise HTTPException(status_code=500, detail="Failed to get admin stats")
 
 
 # Export router
