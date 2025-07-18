@@ -40,41 +40,54 @@ class RateLimiter:
         identifier: str,
         action: str = "api",
         request_metadata: dict[str, Any] | None = None,
+        user_id: str | None = None,
     ) -> tuple[bool, dict[str, Any]]:
-        """Sprawdza czy żądanie jest dozwolone."""
+        """Sprawdza czy żądanie jest dozwolone.
+        
+        Args:
+            identifier: Domyślny identyfikator (IP)
+            action: Typ akcji (api, login, upload, etc.)
+            request_metadata: Dodatkowe metadane żądania
+            user_id: ID użytkownika (jeśli uwierzytelniony) - ma priorytet nad IP
+        """
         now = time.time()
+        
+        # Użyj user_id jeśli dostępny, w przeciwnym razie IP
+        rate_limit_key = f"user:{user_id}" if user_id else f"ip:{identifier}"
 
-        # Sprawdź czy IP jest zablokowane
-        if identifier in self.blocked_ips:
-            if datetime.now(UTC) < self.blocked_ips[identifier]:
+        # Sprawdź czy identyfikator jest zablokowany
+        if rate_limit_key in self.blocked_ips:
+            if datetime.now(UTC) < self.blocked_ips[rate_limit_key]:
                 return False, {
-                    "reason": "ip_blocked",
-                    "unblock_time": self.blocked_ips[identifier].isoformat(),
+                    "reason": "blocked",
+                    "identifier_type": "user" if user_id else "ip", 
+                    "unblock_time": self.blocked_ips[rate_limit_key].isoformat(),
                     "retry_after": int(
                         (
-                            self.blocked_ips[identifier] - datetime.now(UTC)
+                            self.blocked_ips[rate_limit_key] - datetime.now(UTC)
                         ).total_seconds()
                     ),
                 }
             else:
-                # Odblokuj IP
-                del self.blocked_ips[identifier]
+                # Odblokuj identyfikator
+                del self.blocked_ips[rate_limit_key]
 
-        # Pobierz limit dla akcji
-        limit_config = self.limits.get(action, self.limits["api"])
+        # Pobierz limit dla akcji z uwzględnieniem typu użytkownika
+        limit_config = self._get_user_specific_limits(action, user_id)
         max_requests = limit_config["requests"]
         window_seconds = limit_config["window"]
 
         # Wyczyść stare żądania
-        requests_queue = self.requests[identifier]
+        requests_queue = self.requests[rate_limit_key]
         while requests_queue and requests_queue[0] < now - window_seconds:
             requests_queue.popleft()
 
         # Sprawdź limit
         if len(requests_queue) >= max_requests:
-            self._handle_rate_limit_exceeded(identifier, action, request_metadata)
+            self._handle_rate_limit_exceeded(rate_limit_key, action, request_metadata, user_id)
             return False, {
                 "reason": "rate_limit_exceeded",
+                "identifier_type": "user" if user_id else "ip",
                 "limit": max_requests,
                 "window": window_seconds,
                 "retry_after": int(window_seconds - (now - requests_queue[0]))
@@ -84,84 +97,62 @@ class RateLimiter:
 
         # Dodaj żądanie i zwróć sukces
         requests_queue.append(now)
-        return True, {"remaining": max_requests - len(requests_queue)}
+        return True, {
+            "remaining": max_requests - len(requests_queue),
+            "identifier_type": "user" if user_id else "ip"
+        }
 
-    def check_rate_limit(self, identifier: str, endpoint: str = "api") -> bool:
-        """Check if request is allowed under rate limiting rules."""
-        try:
-            now = time.time()
+    def _get_user_specific_limits(self, action: str, user_id: str | None = None) -> dict[str, int]:
+        """Pobiera limity specyficzne dla użytkownika."""
+        base_limit = self.limits.get(action, self.limits["api"])
+        
+        # Jeśli użytkownik jest uwierzytelniony, daj mu wyższe limity
+        if user_id:
+            # Zwiększ limity dla uwierzytelnionych użytkowników
+            multiplier = 3  # 3x więcej requestów dla zalogowanych użytkowników
+            return {
+                "requests": base_limit["requests"] * multiplier,
+                "window": base_limit["window"]
+            }
+        
+        return base_limit
 
-            # Check if IP is blocked
-            if identifier in self.blocked_ips:
-                if datetime.now(UTC) < self.blocked_ips[identifier]:
-                    logger.warning(
-                        f"Blocked IP {identifier} attempted access to {endpoint}"
-                    )
-                    return False
-                else:
-                    # Unblock expired blocks
-                    del self.blocked_ips[identifier]
-
-            # Get rate limit for endpoint
-            limit_config = self.limits.get(endpoint, self.limits["api"])
-            max_requests = limit_config["requests"]
-            window_seconds = limit_config["window"]
-
-            # Clean old requests
-            request_queue = self.requests[identifier]
-            cutoff_time = now - window_seconds
-
-            while request_queue and request_queue[0] < cutoff_time:
-                request_queue.popleft()
-
-            # Check if limit is exceeded
-            if len(request_queue) >= max_requests:
-                logger.warning(f"Rate limit exceeded for {identifier} on {endpoint}")
-                self.suspicious_ips[identifier] += 1
-
-                # Auto-block if too many rate limit violations
-                if (
-                    self.suspicious_ips[identifier]
-                    >= self.auto_block_thresholds["rate_limit_exceeded"]
-                ):
-                    self.block_ip(identifier, hours=1, reason="rate_limit_violations")
-
-                return False
-
-            # Record this request
-            request_queue.append(now)
-
-            return True
-
-        except Exception as e:
-            logger.error(f"Rate limit check error for {identifier}: {e}")
-            return False
-
-    def block_ip(self, ip: str, duration_hours: int = 24, reason: str = "security_violation") -> None:
-        """Blokuje IP na określony czas."""
+    def block_identifier(
+        self, identifier: str, duration_hours: int = 24, reason: str = "security_violation"
+    ) -> None:
+        """Blokuje identyfikator (IP lub user) na określony czas."""
         try:
             unblock_time = datetime.now(UTC) + timedelta(hours=duration_hours)
-            self.blocked_ips[ip] = unblock_time
+            self.blocked_ips[identifier] = unblock_time
 
-            logger.warning(f"IP {ip} blocked for {duration_hours}h: {reason}")
+            identifier_type = "user" if identifier.startswith("user:") else "ip"
+            logger.warning(f"{identifier_type.upper()} {identifier} blocked for {duration_hours}h: {reason}")
 
         except Exception as e:
-            logger.error(f"Failed to block IP {ip}: {e}")
+            logger.error(f"Failed to block {identifier}: {e}")
+
+    def block_ip(
+        self, ip: str, duration_hours: int = 24, reason: str = "security_violation"
+    ) -> None:
+        """Blokuje IP na określony czas (zachowane dla kompatybilności)."""
+        ip_key = f"ip:{ip}"
+        self.block_identifier(ip_key, duration_hours, reason)
 
     def _handle_rate_limit_exceeded(
-        self, identifier: str, action: str, request_metadata: dict[str, Any] | None
+        self, identifier: str, action: str, request_metadata: dict[str, Any] | None, user_id: str | None = None
     ) -> None:
         """Obsługuje przekroczenie limitu żądań."""
         self.suspicious_ips[identifier] += 1
 
-        logger.warning(f"Rate limit exceeded: {identifier} for action {action}")
+        identifier_type = "user" if user_id else "ip"
+        logger.warning(f"Rate limit exceeded: {identifier} ({identifier_type}) for action {action}")
 
-        # Sprawdź czy należy zablokować IP
+        # Sprawdź czy należy zablokować identyfikator
         if (
             self.suspicious_ips[identifier]
             >= self.auto_block_thresholds["rate_limit_exceeded"]
         ):
-            self.block_ip(
+            self.block_identifier(
                 identifier, duration_hours=1, reason="repeated_rate_limit_violations"
             )
 
@@ -398,11 +389,36 @@ class SecurityMiddleware:
         # Pobierz IP klienta
         client_ip = self._get_client_ip(request)
 
+        # Pobierz user_id z tokena jeśli dostępny
+        user_id = None
+        try:
+            from fastapi.security import HTTPAuthorizationCredentials
+            from fastapi import Depends
+            
+            # Pobierz Authorization header
+            authorization = request.headers.get("Authorization")
+            if authorization and authorization.startswith("Bearer "):
+                token = authorization.split(" ")[1]
+                
+                # Importuj funkcję sprawdzania tokena
+                from server.api.routes import security_manager
+                
+                try:
+                    payload = security_manager.verify_token(token, "access")
+                    user_id = payload.get("userId") or payload.get("user_id")
+                except Exception:
+                    # Token nie jest ważny, user_id pozostaje None
+                    pass
+                    
+        except Exception as e:
+            logger.debug(f"Could not extract user_id from token: {e}")
+
         # Sprawdź rate limiting
         is_allowed, rate_info = self.rate_limiter.is_allowed(
             client_ip,
             self._get_action_type(request),
             {"url": str(request.url), "method": request.method},
+            user_id
         )
 
         if not is_allowed:

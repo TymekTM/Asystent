@@ -190,7 +190,8 @@ class SecureConfigManager:
             value = os.getenv(var_name)
             if value:
                 is_valid = (
-                    isinstance(pattern["prefix"], str) and value.startswith(pattern["prefix"])
+                    isinstance(pattern["prefix"], str)
+                    and value.startswith(pattern["prefix"])
                     and len(value) >= pattern["min_length"]
                     and not value.startswith("YOUR_")
                 )

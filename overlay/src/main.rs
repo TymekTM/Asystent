@@ -150,6 +150,8 @@ async fn show_overlay(window: Window, state: tauri::State<'_, SharedState>) -> R
 
 #[tauri::command]
 async fn hide_overlay(window: Window, state: tauri::State<'_, SharedState>) -> Result<(), String> {
+    // ALWAYS ensure click-through even when hiding - user requirement
+    ensure_click_through(&window);
     // Ukryj okno
     window.hide().map_err(|e| e.to_string())?;
     {
@@ -169,6 +171,9 @@ async fn update_status(
     wake_word_detected: bool,
     state: tauri::State<'_, SharedState>
 ) -> Result<(), String> {
+    // ALWAYS ensure click-through on any status update - user requirement
+    ensure_click_through(&window);
+    
     {
         let mut overlay_state = state.lock().unwrap();
         overlay_state.status = status.clone();
@@ -528,10 +533,10 @@ async fn handle_sse_stream(response: reqwest::Response, app_handle: AppHandle, s
 }
 
 async fn handle_polling(client: reqwest::Client, mut current_port: String, app_handle: AppHandle, state: Arc<Mutex<OverlayState>>) {
-    println!("[Rust] Using polling mode");
+    println!("[Rust] Using ultra-high-frequency polling mode for maximum responsiveness");
 
     loop {
-        sleep(Duration::from_millis(500)).await; // Poll every 500ms
+        sleep(Duration::from_millis(50)).await; // Poll every 50ms for ultra-responsive overlay
 
         let poll_url = format!("http://localhost:{}/api/status", current_port);        match client.get(&poll_url).send().await {
             Ok(response) => {
@@ -573,7 +578,7 @@ async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, sta
     let mut state_guard = state.lock().unwrap();
     let window = app_handle.get_window("main").unwrap();
 
-    // Check for action commands
+    // Check for action commands - PRIORITY HANDLING
     if let Some(action) = data.get("action").and_then(|v| v.as_str()) {
         match action {
             "open_settings" => {
@@ -593,19 +598,33 @@ async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, sta
         }
     }
 
-    // Check for direct show/hide commands
+    // Check for direct show/hide commands - IMMEDIATE RESPONSE
     if data.get("show_overlay").and_then(|v| v.as_bool()).unwrap_or(false) {
-        println!("[Rust] Show overlay command received");
+        println!("[Rust] Show overlay command received - IMMEDIATE");
         ensure_click_through(&window);
         let _ = window.show();
         state_guard.visible = true;
+        // Emit immediate status update
+        let payload = serde_json::json!({
+            "status": "Overlay Shown",
+            "text": "Overlay Shown",
+            "immediate": true
+        });
+        window.emit("status-update", payload).unwrap_or_default();
         return;
     }
 
     if data.get("hide_overlay").and_then(|v| v.as_bool()).unwrap_or(false) {
-        println!("[Rust] Hide overlay command received");
+        println!("[Rust] Hide overlay command received - IMMEDIATE");
         let _ = window.hide();
         state_guard.visible = false;
+        // Emit immediate status update
+        let payload = serde_json::json!({
+            "status": "Overlay Hidden",
+            "text": "Overlay Hidden",
+            "immediate": true
+        });
+        window.emit("status-update", payload).unwrap_or_default();
         return;
     }
 
@@ -617,35 +636,65 @@ async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, sta
     let wake_word_detected = data.get("wake_word_detected").and_then(|v| v.as_bool()).unwrap_or(false);
     let overlay_visible = data.get("overlay_visible").and_then(|v| v.as_bool()).unwrap_or(false);
     let show_content = data.get("show_content").and_then(|v| v.as_bool()).unwrap_or(false);
+    let is_critical = data.get("critical").and_then(|v| v.as_bool()).unwrap_or(false);
 
-    // Determine if overlay should be visible based on state
-    let should_show_overlay = wake_word_detected || is_speaking || show_content || overlay_visible ||
-                              (is_listening && (
-                                  current_text.contains("Przetwarzam") ||
-                                  current_text.contains("Mówię") ||
-                                  current_text.contains("Response:") ||
-                                  current_text.contains("Notification:")
-                              )) ||
+    // ENHANCED STATUS LOGIC - Better determination of what to show
+    let should_show_overlay = wake_word_detected || 
+                              is_speaking || 
+                              show_content || 
+                              overlay_visible ||
+                              // Show on specific status keywords
+                              status.contains("Przetwarzam") ||
+                              status.contains("Mówię") ||
+                              status.contains("myślę") ||
+                              status.contains("Response:") ||
+                              status.contains("Notification:") ||
+                              current_text.contains("Przetwarzam") ||
+                              current_text.contains("Mówię") ||
+                              current_text.contains("myślę") ||
+                              current_text.contains("Response:") ||
+                              current_text.contains("Notification:") ||
+                              // Show if we have meaningful text that's not just status
                               (!current_text.is_empty() &&
                                current_text != "Ready" &&
                                current_text != "Listening..." &&
                                current_text != "Connected" &&
+                               current_text != "Offline" &&
                                current_text != "Overlay Shown" &&
-                               current_text != "Overlay Hidden");
+                               current_text != "Overlay Hidden" &&
+                               current_text.len() > 10); // Only show if text is meaningful
+
+    // IMMEDIATE RESPONSE for critical states
+    let is_critical_state = is_critical || 
+                           wake_word_detected || 
+                           status.contains("Przetwarzam") ||
+                           status.contains("Mówię") ||
+                           current_text.contains("Przetwarzam") ||
+                           current_text.contains("Mówię") ||
+                           current_text.contains("wake word detected") ||
+                           is_speaking;
 
     let mut changed = false;
+    let visibility_changed = state_guard.visible != should_show_overlay;
+    
     if state_guard.text != current_text ||
         state_guard.is_listening != is_listening ||
         state_guard.is_speaking != is_speaking ||
         state_guard.wake_word_detected != wake_word_detected ||
-        state_guard.visible != should_show_overlay
+        visibility_changed ||
+        state_guard.status != status
     {
         changed = true;
     }
 
-    if changed {
-        println!("[Rust] Status update: listening={}, speaking={}, wake_word={}, text='{}', show_content={}, should_show={}",
-                is_listening, is_speaking, wake_word_detected, current_text, show_content, should_show_overlay);
+    if changed || is_critical_state {
+        if is_critical_state {
+            println!("[Rust] CRITICAL STATUS UPDATE - IMMEDIATE RESPONSE: status='{}', text='{}', listening={}, speaking={}, wake_word={}",
+                    status, current_text, is_listening, is_speaking, wake_word_detected);
+        } else {
+            println!("[Rust] Status update: status='{}', text='{}', listening={}, speaking={}, wake_word={}, show_content={}, should_show={}",
+                    status, current_text, is_listening, is_speaking, wake_word_detected, show_content, should_show_overlay);
+        }
 
         state_guard.status = status.clone();
         state_guard.text = current_text.clone();
@@ -653,32 +702,46 @@ async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, sta
         state_guard.is_speaking = is_speaking;
         state_guard.wake_word_detected = wake_word_detected;
 
-        // Show or hide overlay based on state
+        // IMMEDIATE SHOW/HIDE for critical states OR regular logic
         if should_show_overlay && !state_guard.visible {
-            println!("[Rust] Showing overlay window");
+            if is_critical_state {
+                println!("[Rust] IMMEDIATE SHOW - Critical state detected");
+            } else {
+                println!("[Rust] Showing overlay window - meaningful content detected");
+            }
             ensure_click_through(&window);
             window.show().unwrap_or_else(|e| eprintln!("Failed to show window: {}", e));
             state_guard.visible = true;
-        } else if !should_show_overlay && state_guard.visible {
-            println!("[Rust] Hiding overlay window");
+        } else if !should_show_overlay && state_guard.visible && !is_critical_state {
+            println!("[Rust] Hiding overlay window - no meaningful content");
             window.hide().unwrap_or_else(|e| eprintln!("Failed to hide window: {}", e));
             state_guard.visible = false;
         }
 
-        // Always ensure click-through is enabled whenever overlay is visible
-        if state_guard.visible {
-            ensure_click_through(&window);
-        }
+        // ALWAYS ensure click-through is enabled regardless of state
+        // User requested overlay to be ALWAYS click-through, no matter what
+        ensure_click_through(&window);
 
-        // Emit status update to frontend with content visibility flag
+        // Emit status update to frontend with enhanced status information
+        let display_status = if is_listening && !is_speaking && !wake_word_detected {
+            "słucham".to_string()
+        } else if wake_word_detected || status.contains("Przetwarzam") || current_text.contains("Przetwarzam") {
+            "myślę".to_string()
+        } else if is_speaking || status.contains("Mówię") || current_text.contains("Mówię") {
+            "mówię".to_string()
+        } else {
+            status.clone()
+        };
+
         let payload = serde_json::json!({
-            "status": status.clone(),
+            "status": display_status,
             "text": state_guard.text.clone(),
             "is_listening": state_guard.is_listening,
             "is_speaking": state_guard.is_speaking,
             "wake_word_detected": state_guard.wake_word_detected,
             "show_content": show_content,
-            "overlay_enabled": overlay_visible
+            "overlay_enabled": overlay_visible,
+            "critical": is_critical_state
         });
 
         window.emit("status-update", payload).unwrap_or_else(|e| {
@@ -715,9 +778,34 @@ pub fn run() {
                 }
             }
 
-            // Set click-through immediately on startup
-            ensure_click_through(&main_window);
-            println!("[Rust] Click-through enabled on startup");
+            // Set click-through AGGRESSIVELY - multiple attempts
+            for attempt in 1..=3 {
+                ensure_click_through(&main_window);
+                println!("[Rust] Click-through setup attempt {} completed", attempt);
+                std::thread::sleep(std::time::Duration::from_millis(100));
+            }
+
+            // Additional safety: ensure window is always non-activating
+            #[cfg(target_os = "windows")]
+            {
+                if let Ok(hwnd) = get_hwnd(&main_window) {
+                    unsafe {
+                        use windows_sys::Win32::UI::WindowsAndMessaging::*;
+                        // Force additional properties
+                        let style = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
+                        let new_style = style | 
+                                       WS_EX_TRANSPARENT as isize |
+                                       WS_EX_LAYERED as isize |
+                                       WS_EX_TOPMOST as isize |
+                                       WS_EX_NOACTIVATE as isize |
+                                       WS_EX_TOOLWINDOW as isize;
+                        SetWindowLongPtrW(hwnd, GWL_EXSTYLE, new_style);
+                        println!("[Rust] FORCED click-through flags set directly");
+                    }
+                }
+            }
+
+            println!("[Rust] Click-through enabled on startup with AGGRESSIVE settings");
 
             // Start overlay hidden initially - will be shown when client sends status
             main_window.hide().unwrap_or_else(|e| eprintln!("Failed to hide window initially: {}", e));
@@ -786,9 +874,9 @@ fn ensure_click_through(window: &Window) {
     let mut last_set = LAST_CLICK_THROUGH_SET.lock().unwrap();
     let now = Instant::now();
 
-    // Only set click-through if it hasn't been set recently (debounce)
-    if last_set.is_none() || now.duration_since(*last_set.as_ref().unwrap()) > Duration::from_millis(500) {
-        set_click_through(window, true);
+    // Reduce debounce time for better responsiveness - but ALWAYS enable click-through
+    if last_set.is_none() || now.duration_since(*last_set.as_ref().unwrap()) > Duration::from_millis(50) {
+        set_click_through(window, true); // ALWAYS true - user requirement
         *last_set = Some(now);
     }
 }
@@ -806,27 +894,27 @@ fn set_click_through(window: &Window, click_through: bool) {
                 if hwnd == 0 {
                     eprintln!("Invalid HWND for click-through setup");
                     return;
-                }                    unsafe {
-                        let ex_style = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
-                        if click_through {
-                            // Enable click-through: add WS_EX_TRANSPARENT and ensure proper layering
-                            let new_style = ex_style |
-                                           WS_EX_TRANSPARENT as isize |
-                                           WS_EX_LAYERED as isize |
-                                           WS_EX_TOPMOST as isize |
-                                           WS_EX_NOACTIVATE as isize |
-                                           WS_EX_TOOLWINDOW as isize;
-                            SetWindowLongPtrW(hwnd, GWL_EXSTYLE, new_style);
-                        } else {
-                            // Disable click-through: remove WS_EX_TRANSPARENT but keep layering
-                            let new_style = (ex_style & !(WS_EX_TRANSPARENT as isize)) |
-                                           WS_EX_LAYERED as isize |
-                                           WS_EX_TOPMOST as isize |
-                                           WS_EX_NOACTIVATE as isize |
-                                           WS_EX_TOOLWINDOW as isize;
-                            SetWindowLongPtrW(hwnd, GWL_EXSTYLE, new_style);
-                        }
-                    }
+                }
+                unsafe {
+                    let ex_style = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
+                    
+                    // ALWAYS FORCE CLICK-THROUGH - user requirement regardless of parameter
+                    let new_style = ex_style |
+                                   WS_EX_TRANSPARENT as isize |
+                                   WS_EX_LAYERED as isize |
+                                   WS_EX_TOPMOST as isize |
+                                   WS_EX_NOACTIVATE as isize |
+                                   WS_EX_TOOLWINDOW as isize;
+                    let result = SetWindowLongPtrW(hwnd, GWL_EXSTYLE, new_style);
+                    
+                    println!("[Rust] FORCED click-through ALWAYS ENABLED - WS_EX_TRANSPARENT PERMANENTLY set, result: {}", result);
+                    
+                    // Additional safety: Set window to bottom of Z-order for click-through
+                    use windows_sys::Win32::UI::WindowsAndMessaging::{SetWindowPos, HWND_BOTTOM, SWP_NOMOVE, SWP_NOSIZE, SWP_NOACTIVATE};
+                    SetWindowPos(hwnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+                    
+                    println!("[Rust] Window Z-order set to bottom for enhanced click-through");
+                }
             }
             Err(e) => {
                 eprintln!("Could not get HWND for set_click_through: {}", e);

@@ -296,36 +296,51 @@
             function updateMainOverlay() {
                 let orbClass = 'listening';
                 let orbIcon = '🎤';
+                let displayText = currentState.text || currentState.status;
 
-                // Determine state based on current status
+                // ENHANCED STATUS DETERMINATION - clearer logic
                 if (currentState.is_speaking) {
                     orbClass = 'speaking';
                     orbIcon = '🗣️';
-                } else if (currentState.wake_word_detected || currentState.status.includes('Przetwarzam')) {
+                    displayText = currentState.text || "mówię";
+                } else if (currentState.wake_word_detected || 
+                          currentState.status.includes('Przetwarzam') ||
+                          currentState.text.includes('Przetwarzam') ||
+                          currentState.status.includes('myślę') ||
+                          currentState.text.includes('myślę')) {
                     orbClass = 'processing';
                     orbIcon = '⚡';
-                } else if (currentState.is_listening) {
+                    displayText = "myślę";
+                } else if (currentState.is_listening && !currentState.wake_word_detected) {
                     orbClass = 'listening';
                     orbIcon = '🎤';
+                    displayText = "słucham";
                 } else if (currentState.status.toLowerCase().includes('error')) {
                     orbClass = 'error';
                     orbIcon = '❌';
+                    displayText = "błąd";
                 } else {
                     orbClass = 'listening';
-                    orbIcon = '💤'; // Off state
+                    orbIcon = '💤'; // Inactive state
+                    displayText = currentState.text || currentState.status;
                 }
 
                 statusOrb.className = `status-orb ${orbClass}`;
                 statusOrb.textContent = orbIcon;
-                statusText.textContent = currentState.text || currentState.status;
+                statusText.textContent = displayText;
 
-                // Show additional details if available
-                if (currentState.status !== currentState.text && currentState.status) {
+                // Show additional details only if they differ from main text
+                if (currentState.status !== displayText && 
+                    currentState.status && 
+                    currentState.status !== currentState.text &&
+                    !currentState.status.includes('Overlay')) {
                     statusDetails.textContent = currentState.status;
                     statusDetails.style.display = 'block';
                 } else {
                     statusDetails.style.display = 'none';
                 }
+
+                debugLog(`Main overlay updated: orbClass=${orbClass}, text="${displayText}"`);
             }
 
             // Listen for status updates from Rust

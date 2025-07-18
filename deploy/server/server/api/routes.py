@@ -7,9 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from auth.security import security_manager
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import FileResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from loguru import logger
 
@@ -108,6 +106,7 @@ class ApiResponse(BaseModel):
 
 
 # Bezpieczni użytkownicy - hasła są zahashowane
+from auth.security import security_manager
 
 # Przykładowi użytkownicy z zahashowanymi hasłami
 # UWAGA: W produkcji należy używać zewnętrznej bazy danych z właściwą migracją
@@ -116,7 +115,7 @@ SECURE_USERS = {
         "id": "1",
         "email": "admin@gaja.app",
         "role": "admin",
-        "password_hash": "$2b$12$sWZp8vkKmF41Ndi6a5uoQu08GUi3gbpa0hqo1ipDgOSodtrI1KNLu",
+        "password_hash": "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LLk8Z8Z8Z8Z8Z8Z8Z",  # Przykładowy hash
         "is_active": True,
         "created_at": datetime.now().isoformat(),
         "settings": {
@@ -127,15 +126,15 @@ SECURE_USERS = {
         },
     },
     "demo@mail.com": {
-        "id": "2",
+        "id": "2", 
         "email": "demo@mail.com",
         "role": "user",
-        "password_hash": "$2b$12$Tg.YnWlT4wbt3QnvYI1KCeal.5M0TowXoeAXTHr7ad1ULLabzJhWe",
+        "password_hash": "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LLk8Z8Z8Z8Z8Z8Z8Y",  # Przykładowy hash
         "is_active": True,
         "created_at": datetime.now().isoformat(),
         "settings": {
             "language": "pl",
-            "voice": "default",
+            "voice": "default", 
             "wakeWord": True,
             "privacy": {"shareAnalytics": False, "storeConversations": True},
         },
@@ -149,35 +148,35 @@ def get_current_user(
     """Get current user from JWT token with proper security validation."""
     try:
         token = credentials.credentials
-
+        
         # Weryfikuj token używając SecurityManager
         payload = security_manager.verify_token(token, "access")
-
+        
         # Pobierz użytkownika na podstawie ID/email z tokenu
         user_email = payload.get("email")
         user_id = payload.get("userId") or payload.get("user_id")
-
+        
         # Znajdź użytkownika w systemie
         user = None
-        for _, user_data in SECURE_USERS.items():
+        for email, user_data in SECURE_USERS.items():
             if user_data["email"] == user_email or user_data["id"] == user_id:
                 user = user_data
                 break
-
+        
         if not user:
             logger.warning(f"User not found for email {user_email} or ID {user_id}")
             raise HTTPException(status_code=401, detail="User not found")
-
+        
         if not user.get("is_active", True):
             raise HTTPException(status_code=401, detail="Account deactivated")
-
+        
         return user
-
+        
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Token validation error: {e}")
-        raise HTTPException(status_code=401, detail="Invalid authentication") from e
+        raise HTTPException(status_code=401, detail="Invalid authentication")
 
 
 def optional_auth(
@@ -199,56 +198,50 @@ async def login(request: LoginRequest) -> LoginResponse:
     try:
         email = request.email.lower().strip()
         password = request.password
-
+        
         # Sprawdź czy konto nie jest zablokowane
         if security_manager.is_account_locked(email):
             logger.warning(f"Login attempt on locked account: {email}")
             raise HTTPException(
-                status_code=429,
-                detail="Account temporarily locked due to too many failed attempts",
+                status_code=429, 
+                detail="Account temporarily locked due to too many failed attempts"
             )
-
+        
         # Znajdź użytkownika
         user = SECURE_USERS.get(email)
         if not user:
             security_manager.record_failed_attempt(email)
             logger.warning(f"Login attempt with non-existent email: {email}")
             raise HTTPException(status_code=401, detail="Invalid credentials")
-
+        
         # Sprawdź czy konto jest aktywne
         if not user.get("is_active", True):
             logger.warning(f"Login attempt on deactivated account: {email}")
             raise HTTPException(status_code=401, detail="Account deactivated")
-
+        
         # Weryfikuj hasło
         if not security_manager.verify_password(password, user["password_hash"]):
             security_manager.record_failed_attempt(email)
             logger.warning(f"Failed login attempt for user: {email}")
             raise HTTPException(status_code=401, detail="Invalid credentials")
-
+        
         # Udane logowanie - wyczyść nieudane próby
         security_manager.clear_failed_attempts(email)
-
+        
         # Utwórz tokeny
-        token_data = {
-            "userId": user["id"],
-            "email": user["email"],
-            "role": user["role"],
-        }
+        token_data = {"userId": user["id"], "email": user["email"], "role": user["role"]}
         access_token = security_manager.create_access_token(token_data)
-        # refresh_token = security_manager.create_refresh_token(token_data)
-
+        refresh_token = security_manager.create_refresh_token(token_data)
+        
         # Loguj udane logowanie (bez wrażliwych danych)
-        log_data = security_manager.sanitize_log_data(
-            {
-                "email": email,
-                "user_id": user["id"],
-                "role": user["role"],
-                "ip": "unknown",  # TODO: dodaj rzeczywiste IP
-            }
-        )
+        log_data = security_manager.sanitize_log_data({
+            "email": email,
+            "user_id": user["id"], 
+            "role": user["role"],
+            "ip": "unknown"  # TODO: dodaj rzeczywiste IP
+        })
         logger.info(f"Successful login: {log_data}")
-
+        
         return LoginResponse(
             success=True,
             token=access_token,
@@ -260,14 +253,12 @@ async def login(request: LoginRequest) -> LoginResponse:
                 "createdAt": user["created_at"],
             },
         )
-
+        
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Login error: {e}")
-        raise HTTPException(
-            status_code=500, detail="Authentication service unavailable"
-        ) from e
+        raise HTTPException(status_code=500, detail="Authentication service unavailable")
 
 
 @router.post("/auth/magic-link")
@@ -301,23 +292,21 @@ async def update_settings(
     """Update user settings securely."""
     try:
         user_email = current_user["email"]
-
+        
         # Waliduj że użytkownik istnieje
         if user_email not in SECURE_USERS:
             raise HTTPException(status_code=404, detail="User not found")
-
+        
         # Zaktualizuj ustawienia (tylko niepuste wartości)
         settings_update = settings.dict(exclude_unset=True)
         SECURE_USERS[user_email]["settings"].update(settings_update)
-
+        
         # Loguj zmianę ustawień
-        log_data = security_manager.sanitize_log_data(
-            {
-                "user_id": current_user["id"],
-                "email": user_email,
-                "updated_settings": list(settings_update.keys()),
-            }
-        )
+        log_data = security_manager.sanitize_log_data({
+            "user_id": current_user["id"],
+            "email": user_email,
+            "updated_settings": list(settings_update.keys())
+        })
         logger.info(f"User settings updated: {log_data}")
 
         return User(
@@ -327,12 +316,12 @@ async def update_settings(
             settings=UserSettings(**SECURE_USERS[user_email]["settings"]),
             createdAt=current_user["created_at"],
         )
-
+        
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Settings update error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to update settings") from e
+        raise HTTPException(status_code=500, detail="Failed to update settings")
 
 
 # Memory endpoints
@@ -372,7 +361,7 @@ async def get_memories(
 
     except Exception as e:
         logger.error(f"Get memories error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get memories") from e
+        raise HTTPException(status_code=500, detail="Failed to get memories")
 
 
 @router.delete("/memory/{memory_id}")
@@ -431,7 +420,7 @@ async def get_plugins(
 
     except Exception as e:
         logger.error(f"Get plugins error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get plugins") from e
+        raise HTTPException(status_code=500, detail="Failed to get plugins")
 
 
 @router.patch("/plugins/{plugin_slug}")
@@ -481,7 +470,7 @@ async def toggle_plugin(
         raise
     except Exception as e:
         logger.error(f"Toggle plugin error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to toggle plugin") from e
+        raise HTTPException(status_code=500, detail="Failed to toggle plugin")
 
 
 # System metrics endpoints
@@ -510,7 +499,7 @@ async def get_metrics(
 
     except Exception as e:
         logger.error(f"Get metrics error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get metrics") from e
+        raise HTTPException(status_code=500, detail="Failed to get metrics")
 
 
 # Log endpoints
@@ -575,7 +564,7 @@ async def get_logs(
 
     except Exception as e:
         logger.error(f"Get logs error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get logs") from e
+        raise HTTPException(status_code=500, detail="Failed to get logs")
 
 
 # Health check endpoint
@@ -598,7 +587,7 @@ async def health_check(
 
     except Exception as e:
         logger.error(f"Health check error: {e}")
-        raise HTTPException(status_code=500, detail="Health check failed") from e
+        raise HTTPException(status_code=500, detail="Health check failed")
 
 
 # AI Query endpoint for web UI
@@ -615,19 +604,19 @@ async def ai_query(
             raise HTTPException(status_code=400, detail="Query is required")
 
         # Use AI module directly if server_app has ai_module
-        if hasattr(server_app, "ai_module") and server_app.ai_module:
+        if hasattr(server_app, 'ai_module') and server_app.ai_module:
             # Prepare context for AI module
             ai_context = {
                 "user_id": current_user["id"],
                 "history": [],  # Can be enhanced with actual history
                 "available_plugins": [],  # Can be enhanced with user plugins
-                "modules": {},  # Can be enhanced with available modules
+                "modules": {}  # Can be enhanced with available modules
             }
             ai_context.update(context)
-
+            
             # Process query using AI module
             response = await server_app.ai_module.process_query(query, ai_context)
-
+            
             return {
                 "success": True,
                 "response": response,
@@ -640,7 +629,7 @@ async def ai_query(
         raise
     except Exception as e:
         logger.error(f"AI query error: {e}")
-        raise HTTPException(status_code=500, detail="AI query failed") from e
+        raise HTTPException(status_code=500, detail="AI query failed")
 
 
 # WebSocket status endpoint
@@ -655,15 +644,7 @@ async def ws_status(
         # Check if user is connected via WebSocket
         connected = False
         if hasattr(server_app, "connection_manager"):
-            connected = server_app.connection_manager.is_connected(user_id)
-        
-        # Jeśli nie ma server_app, spróbuj zaimportować connection_manager bezpośrednio
-        if not hasattr(server_app, "connection_manager"):
-            try:
-                from websocket_manager import connection_manager
-                connected = connection_manager.is_connected(user_id)
-            except ImportError:
-                connected = False
+            connected = user_id in server_app.connection_manager.active_connections
 
         return {
             "connected": connected,
@@ -673,9 +654,7 @@ async def ws_status(
 
     except Exception as e:
         logger.error(f"WebSocket status error: {e}")
-        raise HTTPException(
-            status_code=500, detail="Failed to get WebSocket status"
-        ) from e
+        raise HTTPException(status_code=500, detail="Failed to get WebSocket status")
 
 
 # Daily briefing endpoint
@@ -699,9 +678,7 @@ async def get_daily_briefing(
 
     except Exception as e:
         logger.error(f"Daily briefing error: {e}")
-        raise HTTPException(
-            status_code=500, detail="Failed to get daily briefing"
-        ) from e
+        raise HTTPException(status_code=500, detail="Failed to get daily briefing")
 
 
 # Admin endpoints
@@ -744,7 +721,7 @@ async def get_admin_stats(
                             ).date()
                             if item_date == today:
                                 today_interactions += 1
-                        except Exception:
+                        except:
                             continue
             except Exception as e:
                 logger.debug(f"Error getting interaction stats: {e}")
@@ -830,25 +807,7 @@ async def get_admin_stats(
         raise
     except Exception as e:
         logger.error(f"Admin stats error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get admin stats") from e
-
-
-# WebUI endpoint
-@router.get("/webui")
-async def serve_webui():
-    """Serve the WebUI HTML interface."""
-    try:
-        # Ścieżka do pliku webui.html
-        webui_path = Path(__file__).parent.parent / "webui.html"
-        
-        if not webui_path.exists():
-            raise HTTPException(status_code=404, detail="WebUI not found")
-        
-        return FileResponse(webui_path, media_type="text/html")
-        
-    except Exception as e:
-        logger.error(f"WebUI serve error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to serve WebUI") from e
+        raise HTTPException(status_code=500, detail="Failed to get admin stats")
 
 
 # Export router

@@ -9,26 +9,27 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
-COPY requirements_minimal.txt ./requirements.txt
+# Copy server requirements
+COPY requirements_server_minimal.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
-COPY . .
+# Copy server code
+COPY server/ ./server/
+COPY .env .env
 
 # Create necessary directories
 RUN mkdir -p logs databases ssl data/cache data/history data/logs data/user_data
 
 # Set file permissions
 RUN chmod 755 /app
-RUN chmod -R 755 logs databases ssl data
+RUN chmod -R 755 logs databases ssl data server
 
-# Expose port
-EXPOSE 8443
+# Expose port (server runs on 5000 by default)
+EXPOSE 5000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f -k https://localhost:8443/health || exit 1
+    CMD curl -f http://localhost:5000/health || exit 1
 
 # Environment variables
 ENV PYTHONPATH=/app
@@ -36,4 +37,5 @@ ENV PRODUCTION=true
 ENV DEBUG=false
 
 # Start server
+WORKDIR /app/server
 CMD ["python", "server_main.py"]

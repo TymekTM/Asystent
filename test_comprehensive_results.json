@@ -23,12 +23,12 @@
       "message": "Login successful for demo@mail.com"
     },
     "test_login": {
-      "status": "PASS",
-      "message": "Correctly rejected non-existent user test@example.com"
+      "status": "FAIL",
+      "message": "Should have rejected test@example.com, got 429"
     },
     "user_login": {
-      "status": "PASS",
-      "message": "Correctly rejected non-existent user user@nonexistent.com"
+      "status": "FAIL",
+      "message": "Should have rejected user@nonexistent.com, got 429"
     }
   },
   "api_tests": {
@@ -93,10 +93,10 @@
   },
   "summary": {
     "total_tests": 20,
-    "passed": 20,
-    "failed": 0,
+    "passed": 18,
+    "failed": 2,
     "warnings": 0,
-    "success_rate": "100.0%",
-    "timestamp": "2025-07-18 20:26:56"
+    "success_rate": "90.0%",
+    "timestamp": "2025-07-18 20:49:02"
   }
 }

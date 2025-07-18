@@ -145,7 +145,7 @@
         
         function connect() {
             try {
-                ws = new WebSocket(`ws://localhost:8000/ws/${userId}`);
+                ws = new WebSocket(`ws://localhost:5000/ws/${userId}`);
                 
                 ws.onopen = function(event) {
                     document.getElementById('wsStatus').textContent = 'Połączony';

@@ -865,6 +865,46 @@ class DatabaseManager:
                 (int(user_id), json.dumps(enabled_plugins)),
             )
 
+    async def get_user_plugins(self, user_id: str) -> list[dict]:
+        """Pobiera ustawienia pluginów użytkownika."""
+        try:
+            with self.get_db_connection() as conn:
+                cursor = conn.execute(
+                    """
+                    SELECT value FROM user_preferences
+                    WHERE user_id = ? AND category = 'plugins' AND key_name = 'enabled'
+                """,
+                    (int(user_id),),
+                )
+
+                row = cursor.fetchone()
+                if row:
+                    try:
+                        enabled_plugins = json.loads(row["value"])
+                    except json.JSONDecodeError:
+                        enabled_plugins = []
+                else:
+                    enabled_plugins = []
+
+                # Konwertuj do formatu oczekiwanego przez WebSocket
+                plugins = []
+                for plugin_name in enabled_plugins:
+                    plugins.append({
+                        "plugin_name": plugin_name,
+                        "enabled": True,
+                        "updated_at": None
+                    })
+
+                return plugins
+
+        except Exception as e:
+            logger.error(f"Failed to get user plugins: {e}")
+            return []
+
+    async def set_user_plugin_status(self, user_id: str, plugin_name: str, enabled: bool):
+        """Ustawia status pluginu użytkownika (alias dla update_user_plugins)."""
+        await self.update_user_plugins(user_id, plugin_name, enabled)
+
     def get_user_api_key(self, user_id: int, provider: str) -> str | None:
         """Pobiera klucz API użytkownika dla danego providera.
 

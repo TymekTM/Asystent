@@ -32,23 +32,23 @@ class DatabaseEncryption:
                 return base64.urlsafe_b64decode(env_key)
             except Exception:
                 logger.warning("Invalid encryption key in environment variable")
-        
+
         # Try to load from file
         if os.path.exists(key_file):
             try:
-                with open(key_file, 'rb') as f:
+                with open(key_file, "rb") as f:
                     return f.read()
             except Exception:
                 logger.warning("Could not read encryption key from file")
-        
+
         # Generate new key
         key = Fernet.generate_key()
         try:
-            with open(key_file, 'wb') as f:
+            with open(key_file, "wb") as f:
                 f.write(key)
         except Exception:
             logger.warning("Could not save encryption key to file")
-        
+
         return key
 
     def encrypt_data(self, data: str) -> str:

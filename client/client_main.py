@@ -511,6 +511,11 @@ class ClientApp:
     async def handle_server_message(self, data: dict):
         """Obsłuż wiadomość od serwera."""
         message_type = data.get("type")
+        
+        # Debug: log the entire message structure
+        logger.debug(f"Received message from server: type={message_type}, data keys={list(data.keys())}")
+        if message_type == "ai_response":
+            logger.info(f"AI response data structure: {data}")  # Change to INFO for visibility
 
         # Track message limits and counts if provided
         if "message_limit" in data:
@@ -575,8 +580,19 @@ class ClientApp:
             await self.handle_day_summary(summary)
 
         elif message_type == "ai_response":
-            response = data.get("response", "")
+            # Extract response from the data structure
+            message_data = data.get("data", {})
+            response = message_data.get("response", "")
             logger.info(f"AI Response received: {response}")
+
+            # Check if response is empty or None
+            if not response:
+                logger.warning("Received empty AI response")
+                self.wake_word_detected = False
+                self.recording_command = False
+                await self.hide_overlay()
+                self.update_status("słucham")
+                return
 
             # Response is already a JSON string from the server
             try:
@@ -591,7 +607,7 @@ class ClientApp:
 
                     # Update overlay with AI response - set text BEFORE showing overlay
                     self.last_tts_text = text
-                    self.update_status(f"Response: {text[:50]}...")
+                    self.update_status(f"mówię")
 
                     # Show overlay immediately when starting TTS
                     await self.show_overlay()
@@ -600,7 +616,7 @@ class ClientApp:
                     if self.tts:
                         try:
                             self.tts_playing = True
-                            self.update_status("Mówię...")
+                            self.update_status("mówię")
                             # Ensure text is set during TTS playback
                             self.last_tts_text = text
                             await self.tts.speak(text)
@@ -616,13 +632,13 @@ class ClientApp:
                             # Hide overlay after speaking
                             await self.hide_overlay()
                             self.update_status(
-                                "Listening..."
+                                "słucham"
                             )  # Return to listening immediately
                     else:
                         logger.warning("TTS not available")
                         self.wake_word_detected = False
                         self.update_status(
-                            "Listening..."
+                            "słucham"
                         )  # Return to listening even without TTS
                 else:
                     logger.warning("No text in AI response")
@@ -637,7 +653,7 @@ class ClientApp:
 
                     # Update overlay - set text BEFORE showing overlay
                     self.last_tts_text = text
-                    self.update_status(f"Response: {text[:50]}...")
+                    self.update_status(f"mówię")
 
                     # Show overlay immediately when starting TTS
                     await self.show_overlay()
@@ -646,7 +662,7 @@ class ClientApp:
                     if self.tts:
                         try:
                             self.tts_playing = True
-                            self.update_status("Mówię...")
+                            self.update_status("mówię")
                             # Ensure text is set during TTS playback
                             self.last_tts_text = text
                             await self.tts.speak(text)
@@ -662,13 +678,13 @@ class ClientApp:
                             # Hide overlay after speaking
                             await self.hide_overlay()
                             self.update_status(
-                                "Listening..."
+                                "słucham"
                             )  # Return to listening immediately
                     else:
                         logger.warning("TTS not available")
                         self.wake_word_detected = False
                         self.update_status(
-                            "Listening..."
+                            "słucham"
                         )  # Return to listening even without TTS
 
         elif message_type == "function_result":
@@ -688,7 +704,16 @@ class ClientApp:
         elif message_type == "error":
             error = data.get("error", "Unknown error")
             logger.error(f"Server error: {error}")
-            self.update_status("Error")
+            # DON'T update status to "Error" as it causes overlay to show
+            # Just log the error silently
+
+        elif message_type == "handshake_response":
+            # Handle handshake confirmation from server
+            handshake_data = data.get("data", {})
+            if handshake_data.get("success", False):
+                logger.info("Handshake successful with server")
+            else:
+                logger.warning("Handshake failed with server")
 
         else:
             logger.warning(f"Unknown message type: {message_type}")
@@ -699,11 +724,11 @@ class ClientApp:
             # We already have transcribed text from wakeword detector
             logger.info(f"Wakeword detected with query: {query}")
 
-            # Set wake word detection flag for overlay and show immediately
+            # IMMEDIATE RESPONSE - Set wake word detection flag and show overlay INSTANTLY
             self.wake_word_detected = True
-            self.update_status("Przetwarzam...")
+            self.update_status("myślę")
 
-            # Show overlay immediately when wake word is detected - BEFORE processing
+            # Show overlay IMMEDIATELY when wake word is detected - BEFORE any processing
             await self.show_overlay()
 
             if self.recording_command:
@@ -738,11 +763,11 @@ class ClientApp:
                         f"Wykryto polecenie: '{query}'. Serwer AI niedostępny."
                     )
                     self.last_tts_text = response_text
-                    self.update_status("Odpowiadam...")
+                    self.update_status("mówię")
 
                     # Simulate TTS
                     self.tts_playing = True
-                    self.update_status("Mówię...")
+                    self.update_status("mówię")
                     await asyncio.sleep(2)  # Simulate speech time
                     self.tts_playing = False
                     self.update_status("Ready")
@@ -760,7 +785,7 @@ class ClientApp:
                 self.recording_command = False
                 # Return to listening state
                 await asyncio.sleep(1)
-                self.update_status("Listening...")
+                self.update_status("słucham")
             finally:
                 # Note: recording_command and wake_word_detected are reset in TTS completion
                 pass
@@ -770,7 +795,7 @@ class ClientApp:
                 "Wakeword detected! Recording and transcription handled by wakeword detector."
             )
             self.wake_word_detected = True
-            self.update_status("Listening...")
+            self.update_status("słucham")
 
     async def update_overlay_status(self, status: str):
         """Zaktualizuj status w overlay."""
@@ -824,6 +849,14 @@ class ClientApp:
             and not has_meaningful_text
         )
 
+        # IMMEDIATE STATUS UPDATES - no debouncing for critical states
+        is_critical_state = (
+            self.wake_word_detected or 
+            self.current_status in ["Przetwarzam...", "Mówię...", "Przetwarzam zapytanie..."] or
+            self.tts_playing or
+            self.recording_command
+        )
+
         status_data = {
             "status": self.current_status,
             "text": self.last_tts_text if self.last_tts_text else self.current_status,
@@ -838,17 +871,25 @@ class ClientApp:
             "overlay_enabled": True,  # Always enabled unless explicitly disabled
             # Add timing information to help with overlay display
             "timestamp": time.time(),
+            "critical": is_critical_state,  # Flag for immediate processing
         }
 
         message = f"data: {json.dumps(status_data)}\n\n"
 
-        # Send to all connected SSE clients
+        # Send to all connected SSE clients with IMMEDIATE delivery for critical states
         for client in self.sse_clients[
             :
         ]:  # Copy list to avoid modification during iteration
             try:
                 client.wfile.write(message.encode())
                 client.wfile.flush()
+                # Force immediate flush for critical states
+                if is_critical_state:
+                    import socket
+                    try:
+                        client.wfile._sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+                    except:
+                        pass  # Ignore socket option errors
             except Exception as e:
                 logger.debug(f"SSE client disconnected: {e}")
                 self.remove_sse_client(client)
@@ -928,8 +969,8 @@ class ClientApp:
 
             # Start wakeword monitoring
             await self.start_wakeword_monitoring()
-            # Set status to ready
-            self.update_status("Listening...")
+            # Set status to ready with correct Polish status
+            self.update_status("słucham")
 
             # Listen for server messages (or just keep running if no server)
             if self.websocket:
@@ -938,7 +979,7 @@ class ClientApp:
                     await asyncio.gather(
                         self.listen_for_messages(),
                         self.process_command_queue(),
-                        self.periodic_proactive_check(),
+                        # self.periodic_proactive_check(),  # DISABLED: Temporarily disabled for release
                     )
                 except asyncio.CancelledError:
                     logger.info("Main tasks cancelled")

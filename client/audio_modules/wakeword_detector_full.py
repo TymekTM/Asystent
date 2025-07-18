@@ -402,26 +402,41 @@ def _load_openwakeword_model(keyword: str) -> Any:
             logger.error(f"OpenWakeWord model directory not found at {model_dir}")
             return None
 
-        # Find models for the keyword
+        # Load ALL available models, not just keyword-specific ones
         model_files = []
+        all_tflite_files = []
+        
         for file in os.listdir(model_dir):
-            if file.endswith(".tflite") and keyword.lower() in file.lower():
-                model_files.append(str(model_dir / file))
+            if file.endswith(".tflite"):
+                file_path = str(model_dir / file)
+                all_tflite_files.append(file_path)
+                
+                # Still prioritize keyword-specific models
+                if keyword.lower() in file.lower():
+                    model_files.append(file_path)
+
+        # If no keyword-specific models, use all available models
+        if not model_files:
+            model_files = all_tflite_files[:4]  # Load up to 4 models for better detection
+            logger.info(f"No keyword-specific models found, loading first 4 available models")
+        else:
+            # Add additional models if we have less than 4
+            for file_path in all_tflite_files:
+                if file_path not in model_files and len(model_files) < 4:
+                    model_files.append(file_path)
 
         if not model_files:
-            logger.error(
-                f"No OpenWakeWord models found for keyword '{keyword}' in {model_dir}"
-            )
+            logger.error(f"No .tflite models found in {model_dir}")
             return None
 
         logger.info(
-            f"Found {len(model_files)} OpenWakeWord models for '{keyword}': {[os.path.basename(f) for f in model_files]}"
+            f"Loading {len(model_files)} OpenWakeWord models: {[os.path.basename(f) for f in model_files]}"
         )
 
-        # Initialize OpenWakeWord model
+        # Initialize OpenWakeWord model with multiple models for better detection
         model = Model(wakeword_models=model_files, inference_framework="tflite")
 
-        logger.info(f"OpenWakeWord model loaded successfully for '{keyword}'")
+        logger.info(f"OpenWakeWord model loaded successfully with {len(model_files)} models")
         return model
 
     except ImportError:

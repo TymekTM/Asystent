@@ -55,7 +55,7 @@
     {
       "test": "Server Metrics",
       "success": true,
-      "details": "Server uptime: 950"
+      "details": "Server uptime: 2181"
     }
   ]
 }
