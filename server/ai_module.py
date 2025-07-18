@@ -29,6 +29,7 @@ pipeline = None
 # Import environment manager for secure API key handling
 try:
     from environment_manager import EnvironmentManager
+
     env_file_path = os.path.join(os.path.dirname(__file__), "..", ".env")
     env_manager = EnvironmentManager(env_file=env_file_path)
 except ImportError as e:

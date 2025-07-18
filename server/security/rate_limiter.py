@@ -43,7 +43,7 @@ class RateLimiter:
         user_id: str | None = None,
     ) -> tuple[bool, dict[str, Any]]:
         """Sprawdza czy żądanie jest dozwolone.
-        
+
         Args:
             identifier: Domyślny identyfikator (IP)
             action: Typ akcji (api, login, upload, etc.)
@@ -51,7 +51,7 @@ class RateLimiter:
             user_id: ID użytkownika (jeśli uwierzytelniony) - ma priorytet nad IP
         """
         now = time.time()
-        
+
         # Użyj user_id jeśli dostępny, w przeciwnym razie IP
         rate_limit_key = f"user:{user_id}" if user_id else f"ip:{identifier}"
 
@@ -60,7 +60,7 @@ class RateLimiter:
             if datetime.now(UTC) < self.blocked_ips[rate_limit_key]:
                 return False, {
                     "reason": "blocked",
-                    "identifier_type": "user" if user_id else "ip", 
+                    "identifier_type": "user" if user_id else "ip",
                     "unblock_time": self.blocked_ips[rate_limit_key].isoformat(),
                     "retry_after": int(
                         (
@@ -84,7 +84,9 @@ class RateLimiter:
 
         # Sprawdź limit
         if len(requests_queue) >= max_requests:
-            self._handle_rate_limit_exceeded(rate_limit_key, action, request_metadata, user_id)
+            self._handle_rate_limit_exceeded(
+                rate_limit_key, action, request_metadata, user_id
+            )
             return False, {
                 "reason": "rate_limit_exceeded",
                 "identifier_type": "user" if user_id else "ip",
@@ -99,26 +101,31 @@ class RateLimiter:
         requests_queue.append(now)
         return True, {
             "remaining": max_requests - len(requests_queue),
-            "identifier_type": "user" if user_id else "ip"
+            "identifier_type": "user" if user_id else "ip",
         }
 
-    def _get_user_specific_limits(self, action: str, user_id: str | None = None) -> dict[str, int]:
+    def _get_user_specific_limits(
+        self, action: str, user_id: str | None = None
+    ) -> dict[str, int]:
         """Pobiera limity specyficzne dla użytkownika."""
         base_limit = self.limits.get(action, self.limits["api"])
-        
+
         # Jeśli użytkownik jest uwierzytelniony, daj mu wyższe limity
         if user_id:
             # Zwiększ limity dla uwierzytelnionych użytkowników
             multiplier = 3  # 3x więcej requestów dla zalogowanych użytkowników
             return {
                 "requests": base_limit["requests"] * multiplier,
-                "window": base_limit["window"]
+                "window": base_limit["window"],
             }
-        
+
         return base_limit
 
     def block_identifier(
-        self, identifier: str, duration_hours: int = 24, reason: str = "security_violation"
+        self,
+        identifier: str,
+        duration_hours: int = 24,
+        reason: str = "security_violation",
     ) -> None:
         """Blokuje identyfikator (IP lub user) na określony czas."""
         try:
@@ -126,7 +133,9 @@ class RateLimiter:
             self.blocked_ips[identifier] = unblock_time
 
             identifier_type = "user" if identifier.startswith("user:") else "ip"
-            logger.warning(f"{identifier_type.upper()} {identifier} blocked for {duration_hours}h: {reason}")
+            logger.warning(
+                f"{identifier_type.upper()} {identifier} blocked for {duration_hours}h: {reason}"
+            )
 
         except Exception as e:
             logger.error(f"Failed to block {identifier}: {e}")
@@ -139,13 +148,19 @@ class RateLimiter:
         self.block_identifier(ip_key, duration_hours, reason)
 
     def _handle_rate_limit_exceeded(
-        self, identifier: str, action: str, request_metadata: dict[str, Any] | None, user_id: str | None = None
+        self,
+        identifier: str,
+        action: str,
+        request_metadata: dict[str, Any] | None,
+        user_id: str | None = None,
     ) -> None:
         """Obsługuje przekroczenie limitu żądań."""
         self.suspicious_ips[identifier] += 1
 
         identifier_type = "user" if user_id else "ip"
-        logger.warning(f"Rate limit exceeded: {identifier} ({identifier_type}) for action {action}")
+        logger.warning(
+            f"Rate limit exceeded: {identifier} ({identifier_type}) for action {action}"
+        )
 
         # Sprawdź czy należy zablokować identyfikator
         if (
@@ -392,24 +407,22 @@ class SecurityMiddleware:
         # Pobierz user_id z tokena jeśli dostępny
         user_id = None
         try:
-            from fastapi.security import HTTPAuthorizationCredentials
-            from fastapi import Depends
-            
+
             # Pobierz Authorization header
             authorization = request.headers.get("Authorization")
             if authorization and authorization.startswith("Bearer "):
                 token = authorization.split(" ")[1]
-                
+
                 # Importuj funkcję sprawdzania tokena
                 from server.api.routes import security_manager
-                
+
                 try:
                     payload = security_manager.verify_token(token, "access")
                     user_id = payload.get("userId") or payload.get("user_id")
                 except Exception:
                     # Token nie jest ważny, user_id pozostaje None
                     pass
-                    
+
         except Exception as e:
             logger.debug(f"Could not extract user_id from token: {e}")
 
@@ -418,7 +431,7 @@ class SecurityMiddleware:
             client_ip,
             self._get_action_type(request),
             {"url": str(request.url), "method": request.method},
-            user_id
+            user_id,
         )
 
         if not is_allowed:

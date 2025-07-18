@@ -5,7 +5,7 @@ PODSUMOWANIE WDROŻENIA DOCKER GAJA ASSISTANT
 
 🎯 CELE REALIZACJI:
 1. ✅ Serwer powinien być na Docker - ZREALIZOWANE
-2. ✅ Zbudować i zdeployować na PC - ZREALIZOWANE  
+2. ✅ Zbudować i zdeployować na PC - ZREALIZOWANE
 3. ✅ Uruchomić serwer i klienta - ZREALIZOWANE (serwer)
 4. ✅ Test czy działa dobrze - ZREALIZOWANE
 5. ✅ Test przebudowy z zachowaniem danych - ZREALIZOWANE
@@ -46,7 +46,7 @@ PODSUMOWANIE WDROŻENIA DOCKER GAJA ASSISTANT
 System GAJA Assistant został pomyślnie wdrożony w środowisku Docker:
 
 1. ✅ Server Docker działa stabilnie na localhost:8001
-2. ✅ API dokumentacja dostępna i funkcjonalna  
+2. ✅ API dokumentacja dostępna i funkcjonalna
 3. ✅ System zachowuje dane między restartami
 4. ✅ Health monitoring działą
 5. ✅ Podstawowe endpointy respondings
@@ -84,9 +84,13 @@ Status: PRODUCTION READY ✅
 
 from datetime import datetime
 
+
 def main():
-    report = __doc__.replace("{datetime.now()}", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    report = __doc__.replace(
+        "{datetime.now()}", datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    )
     print(report)
+
 
 if __name__ == "__main__":
     main()

@@ -116,7 +116,7 @@
 <body>
     <div class="container">
         <h1>🤖 GAJA Assistant - Web UI</h1>
-        
+
         <div class="status">
             <h3>Status Połączenia</h3>
             <p>WebSocket: <span id="wsStatus" class="disconnected">Rozłączony</span></p>
@@ -142,11 +142,11 @@
     <script>
         let ws = null;
         let userId = '1';
-        
+
         function connect() {
             try {
                 ws = new WebSocket(`ws://localhost:5000/ws/${userId}`);
-                
+
                 ws.onopen = function(event) {
                     document.getElementById('wsStatus').textContent = 'Połączony';
                     document.getElementById('wsStatus').className = 'connected';
@@ -155,33 +155,33 @@
                     addMessage('system', 'Połączono z serwerem');
                     refreshPlugins();
                 };
-                
+
                 ws.onmessage = function(event) {
                     const data = JSON.parse(event.data);
                     handleServerMessage(data);
                 };
-                
+
                 ws.onclose = function(event) {
                     document.getElementById('wsStatus').textContent = 'Rozłączony';
                     document.getElementById('wsStatus').className = 'disconnected';
                     document.getElementById('messageInput').disabled = true;
                     document.getElementById('sendButton').disabled = true;
                     addMessage('system', 'Rozłączono z serwerem');
-                    
+
                     // Auto-reconnect po 3 sekundach
                     setTimeout(connect, 3000);
                 };
-                
+
                 ws.onerror = function(error) {
                     addMessage('error', 'Błąd połączenia WebSocket');
                 };
-                
+
             } catch (error) {
                 addMessage('error', `Błąd połączenia: ${error.message}`);
                 setTimeout(connect, 3000);
             }
         }
-        
+
         function handleServerMessage(data) {
             switch (data.type) {
                 case 'ai_response':
@@ -204,12 +204,12 @@
                     addMessage('system', `Nieznany typ: ${data.type}`);
             }
         }
-        
+
         function addMessage(type, content) {
             const messages = document.getElementById('messages');
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${type}`;
-            
+
             const timestamp = new Date().toLocaleTimeString();
             const prefix = {
                 'user': 'Ty',
@@ -217,61 +217,61 @@
                 'system': 'System',
                 'error': 'Błąd'
             }[type] || 'Info';
-            
+
             messageDiv.textContent = `[${timestamp}] ${prefix}: ${content}`;
             messages.appendChild(messageDiv);
             messages.scrollTop = messages.scrollHeight;
         }
-        
+
         function sendMessage() {
             const input = document.getElementById('messageInput');
             const message = input.value.trim();
-            
+
             if (message && ws && ws.readyState === WebSocket.OPEN) {
                 const data = {
                     type: 'ai_query',
                     query: message,
                     context: {}
                 };
-                
+
                 ws.send(JSON.stringify(data));
                 addMessage('user', message);
                 input.value = '';
             }
         }
-        
+
         function refreshPlugins() {
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({ type: 'plugin_list' }));
             }
         }
-        
+
         function updatePluginsList(plugins) {
             const container = document.getElementById('pluginsList');
             container.innerHTML = '';
-            
+
             if (!plugins || Object.keys(plugins).length === 0) {
                 container.innerHTML = '<p>Brak dostępnych pluginów</p>';
                 return;
             }
-            
+
             for (const [name, enabled] of Object.entries(plugins)) {
                 const div = document.createElement('div');
                 div.className = `plugin-item ${enabled ? 'plugin-enabled' : ''}`;
-                
+
                 const nameSpan = document.createElement('span');
                 nameSpan.textContent = name;
-                
+
                 const button = document.createElement('button');
                 button.textContent = enabled ? 'Wyłącz' : 'Włącz';
                 button.onclick = () => togglePlugin(name, !enabled);
-                
+
                 div.appendChild(nameSpan);
                 div.appendChild(button);
                 container.appendChild(div);
             }
         }
-        
+
         function togglePlugin(name, enable) {
             if (ws && ws.readyState === WebSocket.OPEN) {
                 const data = {
@@ -282,14 +282,14 @@
                 ws.send(JSON.stringify(data));
             }
         }
-        
+
         // Event listeners
         document.getElementById('messageInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 sendMessage();
             }
         });
-        
+
         // Rozpocznij połączenie po załadowaniu strony
         window.onload = function() {
             connect();

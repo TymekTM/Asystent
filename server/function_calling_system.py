@@ -27,33 +27,33 @@ class FunctionCallingSystem:
 
     def register_module(self, module_name: str, module_data: dict[str, Any]) -> None:
         """Register a module with the function calling system.
-        
+
         Args:
             module_name: Name of the module to register
             module_data: Module configuration containing handler and schema info
         """
         self.modules[module_name] = module_data
-        
+
         # Register main handler if available
         if "handler" in module_data:
             self.function_handlers[module_name] = module_data["handler"]
-            
+
         # Register sub-command handlers if available
         if "sub_commands" in module_data:
             for sub_name, sub_data in module_data["sub_commands"].items():
                 if "function" in sub_data:
                     handler_name = f"{module_name}_{sub_name}"
                     self.function_handlers[handler_name] = sub_data["function"]
-                    
+
         logger.info(f"Registered module: {module_name}")
 
     def execute_function(self, function_name: str, arguments: dict[str, Any]) -> Any:
         """Execute a registered function with given arguments.
-        
+
         Args:
             function_name: Name of the function to execute
             arguments: Dictionary of arguments to pass to the function
-            
+
         Returns:
             Result of the function execution or error message
         """
@@ -61,7 +61,7 @@ class FunctionCallingSystem:
             # Check if function exists in handlers
             if function_name in self.function_handlers:
                 handler = self.function_handlers[function_name]
-                
+
                 # Handle callable functions
                 if callable(handler):
                     # Extract parameters and call function
@@ -71,7 +71,7 @@ class FunctionCallingSystem:
                         return handler()
                 else:
                     return f"Handler for {function_name} is not callable"
-                    
+
             # Check in registered modules
             for module_name, module_data in self.modules.items():
                 if function_name == module_name and "handler" in module_data:
@@ -81,20 +81,23 @@ class FunctionCallingSystem:
                             return handler(**arguments)
                         else:
                             return handler()
-                            
+
                 # Check sub-commands
                 if "sub_commands" in module_data:
                     for sub_name, sub_data in module_data["sub_commands"].items():
-                        if function_name == f"{module_name}_{sub_name}" and "function" in sub_data:
+                        if (
+                            function_name == f"{module_name}_{sub_name}"
+                            and "function" in sub_data
+                        ):
                             handler = sub_data["function"]
                             if callable(handler):
                                 if arguments:
                                     return handler(**arguments)
                                 else:
                                     return handler()
-                                    
+
             return f"Function {function_name} not found"
-            
+
         except Exception as e:
             error_msg = f"Error executing function {function_name}: {str(e)}"
             logger.error(error_msg)

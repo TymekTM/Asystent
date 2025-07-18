@@ -405,20 +405,24 @@ def _load_openwakeword_model(keyword: str) -> Any:
         # Load ALL available models, not just keyword-specific ones
         model_files = []
         all_tflite_files = []
-        
+
         for file in os.listdir(model_dir):
             if file.endswith(".tflite"):
                 file_path = str(model_dir / file)
                 all_tflite_files.append(file_path)
-                
+
                 # Still prioritize keyword-specific models
                 if keyword.lower() in file.lower():
                     model_files.append(file_path)
 
         # If no keyword-specific models, use all available models
         if not model_files:
-            model_files = all_tflite_files[:4]  # Load up to 4 models for better detection
-            logger.info(f"No keyword-specific models found, loading first 4 available models")
+            model_files = all_tflite_files[
+                :4
+            ]  # Load up to 4 models for better detection
+            logger.info(
+                "No keyword-specific models found, loading first 4 available models"
+            )
         else:
             # Add additional models if we have less than 4
             for file_path in all_tflite_files:
@@ -436,7 +440,9 @@ def _load_openwakeword_model(keyword: str) -> Any:
         # Initialize OpenWakeWord model with multiple models for better detection
         model = Model(wakeword_models=model_files, inference_framework="tflite")
 
-        logger.info(f"OpenWakeWord model loaded successfully with {len(model_files)} models")
+        logger.info(
+            f"OpenWakeWord model loaded successfully with {len(model_files)} models"
+        )
         return model
 
     except ImportError:

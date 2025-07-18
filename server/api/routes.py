@@ -656,11 +656,12 @@ async def ws_status(
         connected = False
         if hasattr(server_app, "connection_manager"):
             connected = server_app.connection_manager.is_connected(user_id)
-        
+
         # Jeśli nie ma server_app, spróbuj zaimportować connection_manager bezpośrednio
         if not hasattr(server_app, "connection_manager"):
             try:
                 from websocket_manager import connection_manager
+
                 connected = connection_manager.is_connected(user_id)
             except ImportError:
                 connected = False
@@ -840,12 +841,12 @@ async def serve_webui():
     try:
         # Ścieżka do pliku webui.html
         webui_path = Path(__file__).parent.parent / "webui.html"
-        
+
         if not webui_path.exists():
             raise HTTPException(status_code=404, detail="WebUI not found")
-        
+
         return FileResponse(webui_path, media_type="text/html")
-        
+
     except Exception as e:
         logger.error(f"WebUI serve error: {e}")
         raise HTTPException(status_code=500, detail="Failed to serve WebUI") from e

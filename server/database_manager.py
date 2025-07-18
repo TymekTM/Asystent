@@ -889,11 +889,13 @@ class DatabaseManager:
                 # Konwertuj do formatu oczekiwanego przez WebSocket
                 plugins = []
                 for plugin_name in enabled_plugins:
-                    plugins.append({
-                        "plugin_name": plugin_name,
-                        "enabled": True,
-                        "updated_at": None
-                    })
+                    plugins.append(
+                        {
+                            "plugin_name": plugin_name,
+                            "enabled": True,
+                            "updated_at": None,
+                        }
+                    )
 
                 return plugins
 
@@ -901,7 +903,9 @@ class DatabaseManager:
             logger.error(f"Failed to get user plugins: {e}")
             return []
 
-    async def set_user_plugin_status(self, user_id: str, plugin_name: str, enabled: bool):
+    async def set_user_plugin_status(
+        self, user_id: str, plugin_name: str, enabled: bool
+    ):
         """Ustawia status pluginu użytkownika (alias dla update_user_plugins)."""
         await self.update_user_plugins(user_id, plugin_name, enabled)
 

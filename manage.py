@@ -83,17 +83,15 @@ def docker_rebuild_server():
     """Rebuild server Docker image from scratch."""
     print("[DOCKER] Rebuilding server Docker image from scratch...")
     return run_command(
-        ["docker-compose", "build", "--no-cache", "gaja-server"], 
-        "Rebuilding Docker image (no cache)"
+        ["docker-compose", "build", "--no-cache", "gaja-server"],
+        "Rebuilding Docker image (no cache)",
     )
 
 
 def docker_start_server():
     """Start server in Docker."""
     print("[DOCKER] Starting server...")
-    return run_command(
-        ["docker-compose", "up", "-d", "gaja-server"], "Starting server"
-    )
+    return run_command(["docker-compose", "up", "-d", "gaja-server"], "Starting server")
 
 
 def docker_stop_server():
@@ -113,24 +111,21 @@ def docker_restart_server():
 def docker_logs_server():
     """Show server logs."""
     print("[DOCKER] Showing server logs...")
-    return run_command(
-        ["docker-compose", "logs", "-f", "gaja-server"], "Server logs"
-    )
+    return run_command(["docker-compose", "logs", "-f", "gaja-server"], "Server logs")
     """Show server logs."""
     print("[DOCKER] Showing server logs...")
-    return run_command(
-        ["docker-compose", "logs", "-f", "gaja-server"], "Server logs"
-    )
+    return run_command(["docker-compose", "logs", "-f", "gaja-server"], "Server logs")
 
 
 def docker_status():
     """Show Docker container status."""
     print("[DOCKER] Checking server status...")
     result = run_command(["docker-compose", "ps"], "Container status")
-    
+
     # Also check if the service is responding
     print("[DOCKER] Checking server health...")
     import requests
+
     try:
         response = requests.get("http://localhost:8001/health", timeout=5)
         if response.status_code == 200:
@@ -139,7 +134,7 @@ def docker_status():
             print(f"       ⚠️  Server responded with status {response.status_code}")
     except Exception as e:
         print(f"       ❌ Server not responding: {e}")
-    
+
     return result
 
 
@@ -175,10 +170,12 @@ def full_setup():
     # Wait a moment and check if server is responding
     print("[SETUP] Waiting for server to start...")
     import time
+
     time.sleep(5)
-    
+
     # Check server health
     import requests
+
     try:
         response = requests.get("http://localhost:8001/health", timeout=10)
         if response.status_code == 200:

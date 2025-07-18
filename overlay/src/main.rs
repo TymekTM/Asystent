@@ -173,7 +173,7 @@ async fn update_status(
 ) -> Result<(), String> {
     // ALWAYS ensure click-through on any status update - user requirement
     ensure_click_through(&window);
-    
+
     {
         let mut overlay_state = state.lock().unwrap();
         overlay_state.status = status.clone();
@@ -639,9 +639,9 @@ async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, sta
     let is_critical = data.get("critical").and_then(|v| v.as_bool()).unwrap_or(false);
 
     // ENHANCED STATUS LOGIC - Better determination of what to show
-    let should_show_overlay = wake_word_detected || 
-                              is_speaking || 
-                              show_content || 
+    let should_show_overlay = wake_word_detected ||
+                              is_speaking ||
+                              show_content ||
                               overlay_visible ||
                               // Show on specific status keywords
                               status.contains("Przetwarzam") ||
@@ -665,8 +665,8 @@ async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, sta
                                current_text.len() > 10); // Only show if text is meaningful
 
     // IMMEDIATE RESPONSE for critical states
-    let is_critical_state = is_critical || 
-                           wake_word_detected || 
+    let is_critical_state = is_critical ||
+                           wake_word_detected ||
                            status.contains("Przetwarzam") ||
                            status.contains("Mówię") ||
                            current_text.contains("Przetwarzam") ||
@@ -676,7 +676,7 @@ async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, sta
 
     let mut changed = false;
     let visibility_changed = state_guard.visible != should_show_overlay;
-    
+
     if state_guard.text != current_text ||
         state_guard.is_listening != is_listening ||
         state_guard.is_speaking != is_speaking ||
@@ -793,7 +793,7 @@ pub fn run() {
                         use windows_sys::Win32::UI::WindowsAndMessaging::*;
                         // Force additional properties
                         let style = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
-                        let new_style = style | 
+                        let new_style = style |
                                        WS_EX_TRANSPARENT as isize |
                                        WS_EX_LAYERED as isize |
                                        WS_EX_TOPMOST as isize |
@@ -897,7 +897,7 @@ fn set_click_through(window: &Window, click_through: bool) {
                 }
                 unsafe {
                     let ex_style = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
-                    
+
                     // ALWAYS FORCE CLICK-THROUGH - user requirement regardless of parameter
                     let new_style = ex_style |
                                    WS_EX_TRANSPARENT as isize |
@@ -906,13 +906,13 @@ fn set_click_through(window: &Window, click_through: bool) {
                                    WS_EX_NOACTIVATE as isize |
                                    WS_EX_TOOLWINDOW as isize;
                     let result = SetWindowLongPtrW(hwnd, GWL_EXSTYLE, new_style);
-                    
+
                     println!("[Rust] FORCED click-through ALWAYS ENABLED - WS_EX_TRANSPARENT PERMANENTLY set, result: {}", result);
-                    
+
                     // Additional safety: Set window to bottom of Z-order for click-through
                     use windows_sys::Win32::UI::WindowsAndMessaging::{SetWindowPos, HWND_BOTTOM, SWP_NOMOVE, SWP_NOSIZE, SWP_NOACTIVATE};
                     SetWindowPos(hwnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-                    
+
                     println!("[Rust] Window Z-order set to bottom for enhanced click-through");
                 }
             }

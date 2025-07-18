@@ -126,7 +126,7 @@ SECURE_USERS = {
         },
     },
     "demo@mail.com": {
-        "id": "2", 
+        "id": "2",
         "email": "demo@mail.com",
         "role": "user",
         "password_hash": "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LLk8Z8Z8Z8Z8Z8Z8Y",  # Przykładowy hash
@@ -134,7 +134,7 @@ SECURE_USERS = {
         "created_at": datetime.now().isoformat(),
         "settings": {
             "language": "pl",
-            "voice": "default", 
+            "voice": "default",
             "wakeWord": True,
             "privacy": {"shareAnalytics": False, "storeConversations": True},
         },
@@ -148,30 +148,30 @@ def get_current_user(
     """Get current user from JWT token with proper security validation."""
     try:
         token = credentials.credentials
-        
+
         # Weryfikuj token używając SecurityManager
         payload = security_manager.verify_token(token, "access")
-        
+
         # Pobierz użytkownika na podstawie ID/email z tokenu
         user_email = payload.get("email")
         user_id = payload.get("userId") or payload.get("user_id")
-        
+
         # Znajdź użytkownika w systemie
         user = None
         for email, user_data in SECURE_USERS.items():
             if user_data["email"] == user_email or user_data["id"] == user_id:
                 user = user_data
                 break
-        
+
         if not user:
             logger.warning(f"User not found for email {user_email} or ID {user_id}")
             raise HTTPException(status_code=401, detail="User not found")
-        
+
         if not user.get("is_active", True):
             raise HTTPException(status_code=401, detail="Account deactivated")
-        
+
         return user
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -198,50 +198,56 @@ async def login(request: LoginRequest) -> LoginResponse:
     try:
         email = request.email.lower().strip()
         password = request.password
-        
+
         # Sprawdź czy konto nie jest zablokowane
         if security_manager.is_account_locked(email):
             logger.warning(f"Login attempt on locked account: {email}")
             raise HTTPException(
-                status_code=429, 
-                detail="Account temporarily locked due to too many failed attempts"
+                status_code=429,
+                detail="Account temporarily locked due to too many failed attempts",
             )
-        
+
         # Znajdź użytkownika
         user = SECURE_USERS.get(email)
         if not user:
             security_manager.record_failed_attempt(email)
             logger.warning(f"Login attempt with non-existent email: {email}")
             raise HTTPException(status_code=401, detail="Invalid credentials")
-        
+
         # Sprawdź czy konto jest aktywne
         if not user.get("is_active", True):
             logger.warning(f"Login attempt on deactivated account: {email}")
             raise HTTPException(status_code=401, detail="Account deactivated")
-        
+
         # Weryfikuj hasło
         if not security_manager.verify_password(password, user["password_hash"]):
             security_manager.record_failed_attempt(email)
             logger.warning(f"Failed login attempt for user: {email}")
             raise HTTPException(status_code=401, detail="Invalid credentials")
-        
+
         # Udane logowanie - wyczyść nieudane próby
         security_manager.clear_failed_attempts(email)
-        
+
         # Utwórz tokeny
-        token_data = {"userId": user["id"], "email": user["email"], "role": user["role"]}
+        token_data = {
+            "userId": user["id"],
+            "email": user["email"],
+            "role": user["role"],
+        }
         access_token = security_manager.create_access_token(token_data)
         refresh_token = security_manager.create_refresh_token(token_data)
-        
+
         # Loguj udane logowanie (bez wrażliwych danych)
-        log_data = security_manager.sanitize_log_data({
-            "email": email,
-            "user_id": user["id"], 
-            "role": user["role"],
-            "ip": "unknown"  # TODO: dodaj rzeczywiste IP
-        })
+        log_data = security_manager.sanitize_log_data(
+            {
+                "email": email,
+                "user_id": user["id"],
+                "role": user["role"],
+                "ip": "unknown",  # TODO: dodaj rzeczywiste IP
+            }
+        )
         logger.info(f"Successful login: {log_data}")
-        
+
         return LoginResponse(
             success=True,
             token=access_token,
@@ -253,12 +259,14 @@ async def login(request: LoginRequest) -> LoginResponse:
                 "createdAt": user["created_at"],
             },
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Login error: {e}")
-        raise HTTPException(status_code=500, detail="Authentication service unavailable")
+        raise HTTPException(
+            status_code=500, detail="Authentication service unavailable"
+        )
 
 
 @router.post("/auth/magic-link")
@@ -292,21 +300,23 @@ async def update_settings(
     """Update user settings securely."""
     try:
         user_email = current_user["email"]
-        
+
         # Waliduj że użytkownik istnieje
         if user_email not in SECURE_USERS:
             raise HTTPException(status_code=404, detail="User not found")
-        
+
         # Zaktualizuj ustawienia (tylko niepuste wartości)
         settings_update = settings.dict(exclude_unset=True)
         SECURE_USERS[user_email]["settings"].update(settings_update)
-        
+
         # Loguj zmianę ustawień
-        log_data = security_manager.sanitize_log_data({
-            "user_id": current_user["id"],
-            "email": user_email,
-            "updated_settings": list(settings_update.keys())
-        })
+        log_data = security_manager.sanitize_log_data(
+            {
+                "user_id": current_user["id"],
+                "email": user_email,
+                "updated_settings": list(settings_update.keys()),
+            }
+        )
         logger.info(f"User settings updated: {log_data}")
 
         return User(
@@ -316,7 +326,7 @@ async def update_settings(
             settings=UserSettings(**SECURE_USERS[user_email]["settings"]),
             createdAt=current_user["created_at"],
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -604,19 +614,19 @@ async def ai_query(
             raise HTTPException(status_code=400, detail="Query is required")
 
         # Use AI module directly if server_app has ai_module
-        if hasattr(server_app, 'ai_module') and server_app.ai_module:
+        if hasattr(server_app, "ai_module") and server_app.ai_module:
             # Prepare context for AI module
             ai_context = {
                 "user_id": current_user["id"],
                 "history": [],  # Can be enhanced with actual history
                 "available_plugins": [],  # Can be enhanced with user plugins
-                "modules": {}  # Can be enhanced with available modules
+                "modules": {},  # Can be enhanced with available modules
             }
             ai_context.update(context)
-            
+
             # Process query using AI module
             response = await server_app.ai_module.process_query(query, ai_context)
-            
+
             return {
                 "success": True,
                 "response": response,

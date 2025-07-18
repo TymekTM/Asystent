@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Server Configuration and Logging Optimization
+"""Server Configuration and Logging Optimization.
 
 This script addresses the verbose logging issues mentioned in the server logs:
 1. Migrates from deprecated @app.on_event to lifespan handlers
@@ -9,49 +8,47 @@ This script addresses the verbose logging issues mentioned in the server logs:
 """
 
 import asyncio
-import logging
-from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any
 
-from fastapi import FastAPI
 from loguru import logger
+
 
 class ServerOptimizer:
     """Handles server configuration optimization."""
-    
+
     def __init__(self):
         self.optimizations_applied = []
-        
-    def check_current_server_config(self) -> Dict[str, Any]:
+
+    def check_current_server_config(self) -> dict[str, Any]:
         """Analyze current server configuration."""
         server_file = Path("server/server_main.py")
-        
+
         issues = {
             "deprecated_on_event": False,
             "verbose_health_logging": False,
             "missing_log_filtering": False,
-            "no_structured_logging": False
+            "no_structured_logging": False,
         }
-        
+
         if server_file.exists():
-            content = server_file.read_text(encoding='utf-8')
-            
+            content = server_file.read_text(encoding="utf-8")
+
             # Check for deprecated patterns
             if "@app.on_event" in content:
                 issues["deprecated_on_event"] = True
-                
-            if 'INFO:     127.0.0.1:' in content:
+
+            if "INFO:     127.0.0.1:" in content:
                 issues["verbose_health_logging"] = True
-                
+
             if "logging.getLogger" not in content:
                 issues["missing_log_filtering"] = True
-                
+
             if "structured" not in content.lower():
                 issues["no_structured_logging"] = True
-                
+
         return issues
-    
+
     def generate_optimized_lifespan(self) -> str:
         """Generate optimized lifespan handler code."""
         return '''
@@ -60,18 +57,18 @@ async def lifespan(app: FastAPI):
     """Application lifespan management with optimized logging."""
     # Startup
     global server_app
-    
+
     # Configure logging for production
     setup_production_logging()
-    
+
     logger.info("Starting GAJA Assistant Server...")
     server_app = ServerApp()
     await server_app.initialize()
     set_server_app(server_app)
     logger.success("Server initialization completed")
-    
+
     yield
-    
+
     # Shutdown
     logger.info("Shutting down GAJA Assistant Server...")
     if server_app:
@@ -83,7 +80,7 @@ def setup_production_logging():
     """Configure optimized logging for production."""
     # Remove default logger
     logger.remove()
-    
+
     # Add structured logging with filtering
     logger.add(
         "logs/server_{time:YYYY-MM-DD}.log",
@@ -93,7 +90,7 @@ def setup_production_logging():
         format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level} | {name}:{function}:{line} | {message}",
         filter=lambda record: not is_health_check_spam(record)
     )
-    
+
     # Console logging with reduced verbosity
     logger.add(
         sys.stderr,
@@ -101,7 +98,7 @@ def setup_production_logging():
         format="<green>{time:HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> | <level>{message}</level>",
         filter=lambda record: not is_health_check_spam(record) and record["level"].no >= 20
     )
-    
+
     # Suppress external library noise
     logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
     logging.getLogger("uvicorn.error").setLevel(logging.INFO)
@@ -112,18 +109,18 @@ def setup_production_logging():
 def is_health_check_spam(record) -> bool:
     """Filter out repetitive health check logs."""
     message = record.get("message", "")
-    
+
     # Filter health check access logs
     if "GET /health HTTP/1.1" in message and "200 OK" in message:
         return True
-    
+
     # Filter repetitive startup messages after initial load
     spam_patterns = [
         "Waiting for application startup",
         "Application startup complete",
         "Uvicorn running on"
     ]
-    
+
     return any(pattern in message for pattern in spam_patterns)
 
 
@@ -143,12 +140,12 @@ app = FastAPI(
 async def health_check():
     """Optimized health check with minimal logging."""
     return {
-        "status": "healthy", 
+        "status": "healthy",
         "timestamp": datetime.utcnow().isoformat() + "Z",
         "function_calling": "enabled" if server_app and hasattr(server_app, 'function_calling_system') else "disabled"
     }
 
-@app.get("/healthz")  
+@app.get("/healthz")
 async def kubernetes_health_check():
     """Kubernetes-style health check (silent)."""
     return {"status": "ok"}
@@ -158,7 +155,7 @@ async def api_health_check():
     """API health check with function calling status."""
     if not server_app:
         raise HTTPException(status_code=503, detail="Server not initialized")
-    
+
     return {
         "status": "healthy",
         "services": {
@@ -187,24 +184,24 @@ from loguru import logger
 
 class ProductionLoggingConfig:
     """Production-ready logging configuration."""
-    
+
     @staticmethod
     def setup():
         """Setup optimized logging for production use."""
         # Remove all default handlers
         logger.remove()
-        
+
         # File logging with rotation
         logger.add(
             "logs/gaja_server_{time:YYYY-MM-DD}.log",
             rotation="1 day",
-            retention="7 days", 
+            retention="7 days",
             level="INFO",
             format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level} | {name}:{function}:{line} | {message}",
             filter=ProductionLoggingConfig.filter_spam,
             compression="zip"
         )
-        
+
         # Console logging - errors and important info only
         logger.add(
             sys.stderr,
@@ -212,7 +209,7 @@ class ProductionLoggingConfig:
             format="<red>{time:HH:mm:ss}</red> | <level>{level: <8}</level> | <level>{message}</level>",
             filter=ProductionLoggingConfig.filter_console
         )
-        
+
         # Startup/shutdown events - separate file
         logger.add(
             "logs/gaja_lifecycle.log",
@@ -221,48 +218,48 @@ class ProductionLoggingConfig:
             filter=lambda record: ProductionLoggingConfig.is_lifecycle_event(record),
             rotation="10 MB"
         )
-        
+
         # Suppress external libraries
         ProductionLoggingConfig.suppress_external_noise()
-    
+
     @staticmethod
     def filter_spam(record) -> bool:
         """Filter out repetitive/spam logs."""
         message = record.get("message", "")
-        
+
         # Health check spam
         if "GET /health HTTP/1.1" in message:
             return False
-            
+
         # Uvicorn access logs for health checks
         if "127.0.0.1" in message and "200 OK" in message:
             return False
-            
+
         return True
-    
-    @staticmethod  
+
+    @staticmethod
     def filter_console(record) -> bool:
         """Filter console output to essential messages only."""
         message = record.get("message", "")
         level = record.get("level", {}).get("name", "")
-        
+
         # Allow errors and warnings
         if level in ["ERROR", "WARNING", "CRITICAL"]:
             return True
-            
+
         # Allow important startup/shutdown messages
         important_keywords = [
             "Starting GAJA",
-            "Server initialization completed", 
+            "Server initialization completed",
             "Function calling system initialized",
             "Server startup complete",
             "Server shutdown complete",
             "Plugin",
             "AI module initialized"
         ]
-        
+
         return any(keyword in message for keyword in important_keywords)
-    
+
     @staticmethod
     def is_lifecycle_event(record) -> bool:
         """Check if record is a lifecycle event."""
@@ -271,82 +268,82 @@ class ProductionLoggingConfig:
             "Starting GAJA",
             "initialization",
             "startup",
-            "shutdown", 
+            "shutdown",
             "Plugin loaded",
             "Plugin unloaded"
         ]
         return any(keyword in message for keyword in lifecycle_keywords)
-    
+
     @staticmethod
     def suppress_external_noise():
         """Suppress noisy external library logs."""
         noisy_loggers = [
             "uvicorn.access",
-            "uvicorn.error", 
+            "uvicorn.error",
             "websockets.server",
             "websockets.protocol",
             "aiohttp.access",
             "aiofiles",
             "multipart.multipart"
         ]
-        
+
         for logger_name in noisy_loggers:
             logging.getLogger(logger_name).setLevel(logging.WARNING)
 '''
 
-    async def generate_optimization_report(self) -> Dict[str, Any]:
+    async def generate_optimization_report(self) -> dict[str, Any]:
         """Generate optimization recommendations."""
         issues = self.check_current_server_config()
-        
+
         report = {
             "current_issues": issues,
             "optimizations": {
                 "lifespan_migration": {
                     "required": issues["deprecated_on_event"],
                     "description": "Migrate from @app.on_event to lifespan handlers",
-                    "impact": "Removes deprecation warnings"
+                    "impact": "Removes deprecation warnings",
                 },
                 "health_check_optimization": {
-                    "required": issues["verbose_health_logging"], 
+                    "required": issues["verbose_health_logging"],
                     "description": "Reduce health check logging frequency",
-                    "impact": "Significantly reduces log volume"
+                    "impact": "Significantly reduces log volume",
                 },
                 "log_filtering": {
                     "required": issues["missing_log_filtering"],
                     "description": "Implement smart log filtering",
-                    "impact": "Removes repetitive logs while keeping essentials"
+                    "impact": "Removes repetitive logs while keeping essentials",
                 },
                 "structured_logging": {
                     "required": issues["no_structured_logging"],
                     "description": "Add structured logging format",
-                    "impact": "Better log analysis and monitoring"
-                }
+                    "impact": "Better log analysis and monitoring",
+                },
             },
             "recommendations": [
                 "Use /healthz endpoint for monitoring instead of /health to reduce logs",
                 "Implement log rotation with compression",
                 "Add separate lifecycle event logging",
                 "Filter external library noise",
-                "Use WARNING level for console in production"
-            ]
+                "Use WARNING level for console in production",
+            ],
         }
-        
+
         return report
 
     async def create_optimized_files(self):
         """Create optimized configuration files."""
         logger.info("📝 Creating optimized server configuration files...")
-        
+
         # Create logs directory
         logs_dir = Path("logs")
         logs_dir.mkdir(exist_ok=True)
-        
+
         # Generate optimized logging config
         logging_config = self.create_logging_config()
         config_file = Path("server_logging_config.py")
-        config_file.write_text(logging_config, encoding='utf-8')
+        config_file.write_text(logging_config, encoding="utf-8")
         logger.info(f"✅ Created: {config_file}")
-        
+
         # Generate example optimized server
         optimized_server = f"""
 # Example of optimized server configuration
@@ -361,61 +358,64 @@ from loguru import logger
 
 {self.generate_health_endpoint_optimization()}
 """
-        
+
         example_file = Path("server_optimized_example.py")
-        example_file.write_text(optimized_server, encoding='utf-8')
+        example_file.write_text(optimized_server, encoding="utf-8")
         logger.info(f"✅ Created: {example_file}")
-        
-        self.optimizations_applied.extend([
-            "Created optimized logging configuration",
-            "Generated lifespan handler example", 
-            "Created health endpoint optimization",
-            "Setup log filtering and rotation"
-        ])
+
+        self.optimizations_applied.extend(
+            [
+                "Created optimized logging configuration",
+                "Generated lifespan handler example",
+                "Created health endpoint optimization",
+                "Setup log filtering and rotation",
+            ]
+        )
 
 
 async def main():
     """Main optimization execution."""
     logger.info("🔧 GAJA Server Optimization Utility")
     logger.info("=" * 50)
-    
+
     optimizer = ServerOptimizer()
-    
+
     # Generate optimization report
     report = await optimizer.generate_optimization_report()
-    
+
     logger.info("📊 Current Server Analysis:")
     for issue, present in report["current_issues"].items():
         status = "❌ NEEDS FIX" if present else "✅ OK"
         logger.info(f"   {issue}: {status}")
-    
+
     logger.info("\n🛠  Recommended Optimizations:")
     for opt_name, opt_data in report["optimizations"].items():
         required = "🔴 REQUIRED" if opt_data["required"] else "🟢 OPTIONAL"
         logger.info(f"   {opt_name}: {required}")
         logger.info(f"      {opt_data['description']}")
         logger.info(f"      Impact: {opt_data['impact']}")
-    
+
     # Create optimized files
     await optimizer.create_optimized_files()
-    
+
     logger.info("\n📋 Optimization Summary:")
     for optimization in optimizer.optimizations_applied:
         logger.info(f"   ✅ {optimization}")
-    
+
     logger.info("\n🎯 Next Steps:")
     logger.info("   1. Review generated server_optimized_example.py")
-    logger.info("   2. Apply lifespan handler migration to server_main.py")  
+    logger.info("   2. Apply lifespan handler migration to server_main.py")
     logger.info("   3. Import and use ProductionLoggingConfig.setup()")
     logger.info("   4. Test with reduced logging verbosity")
     logger.info("   5. Monitor function calling system performance")
-    
+
     # Save report
     import json
+
     report_file = Path("server_optimization_report.json")
     with open(report_file, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2, ensure_ascii=False)
-    
+
     logger.info(f"📁 Detailed report saved to: {report_file}")
 
 

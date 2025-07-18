@@ -511,11 +511,15 @@ class ClientApp:
     async def handle_server_message(self, data: dict):
         """Obsłuż wiadomość od serwera."""
         message_type = data.get("type")
-        
+
         # Debug: log the entire message structure
-        logger.debug(f"Received message from server: type={message_type}, data keys={list(data.keys())}")
+        logger.debug(
+            f"Received message from server: type={message_type}, data keys={list(data.keys())}"
+        )
         if message_type == "ai_response":
-            logger.info(f"AI response data structure: {data}")  # Change to INFO for visibility
+            logger.info(
+                f"AI response data structure: {data}"
+            )  # Change to INFO for visibility
 
         # Track message limits and counts if provided
         if "message_limit" in data:
@@ -607,7 +611,7 @@ class ClientApp:
 
                     # Update overlay with AI response - set text BEFORE showing overlay
                     self.last_tts_text = text
-                    self.update_status(f"mówię")
+                    self.update_status("mówię")
 
                     # Show overlay immediately when starting TTS
                     await self.show_overlay()
@@ -653,7 +657,7 @@ class ClientApp:
 
                     # Update overlay - set text BEFORE showing overlay
                     self.last_tts_text = text
-                    self.update_status(f"mówię")
+                    self.update_status("mówię")
 
                     # Show overlay immediately when starting TTS
                     await self.show_overlay()
@@ -851,10 +855,11 @@ class ClientApp:
 
         # IMMEDIATE STATUS UPDATES - no debouncing for critical states
         is_critical_state = (
-            self.wake_word_detected or 
-            self.current_status in ["Przetwarzam...", "Mówię...", "Przetwarzam zapytanie..."] or
-            self.tts_playing or
-            self.recording_command
+            self.wake_word_detected
+            or self.current_status
+            in ["Przetwarzam...", "Mówię...", "Przetwarzam zapytanie..."]
+            or self.tts_playing
+            or self.recording_command
         )
 
         status_data = {
@@ -886,8 +891,11 @@ class ClientApp:
                 # Force immediate flush for critical states
                 if is_critical_state:
                     import socket
+
                     try:
-                        client.wfile._sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+                        client.wfile._sock.setsockopt(
+                            socket.IPPROTO_TCP, socket.TCP_NODELAY, 1
+                        )
                     except:
                         pass  # Ignore socket option errors
             except Exception as e:

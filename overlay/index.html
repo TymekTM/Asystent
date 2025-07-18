@@ -303,7 +303,7 @@
                     orbClass = 'speaking';
                     orbIcon = '🗣️';
                     displayText = currentState.text || "mówię";
-                } else if (currentState.wake_word_detected || 
+                } else if (currentState.wake_word_detected ||
                           currentState.status.includes('Przetwarzam') ||
                           currentState.text.includes('Przetwarzam') ||
                           currentState.status.includes('myślę') ||
@@ -330,8 +330,8 @@
                 statusText.textContent = displayText;
 
                 // Show additional details only if they differ from main text
-                if (currentState.status !== displayText && 
-                    currentState.status && 
+                if (currentState.status !== displayText &&
+                    currentState.status &&
                     currentState.status !== currentState.text &&
                     !currentState.status.includes('Overlay')) {
                     statusDetails.textContent = currentState.status;

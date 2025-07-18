@@ -18,10 +18,10 @@ sys.path.insert(0, str(Path(__file__).parent))
 # Load environment variables from .env file
 try:
     from dotenv import load_dotenv
-    
+
     # Try to load .env from project root (parent of server directory) - but only if not in container
-    is_docker = os.getenv('PRODUCTION', 'false').lower() == 'true'
-    
+    is_docker = os.getenv("PRODUCTION", "false").lower() == "true"
+
     if not is_docker:
         env_path = Path(__file__).parent.parent / ".env"
         if env_path.exists():
@@ -31,21 +31,23 @@ try:
             logger.warning(f"⚠️ No .env file found at {env_path}")
     else:
         logger.info("🐳 Running in Docker - using environment variables")
-        
+
 except ImportError:
     logger.warning("⚠️ python-dotenv not installed, trying manual .env loading")
     # Manual fallback for .env loading (only if not in Docker)
-    is_docker = os.getenv('PRODUCTION', 'false').lower() == 'true'
+    is_docker = os.getenv("PRODUCTION", "false").lower() == "true"
     if not is_docker:
         env_path = Path(__file__).parent.parent / ".env"
         if env_path.exists():
             try:
-                with open(env_path, 'r', encoding='utf-8') as f:
+                with open(env_path, encoding="utf-8") as f:
                     for line in f:
                         line = line.strip()
-                        if line and not line.startswith('#') and '=' in line:
-                            key, value = line.split('=', 1)
-                            os.environ[key.strip()] = value.strip().strip('"').strip("'")
+                        if line and not line.startswith("#") and "=" in line:
+                            key, value = line.split("=", 1)
+                            os.environ[key.strip()] = (
+                                value.strip().strip('"').strip("'")
+                            )
                 logger.info(f"✅ Manually loaded environment variables from {env_path}")
             except Exception as e:
                 logger.error(f"❌ Error loading .env file: {e}")
@@ -70,7 +72,7 @@ from onboarding_module import OnboardingModule
 from plugin_manager import plugin_manager
 from plugin_monitor import plugin_monitor
 from proactive_assistant_simple import get_proactive_assistant
-from websocket_manager import connection_manager, WebSocketMessage
+from websocket_manager import WebSocketMessage, connection_manager
 
 # Global server instance
 server_app = None
@@ -94,192 +96,226 @@ class ServerApp:
         try:
             message_type = message_data.get("type", "unknown")
             logger.info(f"WebSocket message from {user_id}: {message_type}")
-            
+
             if message_type == "handshake":
                 # Handshake jest obsługiwany automatycznie w connection_manager
                 logger.info(f"Handshake completed for user {user_id}")
                 return
-                
+
             elif message_type == "query" or message_type == "ai_query":
                 # Zapytanie AI
                 query = message_data.get("query", "")
                 context = message_data.get("context", {})
-                
+
                 if not query:
                     await self.connection_manager.send_to_user(
-                        user_id,
-                        WebSocketMessage("error", {"message": "Empty query"})
+                        user_id, WebSocketMessage("error", {"message": "Empty query"})
                     )
                     return
-                
+
                 # Przetwórz zapytanie przez AI
                 try:
                     response = await self.ai_module.process_query(query, context)
-                    logger.info(f"AI module returned response: {response[:200] if response else 'EMPTY'}")
-                    
+                    logger.info(
+                        f"AI module returned response: {response[:200] if response else 'EMPTY'}"
+                    )
+
                     await self.connection_manager.send_to_user(
                         user_id,
-                        WebSocketMessage("ai_response", {
-                            "response": response,
-                            "query": query,
-                            "timestamp": message_data.get("timestamp")
-                        })
+                        WebSocketMessage(
+                            "ai_response",
+                            {
+                                "response": response,
+                                "query": query,
+                                "timestamp": message_data.get("timestamp"),
+                            },
+                        ),
                     )
-                    
+
                 except Exception as e:
                     logger.error(f"AI query error for user {user_id}: {e}")
                     await self.connection_manager.send_to_user(
                         user_id,
-                        WebSocketMessage("error", {
-                            "message": "Failed to process AI query",
-                            "error": str(e)
-                        })
+                        WebSocketMessage(
+                            "error",
+                            {"message": "Failed to process AI query", "error": str(e)},
+                        ),
                     )
-                    
+
             elif message_type == "plugin_toggle":
                 # Przełączanie pluginu
                 plugin_data = message_data.get("data", {})
                 plugin_name = plugin_data.get("plugin")
                 action = plugin_data.get("action")
-                
+
                 if not plugin_name or action not in ["enable", "disable"]:
                     await self.connection_manager.send_to_user(
                         user_id,
-                        WebSocketMessage("error", {"message": "Invalid plugin toggle request"})
+                        WebSocketMessage(
+                            "error", {"message": "Invalid plugin toggle request"}
+                        ),
                     )
                     return
-                
+
                 try:
                     if action == "enable":
-                        await plugin_manager.enable_plugin_for_user(plugin_name, user_id)
-                        await self.db_manager.set_user_plugin_status(user_id, plugin_name, True)
+                        await plugin_manager.enable_plugin_for_user(
+                            plugin_name, user_id
+                        )
+                        await self.db_manager.set_user_plugin_status(
+                            user_id, plugin_name, True
+                        )
                         status = "enabled"
                     else:
-                        await plugin_manager.disable_plugin_for_user(plugin_name, user_id)
-                        await self.db_manager.set_user_plugin_status(user_id, plugin_name, False)
+                        await plugin_manager.disable_plugin_for_user(
+                            plugin_name, user_id
+                        )
+                        await self.db_manager.set_user_plugin_status(
+                            user_id, plugin_name, False
+                        )
                         status = "disabled"
-                    
+
                     await self.connection_manager.send_to_user(
                         user_id,
-                        WebSocketMessage("plugin_toggled", {
-                            "plugin": plugin_name,
-                            "status": status,
-                            "success": True
-                        })
+                        WebSocketMessage(
+                            "plugin_toggled",
+                            {"plugin": plugin_name, "status": status, "success": True},
+                        ),
                     )
-                    
+
                 except Exception as e:
                     logger.error(f"Plugin toggle error for user {user_id}: {e}")
                     await self.connection_manager.send_to_user(
                         user_id,
-                        WebSocketMessage("error", {
-                            "message": f"Failed to {action} plugin {plugin_name}",
-                            "error": str(e)
-                        })
+                        WebSocketMessage(
+                            "error",
+                            {
+                                "message": f"Failed to {action} plugin {plugin_name}",
+                                "error": str(e),
+                            },
+                        ),
                     )
-                    
+
             elif message_type == "plugin_list":
                 # Lista pluginów
                 try:
                     all_plugins = plugin_manager.get_all_plugins()
                     user_plugins = await self.db_manager.get_user_plugins(user_id)
-                    
+
                     # Połącz informacje o pluginach
                     plugins_info = []
-                    user_plugin_status = {p["plugin_name"]: p["enabled"] for p in user_plugins}
-                    
+                    user_plugin_status = {
+                        p["plugin_name"]: p["enabled"] for p in user_plugins
+                    }
+
                     for plugin_name, plugin_info in all_plugins.items():
-                        plugins_info.append({
-                            "name": plugin_name,
-                            "enabled": user_plugin_status.get(plugin_name, False),
-                            "description": plugin_info.description or "",
-                            "version": plugin_info.version or "1.0.0"
-                        })
-                    
+                        plugins_info.append(
+                            {
+                                "name": plugin_name,
+                                "enabled": user_plugin_status.get(plugin_name, False),
+                                "description": plugin_info.description or "",
+                                "version": plugin_info.version or "1.0.0",
+                            }
+                        )
+
                     await self.connection_manager.send_to_user(
                         user_id,
-                        WebSocketMessage("plugin_list", {"plugins": plugins_info})
+                        WebSocketMessage("plugin_list", {"plugins": plugins_info}),
                     )
-                    
+
                 except Exception as e:
                     logger.error(f"Plugin list error for user {user_id}: {e}")
                     await self.connection_manager.send_to_user(
                         user_id,
-                        WebSocketMessage("error", {
-                            "message": "Failed to get plugin list",
-                            "error": str(e)
-                        })
+                        WebSocketMessage(
+                            "error",
+                            {"message": "Failed to get plugin list", "error": str(e)},
+                        ),
                     )
-                    
+
             elif message_type == "startup_briefing":
                 # Briefing poranny
                 try:
                     if self.proactive_assistant:
-                        notifications = await self.proactive_assistant.get_notifications(user_id)
+                        notifications = (
+                            await self.proactive_assistant.get_notifications(user_id)
+                        )
                         briefing = f"Daily briefing for user {user_id}: {len(notifications)} notifications"
                         await self.connection_manager.send_to_user(
                             user_id,
-                            WebSocketMessage("startup_briefing", {"briefing": briefing})
+                            WebSocketMessage(
+                                "startup_briefing", {"briefing": briefing}
+                            ),
                         )
                     else:
                         await self.connection_manager.send_to_user(
                             user_id,
-                            WebSocketMessage("startup_briefing", {
-                                "briefing": "Proactive assistant nie jest dostępny"
-                            })
+                            WebSocketMessage(
+                                "startup_briefing",
+                                {"briefing": "Proactive assistant nie jest dostępny"},
+                            ),
                         )
                 except Exception as e:
                     logger.error(f"Briefing error for user {user_id}: {e}")
                     await self.connection_manager.send_to_user(
                         user_id,
-                        WebSocketMessage("error", {
-                            "message": "Failed to get briefing",
-                            "error": str(e)
-                        })
+                        WebSocketMessage(
+                            "error",
+                            {"message": "Failed to get briefing", "error": str(e)},
+                        ),
                     )
-                    
+
             elif message_type == "proactive_check":
                 # Sprawdzenie proaktywnych powiadomień
                 try:
                     if self.proactive_assistant:
-                        notifications = await self.proactive_assistant.get_notifications(user_id)
+                        notifications = (
+                            await self.proactive_assistant.get_notifications(user_id)
+                        )
                         await self.connection_manager.send_to_user(
                             user_id,
-                            WebSocketMessage("proactive_notifications", {"notifications": notifications})
+                            WebSocketMessage(
+                                "proactive_notifications",
+                                {"notifications": notifications},
+                            ),
                         )
                     else:
                         await self.connection_manager.send_to_user(
                             user_id,
-                            WebSocketMessage("proactive_notifications", {"notifications": []})
+                            WebSocketMessage(
+                                "proactive_notifications", {"notifications": []}
+                            ),
                         )
                 except Exception as e:
                     logger.error(f"Proactive check error for user {user_id}: {e}")
-                    
+
             elif message_type == "user_context_update":
                 # Handle user context updates (for analytics, debugging, etc.)
                 context_data = message_data.get("data", {})
                 logger.debug(f"User context update from {user_id}: {context_data}")
                 # For now, just acknowledge the update - could be stored in database later
                 await self.connection_manager.send_to_user(
-                    user_id,
-                    WebSocketMessage("context_ack", {"status": "received"})
+                    user_id, WebSocketMessage("context_ack", {"status": "received"})
                 )
-                    
+
             else:
-                logger.warning(f"Unknown WebSocket message type: {message_type} from user {user_id}")
+                logger.warning(
+                    f"Unknown WebSocket message type: {message_type} from user {user_id}"
+                )
                 await self.connection_manager.send_to_user(
                     user_id,
-                    WebSocketMessage("error", {"message": f"Unknown message type: {message_type}"})
+                    WebSocketMessage(
+                        "error", {"message": f"Unknown message type: {message_type}"}
+                    ),
                 )
-                
+
         except Exception as e:
             logger.error(f"WebSocket message handling error for user {user_id}: {e}")
             await self.connection_manager.send_to_user(
                 user_id,
-                WebSocketMessage("error", {
-                    "message": "Internal server error",
-                    "error": str(e)
-                })
+                WebSocketMessage(
+                    "error", {"message": "Internal server error", "error": str(e)}
+                ),
             )
 
     async def initialize(self):
@@ -407,29 +443,35 @@ app.include_router(api_router)
 async def websocket_endpoint(websocket: WebSocket, user_id: str):
     """WebSocket endpoint dla komunikacji w czasie rzeczywistym."""
     logger.info(f"WebSocket connection attempt for user: {user_id}")
-    
+
     try:
         # Nawiąż połączenie
-        await connection_manager.connect(websocket, user_id, {
-            "client_type": "web_ui",
-            "user_agent": websocket.headers.get("user-agent", "unknown")
-        })
-        
+        await connection_manager.connect(
+            websocket,
+            user_id,
+            {
+                "client_type": "web_ui",
+                "user_agent": websocket.headers.get("user-agent", "unknown"),
+            },
+        )
+
         logger.info(f"WebSocket connected for user: {user_id}")
-        
+
         while True:
             # Odbierz wiadomość
             try:
                 data = await websocket.receive_text()
                 message_data = json.loads(data)
-                
+
                 # Przetwórz wiadomość przez connection manager
-                processed_message = await connection_manager.handle_message(user_id, message_data)
-                
+                processed_message = await connection_manager.handle_message(
+                    user_id, message_data
+                )
+
                 if processed_message and server_app:
                     # Przekaż do aplikacji serwera
                     await server_app.handle_websocket_message(user_id, message_data)
-                
+
             except WebSocketDisconnect:
                 logger.info(f"WebSocket disconnected for user: {user_id}")
                 break
@@ -437,15 +479,15 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
                 logger.warning(f"Invalid JSON from user {user_id}: {e}")
                 await connection_manager.send_to_user(
                     user_id,
-                    WebSocketMessage("error", {"message": "Invalid JSON format"})
+                    WebSocketMessage("error", {"message": "Invalid JSON format"}),
                 )
             except Exception as e:
                 logger.error(f"WebSocket message error for user {user_id}: {e}")
                 await connection_manager.send_to_user(
                     user_id,
-                    WebSocketMessage("error", {"message": "Message processing error"})
+                    WebSocketMessage("error", {"message": "Message processing error"}),
                 )
-                
+
     except Exception as e:
         logger.error(f"WebSocket connection error for user {user_id}: {e}")
     finally:
@@ -512,7 +554,7 @@ def main():
     # Priorytet dla zmiennych środowiskowych
     host = os.getenv("SERVER_HOST", config.get("server", {}).get("host", "localhost"))
     port = int(os.getenv("SERVER_PORT", config.get("server", {}).get("port", 8001)))
-    
+
     uvicorn.run(
         app,
         host=host,
