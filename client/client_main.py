@@ -1308,64 +1308,75 @@ class ClientApp:
             # Load audio modules only after dependencies are ready
             # Note: These imports will fail if heavy dependencies are not available
             # That's expected - the dependency_manager will install them first
-            # Try to load basic audio components
+            # Try to load optimized audio components first
             try:
-                from audio_modules.advanced_wakeword_detector import (
+                from audio_modules.optimized_wakeword_detector import (
                     create_wakeword_detector,
                 )
 
-                logger.info("✅ Advanced wakeword detector loaded")
+                logger.info("✅ Optimized wakeword detector loaded")
             except ImportError as e:
-                logger.warning(f"Advanced wakeword detector not available: {e}")
-                # Fallback to simple wakeword detector
+                logger.warning(f"Optimized wakeword detector not available: {e}")
+                # Fallback to advanced wakeword detector
                 try:
-                    from audio_modules.simple_wakeword_detector import (
+                    from audio_modules.advanced_wakeword_detector import (
                         create_wakeword_detector,
                     )
 
-                    logger.info("✅ Simple wakeword detector loaded as fallback")
+                    logger.info("✅ Advanced wakeword detector loaded as fallback")
                 except ImportError as e2:
-                    logger.warning(f"Simple wakeword detector also not available: {e2}")
-                    create_wakeword_detector = None
+                    logger.warning(f"Advanced wakeword detector not available: {e2}")
+                    # Fallback to simple wakeword detector
+                    try:
+                        from audio_modules.simple_wakeword_detector import (
+                            create_wakeword_detector,
+                        )
+
+                        logger.info(
+                            "✅ Simple wakeword detector loaded as final fallback"
+                        )
+                    except ImportError as e3:
+                        logger.warning(
+                            f"Simple wakeword detector also not available: {e3}"
+                        )
+                        create_wakeword_detector = None
 
             try:
-                from audio_modules.whisper_asr import (
-                    create_audio_recorder,
-                    create_whisper_asr,
+                from audio_modules.optimized_whisper_asr import (
+                    create_optimized_recorder,
+                    create_optimized_whisper_async,
                 )
 
-                logger.info("✅ Whisper ASR loaded")
+                create_audio_recorder = create_optimized_recorder
+                create_whisper_asr = create_optimized_whisper_async
+                logger.info("✅ Optimized Whisper ASR loaded")
             except ImportError as e:
-                logger.warning(f"Whisper ASR not available: {e}")
-                create_whisper_asr = None
-                create_audio_recorder = None
+                logger.warning(f"Optimized Whisper ASR not available: {e}")
+                # Fallback to legacy whisper
+                try:
+                    from audio_modules.whisper_asr import (
+                        create_audio_recorder,
+                        create_whisper_asr,
+                    )
+
+                    logger.info("✅ Legacy Whisper ASR loaded as fallback")
+                except ImportError as e2:
+                    logger.warning(f"Legacy Whisper ASR not available: {e2}")
+                    create_whisper_asr = None
+                    create_audio_recorder = None
 
             # Try enhanced modules if available, fallback to legacy
             try:
-                # from audio_modules.enhanced_tts_module import EnhancedTTSModule as TTSModule
-                # logger.info("Using Enhanced TTS Module")
-                # Enhanced modules may not exist yet
+                # Use optimized TTS module when available
+                from audio_modules.tts_module import TTSModule
+
+                logger.info("✅ TTS Module loaded")
+            except ImportError as e:
+                logger.warning(f"TTS Module not available: {e}")
                 TTSModule = None
-                logger.info("Enhanced TTS Module not available - using basic TTS")
-            except ImportError:
-                try:
-                    from audio_modules.tts_module import TTSModule
 
-                    logger.info("Using Legacy TTS Module")
-                except ImportError as e:
-                    logger.warning(f"TTS Module not available: {e}")
-                    TTSModule = None
-
-            try:
-                # from audio_modules.enhanced_whisper_asr import EnhancedWhisperASR as WhisperASR
-                # logger.info("Using Enhanced Whisper ASR")
-                # Enhanced modules may not exist yet
-                WhisperASR = None
-                logger.info("Enhanced Whisper ASR not available - using basic ASR")
-            except ImportError:
-                # WhisperASR already imported via create_whisper_asr
-                WhisperASR = None
-                logger.info("Using Legacy Whisper ASR")
+            # Optimized Whisper ASR is already loaded above via create_optimized_whisper_async
+            # No need for separate WhisperASR import as we use factory functions
 
             # Return True if at least some modules loaded
             basic_modules_available = any(
