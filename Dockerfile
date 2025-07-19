@@ -24,12 +24,12 @@ RUN mkdir -p logs databases ssl data/cache data/history data/logs data/user_data
 RUN chmod 755 /app
 RUN chmod -R 755 logs databases ssl data server
 
-# Expose port (server runs on 5000 by default)
-EXPOSE 5000
+# Expose port (server runs on 8001)
+EXPOSE 8001
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:5000/health || exit 1
+    CMD curl -f http://localhost:8001/health || exit 1
 
 # Environment variables
 ENV PYTHONPATH=/app

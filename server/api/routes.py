@@ -601,6 +601,21 @@ async def health_check(
         raise HTTPException(status_code=500, detail="Health check failed") from e
 
 
+# Legacy status endpoint for compatibility
+@router.get("/status")
+async def status_check() -> dict[str, Any]:
+    """Legacy status endpoint for client compatibility."""
+    try:
+        return {
+            "status": "running",
+            "version": "1.0.0",
+            "timestamp": datetime.now().isoformat(),
+        }
+    except Exception as e:
+        logger.error(f"Status check error: {e}")
+        raise HTTPException(status_code=500, detail="Status check failed") from e
+
+
 # AI Query endpoint for web UI
 @router.post("/ai/query")
 async def ai_query(

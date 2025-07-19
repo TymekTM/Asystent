@@ -439,6 +439,23 @@ app.add_middleware(
 app.include_router(api_router)
 
 
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for Docker."""
+    return {"status": "healthy", "timestamp": "2025-07-16T19:25:00Z"}
+
+
+# Legacy status endpoint for compatibility with client  
+@app.get("/api/status")
+async def legacy_status():
+    """Legacy status endpoint for client compatibility."""
+    return {
+        "status": "running",
+        "version": "1.0.0",
+        "timestamp": "2025-07-16T19:25:00Z"
+    }
+
+
 @app.websocket("/ws/{user_id}")
 async def websocket_endpoint(websocket: WebSocket, user_id: str):
     """WebSocket endpoint dla komunikacji w czasie rzeczywistym."""
@@ -477,16 +494,27 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
                 break
             except json.JSONDecodeError as e:
                 logger.warning(f"Invalid JSON from user {user_id}: {e}")
-                await connection_manager.send_to_user(
-                    user_id,
-                    WebSocketMessage("error", {"message": "Invalid JSON format"}),
-                )
+                # Tylko spróbuj wysłać błąd jeśli użytkownik jest połączony
+                if user_id in connection_manager.active_connections:
+                    try:
+                        await connection_manager.send_to_user(
+                            user_id,
+                            WebSocketMessage("error", {"message": "Invalid JSON format"}),
+                        )
+                    except Exception as send_error:
+                        logger.debug(f"Could not send JSON error message to {user_id}: {send_error}")
             except Exception as e:
                 logger.error(f"WebSocket message error for user {user_id}: {e}")
-                await connection_manager.send_to_user(
-                    user_id,
-                    WebSocketMessage("error", {"message": "Message processing error"}),
-                )
+                # Tylko spróbuj wysłać błąd jeśli użytkownik jest połączony
+                if user_id in connection_manager.active_connections:
+                    try:
+                        await connection_manager.send_to_user(
+                            user_id,
+                            WebSocketMessage("error", {"message": "Message processing error"}),
+                        )
+                    except Exception as send_error:
+                        logger.debug(f"Could not send error message to {user_id}: {send_error}")
+                        # Nie loguj tego jako ERROR żeby uniknąć spam logów
 
     except Exception as e:
         logger.error(f"WebSocket connection error for user {user_id}: {e}")
@@ -559,7 +587,8 @@ def main():
         app,
         host=host,
         port=port,
-        log_level="info",
+        log_level="warning",  # Przywrócone do warning po naprawie overlay
+        access_log=False,     # Wyłączone logi żądań HTTP - overlay naprawiony
         reload=False,
     )
 

@@ -81,14 +81,15 @@
         "fullscreen": false,
         "resizable": false,
         "title": "Gaja Overlay",
-        "width": 1920,
-        "height": 1080,
+        "width": 400,
+        "height": 200,
         "decorations": false,
         "transparent": true,
         "alwaysOnTop": true,
         "skipTaskbar": true,
         "visible": true,
-        "url": "index.html"
+        "url": "index.html",
+        "focus": false
       }
     ]
   }

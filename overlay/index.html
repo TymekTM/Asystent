@@ -349,6 +349,19 @@
                     debugLog(`Received status update: ${JSON.stringify(event.payload)}`);
                     updateOverlay(event.payload);
                 });
+            } else {
+                // Fallback: listen for custom window events
+                debugLog('Setting up fallback event listener for status updates');
+                window.addEventListener('status-update', (event) => {
+                    debugLog(`Received fallback status update: ${JSON.stringify(event.detail)}`);
+                    updateOverlay(event.detail);
+                });
+                
+                // Also listen for direct calls from Rust side
+                window.updateOverlayStatus = function(data) {
+                    debugLog(`Direct overlay update: ${JSON.stringify(data)}`);
+                    updateOverlay(data);
+                };
             }
 
             // Initialize overlay
@@ -358,7 +371,7 @@
                 // Ensure overlay is always click-through
                 document.body.style.pointerEvents = 'none';
 
-                // Start with default state - no need to call get_state
+                // Start with default state
                 updateOverlay({
                     status: 'Ready',
                     text: 'Waiting for connection...',

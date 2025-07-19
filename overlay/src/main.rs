@@ -7,7 +7,8 @@ use std::sync::{Arc, Mutex};
 use serde::{Deserialize, Serialize};
 use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
 use std::time::{Instant, Duration};
-use futures_util::TryStreamExt;
+use futures_util::{TryStreamExt, SinkExt, StreamExt};
+use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 use std::fs;
 
 #[derive(Clone, Serialize)]
@@ -389,7 +390,7 @@ fn load_settings() -> Result<Settings, String> {
 async fn get_connection_status() -> Result<serde_json::Value, String> {
     println!("[Rust] get_connection_status called");
     let client = reqwest::Client::new();
-    let ports = vec!["5000", "5001"];
+    let ports = vec!["5000", "5001"]; // Connect to local client only
 
     for port in &ports {
         let test_url = format!("http://localhost:{}/api/status", port);
@@ -455,46 +456,22 @@ async fn save_settings(settings: Settings) -> Result<(), String> {
 }
 
 async fn poll_assistant_status(app_handle: AppHandle, state: Arc<Mutex<OverlayState>>) {
-    let client = reqwest::Client::new();
-    let ports = vec!["5000", "5001"]; // Try both ports
-    let mut working_port = None;
-
-    // First, find which port is working
-    for port in &ports {
-        let test_url = format!("http://localhost:{}/api/status", port);
-        if let Ok(response) = client.get(&test_url).send().await {
-            if response.status().is_success() {
-                working_port = Some(port.to_string());
-                println!("[Rust] Found working port: {}", port);
-                break;
-            }
+    println!("[Rust] 🟢 Starting connection to client - trying WebSocket first");
+    
+    // Write to log file
+    let _ = std::fs::write("overlay_start.log", "🟢 poll_assistant_status STARTED\n");
+    let _ = std::fs::write("overlay_before_ws.log", "About to call handle_websocket\n");
+    
+    // Try WebSocket first (most efficient)
+    let _ = std::fs::write("overlay_timeout_test.log", "Testing if handle_websocket hangs forever\n");
+    
+    // Use timeout to detect if handle_websocket never returns
+    match tokio::time::timeout(std::time::Duration::from_secs(5), handle_websocket(app_handle.clone(), state.clone())).await {
+        Ok(_) => {
+            let _ = std::fs::write("overlay_after_ws.log", "handle_websocket completed normally\n");
         }
-    }
-
-    let current_port = working_port.unwrap_or_else(|| {
-        std::env::var("GAJA_PORT").unwrap_or_else(|_| {
-            if cfg!(debug_assertions) { "5001".to_string() } else { "5000".to_string() }
-        })
-    });
-      // Try SSE first, fallback to polling if not available
-    let sse_url = format!("http://localhost:{}/status/stream", current_port);
-
-    println!("[Rust] Attempting to connect to SSE stream: {}", sse_url);
-
-    // Try to establish SSE connection
-    match client.get(&sse_url).send().await {
-        Ok(response) => {
-            if response.status().is_success() {
-                println!("[Rust] Successfully connected to SSE stream");
-                handle_sse_stream(response, app_handle.clone(), state.clone()).await;
-            } else {
-                println!("[Rust] SSE not available, falling back to polling");
-                handle_polling(client, current_port, app_handle, state).await;
-            }
-        }
-        Err(e) => {
-            println!("[Rust] Failed to connect to SSE: {}, falling back to polling", e);
-            handle_polling(client, current_port, app_handle, state).await;
+        Err(_) => {
+            let _ = std::fs::write("overlay_timeout.log", "handle_websocket TIMED OUT after 5 seconds!\n");
         }
     }
 }
@@ -532,11 +509,123 @@ async fn handle_sse_stream(response: reqwest::Response, app_handle: AppHandle, s
     Box::pin(poll_assistant_status(app_handle, state)).await;
 }
 
+async fn handle_websocket(app_handle: AppHandle, state: Arc<Mutex<OverlayState>>) {
+    println!("[Rust] 🔴 Starting WebSocket connection to client...");
+    
+    // Write to log file for debugging
+    if let Err(e) = std::fs::write("overlay_debug.log", "🔴 Starting WebSocket connection to client...\n") {
+        eprintln!("Failed to write to log file: {}", e);
+    }
+    let _ = std::fs::write("overlay_ws_start.log", "WebSocket function started\n");
+
+    // Try WebSocket ports (6001, 6000)
+    let ports = ["6001", "6000"];
+    let _ = std::fs::write("overlay_ws_ports.log", "About to try ports\n");
+    
+    for port in &ports {
+        let ws_url = format!("ws://localhost:{}", port);
+        println!("[Rust] 🔍 Trying WebSocket connection to {}", ws_url);
+        
+        // Log to file
+        let log_msg = format!("🔍 Trying WebSocket connection to {}\n", ws_url);
+        let _ = std::fs::write("overlay_debug.log", log_msg);
+        let _ = std::fs::write("overlay_try.log", format!("Trying port {}\n", port));
+        
+        match connect_async(&ws_url).await {
+            Ok((ws_stream, _)) => {
+                println!("[Rust] ✅ WebSocket connected successfully to port {}", port);
+                let log_msg = format!("✅ WebSocket connected successfully to port {}\n", port);
+                let _ = std::fs::write("overlay_debug.log", log_msg);
+                let _ = std::fs::write("overlay_step1.log", "STEP 1: Connected\n");
+                println!("[Rust] 🔗 Starting WebSocket message loop...");
+                
+                // Log before split
+                let _ = std::fs::write("overlay_step2.log", "STEP 2: About to split\n");
+                let (mut ws_sender, mut ws_receiver) = ws_stream.split();
+                let _ = std::fs::write("overlay_step3.log", "STEP 3: Split successful\n");
+                
+                // Log before entering loop
+                let _ = std::fs::write("overlay_step4.log", "STEP 4: Entering loop\n");
+                
+                // Main WebSocket loop
+                loop {
+                    let _ = std::fs::write("overlay_step5.log", "STEP 5: In loop\n");
+                    println!("[Rust] 🔄 Waiting for WebSocket message...");
+                    match ws_receiver.next().await {
+                        Some(Ok(Message::Text(text))) => {
+                            println!("[Rust] 📨 Got text message: {}", text);
+                            match serde_json::from_str::<serde_json::Value>(&text) {
+                                Ok(data) => {
+                                    println!("[Rust] 📊 Parsed JSON: {:?}", data);
+                                    if let Some(msg_type) = data.get("type").and_then(|v| v.as_str()) {
+                                        println!("[Rust] 🔍 Message type: {}", msg_type);
+                                        match msg_type {
+                                            "status" => {
+                                                if let Some(status_data) = data.get("data") {
+                                                    println!("[Rust] 🔵 RECEIVED WebSocket status message: {:?}", status_data);
+                                                    process_status_data(status_data.clone(), app_handle.clone(), state.clone()).await;
+                                                } else {
+                                                    println!("[Rust] ❌ No 'data' field in status message");
+                                                }
+                                            }
+                                            _ => {
+                                                println!("[Rust] ❓ Unknown message type: {}", msg_type);
+                                            }
+                                        }
+                                    } else {
+                                        println!("[Rust] ❌ No 'type' field in message");
+                                    }
+                                }
+                                Err(e) => {
+                                    eprintln!("[Rust] ❌ Failed to parse WebSocket JSON: {}", e);
+                                    eprintln!("[Rust] 🔍 Raw text was: {}", text);
+                                }
+                            }
+                        }
+                        Some(Ok(Message::Close(_))) => {
+                            println!("[Rust] WebSocket connection closed by server");
+                            break;
+                        }
+                        Some(Err(e)) => {
+                            eprintln!("[Rust] WebSocket error: {}", e);
+                            break;
+                        }
+                        None => {
+                            println!("[Rust] WebSocket stream ended");
+                            break;
+                        }
+                        _ => {
+                            // Ignore other message types (Binary, Ping, Pong)
+                        }
+                    }
+                }
+                
+                println!("[Rust] WebSocket disconnected, attempting to reconnect...");
+                tokio::time::sleep(Duration::from_secs(5)).await;
+                continue; // Try to reconnect to the same port
+            }
+            Err(e) => {
+                println!("[Rust] ❌ Failed to connect WebSocket to port {}: {}", port, e);
+                println!("[Rust] 🔍 Error details: {:?}", e);
+                let log_msg = format!("❌ Failed to connect WebSocket to port {}: {}\n", port, e);
+                let _ = std::fs::write("overlay_debug.log", log_msg);
+                let _ = std::fs::write("overlay_error.log", format!("ERROR port {}: {}\n", port, e));
+                continue; // Try next port
+            }
+        }
+    }
+    
+    // If all WebSocket connections failed, fall back to HTTP polling
+    println!("[Rust] ❌ All WebSocket connections failed, falling back to HTTP polling");
+    let client = reqwest::Client::new();
+    handle_polling(client, "5000".to_string(), app_handle, state).await;
+}
+
 async fn handle_polling(client: reqwest::Client, mut current_port: String, app_handle: AppHandle, state: Arc<Mutex<OverlayState>>) {
-    println!("[Rust] Using ultra-high-frequency polling mode for maximum responsiveness");
+    println!("[Rust] Using optimized polling mode with low CPU usage");
 
     loop {
-        sleep(Duration::from_millis(50)).await; // Poll every 50ms for ultra-responsive overlay
+        sleep(Duration::from_millis(1000)).await; // Poll every 1000ms (1 second) to minimize CPU usage
 
         let poll_url = format!("http://localhost:{}/api/status", current_port);        match client.get(&poll_url).send().await {
             Ok(response) => {
@@ -556,7 +645,7 @@ async fn handle_polling(client: reqwest::Client, mut current_port: String, app_h
             Err(e) => {
                 eprintln!("[Rust] Failed to connect to status endpoint on port {}: {}. Trying other ports...", current_port, e);
 
-                // Try the other port if connection fails
+                // Try the other client ports if connection fails
                 for test_port in &["5000", "5001"] {
                     if test_port != &current_port {
                         let test_url = format!("http://localhost:{}/api/status", test_port);
@@ -575,6 +664,7 @@ async fn handle_polling(client: reqwest::Client, mut current_port: String, app_h
 }
 
 async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, state: Arc<Mutex<OverlayState>>) {
+    println!("[Rust] 🔵 RECEIVED WebSocket status message: {:?}", data);
     let mut state_guard = state.lock().unwrap();
     let window = app_handle.get_window("main").unwrap();
 
@@ -664,6 +754,9 @@ async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, sta
                                current_text != "Overlay Hidden" &&
                                current_text.len() > 10); // Only show if text is meaningful
 
+    println!("[Rust] 🔍 LOGIC: status='{}', text='{}', wake_word={}, speaking={}, show_content={}, should_show={}", 
+             status, current_text, wake_word_detected, is_speaking, show_content, should_show_overlay);
+
     // IMMEDIATE RESPONSE for critical states
     let is_critical_state = is_critical ||
                            wake_word_detected ||
@@ -744,6 +837,7 @@ async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, sta
             "critical": is_critical_state
         });
 
+        println!("[Rust] 📤 EMITTING to HTML: {:?}", payload);
         window.emit("status-update", payload).unwrap_or_else(|e| {
             eprintln!("Failed to emit status-update: {}", e);
         });
@@ -754,6 +848,9 @@ async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, sta
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // Log at the very start
+    let _ = std::fs::write("overlay_run_start.log", "run() function STARTED\n");
+    
     let state = Arc::new(Mutex::new(OverlayState::new()));
 
     let app_result = tauri::Builder::default()
@@ -807,13 +904,19 @@ pub fn run() {
 
             println!("[Rust] Click-through enabled on startup with AGGRESSIVE settings");
 
-            // Start overlay hidden initially - will be shown when client sends status
-            main_window.hide().unwrap_or_else(|e| eprintln!("Failed to hide window initially: {}", e));
-            println!("[Rust] Overlay started and hidden with click-through enabled, waiting for client status updates");
+            // TYMCZASOWE dla testów: pokaż overlay od razu
+            main_window.show().unwrap_or_else(|e| eprintln!("Failed to show window initially: {}", e));
+            println!("[Rust] Overlay started and SHOWN immediately for testing");
 
+            // Log spawn attempt
+            let _ = std::fs::write("overlay_main.log", "About to spawn async task\n");
+            
             tauri::async_runtime::spawn(async move {
+                let _ = std::fs::write("overlay_spawn.log", "Async task STARTED\n");
                 poll_assistant_status(app_handle, state_clone_for_poll).await;
             });
+
+            let _ = std::fs::write("overlay_main2.log", "Spawn completed\n");
 
             Ok(())
         })        .invoke_handler(tauri::generate_handler![
@@ -994,6 +1097,7 @@ fn get_hwnd(window: &Window) -> Result<windows_sys::Win32::Foundation::HWND, Str
 
 // main function to call run
 fn main() {
+    let _ = std::fs::write("overlay_main_start.log", "main() function STARTED\n");
     run();
 }
 

@@ -56,7 +56,8 @@ if __name__ == "__main__":
         app,
         host="localhost",
         port=8001,
-        log_level="info",
+        log_level="warning",  # Zmieniono z "info" na "warning" żeby ukryć zbędne logi
+        access_log=False,     # Wyłączono logi żądań HTTP
         reload=False,
     )
     print("Server stopped")

@@ -433,8 +433,8 @@ async def _timer_polling_loop():
         except Exception as e:
             logger.error(f"Timer polling error: {e}")
 
-        # Use async sleep instead of time.sleep
-        await asyncio.sleep(1)
+        # Use async sleep with longer interval to reduce CPU usage
+        await asyncio.sleep(30)  # Check timers every 30 seconds instead of 1 second
 
 
 def _start_timer_polling_task():

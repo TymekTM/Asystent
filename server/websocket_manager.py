@@ -39,6 +39,9 @@ class ConnectionManager:
         self.active_connections: dict[str, WebSocket] = {}
         # Metadane połączeń: user_id -> dict
         self.connection_metadata: dict[str, dict] = {}
+        # Rate limiting dla logów błędów
+        self._last_warning_time: dict[str, float] = {}
+        self._warning_cooldown = 5.0  # 5 sekund między ostrzeżeniami dla tego samego użytkownika
         # Statystyki
         self.stats = {
             "total_connections": 0,
@@ -131,7 +134,14 @@ class ConnectionManager:
         """Wysyła wiadomość do konkretnego użytkownika."""
         try:
             if user_id not in self.active_connections:
-                logger.warning(f"User {user_id} not connected via WebSocket")
+                # Rate limiting dla logów ostrzeżeń
+                current_time = time.time()
+                last_warning = self._last_warning_time.get(user_id, 0)
+                
+                if current_time - last_warning > self._warning_cooldown:
+                    logger.warning(f"User {user_id} not connected via WebSocket")
+                    self._last_warning_time[user_id] = current_time
+                    
                 return False
 
             websocket = self.active_connections[user_id]

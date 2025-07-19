@@ -288,10 +288,10 @@ class OptimizedWakeWordDetector:
                 try:
                     from openwakeword import Model
 
-                    # Find available models
+                    # Find available models - use only .onnx files for onnx framework
                     model_files = []
                     for file in os.listdir(model_dir):
-                        if file.endswith((".onnx", ".tflite")):
+                        if file.endswith(".onnx"):  # Only use .onnx files
                             if not any(
                                 x in file.lower()
                                 for x in ["preprocessor", "embedding", "melspectrogram"]
@@ -299,7 +299,7 @@ class OptimizedWakeWordDetector:
                                 model_files.append(str(model_dir / file))
 
                     if model_files:
-                        logger.info(f"Loading {len(model_files)} wake word models")
+                        logger.info(f"Loading {len(model_files)} wake word models (ONNX)")
                         self.ww_model = Model(
                             wakeword_models=model_files[
                                 :4
