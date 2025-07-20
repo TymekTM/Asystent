@@ -174,3 +174,4 @@ admin_credentials.txt
 configs/api_keys.json
 configs/auth_config.json
 /dependencies
+.env

@@ -13,7 +13,7 @@ import threading
 import time
 from collections import deque
 from collections.abc import Callable
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 
@@ -212,6 +212,9 @@ class OptimizedWakeWordDetector:
         self.ww_model = None
         self.model_loaded = False
 
+        # Whisper ASR integration
+        self.whisper_asr = None
+
         # State management
         self.is_running = False
         self.last_detection_time = 0
@@ -299,7 +302,9 @@ class OptimizedWakeWordDetector:
                                 model_files.append(str(model_dir / file))
 
                     if model_files:
-                        logger.info(f"Loading {len(model_files)} wake word models (ONNX)")
+                        logger.info(
+                            f"Loading {len(model_files)} wake word models (ONNX)"
+                        )
                         self.ww_model = Model(
                             wakeword_models=model_files[
                                 :4
@@ -322,58 +327,95 @@ class OptimizedWakeWordDetector:
             logger.error(f"Error loading wake word model: {e}")
 
     def _audio_processing_loop(self) -> None:
-        """Main audio processing loop (runs in dedicated thread)."""
+        """Main audio processing loop using legacy wake word detection."""
         try:
-            # Import sounddevice in the audio thread
-            import sounddevice as sd
+            # Use the working legacy wake word detection code
+            from .sounddevice_loader import is_sounddevice_available
+            from .wakeword_detector import run_wakeword_detection
 
-            def audio_callback(indata, frames, time_info, status):
-                """High-performance audio callback."""
-                if status:
-                    logger.debug(f"Audio status: {status}")
+            # Check if sounddevice is available
+            if not is_sounddevice_available():
+                logger.error("sounddevice not available for wake word detection")
+                return
 
-                if self._stop_event.is_set():
-                    return
+            logger.info("Starting legacy wake word detection from optimized detector")
 
-                try:
-                    # Convert to float32 and flatten
-                    audio_data = indata.astype(np.float32).flatten()
-
-                    # Skip processing if audio is too quiet (energy gate)
-                    if np.mean(audio_data**2) < WW_ENERGY_GATE:
-                        return
-
-                    # Add to buffer
-                    self.audio_buffer.append(audio_data)
-
-                    # Process frame for VAD and wake word detection
-                    self._process_audio_frame(audio_data)
-
-                    self.frames_processed += 1
-
-                except Exception as e:
-                    logger.error(f"Error in audio callback: {e}")
-
-            # Start audio stream with optimized parameters
-            with sd.InputStream(
-                samplerate=SAMPLE_RATE,
-                channels=1,
-                dtype=np.float32,
-                blocksize=OPTIMAL_CHUNK_SIZE,
-                device=self.device_id,
-                callback=audio_callback,
-                latency="low",  # Request low latency
-            ):
-                logger.info(f"Audio stream started (device: {self.device_id})")
-
-                # Keep thread alive until stop event
-                while not self._stop_event.wait(0.1):
-                    pass
+            # Use our working legacy implementation
+            run_wakeword_detection(
+                mic_device_id=self.device_id,
+                stt_silence_threshold_ms=2000,
+                wake_word_config_name="gaja",
+                tts_module=None,
+                process_query_callback_async=self._handle_wake_word_detection_async,
+                async_event_loop=self._get_event_loop(),
+                oww_sensitivity_threshold=self.sensitivity,
+                whisper_asr_instance=getattr(self, "whisper_asr", None),
+                manual_listen_trigger_event=threading.Event(),
+                stop_detector_event=self._stop_event,
+            )
 
         except Exception as e:
             logger.error(f"Error in audio processing loop: {e}")
         finally:
             logger.info("Audio processing loop finished")
+
+    def _handle_wake_word_detection(self, transcribed_text: str) -> None:
+        """Handle wake word detection and transcribed text."""
+        try:
+            logger.info(f"Wake word detected with text: '{transcribed_text}'")
+
+            # Trigger callbacks
+            for callback in self.detection_callbacks:
+                try:
+                    # Check if callback is async
+                    import asyncio
+                    import inspect
+
+                    if inspect.iscoroutinefunction(callback):
+                        # If callback is async, schedule it on the event loop
+                        try:
+                            loop = asyncio.get_event_loop()
+                            asyncio.create_task(callback(transcribed_text))
+                        except RuntimeError:
+                            # No event loop in this thread, create new one
+                            asyncio.run(callback(transcribed_text))
+                    else:
+                        # Synchronous callback
+                        callback(transcribed_text)
+                except Exception as e:
+                    logger.error(f"Error in detection callback: {e}")
+
+        except Exception as e:
+            logger.error(f"Error handling wake word detection: {e}")
+
+    async def _handle_wake_word_detection_async(self, transcribed_text: str) -> None:
+        """Async wrapper for wake word detection handling."""
+        try:
+            logger.info(f"Wake word detected with text: '{transcribed_text}'")
+
+            # Trigger callbacks
+            for callback in self.detection_callbacks:
+                try:
+                    import inspect
+
+                    if inspect.iscoroutinefunction(callback):
+                        # If callback is async, await it
+                        await callback(transcribed_text)
+                    else:
+                        # Synchronous callback
+                        callback(transcribed_text)
+                except Exception as e:
+                    logger.error(f"Error in detection callback: {e}")
+
+        except Exception as e:
+            logger.error(f"Error handling wake word detection: {e}")
+
+    def _get_event_loop(self):
+        """Get the current event loop or None if not available."""
+        try:
+            return asyncio.get_running_loop()
+        except RuntimeError:
+            return None
 
     def _process_audio_frame(self, audio_frame: np.ndarray) -> None:
         """Process a single audio frame for wake word detection.
@@ -537,6 +579,20 @@ class OptimizedWakeWordDetector:
         )
         self._detection_thread.start()
         logger.info("Wake word detection started in background thread")
+
+    def stop_detection(self) -> None:
+        """Legacy-compatible synchronous stop method."""
+        import asyncio
+
+        try:
+            # Try to get running event loop
+            loop = asyncio.get_running_loop()
+            asyncio.create_task(self.stop_async())
+        except RuntimeError:
+            # No running loop, create new one
+            asyncio.run(self.stop_async())
+
+        logger.info("Wake word detection stopped")
 
 
 class OptimizedSpeechRecorder:

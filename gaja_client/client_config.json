@@ -10,13 +10,13 @@
     "enabled": true,
     "sensitivity": 0.6,
     "keyword": "gaja",
-    "device_id": 1,
+    "device_id": 14,
     "stt_silence_threshold_ms": 2000
   },
   "whisper": {
     "model": "small",
     "language": "en",
-    "device_id": 1
+    "device_id": 14
   },
   "overlay": {
     "enabled": true,
@@ -28,7 +28,7 @@
     "transparency": 0.9
   },
   "audio": {
-    "input_device": 54,
+    "input_device": 14,
     "output_device": 21,
     "sample_rate": 16000
   },
