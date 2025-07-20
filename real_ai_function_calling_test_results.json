@@ -1,0 +1,367 @@
+{
+  "test_summary": {
+    "total_scenarios": 10,
+    "total_tests": 20,
+    "successful_tests": 10,
+    "success_rate": 50.0,
+    "timestamp": "2025-07-20T19:43:48.085639"
+  },
+  "scenarios": [
+    {
+      "scenario": "Pogoda w Warszawie",
+      "query": "Jaka jest pogoda w Warszawie?",
+      "expected_functions": [
+        "weather_module_get_weather"
+      ],
+      "tests": [
+        {
+          "success": false,
+          "error": "HTTP 403: {\"detail\":\"Not authenticated\"}",
+          "method": "REST",
+          "query": "Jaka jest pogoda w Warszawie?"
+        },
+        {
+          "success": true,
+          "response": {
+            "type": "ai_response",
+            "data": {
+              "response": "{\"text\": \"Obecnie w Warszawie jest około 10°C, z częściowym zachmurzeniem i delikatnym wiatrem. Pogoda na jutro zapowiada się słonecznie, z temperaturami od 9 do 13°C.\", \"command\": \"\", \"params\": {}, \"function_calls_executed\": true}",
+              "query": "Jaka jest pogoda w Warszawie?",
+              "timestamp": "2025-07-20T19:43:17.893924"
+            },
+            "timestamp": 1753033398.9800084
+          },
+          "method": "WebSocket",
+          "query": "Jaka jest pogoda w Warszawie?"
+        }
+      ],
+      "timestamp": "2025-07-20T19:43:17.870723"
+    },
+    {
+      "scenario": "Ustawienie timera i zadania",
+      "query": "Ustaw timer na 5 minut i dodaj zadanie 'Sprawdzić maile'",
+      "expected_functions": [
+        "core_module_set_timer",
+        "core_module_add_task"
+      ],
+      "tests": [
+        {
+          "success": false,
+          "error": "HTTP 403: {\"detail\":\"Not authenticated\"}",
+          "method": "REST",
+          "query": "Ustaw timer na 5 minut i dodaj zadanie 'Sprawdzić maile'"
+        },
+        {
+          "success": true,
+          "response": {
+            "type": "ai_response",
+            "data": {
+              "response": "{\"text\": \"Niestety, nie mogę bezpośrednio ustawić timera, ale mogę Ci przypomnieć o tym zadaniu za 5 minut. Chcesz, żebym Ci o tym przypomniała?\", \"command\": \"\", \"params\": {}}",
+              "query": "Ustaw timer na 5 minut i dodaj zadanie 'Sprawdzić maile'",
+              "timestamp": "2025-07-20T19:43:21.004849"
+            },
+            "timestamp": 1753033401.62411
+          },
+          "method": "WebSocket",
+          "query": "Ustaw timer na 5 minut i dodaj zadanie 'Sprawdzić maile'"
+        }
+      ],
+      "timestamp": "2025-07-20T19:43:20.995761"
+    },
+    {
+      "scenario": "Wyszukiwanie w internecie",
+      "query": "Wyszukaj najnowsze informacje o sztucznej inteligencji",
+      "expected_functions": [
+        "search_module_search"
+      ],
+      "tests": [
+        {
+          "success": false,
+          "error": "HTTP 403: {\"detail\":\"Not authenticated\"}",
+          "method": "REST",
+          "query": "Wyszukaj najnowsze informacje o sztucznej inteligencji"
+        },
+        {
+          "success": true,
+          "response": {
+            "type": "ai_response",
+            "data": {
+              "response": "{\"text\": \"Ostatnio pojawiło się kilka ciekawych artykułów na temat sztucznej inteligencji. Na przykład, jest analiza sytuacji i komentarze ekspertów na temat najnowszych trendów, a także relacje z wydarzeń związanych z AI. Chcesz, żebym podała Ci linki do tych artykułów?\", \"command\": \"\", \"params\": {}, \"function_calls_executed\": true}",
+              "query": "Wyszukaj najnowsze informacje o sztucznej inteligencji",
+              "timestamp": "2025-07-20T19:43:23.646446"
+            },
+            "timestamp": 1753033405.0979083
+          },
+          "method": "WebSocket",
+          "query": "Wyszukaj najnowsze informacje o sztucznej inteligencji"
+        }
+      ],
+      "timestamp": "2025-07-20T19:43:23.636256"
+    },
+    {
+      "scenario": "Kontrola muzyki",
+      "query": "Zatrzymaj muzykę i sprawdź aktualny czas",
+      "expected_functions": [
+        "music_module_control_music",
+        "core_module_get_current_time"
+      ],
+      "tests": [
+        {
+          "success": false,
+          "error": "HTTP 403: {\"detail\":\"Not authenticated\"}",
+          "method": "REST",
+          "query": "Zatrzymaj muzykę i sprawdź aktualny czas"
+        },
+        {
+          "success": true,
+          "response": {
+            "type": "ai_response",
+            "data": {
+              "response": "{\"text\": \"Aktualny czas to 17:43.\", \"command\": \"\", \"params\": {}, \"function_calls_executed\": true}",
+              "query": "Zatrzymaj muzykę i sprawdź aktualny czas",
+              "timestamp": "2025-07-20T19:43:27.113022"
+            },
+            "timestamp": 1753033409.0210185
+          },
+          "method": "WebSocket",
+          "query": "Zatrzymaj muzykę i sprawdź aktualny czas"
+        }
+      ],
+      "timestamp": "2025-07-20T19:43:27.103245"
+    },
+    {
+      "scenario": "Kalendarz i przypomnienia",
+      "query": "Dodaj wydarzenie na jutro o 15:00 i ustaw przypomnienie",
+      "expected_functions": [
+        "core_module_add_event",
+        "core_module_set_reminder"
+      ],
+      "tests": [
+        {
+          "success": false,
+          "error": "HTTP 403: {\"detail\":\"Not authenticated\"}",
+          "method": "REST",
+          "query": "Dodaj wydarzenie na jutro o 15:00 i ustaw przypomnienie"
+        },
+        {
+          "success": true,
+          "response": {
+            "type": "ai_response",
+            "data": {
+              "response": "{\"text\": \"Chcesz, żebym dodała wydarzenie na jutro o 15:00 i ustawiła przypomnienie? Podaj mi, proszę, szczegóły tego wydarzenia.\", \"command\": \"\", \"params\": {}}",
+              "query": "Dodaj wydarzenie na jutro o 15:00 i ustaw przypomnienie",
+              "timestamp": "2025-07-20T19:43:31.042610"
+            },
+            "timestamp": 1753033411.6322808
+          },
+          "method": "WebSocket",
+          "query": "Dodaj wydarzenie na jutro o 15:00 i ustaw przypomnienie"
+        }
+      ],
+      "timestamp": "2025-07-20T19:43:31.032516"
+    },
+    {
+      "scenario": "Prognoza pogody",
+      "query": "Jaka będzie pogoda w Krakowie na następne 3 dni?",
+      "expected_functions": [
+        "weather_module_get_forecast"
+      ],
+      "tests": [
+        {
+          "success": false,
+          "error": "HTTP 403: {\"detail\":\"Not authenticated\"}",
+          "method": "REST",
+          "query": "Jaka będzie pogoda w Krakowie na następne 3 dni?"
+        },
+        {
+          "success": true,
+          "response": {
+            "type": "ai_response",
+            "data": {
+              "response": "{\"text\": \"Na najbliższe trzy dni w Krakowie prognoza przewiduje się dość łagodnie, z temperaturami od 5 do 12°C i umiarkowanym wiatrem. Pogoda będzie raczej pochmurna, ale bez większych opadów, idealna na spacer albo kawę na świeżym powietrzu.\", \"command\": \"\", \"params\": {}, \"function_calls_executed\": true}",
+              "query": "Jaka będzie pogoda w Krakowie na następne 3 dni?",
+              "timestamp": "2025-07-20T19:43:33.644150"
+            },
+            "timestamp": 1753033414.8755395
+          },
+          "method": "WebSocket",
+          "query": "Jaka będzie pogoda w Krakowie na następne 3 dni?"
+        }
+      ],
+      "timestamp": "2025-07-20T19:43:33.634408"
+    },
+    {
+      "scenario": "Wiadomości",
+      "query": "Pokaż najnowsze wiadomości o technologii",
+      "expected_functions": [
+        "search_module_search_news"
+      ],
+      "tests": [
+        {
+          "success": false,
+          "error": "HTTP 403: {\"detail\":\"Not authenticated\"}",
+          "method": "REST",
+          "query": "Pokaż najnowsze wiadomości o technologii"
+        },
+        {
+          "success": true,
+          "response": {
+            "type": "ai_response",
+            "data": {
+              "response": "{\"text\": \"Oto najnowsze wiadomości o technologii, które znalazłam:  \\n1. Artykuł na temat najświeższych informacji – [czytaj więcej](https://news.example.com/article1)  \\n2. Analiza sytuacji i komentarze ekspertów – [czytaj więcej](https://analysis.example.com/article2)  \\n3. Relacja z ostatnich wydarzeń i ich wpływu – [czytaj więcej](https://events.example.com/article3)  \\n\\nJeśli chcesz, mogę pomóc Ci w czymś jeszcze!\", \"command\": \"\", \"params\": {}, \"function_calls_executed\": true}",
+              "query": "Pokaż najnowsze wiadomości o technologii",
+              "timestamp": "2025-07-20T19:43:36.895070"
+            },
+            "timestamp": 1753033418.3726826
+          },
+          "method": "WebSocket",
+          "query": "Pokaż najnowsze wiadomości o technologii"
+        }
+      ],
+      "timestamp": "2025-07-20T19:43:36.885994"
+    },
+    {
+      "scenario": "Status Spotify",
+      "query": "Co teraz gra na Spotify?",
+      "expected_functions": [
+        "music_module_get_spotify_status"
+      ],
+      "tests": [
+        {
+          "success": false,
+          "error": "HTTP 403: {\"detail\":\"Not authenticated\"}",
+          "method": "REST",
+          "query": "Co teraz gra na Spotify?"
+        },
+        {
+          "success": true,
+          "response": {
+            "type": "ai_response",
+            "data": {
+              "response": "{\"text\": \"Nie mam dostępu do bieżących danych na Spotify, ale mogę pomóc Ci znaleźć najnowsze trendy albo coś, co może Ci się spodobać. Chcesz, żebym coś sprawdził?\", \"command\": \"\", \"params\": {}}",
+              "query": "Co teraz gra na Spotify?",
+              "timestamp": "2025-07-20T19:43:40.387789"
+            },
+            "timestamp": 1753033420.9233556
+          },
+          "method": "WebSocket",
+          "query": "Co teraz gra na Spotify?"
+        }
+      ],
+      "timestamp": "2025-07-20T19:43:40.378915"
+    },
+    {
+      "scenario": "Zarządzanie listą",
+      "query": "Dodaj 'chleb' do listy zakupów i pokaż całą listę",
+      "expected_functions": [
+        "core_module_add_item",
+        "core_module_view_list"
+      ],
+      "tests": [
+        {
+          "success": false,
+          "error": "HTTP 403: {\"detail\":\"Not authenticated\"}",
+          "method": "REST",
+          "query": "Dodaj 'chleb' do listy zakupów i pokaż całą listę"
+        },
+        {
+          "success": true,
+          "response": {
+            "type": "ai_response",
+            "data": {
+              "response": "{\"text\": \"Chleb dodany do listy zakupów. Chcesz, żebym wyświetliła całą listę?\", \"command\": \"\", \"params\": {}}",
+              "query": "Dodaj 'chleb' do listy zakupów i pokaż całą listę",
+              "timestamp": "2025-07-20T19:43:42.941271"
+            },
+            "timestamp": 1753033423.49032
+          },
+          "method": "WebSocket",
+          "query": "Dodaj 'chleb' do listy zakupów i pokaż całą listę"
+        }
+      ],
+      "timestamp": "2025-07-20T19:43:42.931693"
+    },
+    {
+      "scenario": "Zewnętrzne API",
+      "query": "Wykonaj zapytanie GET do api.github.com/users/octocat",
+      "expected_functions": [
+        "api_module_make_api_request"
+      ],
+      "tests": [
+        {
+          "success": false,
+          "error": "HTTP 403: {\"detail\":\"Not authenticated\"}",
+          "method": "REST",
+          "query": "Wykonaj zapytanie GET do api.github.com/users/octocat"
+        },
+        {
+          "success": true,
+          "response": {
+            "type": "ai_response",
+            "data": {
+              "response": "{\"text\": \"Nie mogę bezpośrednio wykonywać zapytań HTTP, ale mogę pomóc Ci przygotować kod, który to zrobi, albo podpowiedzieć, jak możesz to zrobić samodzielnie. Chcesz, żebym napisała Ci przykładowy kod?\", \"command\": \"\", \"params\": {}}",
+              "query": "Wykonaj zapytanie GET do api.github.com/users/octocat",
+              "timestamp": "2025-07-20T19:43:45.503276"
+            },
+            "timestamp": 1753033426.0731869
+          },
+          "method": "WebSocket",
+          "query": "Wykonaj zapytanie GET do api.github.com/users/octocat"
+        }
+      ],
+      "timestamp": "2025-07-20T19:43:45.494213"
+    }
+  ],
+  "failed_tests": [
+    {
+      "scenario": "Pogoda w Warszawie",
+      "method": "REST",
+      "error": "HTTP 403: {\"detail\":\"Not authenticated\"}"
+    },
+    {
+      "scenario": "Ustawienie timera i zadania",
+      "method": "REST",
+      "error": "HTTP 403: {\"detail\":\"Not authenticated\"}"
+    },
+    {
+      "scenario": "Wyszukiwanie w internecie",
+      "method": "REST",
+      "error": "HTTP 403: {\"detail\":\"Not authenticated\"}"
+    },
+    {
+      "scenario": "Kontrola muzyki",
+      "method": "REST",
+      "error": "HTTP 403: {\"detail\":\"Not authenticated\"}"
+    },
+    {
+      "scenario": "Kalendarz i przypomnienia",
+      "method": "REST",
+      "error": "HTTP 403: {\"detail\":\"Not authenticated\"}"
+    },
+    {
+      "scenario": "Prognoza pogody",
+      "method": "REST",
+      "error": "HTTP 403: {\"detail\":\"Not authenticated\"}"
+    },
+    {
+      "scenario": "Wiadomości",
+      "method": "REST",
+      "error": "HTTP 403: {\"detail\":\"Not authenticated\"}"
+    },
+    {
+      "scenario": "Status Spotify",
+      "method": "REST",
+      "error": "HTTP 403: {\"detail\":\"Not authenticated\"}"
+    },
+    {
+      "scenario": "Zarządzanie listą",
+      "method": "REST",
+      "error": "HTTP 403: {\"detail\":\"Not authenticated\"}"
+    },
+    {
+      "scenario": "Zewnętrzne API",
+      "method": "REST",
+      "error": "HTTP 403: {\"detail\":\"Not authenticated\"}"
+    }
+  ]
+}

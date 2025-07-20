@@ -10,7 +10,6 @@ This tool helps you:
 import json
 import sys
 from pathlib import Path
-from typing import Optional
 
 
 def list_audio_devices() -> list[dict]:

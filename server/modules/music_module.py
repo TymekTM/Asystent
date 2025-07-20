@@ -516,3 +516,40 @@ def get_module_status() -> dict[str, Any]:
         "keyboard_available": _keyboard_available,
         "spotify_client_ready": _spotify_client is not None,
     }
+
+
+class MusicModule:
+    """Music module wrapper class for function calling system"""
+    
+    def __init__(self):
+        """Initialize the music module"""
+        logger.info("MusicModule initialized")
+    
+    def get_functions(self):
+        """Return list of available functions"""
+        return [
+            {
+                "name": "play_music",
+                "description": "Play music or a specific song",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "song": {"type": "string", "description": "Song name or query to play"},
+                        "platform": {"type": "string", "description": "Platform to use (spotify, auto)", "default": "auto"}
+                    },
+                    "required": ["song"]
+                }
+            },
+            {
+                "name": "control_music",
+                "description": "Control music playback (play, pause, next, previous)",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "action": {"type": "string", "description": "Action to perform (play, pause, next, prev)"},
+                        "platform": {"type": "string", "description": "Platform to use (spotify, auto)", "default": "auto"}
+                    },
+                    "required": ["action"]
+                }
+            }
+        ]

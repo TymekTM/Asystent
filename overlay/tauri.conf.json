@@ -1,48 +1,47 @@
 {
+  "$schema": "./node_modules/@tauri-apps/cli/schema.json",
   "build": {
-    "distDir": "../dist",
+    "beforeBuildCommand": "npm run build",
+    "beforeDevCommand": "npm run dev",
     "devPath": "http://localhost:1420",
-    "beforeBuildCommand": "",
-    "beforeDevCommand": ""
+    "distDir": "./dist"
   },
   "package": {
-    "productName": "Gaja Overlay",
+    "productName": "Asystent Overlay",
     "version": "0.1.0"
   },
   "tauri": {
     "allowlist": {
       "all": false,
-      "fs": {
-        "all": true
+      "shell": {
+        "all": false,
+        "open": true
       },
       "window": {
-        "all": true
-      },
-      "shell": {
-        "all": true
-      },
-      "dialog": {
-        "all": true
+        "all": false,
+        "close": true,
+        "hide": true,
+        "show": true,
+        "maximize": false,
+        "minimize": false,
+        "unmaximize": false,
+        "unminimize": false,
+        "startDragging": false,
+        "print": false
       },
       "http": {
-        "all": true
-      },
-      "notification": {
-        "all": true
-      },
-      "os": {
-        "all": true
-      },
-      "path": {
-        "all": true
-      },
-      "protocol": {
-        "all": true
+        "all": true,
+        "request": true
       }
     },
     "bundle": {
       "active": true,
-      "identifier": "com.gaja.overlay",
+      "category": "DeveloperTool",
+      "copyright": "",
+      "deb": {
+        "depends": []
+      },
+      "externalBin": [],
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
@@ -50,46 +49,49 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "resources": ["index.html"],
-      "externalBin": [],
-      "copyright": "",
-      "category": "DeveloperTool",
-      "shortDescription": "",
+      "identifier": "com.gaja.overlay",
       "longDescription": "",
-      "deb": {
-        "depends": []
-      },
       "macOS": {
-        "frameworks": [],
-        "minimumSystemVersion": "",
+        "entitlements": null,
         "exceptionDomain": "",
-        "signingIdentity": null,
+        "frameworks": [],
         "providerShortName": null,
-        "entitlements": null
+        "signingIdentity": null
       },
+      "resources": [],
+      "shortDescription": "",
+      "targets": "all",
       "windows": {
         "certificateThumbprint": null,
         "digestAlgorithm": "sha256",
-        "timestampUrl": ""
+        "timestampUrl": "",
+        "wix": null
       }
     },
     "security": {
       "csp": null
     },
+    "updater": {
+      "active": false
+    },
     "windows": [
       {
         "fullscreen": false,
+        "height": 1080,
         "resizable": false,
         "title": "Gaja Overlay",
-        "width": 400,
-        "height": 200,
+        "width": 1920,
         "decorations": false,
         "transparent": true,
         "alwaysOnTop": true,
         "skipTaskbar": true,
+        "focus": false,
+        "maximized": true,
         "visible": true,
-        "url": "index.html",
-        "focus": false
+        "center": false,
+        "label": "main",
+        "x": 0,
+        "y": 0
       }
     ]
   }

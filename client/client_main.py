@@ -287,17 +287,17 @@ class ClientApp:
         try:
             # Możliwe ścieżki do overlay exe - najpierw sprawdzamy nowy naprawiony overlay
             overlay_paths = [
+                # Nowy naprawiony overlay z katalogu głównego (release) - NAJWYZSZY PRIORYTET
+                Path(__file__).parent.parent
+                / "overlay"
+                / "target"
+                / "release"
+                / "gaja-overlay.exe",
                 # Nowy naprawiony overlay z katalogu głównego (debug)
                 Path(__file__).parent.parent
                 / "overlay"
                 / "target"
                 / "debug"
-                / "gaja-overlay.exe",
-                # Nowy naprawiony overlay z katalogu głównego (release)
-                Path(__file__).parent.parent
-                / "overlay"
-                / "target"
-                / "release"
                 / "gaja-overlay.exe",
                 # Fallback do starych lokalizacji
                 Path(__file__).parent

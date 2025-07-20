@@ -1,0 +1,1131 @@
+{
+  "summary": {
+    "total_modules": 9,
+    "active_modules": 8,
+    "total_functions": 30,
+    "generated_at": "2025-07-20T19:36:33.051865"
+  },
+  "modules": {
+    "weather_module": {
+      "function_count": 2,
+      "functions": [
+        {
+          "name": "get_weather",
+          "description": "Pobiera dane pogodowe dla określonej lokalizacji",
+          "analysis": {
+            "parameter_count": 3,
+            "required_parameters": 1,
+            "optional_parameters": 2,
+            "parameters": [
+              "location",
+              "provider",
+              "test_mode"
+            ],
+            "required_params": [
+              "location"
+            ],
+            "optional_params": [
+              "provider",
+              "test_mode"
+            ]
+          }
+        },
+        {
+          "name": "get_forecast",
+          "description": "Pobiera prognozę pogody na kilka dni",
+          "analysis": {
+            "parameter_count": 3,
+            "required_parameters": 1,
+            "optional_parameters": 2,
+            "parameters": [
+              "location",
+              "days",
+              "test_mode"
+            ],
+            "required_params": [
+              "location"
+            ],
+            "optional_params": [
+              "days",
+              "test_mode"
+            ]
+          }
+        }
+      ],
+      "status": "active"
+    },
+    "search_module": {
+      "function_count": 2,
+      "functions": [
+        {
+          "name": "search",
+          "description": "Wyszukuje informacje w internecie",
+          "analysis": {
+            "parameter_count": 4,
+            "required_parameters": 1,
+            "optional_parameters": 3,
+            "parameters": [
+              "query",
+              "engine",
+              "max_results",
+              "test_mode"
+            ],
+            "required_params": [
+              "query"
+            ],
+            "optional_params": [
+              "engine",
+              "max_results",
+              "test_mode"
+            ]
+          }
+        },
+        {
+          "name": "search_news",
+          "description": "Wyszukuje najnowsze wiadomości",
+          "analysis": {
+            "parameter_count": 4,
+            "required_parameters": 1,
+            "optional_parameters": 3,
+            "parameters": [
+              "query",
+              "language",
+              "max_results",
+              "test_mode"
+            ],
+            "required_params": [
+              "query"
+            ],
+            "optional_params": [
+              "language",
+              "max_results",
+              "test_mode"
+            ]
+          }
+        }
+      ],
+      "status": "active"
+    },
+    "core_module": {
+      "function_count": 15,
+      "functions": [
+        {
+          "name": "set_timer",
+          "description": "Set a timer with specified duration and label",
+          "analysis": {
+            "parameter_count": 2,
+            "required_parameters": 1,
+            "optional_parameters": 1,
+            "parameters": [
+              "duration",
+              "label"
+            ],
+            "required_params": [
+              "duration"
+            ],
+            "optional_params": [
+              "label"
+            ]
+          }
+        },
+        {
+          "name": "view_timers",
+          "description": "View active timers",
+          "analysis": {
+            "parameter_count": 0,
+            "required_parameters": 0,
+            "optional_parameters": 0,
+            "parameters": [],
+            "required_params": [],
+            "optional_params": []
+          }
+        },
+        {
+          "name": "add_event",
+          "description": "Add a calendar event",
+          "analysis": {
+            "parameter_count": 3,
+            "required_parameters": 2,
+            "optional_parameters": 1,
+            "parameters": [
+              "title",
+              "date",
+              "time"
+            ],
+            "required_params": [
+              "title",
+              "date"
+            ],
+            "optional_params": [
+              "time"
+            ]
+          }
+        },
+        {
+          "name": "view_calendar",
+          "description": "View calendar events",
+          "analysis": {
+            "parameter_count": 0,
+            "required_parameters": 0,
+            "optional_parameters": 0,
+            "parameters": [],
+            "required_params": [],
+            "optional_params": []
+          }
+        },
+        {
+          "name": "set_reminder",
+          "description": "Set a reminder",
+          "analysis": {
+            "parameter_count": 2,
+            "required_parameters": 2,
+            "optional_parameters": 0,
+            "parameters": [
+              "text",
+              "time"
+            ],
+            "required_params": [
+              "text",
+              "time"
+            ],
+            "optional_params": []
+          }
+        },
+        {
+          "name": "view_reminders",
+          "description": "View reminders",
+          "analysis": {
+            "parameter_count": 0,
+            "required_parameters": 0,
+            "optional_parameters": 0,
+            "parameters": [],
+            "required_params": [],
+            "optional_params": []
+          }
+        },
+        {
+          "name": "get_reminders_for_today",
+          "description": "Get reminders due today",
+          "analysis": {
+            "parameter_count": 0,
+            "required_parameters": 0,
+            "optional_parameters": 0,
+            "parameters": [],
+            "required_params": [],
+            "optional_params": []
+          }
+        },
+        {
+          "name": "add_task",
+          "description": "Add a task",
+          "analysis": {
+            "parameter_count": 2,
+            "required_parameters": 1,
+            "optional_parameters": 1,
+            "parameters": [
+              "task",
+              "priority"
+            ],
+            "required_params": [
+              "task"
+            ],
+            "optional_params": [
+              "priority"
+            ]
+          }
+        },
+        {
+          "name": "view_tasks",
+          "description": "View tasks",
+          "analysis": {
+            "parameter_count": 0,
+            "required_parameters": 0,
+            "optional_parameters": 0,
+            "parameters": [],
+            "required_params": [],
+            "optional_params": []
+          }
+        },
+        {
+          "name": "complete_task",
+          "description": "Mark a task as completed",
+          "analysis": {
+            "parameter_count": 1,
+            "required_parameters": 1,
+            "optional_parameters": 0,
+            "parameters": [
+              "task_id"
+            ],
+            "required_params": [
+              "task_id"
+            ],
+            "optional_params": []
+          }
+        },
+        {
+          "name": "remove_task",
+          "description": "Remove a task",
+          "analysis": {
+            "parameter_count": 1,
+            "required_parameters": 1,
+            "optional_parameters": 0,
+            "parameters": [
+              "task_id"
+            ],
+            "required_params": [
+              "task_id"
+            ],
+            "optional_params": []
+          }
+        },
+        {
+          "name": "add_item",
+          "description": "Add item to a list",
+          "analysis": {
+            "parameter_count": 2,
+            "required_parameters": 2,
+            "optional_parameters": 0,
+            "parameters": [
+              "list_name",
+              "item"
+            ],
+            "required_params": [
+              "list_name",
+              "item"
+            ],
+            "optional_params": []
+          }
+        },
+        {
+          "name": "view_list",
+          "description": "View items in a list",
+          "analysis": {
+            "parameter_count": 1,
+            "required_parameters": 1,
+            "optional_parameters": 0,
+            "parameters": [
+              "list_name"
+            ],
+            "required_params": [
+              "list_name"
+            ],
+            "optional_params": []
+          }
+        },
+        {
+          "name": "remove_item",
+          "description": "Remove item from a list",
+          "analysis": {
+            "parameter_count": 2,
+            "required_parameters": 2,
+            "optional_parameters": 0,
+            "parameters": [
+              "list_name",
+              "item"
+            ],
+            "required_params": [
+              "list_name",
+              "item"
+            ],
+            "optional_params": []
+          }
+        },
+        {
+          "name": "get_current_time",
+          "description": "Get current time",
+          "analysis": {
+            "parameter_count": 0,
+            "required_parameters": 0,
+            "optional_parameters": 0,
+            "parameters": [],
+            "required_params": [],
+            "optional_params": []
+          }
+        }
+      ],
+      "status": "active"
+    },
+    "music_module": {
+      "function_count": 2,
+      "functions": [
+        {
+          "name": "control_music",
+          "description": "Control music playback (play, pause, next, prev)",
+          "analysis": {
+            "parameter_count": 3,
+            "required_parameters": 1,
+            "optional_parameters": 2,
+            "parameters": [
+              "action",
+              "platform",
+              "test_mode"
+            ],
+            "required_params": [
+              "action"
+            ],
+            "optional_params": [
+              "platform",
+              "test_mode"
+            ]
+          }
+        },
+        {
+          "name": "get_spotify_status",
+          "description": "Get current Spotify playback status",
+          "analysis": {
+            "parameter_count": 1,
+            "required_parameters": 0,
+            "optional_parameters": 1,
+            "parameters": [
+              "test_mode"
+            ],
+            "required_params": [],
+            "optional_params": [
+              "test_mode"
+            ]
+          }
+        }
+      ],
+      "status": "active"
+    },
+    "api_module": {
+      "function_count": 1,
+      "functions": [
+        {
+          "name": "make_api_request",
+          "description": "Wykonuje zapytanie do zewnętrznego API",
+          "analysis": {
+            "parameter_count": 5,
+            "required_parameters": 2,
+            "optional_parameters": 3,
+            "parameters": [
+              "method",
+              "url",
+              "headers",
+              "params",
+              "json_data"
+            ],
+            "required_params": [
+              "method",
+              "url"
+            ],
+            "optional_params": [
+              "headers",
+              "params",
+              "json_data"
+            ]
+          }
+        }
+      ],
+      "status": "active"
+    },
+    "open_web_module": {
+      "function_count": 1,
+      "functions": [
+        {
+          "name": "open_web",
+          "description": "Opens a web page in the default browser",
+          "analysis": {
+            "parameter_count": 2,
+            "required_parameters": 1,
+            "optional_parameters": 1,
+            "parameters": [
+              "url",
+              "test_mode"
+            ],
+            "required_params": [
+              "url"
+            ],
+            "optional_params": [
+              "test_mode"
+            ]
+          }
+        }
+      ],
+      "status": "active"
+    },
+    "memory_module": {
+      "function_count": 0,
+      "functions": [],
+      "status": "no get_functions method"
+    },
+    "plugin_monitor_module": {
+      "function_count": 4,
+      "functions": [
+        {
+          "name": "start_plugin_monitoring",
+          "description": "Uruchom automatyczne monitorowanie i przeładowywanie pluginów",
+          "analysis": {
+            "parameter_count": 0,
+            "required_parameters": 0,
+            "optional_parameters": 0,
+            "parameters": [],
+            "required_params": [],
+            "optional_params": []
+          }
+        },
+        {
+          "name": "stop_plugin_monitoring",
+          "description": "Zatrzymaj automatyczne monitorowanie pluginów",
+          "analysis": {
+            "parameter_count": 0,
+            "required_parameters": 0,
+            "optional_parameters": 0,
+            "parameters": [],
+            "required_params": [],
+            "optional_params": []
+          }
+        },
+        {
+          "name": "get_plugin_monitoring_status",
+          "description": "Pobierz status systemu monitorowania pluginów i statystyki",
+          "analysis": {
+            "parameter_count": 0,
+            "required_parameters": 0,
+            "optional_parameters": 0,
+            "parameters": [],
+            "required_params": [],
+            "optional_params": []
+          }
+        },
+        {
+          "name": "reload_plugin",
+          "description": "Ręcznie przeładuj konkretny plugin",
+          "analysis": {
+            "parameter_count": 1,
+            "required_parameters": 1,
+            "optional_parameters": 0,
+            "parameters": [
+              "plugin_name"
+            ],
+            "required_params": [
+              "plugin_name"
+            ],
+            "optional_params": []
+          }
+        }
+      ],
+      "status": "active"
+    },
+    "onboarding_plugin_module": {
+      "function_count": 3,
+      "functions": [
+        {
+          "name": "get_onboarding_status",
+          "description": "Pobierz status procesu pierwszego uruchomienia systemu",
+          "analysis": {
+            "parameter_count": 1,
+            "required_parameters": 0,
+            "optional_parameters": 1,
+            "parameters": [
+              "user_id"
+            ],
+            "required_params": [],
+            "optional_params": [
+              "user_id"
+            ]
+          }
+        },
+        {
+          "name": "save_onboarding_step",
+          "description": "Zapisz krok procesu konfiguracji wstępnej",
+          "analysis": {
+            "parameter_count": 3,
+            "required_parameters": 3,
+            "optional_parameters": 0,
+            "parameters": [
+              "user_id",
+              "step",
+              "data"
+            ],
+            "required_params": [
+              "user_id",
+              "step",
+              "data"
+            ],
+            "optional_params": []
+          }
+        },
+        {
+          "name": "complete_onboarding",
+          "description": "Zakończ proces pierwszego uruchomienia systemu",
+          "analysis": {
+            "parameter_count": 1,
+            "required_parameters": 0,
+            "optional_parameters": 1,
+            "parameters": [
+              "user_id"
+            ],
+            "required_params": [],
+            "optional_params": [
+              "user_id"
+            ]
+          }
+        }
+      ],
+      "status": "active"
+    }
+  },
+  "functions": [
+    {
+      "module": "weather_module",
+      "name": "get_weather",
+      "description": "Pobiera dane pogodowe dla określonej lokalizacji",
+      "full_name": "weather_module_get_weather",
+      "parameter_count": 3,
+      "required_parameters": 1,
+      "optional_parameters": 2,
+      "parameters": [
+        "location",
+        "provider",
+        "test_mode"
+      ],
+      "required_params": [
+        "location"
+      ],
+      "optional_params": [
+        "provider",
+        "test_mode"
+      ]
+    },
+    {
+      "module": "weather_module",
+      "name": "get_forecast",
+      "description": "Pobiera prognozę pogody na kilka dni",
+      "full_name": "weather_module_get_forecast",
+      "parameter_count": 3,
+      "required_parameters": 1,
+      "optional_parameters": 2,
+      "parameters": [
+        "location",
+        "days",
+        "test_mode"
+      ],
+      "required_params": [
+        "location"
+      ],
+      "optional_params": [
+        "days",
+        "test_mode"
+      ]
+    },
+    {
+      "module": "search_module",
+      "name": "search",
+      "description": "Wyszukuje informacje w internecie",
+      "full_name": "search_module_search",
+      "parameter_count": 4,
+      "required_parameters": 1,
+      "optional_parameters": 3,
+      "parameters": [
+        "query",
+        "engine",
+        "max_results",
+        "test_mode"
+      ],
+      "required_params": [
+        "query"
+      ],
+      "optional_params": [
+        "engine",
+        "max_results",
+        "test_mode"
+      ]
+    },
+    {
+      "module": "search_module",
+      "name": "search_news",
+      "description": "Wyszukuje najnowsze wiadomości",
+      "full_name": "search_module_search_news",
+      "parameter_count": 4,
+      "required_parameters": 1,
+      "optional_parameters": 3,
+      "parameters": [
+        "query",
+        "language",
+        "max_results",
+        "test_mode"
+      ],
+      "required_params": [
+        "query"
+      ],
+      "optional_params": [
+        "language",
+        "max_results",
+        "test_mode"
+      ]
+    },
+    {
+      "module": "core_module",
+      "name": "set_timer",
+      "description": "Set a timer with specified duration and label",
+      "full_name": "core_module_set_timer",
+      "parameter_count": 2,
+      "required_parameters": 1,
+      "optional_parameters": 1,
+      "parameters": [
+        "duration",
+        "label"
+      ],
+      "required_params": [
+        "duration"
+      ],
+      "optional_params": [
+        "label"
+      ]
+    },
+    {
+      "module": "core_module",
+      "name": "view_timers",
+      "description": "View active timers",
+      "full_name": "core_module_view_timers",
+      "parameter_count": 0,
+      "required_parameters": 0,
+      "optional_parameters": 0,
+      "parameters": [],
+      "required_params": [],
+      "optional_params": []
+    },
+    {
+      "module": "core_module",
+      "name": "add_event",
+      "description": "Add a calendar event",
+      "full_name": "core_module_add_event",
+      "parameter_count": 3,
+      "required_parameters": 2,
+      "optional_parameters": 1,
+      "parameters": [
+        "title",
+        "date",
+        "time"
+      ],
+      "required_params": [
+        "title",
+        "date"
+      ],
+      "optional_params": [
+        "time"
+      ]
+    },
+    {
+      "module": "core_module",
+      "name": "view_calendar",
+      "description": "View calendar events",
+      "full_name": "core_module_view_calendar",
+      "parameter_count": 0,
+      "required_parameters": 0,
+      "optional_parameters": 0,
+      "parameters": [],
+      "required_params": [],
+      "optional_params": []
+    },
+    {
+      "module": "core_module",
+      "name": "set_reminder",
+      "description": "Set a reminder",
+      "full_name": "core_module_set_reminder",
+      "parameter_count": 2,
+      "required_parameters": 2,
+      "optional_parameters": 0,
+      "parameters": [
+        "text",
+        "time"
+      ],
+      "required_params": [
+        "text",
+        "time"
+      ],
+      "optional_params": []
+    },
+    {
+      "module": "core_module",
+      "name": "view_reminders",
+      "description": "View reminders",
+      "full_name": "core_module_view_reminders",
+      "parameter_count": 0,
+      "required_parameters": 0,
+      "optional_parameters": 0,
+      "parameters": [],
+      "required_params": [],
+      "optional_params": []
+    },
+    {
+      "module": "core_module",
+      "name": "get_reminders_for_today",
+      "description": "Get reminders due today",
+      "full_name": "core_module_get_reminders_for_today",
+      "parameter_count": 0,
+      "required_parameters": 0,
+      "optional_parameters": 0,
+      "parameters": [],
+      "required_params": [],
+      "optional_params": []
+    },
+    {
+      "module": "core_module",
+      "name": "add_task",
+      "description": "Add a task",
+      "full_name": "core_module_add_task",
+      "parameter_count": 2,
+      "required_parameters": 1,
+      "optional_parameters": 1,
+      "parameters": [
+        "task",
+        "priority"
+      ],
+      "required_params": [
+        "task"
+      ],
+      "optional_params": [
+        "priority"
+      ]
+    },
+    {
+      "module": "core_module",
+      "name": "view_tasks",
+      "description": "View tasks",
+      "full_name": "core_module_view_tasks",
+      "parameter_count": 0,
+      "required_parameters": 0,
+      "optional_parameters": 0,
+      "parameters": [],
+      "required_params": [],
+      "optional_params": []
+    },
+    {
+      "module": "core_module",
+      "name": "complete_task",
+      "description": "Mark a task as completed",
+      "full_name": "core_module_complete_task",
+      "parameter_count": 1,
+      "required_parameters": 1,
+      "optional_parameters": 0,
+      "parameters": [
+        "task_id"
+      ],
+      "required_params": [
+        "task_id"
+      ],
+      "optional_params": []
+    },
+    {
+      "module": "core_module",
+      "name": "remove_task",
+      "description": "Remove a task",
+      "full_name": "core_module_remove_task",
+      "parameter_count": 1,
+      "required_parameters": 1,
+      "optional_parameters": 0,
+      "parameters": [
+        "task_id"
+      ],
+      "required_params": [
+        "task_id"
+      ],
+      "optional_params": []
+    },
+    {
+      "module": "core_module",
+      "name": "add_item",
+      "description": "Add item to a list",
+      "full_name": "core_module_add_item",
+      "parameter_count": 2,
+      "required_parameters": 2,
+      "optional_parameters": 0,
+      "parameters": [
+        "list_name",
+        "item"
+      ],
+      "required_params": [
+        "list_name",
+        "item"
+      ],
+      "optional_params": []
+    },
+    {
+      "module": "core_module",
+      "name": "view_list",
+      "description": "View items in a list",
+      "full_name": "core_module_view_list",
+      "parameter_count": 1,
+      "required_parameters": 1,
+      "optional_parameters": 0,
+      "parameters": [
+        "list_name"
+      ],
+      "required_params": [
+        "list_name"
+      ],
+      "optional_params": []
+    },
+    {
+      "module": "core_module",
+      "name": "remove_item",
+      "description": "Remove item from a list",
+      "full_name": "core_module_remove_item",
+      "parameter_count": 2,
+      "required_parameters": 2,
+      "optional_parameters": 0,
+      "parameters": [
+        "list_name",
+        "item"
+      ],
+      "required_params": [
+        "list_name",
+        "item"
+      ],
+      "optional_params": []
+    },
+    {
+      "module": "core_module",
+      "name": "get_current_time",
+      "description": "Get current time",
+      "full_name": "core_module_get_current_time",
+      "parameter_count": 0,
+      "required_parameters": 0,
+      "optional_parameters": 0,
+      "parameters": [],
+      "required_params": [],
+      "optional_params": []
+    },
+    {
+      "module": "music_module",
+      "name": "control_music",
+      "description": "Control music playback (play, pause, next, prev)",
+      "full_name": "music_module_control_music",
+      "parameter_count": 3,
+      "required_parameters": 1,
+      "optional_parameters": 2,
+      "parameters": [
+        "action",
+        "platform",
+        "test_mode"
+      ],
+      "required_params": [
+        "action"
+      ],
+      "optional_params": [
+        "platform",
+        "test_mode"
+      ]
+    },
+    {
+      "module": "music_module",
+      "name": "get_spotify_status",
+      "description": "Get current Spotify playback status",
+      "full_name": "music_module_get_spotify_status",
+      "parameter_count": 1,
+      "required_parameters": 0,
+      "optional_parameters": 1,
+      "parameters": [
+        "test_mode"
+      ],
+      "required_params": [],
+      "optional_params": [
+        "test_mode"
+      ]
+    },
+    {
+      "module": "api_module",
+      "name": "make_api_request",
+      "description": "Wykonuje zapytanie do zewnętrznego API",
+      "full_name": "api_module_make_api_request",
+      "parameter_count": 5,
+      "required_parameters": 2,
+      "optional_parameters": 3,
+      "parameters": [
+        "method",
+        "url",
+        "headers",
+        "params",
+        "json_data"
+      ],
+      "required_params": [
+        "method",
+        "url"
+      ],
+      "optional_params": [
+        "headers",
+        "params",
+        "json_data"
+      ]
+    },
+    {
+      "module": "open_web_module",
+      "name": "open_web",
+      "description": "Opens a web page in the default browser",
+      "full_name": "open_web_module_open_web",
+      "parameter_count": 2,
+      "required_parameters": 1,
+      "optional_parameters": 1,
+      "parameters": [
+        "url",
+        "test_mode"
+      ],
+      "required_params": [
+        "url"
+      ],
+      "optional_params": [
+        "test_mode"
+      ]
+    },
+    {
+      "module": "plugin_monitor_module",
+      "name": "start_plugin_monitoring",
+      "description": "Uruchom automatyczne monitorowanie i przeładowywanie pluginów",
+      "full_name": "plugin_monitor_module_start_plugin_monitoring",
+      "parameter_count": 0,
+      "required_parameters": 0,
+      "optional_parameters": 0,
+      "parameters": [],
+      "required_params": [],
+      "optional_params": []
+    },
+    {
+      "module": "plugin_monitor_module",
+      "name": "stop_plugin_monitoring",
+      "description": "Zatrzymaj automatyczne monitorowanie pluginów",
+      "full_name": "plugin_monitor_module_stop_plugin_monitoring",
+      "parameter_count": 0,
+      "required_parameters": 0,
+      "optional_parameters": 0,
+      "parameters": [],
+      "required_params": [],
+      "optional_params": []
+    },
+    {
+      "module": "plugin_monitor_module",
+      "name": "get_plugin_monitoring_status",
+      "description": "Pobierz status systemu monitorowania pluginów i statystyki",
+      "full_name": "plugin_monitor_module_get_plugin_monitoring_status",
+      "parameter_count": 0,
+      "required_parameters": 0,
+      "optional_parameters": 0,
+      "parameters": [],
+      "required_params": [],
+      "optional_params": []
+    },
+    {
+      "module": "plugin_monitor_module",
+      "name": "reload_plugin",
+      "description": "Ręcznie przeładuj konkretny plugin",
+      "full_name": "plugin_monitor_module_reload_plugin",
+      "parameter_count": 1,
+      "required_parameters": 1,
+      "optional_parameters": 0,
+      "parameters": [
+        "plugin_name"
+      ],
+      "required_params": [
+        "plugin_name"
+      ],
+      "optional_params": []
+    },
+    {
+      "module": "onboarding_plugin_module",
+      "name": "get_onboarding_status",
+      "description": "Pobierz status procesu pierwszego uruchomienia systemu",
+      "full_name": "onboarding_plugin_module_get_onboarding_status",
+      "parameter_count": 1,
+      "required_parameters": 0,
+      "optional_parameters": 1,
+      "parameters": [
+        "user_id"
+      ],
+      "required_params": [],
+      "optional_params": [
+        "user_id"
+      ]
+    },
+    {
+      "module": "onboarding_plugin_module",
+      "name": "save_onboarding_step",
+      "description": "Zapisz krok procesu konfiguracji wstępnej",
+      "full_name": "onboarding_plugin_module_save_onboarding_step",
+      "parameter_count": 3,
+      "required_parameters": 3,
+      "optional_parameters": 0,
+      "parameters": [
+        "user_id",
+        "step",
+        "data"
+      ],
+      "required_params": [
+        "user_id",
+        "step",
+        "data"
+      ],
+      "optional_params": []
+    },
+    {
+      "module": "onboarding_plugin_module",
+      "name": "complete_onboarding",
+      "description": "Zakończ proces pierwszego uruchomienia systemu",
+      "full_name": "onboarding_plugin_module_complete_onboarding",
+      "parameter_count": 1,
+      "required_parameters": 0,
+      "optional_parameters": 1,
+      "parameters": [
+        "user_id"
+      ],
+      "required_params": [],
+      "optional_params": [
+        "user_id"
+      ]
+    }
+  ],
+  "categories": {
+    "Pogoda": [
+      "weather_module_get_weather",
+      "weather_module_get_forecast"
+    ],
+    "Wyszukiwanie": [
+      "search_module_search",
+      "search_module_search_news"
+    ],
+    "Zarządzanie czasem": [
+      "core_module_set_timer",
+      "core_module_view_timers",
+      "core_module_add_event",
+      "core_module_get_current_time"
+    ],
+    "Zadania i listy": [
+      "core_module_add_task",
+      "core_module_view_tasks",
+      "core_module_complete_task",
+      "core_module_remove_task",
+      "core_module_view_list"
+    ],
+    "Muzyka": [
+      "music_module_control_music",
+      "music_module_get_spotify_status"
+    ],
+    "Internet i API": [
+      "api_module_make_api_request",
+      "open_web_module_open_web"
+    ],
+    "System i monitoring": [
+      "plugin_monitor_module_start_plugin_monitoring",
+      "plugin_monitor_module_stop_plugin_monitoring",
+      "plugin_monitor_module_get_plugin_monitoring_status",
+      "plugin_monitor_module_reload_plugin",
+      "onboarding_plugin_module_get_onboarding_status",
+      "onboarding_plugin_module_save_onboarding_step",
+      "onboarding_plugin_module_complete_onboarding"
+    ],
+    "Inne": [
+      "core_module_view_calendar",
+      "core_module_set_reminder",
+      "core_module_view_reminders",
+      "core_module_get_reminders_for_today",
+      "core_module_add_item",
+      "core_module_remove_item"
+    ]
+  },
+  "parameter_statistics": {
+    "no_params": 9,
+    "simple": 18,
+    "medium": 3,
+    "complex": 0
+  }
+}

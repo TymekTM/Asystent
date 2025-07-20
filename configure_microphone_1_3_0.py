@@ -41,7 +41,6 @@ def test_microphone(device_id):
     print("💡 Mów coś przez 3 sekundy...")
 
     try:
-
         import numpy as np
         import sounddevice as sd
 

@@ -132,3 +132,27 @@ def register():
             }
         },
     }
+
+
+class WebModule:
+    """Web module wrapper class for function calling system"""
+    
+    def __init__(self):
+        """Initialize the web module"""
+        logger.info("WebModule initialized")
+    
+    def get_functions(self):
+        """Return list of available functions"""
+        return [
+            {
+                "name": "open_web",
+                "description": "Open a web page in the default browser",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "url": {"type": "string", "description": "URL of the page to open (e.g. https://www.google.com)"}
+                    },
+                    "required": ["url"]
+                }
+            }
+        ]

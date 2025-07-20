@@ -1237,3 +1237,91 @@ except Exception as e:
     logger.warning(
         f"Could not start timer polling immediately: {e}. Will retry when event loop is available."
     )
+
+
+class CoreModule:
+    """Core module wrapper class for function calling system"""
+    
+    def __init__(self):
+        """Initialize the core module"""
+        logger.info("CoreModule initialized")
+        start_core_module()
+    
+    def get_functions(self):
+        """Return list of available functions"""
+        return [
+            {
+                "name": "set_timer",
+                "description": "Set a timer for a specified duration",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "duration_minutes": {"type": "number", "description": "Duration in minutes"},
+                        "label": {"type": "string", "description": "Optional label for the timer"}
+                    },
+                    "required": ["duration_minutes"]
+                }
+            },
+            {
+                "name": "get_active_timers",
+                "description": "Get all active timers",
+                "parameters": {"type": "object", "properties": {}}
+            },
+            {
+                "name": "add_calendar_event",
+                "description": "Add an event to the calendar",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "title": {"type": "string", "description": "Event title"},
+                        "date": {"type": "string", "description": "Event date (YYYY-MM-DD)"},
+                        "time": {"type": "string", "description": "Event time (HH:MM)"},
+                        "description": {"type": "string", "description": "Optional event description"}
+                    },
+                    "required": ["title", "date", "time"]
+                }
+            },
+            {
+                "name": "set_reminder",
+                "description": "Set a reminder for a specific date and time",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "message": {"type": "string", "description": "Reminder message"},
+                        "date": {"type": "string", "description": "Reminder date (YYYY-MM-DD)"},
+                        "time": {"type": "string", "description": "Reminder time (HH:MM)"}
+                    },
+                    "required": ["message", "date", "time"]
+                }
+            },
+            {
+                "name": "add_task",
+                "description": "Add a task to the todo list",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "task": {"type": "string", "description": "Task description"},
+                        "priority": {"type": "string", "description": "Task priority (low, medium, high)"},
+                        "due_date": {"type": "string", "description": "Optional due date (YYYY-MM-DD)"}
+                    },
+                    "required": ["task"]
+                }
+            },
+            {
+                "name": "add_shopping_item",
+                "description": "Add an item to the shopping list",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "item": {"type": "string", "description": "Item to add to shopping list"},
+                        "quantity": {"type": "string", "description": "Optional quantity"}
+                    },
+                    "required": ["item"]
+                }
+            },
+            {
+                "name": "get_current_time",
+                "description": "Get the current date and time",
+                "parameters": {"type": "object", "properties": {}}
+            }
+        ]

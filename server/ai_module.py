@@ -725,7 +725,7 @@ async def generate_response(
 
         if use_function_calling and PROVIDER.lower() == "openai":
             # Get functions directly from plugin_manager
-            from function_calling_system import FunctionCallingSystem
+            from server.function_calling_system import FunctionCallingSystem
 
             # Initialize function calling system
             function_calling_system = FunctionCallingSystem()
@@ -917,7 +917,16 @@ class AIModule:
 
     async def process_query(self, query: str, context: dict) -> str:
         """Przetwarza zapytanie użytkownika i zwraca odpowiedź AI."""
+        import json
+        
         try:
+            print(f"DEBUG: process_query called with context: {context}")
+            print(f"DEBUG: context type: {type(context)}")
+            
+            if context is None:
+                print("DEBUG: context is None, creating empty dict")
+                context = {}
+            
             user_id = context.get("user_id", "anonymous")
             history = context.get("history", [])
             available_plugins = context.get("available_plugins", [])
@@ -941,8 +950,6 @@ class AIModule:
                 # If the content is a JSON string (from assistant), extract the text
                 if msg["role"] == "assistant":
                     try:
-                        import json
-
                         parsed_content = json.loads(content)
                         if (
                             isinstance(parsed_content, dict)

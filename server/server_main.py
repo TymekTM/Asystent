@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 import uvicorn
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
@@ -456,6 +456,44 @@ async def legacy_status():
     }
 
 
+# SSE endpoint for overlay status updates
+@app.get("/status/stream")
+async def status_stream(request: Request):
+    """Server-Sent Events endpoint for overlay status updates."""
+    from fastapi.responses import StreamingResponse
+    import asyncio
+    
+    async def event_stream():
+        try:
+            while True:
+                # Send basic status for now - can be enhanced when client connects
+                status_data = {
+                    "status": "running",
+                    "text": "",
+                    "is_listening": False,
+                    "is_speaking": False,
+                    "wake_word_detected": False,
+                    "overlay_visible": False
+                }
+                
+                yield f"data: {json.dumps(status_data)}\n\n"
+                await asyncio.sleep(1)  # Send updates every second
+                
+        except Exception as e:
+            logger.error(f"SSE stream error: {e}")
+            return
+    
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "Access-Control-Allow-Origin": "*"
+        }
+    )
+
+
 @app.websocket("/ws/{user_id}")
 async def websocket_endpoint(websocket: WebSocket, user_id: str):
     """WebSocket endpoint dla komunikacji w czasie rzeczywistym."""
@@ -487,7 +525,7 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
 
                 if processed_message and server_app:
                     # Przekaż do aplikacji serwera
-                    await server_app.handle_websocket_message(user_id, message_data)
+                    await server_app.handle_websocket_message(user_id, processed_message)
 
             except WebSocketDisconnect:
                 logger.info(f"WebSocket disconnected for user: {user_id}")
