@@ -177,14 +177,12 @@ class FunctionCallingSystem:
         sys.stderr.flush()
         try:
             print("DEBUG: Importing server modules...")
-            from server.modules import (
+            from server.modules import (  # onboarding_plugin_module,  # Disabled - not needed; plugin_monitor_module,  # Disabled - not needed
                 api_module,
                 core_module,
                 memory_module,
                 music_module,
-                onboarding_plugin_module,
                 open_web_module,
-                plugin_monitor_module,
                 search_module,
                 weather_module,
             )
@@ -199,8 +197,8 @@ class FunctionCallingSystem:
                 ("api", api_module),
                 ("web", open_web_module),
                 ("memory", memory_module),
-                ("monitor", plugin_monitor_module),
-                ("onboarding", onboarding_plugin_module),
+                # ("monitor", plugin_monitor_module),  # Disabled - not needed
+                # ("onboarding", onboarding_plugin_module),  # Disabled - not needed
             ]
 
             print(f"DEBUG: Processing {len(server_modules)} server modules")

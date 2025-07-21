@@ -342,7 +342,9 @@ async def execute_function(
         elif function_name == "ask_for_clarification":
             question = parameters.get("question", "")
             context = parameters.get("context", "")
-            return await ask_for_clarification({"question": question, "context": context})
+            return await ask_for_clarification(
+                {"question": question, "context": context}
+            )
 
         else:
             return {
@@ -1192,7 +1194,7 @@ async def ask_for_clarification(params) -> dict[str, Any]:
 
         # Log the clarification request
         logger.info(f"AI requesting clarification: {question}")
-        
+
         # Create clarification message that will be sent via WebSocket to client
         clarification_data = {
             "type": "clarification_request",
@@ -1200,10 +1202,10 @@ async def ask_for_clarification(params) -> dict[str, Any]:
             "context": context,
             "timestamp": datetime.now().isoformat(),
             "actions": {
-                "stop_tts": True,
-                "start_recording": True,
-                "show_clarification_ui": True
-            }
+                "wait_for_tts_completion": True,  # Wait for TTS to finish instead of stopping it
+                "start_recording_after_tts": True,  # Start recording only after TTS completes
+                "show_clarification_ui": True,
+            },
         }
 
         # This will be picked up by the WebSocket handler and sent to client
@@ -1215,7 +1217,7 @@ async def ask_for_clarification(params) -> dict[str, Any]:
             "question": question,
             "context": context,
             "requires_user_response": True,
-            "action_type": "clarification_request"
+            "action_type": "clarification_request",
         }
 
     except Exception as e:
@@ -1439,7 +1441,7 @@ class CoreModule:
             },
             {
                 "name": "ask_for_clarification",
-                "description": "🔍 CRITICAL: Use this function when user's request is unclear, ambiguous, or missing essential information. DO NOT guess or ask in text - use this function instead! Examples: weather without location, music without specification, timer without duration, reminder without details. This provides better user experience by properly handling unclear requests.",
+                "description": "🔍 CRITICAL: Use this function when user's request is unclear, ambiguous, or missing essential information. DO NOT guess or ask in text - use this function instead! The system will wait for TTS to complete, then start recording user's response. Examples: weather without location, music without specification, timer without duration, reminder without details. This provides better user experience by properly handling unclear requests.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -1456,3 +1458,18 @@ class CoreModule:
                 },
             },
         ]
+
+    async def execute_function(
+        self, function_name: str, parameters: dict[str, Any], user_id: int = 0
+    ) -> dict[str, Any]:
+        """Execute a function through the CoreModule."""
+        try:
+            # Map function names to the module-level execute_function
+            return await execute_function(function_name, parameters, user_id)
+        except Exception as e:
+            logger.error(f"Error executing CoreModule function {function_name}: {e}")
+            return {
+                "success": False,
+                "message": f"Error executing function: {e}",
+                "error": str(e),
+            }

@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
 COPY requirements_server_minimal.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy server code
+# Copy server code and essential files
 COPY server/ ./server/
 COPY .env .env
 
@@ -31,8 +31,8 @@ EXPOSE 8001
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8001/health || exit 1
 
-# Environment variables
-ENV PYTHONPATH=/app
+# Environment variables - fix PYTHONPATH to include both /app and /app/server
+ENV PYTHONPATH=/app:/app/server
 ENV PRODUCTION=true
 ENV DEBUG=false
 

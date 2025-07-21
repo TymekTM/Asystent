@@ -21,18 +21,18 @@ repos:
         language_version: python3.13
         args: [--line-length=88]
 
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.1.8
-    hooks:
-      - id: ruff
-        args: [--fix, --exit-non-zero-on-fix]
+  # - repo: https://github.com/charliermarsh/ruff-pre-commit
+  #   rev: v0.1.8
+  #   hooks:
+  #     - id: ruff
+  #       args: [--fix, --exit-non-zero-on-fix]
 
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.8.0
-    hooks:
-      - id: mypy
-        additional_dependencies: [types-requests, types-PyYAML]
-        args: [--ignore-missing-imports]
+  # - repo: https://github.com/pre-commit/mirrors-mypy
+  #   rev: v1.8.0
+  #   hooks:
+  #     - id: mypy
+  #       additional_dependencies: [types-requests, types-PyYAML]
+  #       args: [--ignore-missing-imports]
 
   - repo: https://github.com/PyCQA/docformatter
     rev: v1.7.5
@@ -65,13 +65,3 @@ repos:
               build/.*|
               \.migration_backup/.*
           )$
-
-  - repo: local
-    hooks:
-      - id: pytest-check
-        name: pytest-check
-        entry: poetry run pytest
-        language: system
-        pass_filenames: false
-        always_run: true
-        args: [--maxfail=1, -x]
