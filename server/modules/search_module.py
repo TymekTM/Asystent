@@ -618,7 +618,7 @@ class SearchModule:
             Klucz API lub None
         """
         try:
-            from database_manager import get_database_manager
+            from config_manager import get_database_manager
 
             db_manager = get_database_manager()
             return db_manager.get_user_api_key(user_id, provider)

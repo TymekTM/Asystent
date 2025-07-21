@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from config_loader import ConfigLoader
-from database_manager import DatabaseManager
+from config_manager import DatabaseManager
 from flask import Flask, jsonify, redirect, render_template, request, send_file
 from flask_cors import CORS
 

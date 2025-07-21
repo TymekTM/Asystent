@@ -33,7 +33,7 @@ def _load_api_key() -> str | None:
         current_dir = os.path.dirname(os.path.abspath(__file__))
         parent_dir = os.path.dirname(os.path.dirname(current_dir))
         sys.path.insert(0, parent_dir)
-        from environment_manager import EnvironmentManager
+        from server.config_manager import EnvironmentManager
 
         env_file_path = os.path.join(parent_dir, ".env")
         env_manager = EnvironmentManager(env_file=env_file_path)

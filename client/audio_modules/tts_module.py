@@ -152,7 +152,7 @@ class TTSModule:
         # Try to load from environment manager if available
         if not api_key:
             try:
-                from environment_manager import EnvironmentManager
+                from server.config_manager import EnvironmentManager
 
                 env_file_path = os.path.join(
                     os.path.dirname(os.path.dirname(__file__)), ".env"

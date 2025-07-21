@@ -8,7 +8,7 @@ from typing import Any
 
 import aiohttp
 from config_loader import ConfigLoader
-from database_manager import DatabaseManager
+from config_manager import DatabaseManager
 
 logger = logging.getLogger(__name__)
 

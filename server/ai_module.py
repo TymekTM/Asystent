@@ -28,7 +28,7 @@ pipeline = None
 
 # Import environment manager for secure API key handling
 try:
-    from environment_manager import EnvironmentManager
+    from config_manager import EnvironmentManager
 
     env_file_path = os.path.join(os.path.dirname(__file__), "..", ".env")
     env_manager = EnvironmentManager(env_file=env_file_path)
@@ -288,17 +288,26 @@ class AIProviders:
                                 deque(messages[-10:]) if messages else None
                             ),  # Pass recent conversation
                         )
-                        
+
                         # Handle special clarification requests
-                        if isinstance(result, dict) and result.get("action_type") == "clarification_request":
+                        if (
+                            isinstance(result, dict)
+                            and result.get("action_type") == "clarification_request"
+                        ):
                             # This is a clarification request - return it directly to be handled by WebSocket
                             return {
-                                "message": {"content": result.get("message", "Clarification requested")},
-                                "clarification_request": result.get("clarification_data"),
+                                "message": {
+                                    "content": result.get(
+                                        "message", "Clarification requested"
+                                    )
+                                },
+                                "clarification_request": result.get(
+                                    "clarification_data"
+                                ),
                                 "tool_calls_executed": 1,
-                                "requires_user_response": True
+                                "requires_user_response": True,
                             }
-                        
+
                         tool_results.append(
                             {
                                 "tool_call_id": tool_call.id,
@@ -865,7 +874,7 @@ async def generate_response(
                     "params": {},
                     "clarification_data": clarification_data,
                     "requires_user_response": True,
-                    "action_type": "clarification_request"
+                    "action_type": "clarification_request",
                 },
                 ensure_ascii=False,
             )
@@ -1023,18 +1032,17 @@ class AIModule:
                         return {
                             "type": "clarification_request",
                             "response": response,
-                            "clarification_data": parsed_response.get("clarification_data"),
-                            "requires_user_response": True
+                            "clarification_data": parsed_response.get(
+                                "clarification_data"
+                            ),
+                            "requires_user_response": True,
                         }
             except (json.JSONDecodeError, TypeError):
                 # Response is not JSON, continue normally
                 pass
 
             # Normal response
-            return {
-                "type": "normal_response", 
-                "response": response
-            }
+            return {"type": "normal_response", "response": response}
 
         except Exception as e:
             logger.error(f"Error processing AI query: {e}")
@@ -1046,7 +1054,4 @@ class AIModule:
                 },
                 ensure_ascii=False,
             )
-            return {
-                "type": "error_response",
-                "response": error_response
-            }
+            return {"type": "error_response", "response": error_response}

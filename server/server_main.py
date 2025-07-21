@@ -65,7 +65,7 @@ from ai_module import AIModule
 from api.routes import router as api_router
 from api.routes import set_server_app
 from config_loader import load_config
-from database_manager import initialize_database_manager
+from config_manager import initialize_database_manager
 from extended_webui import ExtendedWebUI
 from function_calling_system import FunctionCallingSystem
 from onboarding_module import OnboardingModule
