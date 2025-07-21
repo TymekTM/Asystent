@@ -1,0 +1,18 @@
+{
+  "results": [
+    "Available endpoints: 3",
+    "HTTP flood: 2000/2000 at 1978.89 req/s",
+    "Large payload: Tested up to 50MB",
+    "Malformed requests: Completed all tests",
+    "Concurrent: 200/200 connections",
+    "Memory exhaustion: 0/30 processed",
+    "CPU intensive: 0/100 in 2.79s",
+    "Rapid fire: Tested up to 2000 req/s"
+  ],
+  "available_endpoints": [
+    ["/", 200],
+    ["/health", 200],
+    ["/docs", 200]
+  ],
+  "timestamp": 1753124294.6667287
+}

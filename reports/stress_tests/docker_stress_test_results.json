@@ -1,0 +1,12 @@
+[
+  "Disk pressure: Failed - server rejected WebSocket connection: HTTP 403",
+  "FD exhaustion: Max 0 connections",
+  "FD exhaustion: Max 0 connections",
+  "Bandwidth saturation: Completed 20 clients",
+  "Bandwidth saturation: Completed 20 clients",
+  "Memory exhaustion: Created 0 heavy connections",
+  "Memory exhaustion: Created 0 heavy connections",
+  "Cascade failure: Survived 30.07s of combined stress",
+  "CPU intensive: 0/200 successful",
+  "Docker limits: Container 29f6a0018683 monitored"
+]

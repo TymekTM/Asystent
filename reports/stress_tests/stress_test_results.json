@@ -1,0 +1,12 @@
+{
+  "total_tests": 11,
+  "passed": 7,
+  "failed": 4,
+  "errors": [
+    "Large Payload WebSocket: server rejected WebSocket connection: HTTP 403",
+    "Malformed WebSocket Messages: server rejected WebSocket connection: HTTP 403",
+    "Rapid WebSocket Messages: server rejected WebSocket connection: HTTP 403",
+    "AI Context Overflow: server rejected WebSocket connection: HTTP 403"
+  ],
+  "performance_metrics": {}
+}
