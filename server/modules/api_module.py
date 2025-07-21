@@ -100,10 +100,10 @@ class APIModule:
         user_id: int,
         method: str,
         url: str,
-        headers: dict[str, str] = None,
-        params: dict[str, Any] = None,
+        headers: dict[str, str] | None = None,
+        params: dict[str, Any] | None = None,
         data: Any = None,
-        json_data: dict[str, Any] = None,
+        json_data: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Wykonuje zapytanie HTTP z logowaniem użycia API.
 
@@ -328,7 +328,11 @@ class APIModule:
         return response
 
     async def search_web(
-        self, user_id: int, query: str, api_key: str = None, engine: str = "google"
+        self,
+        user_id: int,
+        query: str,
+        api_key: str | None = None,
+        engine: str = "google",
     ) -> dict[str, Any]:
         """Wyszukuje w internecie.
 
@@ -422,8 +426,8 @@ class APIModule:
         self,
         user_id: int,
         api_key: str,
-        query: str = None,
-        category: str = None,
+        query: str | None = None,
+        category: str | None = None,
         country: str = "pl",
     ) -> dict[str, Any]:
         """Pobiera wiadomości.

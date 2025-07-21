@@ -170,7 +170,7 @@ class SearchModule:
         user_id: int,
         query: str,
         engine: str = "duckduckgo",
-        api_key: str = None,
+        api_key: str | None = None,
         max_results: int = 10,
     ) -> dict[str, Any]:
         """Wykonuje wyszukiwanie w internecie.
@@ -217,7 +217,11 @@ class SearchModule:
             }
 
     async def _search_duckduckgo(
-        self, user_id: int, query: str, api_key: str = None, max_results: int = 10
+        self,
+        user_id: int,
+        query: str,
+        api_key: str | None = None,
+        max_results: int = 10,
     ) -> dict[str, Any]:
         """Wyszukiwanie za pomocą DuckDuckGo."""
 
@@ -233,7 +237,7 @@ class SearchModule:
         data = response.get("data", {})
 
         # Przetwórz wyniki DuckDuckGo
-        results = {
+        results: dict[str, Any] = {
             "engine": "duckduckgo",
             "query": query,
             "results": [],
@@ -288,7 +292,11 @@ class SearchModule:
         return results
 
     async def _search_google(
-        self, user_id: int, query: str, api_key: str = None, max_results: int = 10
+        self,
+        user_id: int,
+        query: str,
+        api_key: str | None = None,
+        max_results: int = 10,
     ) -> dict[str, Any]:
         """Wyszukiwanie za pomocą Google Custom Search API."""
 
@@ -344,7 +352,11 @@ class SearchModule:
         return results
 
     async def _search_bing(
-        self, user_id: int, query: str, api_key: str = None, max_results: int = 10
+        self,
+        user_id: int,
+        query: str,
+        api_key: str | None = None,
+        max_results: int = 10,
     ) -> dict[str, Any]:
         """Wyszukiwanie za pomocą Bing Search API."""
 
@@ -399,11 +411,11 @@ class SearchModule:
     async def search_news(
         self,
         user_id: int,
-        query: str = None,
+        query: str | None = None,
         language: str = "pl",
         max_results: int = 5,
-        api_key: str = None,
-        category: str = None,
+        api_key: str | None = None,
+        category: str | None = None,
         country: str = "pl",
     ) -> dict[str, Any]:
         """Wyszukuje wiadomości.
@@ -436,7 +448,7 @@ class SearchModule:
         )
 
     async def search_images(
-        self, user_id: int, query: str, api_key: str = None, engine: str = "bing"
+        self, user_id: int, query: str, api_key: str | None = None, engine: str = "bing"
     ) -> dict[str, Any]:
         """Wyszukuje obrazy.
 
@@ -557,7 +569,7 @@ class SearchModule:
         return intent
 
     async def smart_search(
-        self, user_id: int, query: str, user_api_keys: dict[str, str] = None
+        self, user_id: int, query: str, user_api_keys: dict[str, str] | None = None
     ) -> dict[str, Any]:
         """Inteligentne wyszukiwanie z automatycznym wyborem silnika.
 

@@ -600,7 +600,7 @@ async def root():
 
 
 @app.get("/health")
-async def health_check():
+async def health_check_endpoint():
     """Health check endpoint."""
     return {"status": "healthy", "timestamp": "2025-07-16T19:25:00Z"}
 

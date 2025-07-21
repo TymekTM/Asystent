@@ -5,7 +5,6 @@ system to OpenAI function calling format.
 """
 
 import logging
-from collections.abc import Callable
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -17,7 +16,7 @@ class FunctionCallingSystem:
     def __init__(self):
         """Initialize function calling system."""
         self.modules = {}
-        self.function_handlers: dict[str, Callable] = {}
+        self.function_handlers: dict[str, dict[str, Any]] = {}
 
     async def initialize(self):
         """Asynchroniczna inicjalizacja systemu funkcji."""
@@ -46,62 +45,6 @@ class FunctionCallingSystem:
                     self.function_handlers[handler_name] = sub_data["function"]
 
         logger.info(f"Registered module: {module_name}")
-
-    def execute_function(self, function_name: str, arguments: dict[str, Any]) -> Any:
-        """Execute a registered function with given arguments.
-
-        Args:
-            function_name: Name of the function to execute
-            arguments: Dictionary of arguments to pass to the function
-
-        Returns:
-            Result of the function execution or error message
-        """
-        try:
-            # Check if function exists in handlers
-            if function_name in self.function_handlers:
-                handler = self.function_handlers[function_name]
-
-                # Handle callable functions
-                if callable(handler):
-                    # Extract parameters and call function
-                    if arguments:
-                        return handler(**arguments)
-                    else:
-                        return handler()
-                else:
-                    return f"Handler for {function_name} is not callable"
-
-            # Check in registered modules
-            for module_name, module_data in self.modules.items():
-                if function_name == module_name and "handler" in module_data:
-                    handler = module_data["handler"]
-                    if callable(handler):
-                        if arguments:
-                            return handler(**arguments)
-                        else:
-                            return handler()
-
-                # Check sub-commands
-                if "sub_commands" in module_data:
-                    for sub_name, sub_data in module_data["sub_commands"].items():
-                        if (
-                            function_name == f"{module_name}_{sub_name}"
-                            and "function" in sub_data
-                        ):
-                            handler = sub_data["function"]
-                            if callable(handler):
-                                if arguments:
-                                    return handler(**arguments)
-                                else:
-                                    return handler()
-
-            return f"Function {function_name} not found"
-
-        except Exception as e:
-            error_msg = f"Error executing function {function_name}: {str(e)}"
-            logger.error(error_msg)
-            return error_msg
 
     def convert_modules_to_functions(self) -> list[dict[str, Any]]:
         """Convert plugin manager modules and server modules to OpenAI function calling
@@ -177,7 +120,7 @@ class FunctionCallingSystem:
         sys.stderr.flush()
         try:
             print("DEBUG: Importing server modules...")
-            from server.modules import (  # onboarding_plugin_module,  # Disabled - not needed; plugin_monitor_module,  # Disabled - not needed
+            from modules import (  # onboarding_plugin_module,  # Disabled - not needed; plugin_monitor_module,  # Disabled - not needed
                 api_module,
                 core_module,
                 memory_module,
@@ -537,7 +480,6 @@ class FunctionCallingSystem:
             # Handle plugin manager functions (legacy)
             plugin_name = handler_info.get("plugin_name")
             func_name = handler_info.get("function_name")
-            original_name = handler_info.get("original_name")
 
             if plugin_name and func_name:
                 from plugin_manager import plugin_manager

@@ -3,6 +3,7 @@
 
 import asyncio
 import time
+
 import aiohttp
 import pytest
 from loguru import logger
@@ -26,7 +27,7 @@ async def test_status_endpoint():
 async def test_reduced_logging():
     """Test sprawdzający czy logowanie zostało zredukowane."""
     logger.info("🧪 Testing reduced logging configuration...")
-    
+
     # Symuluj kilka zapytań do status endpoint
     try:
         async with aiohttp.ClientSession() as session:
@@ -35,7 +36,7 @@ async def test_reduced_logging():
                     if response.status == 200:
                         logger.info(f"Request {i+1}/5 completed")
                 await asyncio.sleep(0.1)
-        
+
         logger.success("✅ Logging test completed - check if HTTP logs are reduced")
         return True
     except Exception as e:
@@ -46,16 +47,16 @@ async def test_reduced_logging():
 async def main():
     """Główna funkcja testowa."""
     logger.info("🚀 Starting server logging tests...")
-    
+
     # Poczekaj chwilę na uruchomienie serwera
     await asyncio.sleep(2)
-    
+
     # Test endpoint
     status_ok = await test_status_endpoint()
-    
+
     # Test logowania
     logging_ok = await test_reduced_logging()
-    
+
     if status_ok and logging_ok:
         logger.success("✅ All tests passed!")
     else:

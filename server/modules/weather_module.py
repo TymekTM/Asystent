@@ -271,8 +271,8 @@ class WeatherModule:
 
         # Aktualna pogoda
         current_weather = {
-            "temperature": round(main.get("temp", 0)),
-            "feels_like": round(main.get("feels_like", 0)),
+            "temperature": round(float(main.get("temp"), 0)),
+            "feels_like": round(float(main.get("feels_like"), 0)),
             "humidity": main.get("humidity", 0),
             "pressure": main.get("pressure", 0),
             "description": weather.get("description", "").capitalize(),
@@ -353,7 +353,9 @@ class WeatherModule:
                         "day_name": day_data["day_name"],
                         "min_temp": round(min(temps)) if temps else 0,
                         "max_temp": round(max(temps)) if temps else 0,
-                        "avg_temp": round(sum(temps) / len(temps)) if temps else 0,
+                        "avg_temp": round(sum(1 for x in temps if x) / len(temps))
+                        if temps
+                        else 0,
                         "description": (
                             max(
                                 set(day_data["descriptions"]),
@@ -363,13 +365,16 @@ class WeatherModule:
                             else ""
                         ),
                         "avg_humidity": (
-                            round(sum(day_data["humidity"]) / len(day_data["humidity"]))
+                            round(
+                                sum(1 for x in day_data["humidity"] if x)
+                                / len(day_data["humidity"])
+                            )
                             if day_data["humidity"]
                             else 0
                         ),
                         "avg_wind_speed": (
                             round(
-                                sum(day_data["wind_speed"])
+                                sum(1 for x in day_data["wind_speed"] if x)
                                 / len(day_data["wind_speed"]),
                                 1,
                             )
@@ -435,8 +440,8 @@ class WeatherModule:
 
         # Aktualna pogoda
         current_weather = {
-            "temperature": round(current.get("temp_c", 0)),
-            "feels_like": round(current.get("feelslike_c", 0)),
+            "temperature": round(float(current.get("temp_c"), 0)),
+            "feels_like": round(float(current.get("feelslike_c"), 0)),
             "humidity": current.get("humidity", 0),
             "pressure": current.get("pressure_mb", 0),
             "description": current.get("condition", {}).get("text", ""),
@@ -475,7 +480,7 @@ class WeatherModule:
                 hourly.append(
                     {
                         "time": hour_dt.strftime("%H:%M"),
-                        "temperature": round(hour_data.get("temp_c", 0)),
+                        "temperature": round(float(hour_data.get("temp_c"), 0)),
                         "description": hour_data.get("condition", {}).get("text", ""),
                         "icon": hour_data.get("condition", {}).get("icon", ""),
                         "humidity": hour_data.get("humidity", 0),
@@ -488,9 +493,9 @@ class WeatherModule:
                 {
                     "date": date_str,
                     "day_name": datetime.strptime(date_str, "%Y-%m-%d").strftime("%A"),
-                    "min_temp": round(day.get("mintemp_c", 0)),
-                    "max_temp": round(day.get("maxtemp_c", 0)),
-                    "avg_temp": round(day.get("avgtemp_c", 0)),
+                    "min_temp": round(float(day.get("mintemp_c"), 0)),
+                    "max_temp": round(float(day.get("maxtemp_c"), 0)),
+                    "avg_temp": round(float(day.get("avgtemp_c"), 0)),
                     "description": day.get("condition", {}).get("text", ""),
                     "icon": day.get("condition", {}).get("icon", ""),
                     "max_wind_speed": day.get("maxwind_kph", 0) / 3.6,
@@ -987,7 +992,9 @@ async def get_weather_module() -> WeatherModule:
                     "day_name": day_data["day_name"],
                     "min_temp": round(min(temps)) if temps else 0,
                     "max_temp": round(max(temps)) if temps else 0,
-                    "avg_temp": round(sum(temps) / len(temps)) if temps else 0,
+                    "avg_temp": round(sum(1 for x in temps if x) / len(temps))
+                    if temps
+                    else 0,
                     "description": (
                         max(
                             set(day_data["descriptions"]),
@@ -997,19 +1004,26 @@ async def get_weather_module() -> WeatherModule:
                         else ""
                     ),
                     "avg_humidity": (
-                        round(sum(day_data["humidity"]) / len(day_data["humidity"]))
+                        round(
+                            sum(1 for x in day_data["humidity"] if x)
+                            / len(day_data["humidity"])
+                        )
                         if day_data["humidity"]
                         else 0
                     ),
                     "avg_wind_speed": (
                         round(
-                            sum(day_data["wind_speed"]) / len(day_data["wind_speed"]), 1
+                            sum(1 for x in day_data["wind_speed"] if x)
+                            / len(day_data["wind_speed"]),
+                            1,
                         )
                         if day_data["wind_speed"]
                         else 0
                     ),
                     "total_precipitation": (
-                        round(sum(precipitations), 1) if precipitations else 0
+                        round(sum(1 for x in precipitations if x), 1)
+                        if precipitations
+                        else 0
                     ),
                     "hourly": day_data["hourly"][:8],  # Maksymalnie 8 godzin na dzień
                 }

@@ -68,6 +68,8 @@ async def store_memory(
     try:
         from server_main import server_app
 
+        from . import server_main
+
         success = await server_app.memory_module.store_memory(
             user_id, key, value, category
         )
@@ -84,6 +86,8 @@ async def get_memory(user_id: str, key: str) -> dict[str, Any]:
     try:
         from server_main import server_app
 
+        from . import server_main
+
         value = await server_app.memory_module.get_memory(user_id, key)
         return {
             "success": value is not None,
@@ -98,6 +102,8 @@ async def search_memories(user_id: str, query: str) -> dict[str, Any]:
     """Search memories."""
     try:
         from server_main import server_app
+
+        from . import server_main
 
         results = await server_app.memory_module.search_memories(user_id, query)
         return {"success": True, "results": results, "count": len(results)}

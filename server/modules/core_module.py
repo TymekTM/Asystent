@@ -1230,7 +1230,9 @@ async def ask_for_clarification(params) -> dict[str, Any]:
 
 
 # Legacy handler functions for backward compatibility
-async def handler(params: str = "", conversation_history: list = None) -> str:
+async def handler(
+    params: str = "", conversation_history: list[Any] | None = None
+) -> str:
     """Legacy handler for backward compatibility."""
     # Simple command parsing for legacy support
     if not params:
