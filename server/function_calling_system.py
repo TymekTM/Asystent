@@ -104,16 +104,20 @@ class FunctionCallingSystem:
             return error_msg
 
     def convert_modules_to_functions(self) -> list[dict[str, Any]]:
-        """Convert plugin manager modules and server modules to OpenAI function calling format."""
+        """Convert plugin manager modules and server modules to OpenAI function calling
+        format."""
         functions = []
-        
+
         # First try plugin manager (legacy support)
         try:
             from plugin_manager import plugin_manager
-            
+
             if plugin_manager.function_registry:
                 # Get functions from plugin manager's function registry
-                for full_func_name, func_info in plugin_manager.function_registry.items():
+                for (
+                    full_func_name,
+                    func_info,
+                ) in plugin_manager.function_registry.items():
                     try:
                         # Parse plugin name and function name
                         parts = full_func_name.split(".")
@@ -137,7 +141,11 @@ class FunctionCallingSystem:
                                 ),
                                 "parameters": func_info.get(
                                     "parameters",
-                                    {"type": "object", "properties": {}, "required": []},
+                                    {
+                                        "type": "object",
+                                        "properties": {},
+                                        "required": [],
+                                    },
                                 ),
                             },
                         }
@@ -160,105 +168,127 @@ class FunctionCallingSystem:
                         continue
         except Exception as e:
             logger.debug(f"Plugin manager not available or has no functions: {e}")
-        
+
         # Add server modules directly (main source of functions)
         import sys
+
         print("DEBUG: Starting server modules section", flush=True)
         sys.stderr.write("DEBUG: Starting server modules section\n")
         sys.stderr.flush()
         try:
             print("DEBUG: Importing server modules...")
             from server.modules import (
-                weather_module, search_module, core_module, music_module, 
-                api_module, open_web_module, memory_module, plugin_monitor_module,
-                onboarding_plugin_module
+                api_module,
+                core_module,
+                memory_module,
+                music_module,
+                onboarding_plugin_module,
+                open_web_module,
+                plugin_monitor_module,
+                search_module,
+                weather_module,
             )
+
             print("DEBUG: Server modules imported successfully")
-            
+
             server_modules = [
-                ('weather', weather_module),
-                ('search', search_module),
-                ('core', core_module),
-                ('music', music_module),
-                ('api', api_module),
-                ('web', open_web_module),
-                ('memory', memory_module),
-                ('monitor', plugin_monitor_module),
-                ('onboarding', onboarding_plugin_module)
+                ("weather", weather_module),
+                ("search", search_module),
+                ("core", core_module),
+                ("music", music_module),
+                ("api", api_module),
+                ("web", open_web_module),
+                ("memory", memory_module),
+                ("monitor", plugin_monitor_module),
+                ("onboarding", onboarding_plugin_module),
             ]
-            
+
             print(f"DEBUG: Processing {len(server_modules)} server modules")
-            
+
             for module_name, module in server_modules:
                 print(f"DEBUG: Processing module {module_name}")
                 try:
-                    if hasattr(module, 'get_functions'):
+                    if hasattr(module, "get_functions"):
                         print(f"DEBUG: Module {module_name} has get_functions")
                         # Call get_functions directly on the module
                         module_functions = module.get_functions()
-                        logger.debug(f"Got {len(module_functions)} functions from {module_name}")
-                        print(f"DEBUG: Got {len(module_functions)} functions from {module_name}")
-                        
+                        logger.debug(
+                            f"Got {len(module_functions)} functions from {module_name}"
+                        )
+                        print(
+                            f"DEBUG: Got {len(module_functions)} functions from {module_name}"
+                        )
+
                         for func in module_functions:
                             openai_func = {
                                 "type": "function",
                                 "function": {
                                     "name": f"{module_name}_{func['name']}",
-                                    "description": func['description'],
-                                    "parameters": func['parameters']
-                                }
+                                    "description": func["description"],
+                                    "parameters": func["parameters"],
+                                },
                             }
                             functions.append(openai_func)
-                            
+
                             # Store handler for execution - create module instance
                             handler_name = f"{module_name}_{func['name']}"
-                            
+
                             # Create module instance based on module type
-                            if hasattr(module, 'WeatherModule'):
+                            if hasattr(module, "WeatherModule"):
                                 module_instance = module.WeatherModule()
-                            elif hasattr(module, 'SearchModule'):
+                            elif hasattr(module, "SearchModule"):
                                 module_instance = module.SearchModule()
-                            elif hasattr(module, 'CoreModule'):
+                            elif hasattr(module, "CoreModule"):
                                 module_instance = module.CoreModule()
-                            elif hasattr(module, 'MusicModule'):
+                            elif hasattr(module, "MusicModule"):
                                 module_instance = module.MusicModule()
-                            elif hasattr(module, 'APIModule'):
+                            elif hasattr(module, "APIModule"):
                                 module_instance = module.APIModule()
-                            elif hasattr(module, 'WebModule'):
+                            elif hasattr(module, "WebModule"):
                                 module_instance = module.WebModule()
-                            elif hasattr(module, 'MemoryModule'):
+                            elif hasattr(module, "MemoryModule"):
                                 module_instance = module.MemoryModule()
-                            elif hasattr(module, 'PluginMonitorModule'):
+                            elif hasattr(module, "PluginMonitorModule"):
                                 module_instance = module.PluginMonitorModule()
-                            elif hasattr(module, 'OnboardingPluginModule'):
+                            elif hasattr(module, "OnboardingPluginModule"):
                                 module_instance = module.OnboardingPluginModule()
                             else:
-                                logger.warning(f"Could not create instance for {module_name}")
-                                print(f"DEBUG: Could not create instance for {module_name}")
+                                logger.warning(
+                                    f"Could not create instance for {module_name}"
+                                )
+                                print(
+                                    f"DEBUG: Could not create instance for {module_name}"
+                                )
                                 continue
-                            
+
                             self.function_handlers[handler_name] = {
                                 "module": module_instance,
-                                "function_name": func['name'],
+                                "function_name": func["name"],
                                 "module_name": module_name,
-                                "type": "server_module"
+                                "type": "server_module",
                             }
-                            
+
                             logger.debug(f"Added server function: {handler_name}")
                             print(f"DEBUG: Added server function: {handler_name}")
                     else:
-                        logger.warning(f"Module {module_name} does not have get_functions method")
-                        print(f"DEBUG: Module {module_name} does not have get_functions method")
+                        logger.warning(
+                            f"Module {module_name} does not have get_functions method"
+                        )
+                        print(
+                            f"DEBUG: Module {module_name} does not have get_functions method"
+                        )
                 except Exception as e:
                     logger.error(f"Error loading functions from {module_name}: {e}")
                     print(f"DEBUG: Error loading functions from {module_name}: {e}")
                     import traceback
+
                     logger.error(traceback.format_exc())
                     traceback.print_exc()
         except Exception as e:
             logger.error(f"Error loading server modules: {e}")
             print(f"DEBUG: Error loading server modules: {e}")
             import traceback
+
             traceback.print_exc()
 
         logger.info(f"Converted {len(functions)} functions for OpenAI")
@@ -491,9 +521,11 @@ class FunctionCallingSystem:
                 module = handler_info["module"]
                 func_name = handler_info["function_name"]
                 module_name = handler_info["module_name"]
-                
-                logger.info(f"Executing server module function: {module_name}.{func_name}")
-                
+
+                logger.info(
+                    f"Executing server module function: {module_name}.{func_name}"
+                )
+
                 if hasattr(module, "execute_function"):
                     # Use the module's execute_function method (async)
                     result = await module.execute_function(

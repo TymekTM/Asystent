@@ -29,7 +29,17 @@ SYSTEM_PROMPT = (
     "Personality: v2 "
     "Use the available functions when appropriate to help the user. When the user requests something that can be done with a function, call it directly. "
     "DO NOT say that you will do something, just DO IT by calling the appropriate function! "
-    "Respond naturally and directly without explaining what function you're calling."
+    "Respond naturally and directly without explaining what function you're calling. "
+    "\n\n"
+    "IMPORTANT: When the user's request is unclear, ambiguous, or missing crucial information needed to execute a function properly, "
+    "ALWAYS use the 'core_ask_for_clarification' function instead of guessing or asking in text. "
+    "Examples of when to use ask_for_clarification: "
+    "- User asks 'what's the weather?' without specifying location → ask_for_clarification('What city would you like the weather for?') "
+    "- User says 'play music' without specifying what → ask_for_clarification('What song, artist, or genre would you like me to play?') "
+    "- User says 'set a timer' without duration → ask_for_clarification('How long should I set the timer for?') "
+    "- User says 'remind me' without details → ask_for_clarification('What should I remind you about and when?') "
+    "- User says 'add milk' without specifying list → ask_for_clarification('Which list should I add milk to?') "
+    "This function will pause TTS, ask the user for details, and start recording again for a natural conversation flow."
 )
 
 

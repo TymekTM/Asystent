@@ -16,18 +16,9 @@
             "parameter_count": 3,
             "required_parameters": 1,
             "optional_parameters": 2,
-            "parameters": [
-              "location",
-              "provider",
-              "test_mode"
-            ],
-            "required_params": [
-              "location"
-            ],
-            "optional_params": [
-              "provider",
-              "test_mode"
-            ]
+            "parameters": ["location", "provider", "test_mode"],
+            "required_params": ["location"],
+            "optional_params": ["provider", "test_mode"]
           }
         },
         {
@@ -37,18 +28,9 @@
             "parameter_count": 3,
             "required_parameters": 1,
             "optional_parameters": 2,
-            "parameters": [
-              "location",
-              "days",
-              "test_mode"
-            ],
-            "required_params": [
-              "location"
-            ],
-            "optional_params": [
-              "days",
-              "test_mode"
-            ]
+            "parameters": ["location", "days", "test_mode"],
+            "required_params": ["location"],
+            "optional_params": ["days", "test_mode"]
           }
         }
       ],
@@ -64,20 +46,9 @@
             "parameter_count": 4,
             "required_parameters": 1,
             "optional_parameters": 3,
-            "parameters": [
-              "query",
-              "engine",
-              "max_results",
-              "test_mode"
-            ],
-            "required_params": [
-              "query"
-            ],
-            "optional_params": [
-              "engine",
-              "max_results",
-              "test_mode"
-            ]
+            "parameters": ["query", "engine", "max_results", "test_mode"],
+            "required_params": ["query"],
+            "optional_params": ["engine", "max_results", "test_mode"]
           }
         },
         {
@@ -87,20 +58,9 @@
             "parameter_count": 4,
             "required_parameters": 1,
             "optional_parameters": 3,
-            "parameters": [
-              "query",
-              "language",
-              "max_results",
-              "test_mode"
-            ],
-            "required_params": [
-              "query"
-            ],
-            "optional_params": [
-              "language",
-              "max_results",
-              "test_mode"
-            ]
+            "parameters": ["query", "language", "max_results", "test_mode"],
+            "required_params": ["query"],
+            "optional_params": ["language", "max_results", "test_mode"]
           }
         }
       ],
@@ -116,16 +76,9 @@
             "parameter_count": 2,
             "required_parameters": 1,
             "optional_parameters": 1,
-            "parameters": [
-              "duration",
-              "label"
-            ],
-            "required_params": [
-              "duration"
-            ],
-            "optional_params": [
-              "label"
-            ]
+            "parameters": ["duration", "label"],
+            "required_params": ["duration"],
+            "optional_params": ["label"]
           }
         },
         {
@@ -147,18 +100,9 @@
             "parameter_count": 3,
             "required_parameters": 2,
             "optional_parameters": 1,
-            "parameters": [
-              "title",
-              "date",
-              "time"
-            ],
-            "required_params": [
-              "title",
-              "date"
-            ],
-            "optional_params": [
-              "time"
-            ]
+            "parameters": ["title", "date", "time"],
+            "required_params": ["title", "date"],
+            "optional_params": ["time"]
           }
         },
         {
@@ -180,14 +124,8 @@
             "parameter_count": 2,
             "required_parameters": 2,
             "optional_parameters": 0,
-            "parameters": [
-              "text",
-              "time"
-            ],
-            "required_params": [
-              "text",
-              "time"
-            ],
+            "parameters": ["text", "time"],
+            "required_params": ["text", "time"],
             "optional_params": []
           }
         },
@@ -222,16 +160,9 @@
             "parameter_count": 2,
             "required_parameters": 1,
             "optional_parameters": 1,
-            "parameters": [
-              "task",
-              "priority"
-            ],
-            "required_params": [
-              "task"
-            ],
-            "optional_params": [
-              "priority"
-            ]
+            "parameters": ["task", "priority"],
+            "required_params": ["task"],
+            "optional_params": ["priority"]
           }
         },
         {
@@ -253,12 +184,8 @@
             "parameter_count": 1,
             "required_parameters": 1,
             "optional_parameters": 0,
-            "parameters": [
-              "task_id"
-            ],
-            "required_params": [
-              "task_id"
-            ],
+            "parameters": ["task_id"],
+            "required_params": ["task_id"],
             "optional_params": []
           }
         },
@@ -269,12 +196,8 @@
             "parameter_count": 1,
             "required_parameters": 1,
             "optional_parameters": 0,
-            "parameters": [
-              "task_id"
-            ],
-            "required_params": [
-              "task_id"
-            ],
+            "parameters": ["task_id"],
+            "required_params": ["task_id"],
             "optional_params": []
           }
         },
@@ -285,14 +208,8 @@
             "parameter_count": 2,
             "required_parameters": 2,
             "optional_parameters": 0,
-            "parameters": [
-              "list_name",
-              "item"
-            ],
-            "required_params": [
-              "list_name",
-              "item"
-            ],
+            "parameters": ["list_name", "item"],
+            "required_params": ["list_name", "item"],
             "optional_params": []
           }
         },
@@ -303,12 +220,8 @@
             "parameter_count": 1,
             "required_parameters": 1,
             "optional_parameters": 0,
-            "parameters": [
-              "list_name"
-            ],
-            "required_params": [
-              "list_name"
-            ],
+            "parameters": ["list_name"],
+            "required_params": ["list_name"],
             "optional_params": []
           }
         },
@@ -319,14 +232,8 @@
             "parameter_count": 2,
             "required_parameters": 2,
             "optional_parameters": 0,
-            "parameters": [
-              "list_name",
-              "item"
-            ],
-            "required_params": [
-              "list_name",
-              "item"
-            ],
+            "parameters": ["list_name", "item"],
+            "required_params": ["list_name", "item"],
             "optional_params": []
           }
         },
@@ -355,18 +262,9 @@
             "parameter_count": 3,
             "required_parameters": 1,
             "optional_parameters": 2,
-            "parameters": [
-              "action",
-              "platform",
-              "test_mode"
-            ],
-            "required_params": [
-              "action"
-            ],
-            "optional_params": [
-              "platform",
-              "test_mode"
-            ]
+            "parameters": ["action", "platform", "test_mode"],
+            "required_params": ["action"],
+            "optional_params": ["platform", "test_mode"]
           }
         },
         {
@@ -376,13 +274,9 @@
             "parameter_count": 1,
             "required_parameters": 0,
             "optional_parameters": 1,
-            "parameters": [
-              "test_mode"
-            ],
+            "parameters": ["test_mode"],
             "required_params": [],
-            "optional_params": [
-              "test_mode"
-            ]
+            "optional_params": ["test_mode"]
           }
         }
       ],
@@ -398,22 +292,9 @@
             "parameter_count": 5,
             "required_parameters": 2,
             "optional_parameters": 3,
-            "parameters": [
-              "method",
-              "url",
-              "headers",
-              "params",
-              "json_data"
-            ],
-            "required_params": [
-              "method",
-              "url"
-            ],
-            "optional_params": [
-              "headers",
-              "params",
-              "json_data"
-            ]
+            "parameters": ["method", "url", "headers", "params", "json_data"],
+            "required_params": ["method", "url"],
+            "optional_params": ["headers", "params", "json_data"]
           }
         }
       ],
@@ -429,16 +310,9 @@
             "parameter_count": 2,
             "required_parameters": 1,
             "optional_parameters": 1,
-            "parameters": [
-              "url",
-              "test_mode"
-            ],
-            "required_params": [
-              "url"
-            ],
-            "optional_params": [
-              "test_mode"
-            ]
+            "parameters": ["url", "test_mode"],
+            "required_params": ["url"],
+            "optional_params": ["test_mode"]
           }
         }
       ],
@@ -495,12 +369,8 @@
             "parameter_count": 1,
             "required_parameters": 1,
             "optional_parameters": 0,
-            "parameters": [
-              "plugin_name"
-            ],
-            "required_params": [
-              "plugin_name"
-            ],
+            "parameters": ["plugin_name"],
+            "required_params": ["plugin_name"],
             "optional_params": []
           }
         }
@@ -517,13 +387,9 @@
             "parameter_count": 1,
             "required_parameters": 0,
             "optional_parameters": 1,
-            "parameters": [
-              "user_id"
-            ],
+            "parameters": ["user_id"],
             "required_params": [],
-            "optional_params": [
-              "user_id"
-            ]
+            "optional_params": ["user_id"]
           }
         },
         {
@@ -533,16 +399,8 @@
             "parameter_count": 3,
             "required_parameters": 3,
             "optional_parameters": 0,
-            "parameters": [
-              "user_id",
-              "step",
-              "data"
-            ],
-            "required_params": [
-              "user_id",
-              "step",
-              "data"
-            ],
+            "parameters": ["user_id", "step", "data"],
+            "required_params": ["user_id", "step", "data"],
             "optional_params": []
           }
         },
@@ -553,13 +411,9 @@
             "parameter_count": 1,
             "required_parameters": 0,
             "optional_parameters": 1,
-            "parameters": [
-              "user_id"
-            ],
+            "parameters": ["user_id"],
             "required_params": [],
-            "optional_params": [
-              "user_id"
-            ]
+            "optional_params": ["user_id"]
           }
         }
       ],
@@ -575,18 +429,9 @@
       "parameter_count": 3,
       "required_parameters": 1,
       "optional_parameters": 2,
-      "parameters": [
-        "location",
-        "provider",
-        "test_mode"
-      ],
-      "required_params": [
-        "location"
-      ],
-      "optional_params": [
-        "provider",
-        "test_mode"
-      ]
+      "parameters": ["location", "provider", "test_mode"],
+      "required_params": ["location"],
+      "optional_params": ["provider", "test_mode"]
     },
     {
       "module": "weather_module",
@@ -596,18 +441,9 @@
       "parameter_count": 3,
       "required_parameters": 1,
       "optional_parameters": 2,
-      "parameters": [
-        "location",
-        "days",
-        "test_mode"
-      ],
-      "required_params": [
-        "location"
-      ],
-      "optional_params": [
-        "days",
-        "test_mode"
-      ]
+      "parameters": ["location", "days", "test_mode"],
+      "required_params": ["location"],
+      "optional_params": ["days", "test_mode"]
     },
     {
       "module": "search_module",
@@ -617,20 +453,9 @@
       "parameter_count": 4,
       "required_parameters": 1,
       "optional_parameters": 3,
-      "parameters": [
-        "query",
-        "engine",
-        "max_results",
-        "test_mode"
-      ],
-      "required_params": [
-        "query"
-      ],
-      "optional_params": [
-        "engine",
-        "max_results",
-        "test_mode"
-      ]
+      "parameters": ["query", "engine", "max_results", "test_mode"],
+      "required_params": ["query"],
+      "optional_params": ["engine", "max_results", "test_mode"]
     },
     {
       "module": "search_module",
@@ -640,20 +465,9 @@
       "parameter_count": 4,
       "required_parameters": 1,
       "optional_parameters": 3,
-      "parameters": [
-        "query",
-        "language",
-        "max_results",
-        "test_mode"
-      ],
-      "required_params": [
-        "query"
-      ],
-      "optional_params": [
-        "language",
-        "max_results",
-        "test_mode"
-      ]
+      "parameters": ["query", "language", "max_results", "test_mode"],
+      "required_params": ["query"],
+      "optional_params": ["language", "max_results", "test_mode"]
     },
     {
       "module": "core_module",
@@ -663,16 +477,9 @@
       "parameter_count": 2,
       "required_parameters": 1,
       "optional_parameters": 1,
-      "parameters": [
-        "duration",
-        "label"
-      ],
-      "required_params": [
-        "duration"
-      ],
-      "optional_params": [
-        "label"
-      ]
+      "parameters": ["duration", "label"],
+      "required_params": ["duration"],
+      "optional_params": ["label"]
     },
     {
       "module": "core_module",
@@ -694,18 +501,9 @@
       "parameter_count": 3,
       "required_parameters": 2,
       "optional_parameters": 1,
-      "parameters": [
-        "title",
-        "date",
-        "time"
-      ],
-      "required_params": [
-        "title",
-        "date"
-      ],
-      "optional_params": [
-        "time"
-      ]
+      "parameters": ["title", "date", "time"],
+      "required_params": ["title", "date"],
+      "optional_params": ["time"]
     },
     {
       "module": "core_module",
@@ -727,14 +525,8 @@
       "parameter_count": 2,
       "required_parameters": 2,
       "optional_parameters": 0,
-      "parameters": [
-        "text",
-        "time"
-      ],
-      "required_params": [
-        "text",
-        "time"
-      ],
+      "parameters": ["text", "time"],
+      "required_params": ["text", "time"],
       "optional_params": []
     },
     {
@@ -769,16 +561,9 @@
       "parameter_count": 2,
       "required_parameters": 1,
       "optional_parameters": 1,
-      "parameters": [
-        "task",
-        "priority"
-      ],
-      "required_params": [
-        "task"
-      ],
-      "optional_params": [
-        "priority"
-      ]
+      "parameters": ["task", "priority"],
+      "required_params": ["task"],
+      "optional_params": ["priority"]
     },
     {
       "module": "core_module",
@@ -800,12 +585,8 @@
       "parameter_count": 1,
       "required_parameters": 1,
       "optional_parameters": 0,
-      "parameters": [
-        "task_id"
-      ],
-      "required_params": [
-        "task_id"
-      ],
+      "parameters": ["task_id"],
+      "required_params": ["task_id"],
       "optional_params": []
     },
     {
@@ -816,12 +597,8 @@
       "parameter_count": 1,
       "required_parameters": 1,
       "optional_parameters": 0,
-      "parameters": [
-        "task_id"
-      ],
-      "required_params": [
-        "task_id"
-      ],
+      "parameters": ["task_id"],
+      "required_params": ["task_id"],
       "optional_params": []
     },
     {
@@ -832,14 +609,8 @@
       "parameter_count": 2,
       "required_parameters": 2,
       "optional_parameters": 0,
-      "parameters": [
-        "list_name",
-        "item"
-      ],
-      "required_params": [
-        "list_name",
-        "item"
-      ],
+      "parameters": ["list_name", "item"],
+      "required_params": ["list_name", "item"],
       "optional_params": []
     },
     {
@@ -850,12 +621,8 @@
       "parameter_count": 1,
       "required_parameters": 1,
       "optional_parameters": 0,
-      "parameters": [
-        "list_name"
-      ],
-      "required_params": [
-        "list_name"
-      ],
+      "parameters": ["list_name"],
+      "required_params": ["list_name"],
       "optional_params": []
     },
     {
@@ -866,14 +633,8 @@
       "parameter_count": 2,
       "required_parameters": 2,
       "optional_parameters": 0,
-      "parameters": [
-        "list_name",
-        "item"
-      ],
-      "required_params": [
-        "list_name",
-        "item"
-      ],
+      "parameters": ["list_name", "item"],
+      "required_params": ["list_name", "item"],
       "optional_params": []
     },
     {
@@ -896,18 +657,9 @@
       "parameter_count": 3,
       "required_parameters": 1,
       "optional_parameters": 2,
-      "parameters": [
-        "action",
-        "platform",
-        "test_mode"
-      ],
-      "required_params": [
-        "action"
-      ],
-      "optional_params": [
-        "platform",
-        "test_mode"
-      ]
+      "parameters": ["action", "platform", "test_mode"],
+      "required_params": ["action"],
+      "optional_params": ["platform", "test_mode"]
     },
     {
       "module": "music_module",
@@ -917,13 +669,9 @@
       "parameter_count": 1,
       "required_parameters": 0,
       "optional_parameters": 1,
-      "parameters": [
-        "test_mode"
-      ],
+      "parameters": ["test_mode"],
       "required_params": [],
-      "optional_params": [
-        "test_mode"
-      ]
+      "optional_params": ["test_mode"]
     },
     {
       "module": "api_module",
@@ -933,22 +681,9 @@
       "parameter_count": 5,
       "required_parameters": 2,
       "optional_parameters": 3,
-      "parameters": [
-        "method",
-        "url",
-        "headers",
-        "params",
-        "json_data"
-      ],
-      "required_params": [
-        "method",
-        "url"
-      ],
-      "optional_params": [
-        "headers",
-        "params",
-        "json_data"
-      ]
+      "parameters": ["method", "url", "headers", "params", "json_data"],
+      "required_params": ["method", "url"],
+      "optional_params": ["headers", "params", "json_data"]
     },
     {
       "module": "open_web_module",
@@ -958,16 +693,9 @@
       "parameter_count": 2,
       "required_parameters": 1,
       "optional_parameters": 1,
-      "parameters": [
-        "url",
-        "test_mode"
-      ],
-      "required_params": [
-        "url"
-      ],
-      "optional_params": [
-        "test_mode"
-      ]
+      "parameters": ["url", "test_mode"],
+      "required_params": ["url"],
+      "optional_params": ["test_mode"]
     },
     {
       "module": "plugin_monitor_module",
@@ -1013,12 +741,8 @@
       "parameter_count": 1,
       "required_parameters": 1,
       "optional_parameters": 0,
-      "parameters": [
-        "plugin_name"
-      ],
-      "required_params": [
-        "plugin_name"
-      ],
+      "parameters": ["plugin_name"],
+      "required_params": ["plugin_name"],
       "optional_params": []
     },
     {
@@ -1029,13 +753,9 @@
       "parameter_count": 1,
       "required_parameters": 0,
       "optional_parameters": 1,
-      "parameters": [
-        "user_id"
-      ],
+      "parameters": ["user_id"],
       "required_params": [],
-      "optional_params": [
-        "user_id"
-      ]
+      "optional_params": ["user_id"]
     },
     {
       "module": "onboarding_plugin_module",
@@ -1045,16 +765,8 @@
       "parameter_count": 3,
       "required_parameters": 3,
       "optional_parameters": 0,
-      "parameters": [
-        "user_id",
-        "step",
-        "data"
-      ],
-      "required_params": [
-        "user_id",
-        "step",
-        "data"
-      ],
+      "parameters": ["user_id", "step", "data"],
+      "required_params": ["user_id", "step", "data"],
       "optional_params": []
     },
     {
@@ -1065,24 +777,14 @@
       "parameter_count": 1,
       "required_parameters": 0,
       "optional_parameters": 1,
-      "parameters": [
-        "user_id"
-      ],
+      "parameters": ["user_id"],
       "required_params": [],
-      "optional_params": [
-        "user_id"
-      ]
+      "optional_params": ["user_id"]
     }
   ],
   "categories": {
-    "Pogoda": [
-      "weather_module_get_weather",
-      "weather_module_get_forecast"
-    ],
-    "Wyszukiwanie": [
-      "search_module_search",
-      "search_module_search_news"
-    ],
+    "Pogoda": ["weather_module_get_weather", "weather_module_get_forecast"],
+    "Wyszukiwanie": ["search_module_search", "search_module_search_news"],
     "Zarządzanie czasem": [
       "core_module_set_timer",
       "core_module_view_timers",
@@ -1096,10 +798,7 @@
       "core_module_remove_task",
       "core_module_view_list"
     ],
-    "Muzyka": [
-      "music_module_control_music",
-      "music_module_get_spotify_status"
-    ],
+    "Muzyka": ["music_module_control_music", "music_module_get_spotify_status"],
     "Internet i API": [
       "api_module_make_api_request",
       "open_web_module_open_web"

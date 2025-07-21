@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 import uvicorn
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
@@ -115,11 +115,32 @@ class ServerApp:
 
                 # Przetwórz zapytanie przez AI
                 try:
-                    response = await self.ai_module.process_query(query, context)
+                    ai_result = await self.ai_module.process_query(query, context)
                     logger.info(
-                        f"AI module returned response: {response[:200] if response else 'EMPTY'}"
+                        f"AI module returned result type: {ai_result.get('type', 'unknown')}"
                     )
 
+                    # Handle clarification requests
+                    if ai_result.get("type") == "clarification_request":
+                        # Send clarification request to client
+                        clarification_data = ai_result.get("clarification_data", {})
+                        await self.connection_manager.send_to_user(
+                            user_id,
+                            WebSocketMessage(
+                                "clarification_request",
+                                {
+                                    "question": clarification_data.get("question", ""),
+                                    "context": clarification_data.get("context", ""),
+                                    "actions": clarification_data.get("actions", {}),
+                                    "timestamp": clarification_data.get("timestamp"),
+                                    "original_query": query,
+                                },
+                            ),
+                        )
+                        return
+
+                    # Normal AI response
+                    response = ai_result.get("response", "")
                     await self.connection_manager.send_to_user(
                         user_id,
                         WebSocketMessage(
@@ -445,14 +466,14 @@ async def health_check():
     return {"status": "healthy", "timestamp": "2025-07-16T19:25:00Z"}
 
 
-# Legacy status endpoint for compatibility with client  
+# Legacy status endpoint for compatibility with client
 @app.get("/api/status")
 async def legacy_status():
     """Legacy status endpoint for client compatibility."""
     return {
         "status": "running",
         "version": "1.0.0",
-        "timestamp": "2025-07-16T19:25:00Z"
+        "timestamp": "2025-07-16T19:25:00Z",
     }
 
 
@@ -460,9 +481,10 @@ async def legacy_status():
 @app.get("/status/stream")
 async def status_stream(request: Request):
     """Server-Sent Events endpoint for overlay status updates."""
-    from fastapi.responses import StreamingResponse
     import asyncio
-    
+
+    from fastapi.responses import StreamingResponse
+
     async def event_stream():
         try:
             while True:
@@ -473,24 +495,24 @@ async def status_stream(request: Request):
                     "is_listening": False,
                     "is_speaking": False,
                     "wake_word_detected": False,
-                    "overlay_visible": False
+                    "overlay_visible": False,
                 }
-                
+
                 yield f"data: {json.dumps(status_data)}\n\n"
                 await asyncio.sleep(1)  # Send updates every second
-                
+
         except Exception as e:
             logger.error(f"SSE stream error: {e}")
             return
-    
+
     return StreamingResponse(
         event_stream(),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
-            "Access-Control-Allow-Origin": "*"
-        }
+            "Access-Control-Allow-Origin": "*",
+        },
     )
 
 
@@ -525,7 +547,9 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
 
                 if processed_message and server_app:
                     # Przekaż do aplikacji serwera
-                    await server_app.handle_websocket_message(user_id, processed_message)
+                    await server_app.handle_websocket_message(
+                        user_id, processed_message
+                    )
 
             except WebSocketDisconnect:
                 logger.info(f"WebSocket disconnected for user: {user_id}")
@@ -537,10 +561,14 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
                     try:
                         await connection_manager.send_to_user(
                             user_id,
-                            WebSocketMessage("error", {"message": "Invalid JSON format"}),
+                            WebSocketMessage(
+                                "error", {"message": "Invalid JSON format"}
+                            ),
                         )
                     except Exception as send_error:
-                        logger.debug(f"Could not send JSON error message to {user_id}: {send_error}")
+                        logger.debug(
+                            f"Could not send JSON error message to {user_id}: {send_error}"
+                        )
             except Exception as e:
                 logger.error(f"WebSocket message error for user {user_id}: {e}")
                 # Tylko spróbuj wysłać błąd jeśli użytkownik jest połączony
@@ -548,10 +576,14 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
                     try:
                         await connection_manager.send_to_user(
                             user_id,
-                            WebSocketMessage("error", {"message": "Message processing error"}),
+                            WebSocketMessage(
+                                "error", {"message": "Message processing error"}
+                            ),
                         )
                     except Exception as send_error:
-                        logger.debug(f"Could not send error message to {user_id}: {send_error}")
+                        logger.debug(
+                            f"Could not send error message to {user_id}: {send_error}"
+                        )
                         # Nie loguj tego jako ERROR żeby uniknąć spam logów
 
     except Exception as e:
@@ -626,7 +658,7 @@ def main():
         host=host,
         port=port,
         log_level="warning",  # Przywrócone do warning po naprawie overlay
-        access_log=False,     # Wyłączone logi żądań HTTP - overlay naprawiony
+        access_log=False,  # Wyłączone logi żądań HTTP - overlay naprawiony
         reload=False,
     )
 

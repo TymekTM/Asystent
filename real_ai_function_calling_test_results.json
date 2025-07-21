@@ -10,9 +10,7 @@
     {
       "scenario": "Pogoda w Warszawie",
       "query": "Jaka jest pogoda w Warszawie?",
-      "expected_functions": [
-        "weather_module_get_weather"
-      ],
+      "expected_functions": ["weather_module_get_weather"],
       "tests": [
         {
           "success": false,
@@ -40,10 +38,7 @@
     {
       "scenario": "Ustawienie timera i zadania",
       "query": "Ustaw timer na 5 minut i dodaj zadanie 'Sprawdzić maile'",
-      "expected_functions": [
-        "core_module_set_timer",
-        "core_module_add_task"
-      ],
+      "expected_functions": ["core_module_set_timer", "core_module_add_task"],
       "tests": [
         {
           "success": false,
@@ -71,9 +66,7 @@
     {
       "scenario": "Wyszukiwanie w internecie",
       "query": "Wyszukaj najnowsze informacje o sztucznej inteligencji",
-      "expected_functions": [
-        "search_module_search"
-      ],
+      "expected_functions": ["search_module_search"],
       "tests": [
         {
           "success": false,
@@ -163,9 +156,7 @@
     {
       "scenario": "Prognoza pogody",
       "query": "Jaka będzie pogoda w Krakowie na następne 3 dni?",
-      "expected_functions": [
-        "weather_module_get_forecast"
-      ],
+      "expected_functions": ["weather_module_get_forecast"],
       "tests": [
         {
           "success": false,
@@ -193,9 +184,7 @@
     {
       "scenario": "Wiadomości",
       "query": "Pokaż najnowsze wiadomości o technologii",
-      "expected_functions": [
-        "search_module_search_news"
-      ],
+      "expected_functions": ["search_module_search_news"],
       "tests": [
         {
           "success": false,
@@ -223,9 +212,7 @@
     {
       "scenario": "Status Spotify",
       "query": "Co teraz gra na Spotify?",
-      "expected_functions": [
-        "music_module_get_spotify_status"
-      ],
+      "expected_functions": ["music_module_get_spotify_status"],
       "tests": [
         {
           "success": false,
@@ -253,10 +240,7 @@
     {
       "scenario": "Zarządzanie listą",
       "query": "Dodaj 'chleb' do listy zakupów i pokaż całą listę",
-      "expected_functions": [
-        "core_module_add_item",
-        "core_module_view_list"
-      ],
+      "expected_functions": ["core_module_add_item", "core_module_view_list"],
       "tests": [
         {
           "success": false,
@@ -284,9 +268,7 @@
     {
       "scenario": "Zewnętrzne API",
       "query": "Wykonaj zapytanie GET do api.github.com/users/octocat",
-      "expected_functions": [
-        "api_module_make_api_request"
-      ],
+      "expected_functions": ["api_module_make_api_request"],
       "tests": [
         {
           "success": false,

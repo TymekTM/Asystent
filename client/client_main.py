@@ -820,7 +820,7 @@ class ClientApp:
         """Zaktualizuj status i powiadom overlay."""
         self.current_status = status
         self.notify_sse_clients()
-        
+
         # Wyślij status do overlay przez WebSocket (asynchronicznie)
         if self.websocket_clients:
             message = {
@@ -833,11 +833,12 @@ class ClientApp:
                     "wake_word_detected": self.wake_word_detected,
                     "overlay_visible": self.overlay_visible,
                     "monitoring": self.monitoring_wakeword,
-                }
+                },
             }
             # Uruchom broadcast w tle (nie blokuj UI)
             try:
                 import asyncio
+
                 loop = asyncio.get_event_loop()
                 if loop.is_running():
                     loop.create_task(self.broadcast_to_overlay(message))
@@ -969,12 +970,14 @@ class ClientApp:
         """Uruchom WebSocket serwer dla overlay."""
         try:
             import websockets
-            
+
             async def handle_overlay_connection(websocket, path):
                 """Obsługa połączenia WebSocket z overlay."""
-                logger.info(f"Overlay connected via WebSocket: {websocket.remote_address}")
+                logger.info(
+                    f"Overlay connected via WebSocket: {websocket.remote_address}"
+                )
                 self.websocket_clients.add(websocket)
-                
+
                 try:
                     # Wyślij początkowy status
                     initial_status = {
@@ -987,16 +990,16 @@ class ClientApp:
                             "wake_word_detected": self.wake_word_detected,
                             "overlay_visible": self.overlay_visible,
                             "monitoring": self.monitoring_wakeword,
-                        }
+                        },
                     }
                     await websocket.send(json.dumps(initial_status))
-                    
+
                     # Słuchaj wiadomości od overlay
                     async for message in websocket:
                         try:
                             data = json.loads(message)
                             logger.debug(f"Received from overlay: {data}")
-                            
+
                             # Obsługuj komendy od overlay
                             if data.get("type") == "command":
                                 command = data.get("command")
@@ -1004,37 +1007,37 @@ class ClientApp:
                                     await self.toggle_wakeword_monitoring()
                                 elif command == "stop_tts":
                                     await self.stop_tts()
-                                    
+
                         except json.JSONDecodeError:
                             logger.warning(f"Invalid JSON from overlay: {message}")
-                            
+
                 except websockets.exceptions.ConnectionClosed:
                     logger.info("Overlay WebSocket disconnected")
                 except Exception as e:
                     logger.error(f"Error in overlay WebSocket handler: {e}")
                 finally:
                     self.websocket_clients.discard(websocket)
-            
+
             # Próbuj porty WebSocket (6001, 6000)
             ports = [6001, 6000]
-            
+
             for port in ports:
                 try:
                     self.websocket_server = await websockets.serve(
-                        handle_overlay_connection,
-                        "127.0.0.1",
-                        port
+                        handle_overlay_connection, "127.0.0.1", port
                     )
                     logger.info(f"WebSocket server started on port {port} for overlay")
                     logger.info(f"WebSocket server object: {self.websocket_server}")
-                    logger.info(f"WebSocket server bound to: {self.websocket_server.sockets}")
+                    logger.info(
+                        f"WebSocket server bound to: {self.websocket_server.sockets}"
+                    )
                     break
                 except OSError as e:
                     logger.warning(f"WebSocket port {port} unavailable: {e}")
                     continue
             else:
                 logger.error("Could not start WebSocket server on any port")
-                
+
         except Exception as e:
             logger.error(f"Error starting WebSocket server: {e}")
 
@@ -1052,7 +1055,7 @@ class ClientApp:
         """Wyślij wiadomość do wszystkich połączonych overlay."""
         if not self.websocket_clients:
             return
-            
+
         disconnected = set()
         for client in self.websocket_clients.copy():
             try:
@@ -1062,7 +1065,7 @@ class ClientApp:
             except Exception as e:
                 logger.error(f"Error broadcasting to overlay: {e}")
                 disconnected.add(client)
-        
+
         # Usuń rozłączonych klientów
         self.websocket_clients -= disconnected
 

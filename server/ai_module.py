@@ -288,6 +288,17 @@ class AIProviders:
                                 deque(messages[-10:]) if messages else None
                             ),  # Pass recent conversation
                         )
+                        
+                        # Handle special clarification requests
+                        if isinstance(result, dict) and result.get("action_type") == "clarification_request":
+                            # This is a clarification request - return it directly to be handled by WebSocket
+                            return {
+                                "message": {"content": result.get("message", "Clarification requested")},
+                                "clarification_request": result.get("clarification_data"),
+                                "tool_calls_executed": 1,
+                                "requires_user_response": True
+                            }
+                        
                         tool_results.append(
                             {
                                 "tool_call_id": tool_call.id,
@@ -843,6 +854,22 @@ async def generate_response(
         if not content:
             raise ValueError("Empty response.")
 
+        # Check for clarification request first
+        if resp and resp.get("clarification_request"):
+            # This is a clarification request - return it specially formatted
+            clarification_data = resp.get("clarification_request")
+            return json.dumps(
+                {
+                    "text": content,
+                    "command": "",
+                    "params": {},
+                    "clarification_data": clarification_data,
+                    "requires_user_response": True,
+                    "action_type": "clarification_request"
+                },
+                ensure_ascii=False,
+            )
+
         # If using function calling, return the content directly as it should be a natural response
         if use_function_calling and functions and resp.get("tool_calls_executed"):
             # Content is already a natural language response from function calling
@@ -915,18 +942,18 @@ class AIModule:
         self.providers = get_ai_providers()
         self._conversation_history = {}
 
-    async def process_query(self, query: str, context: dict) -> str:
+    async def process_query(self, query: str, context: dict) -> dict:
         """Przetwarza zapytanie użytkownika i zwraca odpowiedź AI."""
         import json
-        
+
         try:
             print(f"DEBUG: process_query called with context: {context}")
             print(f"DEBUG: context type: {type(context)}")
-            
+
             if context is None:
                 print("DEBUG: context is None, creating empty dict")
                 context = {}
-            
+
             user_id = context.get("user_id", "anonymous")
             history = context.get("history", [])
             available_plugins = context.get("available_plugins", [])
@@ -987,11 +1014,31 @@ class AIModule:
                 user_name=context.get("user_name", "User"),
             )
 
-            return response
+            # Check if response contains clarification request
+            try:
+                parsed_response = json.loads(response)
+                if isinstance(parsed_response, dict):
+                    # If it has clarification request data, return structured response
+                    if parsed_response.get("requires_user_response"):
+                        return {
+                            "type": "clarification_request",
+                            "response": response,
+                            "clarification_data": parsed_response.get("clarification_data"),
+                            "requires_user_response": True
+                        }
+            except (json.JSONDecodeError, TypeError):
+                # Response is not JSON, continue normally
+                pass
+
+            # Normal response
+            return {
+                "type": "normal_response", 
+                "response": response
+            }
 
         except Exception as e:
             logger.error(f"Error processing AI query: {e}")
-            return json.dumps(
+            error_response = json.dumps(
                 {
                     "text": f"Przepraszam, wystąpił błąd podczas przetwarzania zapytania: {str(e)}",
                     "command": "",
@@ -999,3 +1046,7 @@ class AIModule:
                 },
                 ensure_ascii=False,
             )
+            return {
+                "type": "error_response",
+                "response": error_response
+            }

@@ -252,6 +252,24 @@ def get_functions() -> list[dict[str, Any]]:
                 "properties": {},
             },
         },
+        {
+            "name": "ask_for_clarification",
+            "description": "🔍 CRITICAL: Use this function when user's request is unclear, ambiguous, or missing essential information. DO NOT guess or ask in text - use this function instead! Examples: weather without location, music without specification, timer without duration, reminder without details. This provides better user experience by properly handling unclear requests.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "question": {
+                        "type": "string",
+                        "description": "Clear, specific question asking for the missing information. Examples: 'What city would you like the weather for?', 'What song or artist should I play?', 'How long should the timer be?'",
+                    },
+                    "context": {
+                        "type": "string",
+                        "description": "What you understood from the user's request so far",
+                    },
+                },
+                "required": ["question"],
+            },
+        },
     ]
 
 
@@ -320,6 +338,11 @@ async def execute_function(
 
         elif function_name == "get_current_time":
             return await get_current_time({})
+
+        elif function_name == "ask_for_clarification":
+            question = parameters.get("question", "")
+            context = parameters.get("context", "")
+            return await ask_for_clarification({"question": question, "context": context})
 
         else:
             return {
@@ -1147,6 +1170,63 @@ async def get_current_time(params) -> dict[str, Any]:
         }
 
 
+async def ask_for_clarification(params) -> dict[str, Any]:
+    """Ask user for clarification when AI doesn't understand something."""
+    try:
+        if not isinstance(params, dict):
+            return {
+                "success": False,
+                "message": "Parameters must be a dictionary",
+                "error": "Invalid parameter format",
+            }
+
+        question = params.get("question", "").strip()
+        context = params.get("context", "").strip()
+
+        if not question:
+            return {
+                "success": False,
+                "message": "Question parameter is required",
+                "error": "Missing question parameter",
+            }
+
+        # Log the clarification request
+        logger.info(f"AI requesting clarification: {question}")
+        
+        # Create clarification message that will be sent via WebSocket to client
+        clarification_data = {
+            "type": "clarification_request",
+            "question": question,
+            "context": context,
+            "timestamp": datetime.now().isoformat(),
+            "actions": {
+                "stop_tts": True,
+                "start_recording": True,
+                "show_clarification_ui": True
+            }
+        }
+
+        # This will be picked up by the WebSocket handler and sent to client
+        # The actual WebSocket sending will be handled by the calling code
+        return {
+            "success": True,
+            "message": f"Clarification requested: {question}",
+            "clarification_data": clarification_data,
+            "question": question,
+            "context": context,
+            "requires_user_response": True,
+            "action_type": "clarification_request"
+        }
+
+    except Exception as e:
+        logger.error(f"Error requesting clarification: {e}")
+        return {
+            "success": False,
+            "message": f"Error requesting clarification: {e}",
+            "error": str(e),
+        }
+
+
 # Legacy handler functions for backward compatibility
 async def handler(params: str = "", conversation_history: list = None) -> str:
     """Legacy handler for backward compatibility."""
@@ -1240,15 +1320,15 @@ except Exception as e:
 
 
 class CoreModule:
-    """Core module wrapper class for function calling system"""
-    
+    """Core module wrapper class for function calling system."""
+
     def __init__(self):
-        """Initialize the core module"""
+        """Initialize the core module."""
         logger.info("CoreModule initialized")
         start_core_module()
-    
+
     def get_functions(self):
-        """Return list of available functions"""
+        """Return list of available functions."""
         return [
             {
                 "name": "set_timer",
@@ -1256,16 +1336,22 @@ class CoreModule:
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "duration_minutes": {"type": "number", "description": "Duration in minutes"},
-                        "label": {"type": "string", "description": "Optional label for the timer"}
+                        "duration_minutes": {
+                            "type": "number",
+                            "description": "Duration in minutes",
+                        },
+                        "label": {
+                            "type": "string",
+                            "description": "Optional label for the timer",
+                        },
                     },
-                    "required": ["duration_minutes"]
-                }
+                    "required": ["duration_minutes"],
+                },
             },
             {
                 "name": "get_active_timers",
                 "description": "Get all active timers",
-                "parameters": {"type": "object", "properties": {}}
+                "parameters": {"type": "object", "properties": {}},
             },
             {
                 "name": "add_calendar_event",
@@ -1274,12 +1360,18 @@ class CoreModule:
                     "type": "object",
                     "properties": {
                         "title": {"type": "string", "description": "Event title"},
-                        "date": {"type": "string", "description": "Event date (YYYY-MM-DD)"},
+                        "date": {
+                            "type": "string",
+                            "description": "Event date (YYYY-MM-DD)",
+                        },
                         "time": {"type": "string", "description": "Event time (HH:MM)"},
-                        "description": {"type": "string", "description": "Optional event description"}
+                        "description": {
+                            "type": "string",
+                            "description": "Optional event description",
+                        },
                     },
-                    "required": ["title", "date", "time"]
-                }
+                    "required": ["title", "date", "time"],
+                },
             },
             {
                 "name": "set_reminder",
@@ -1287,12 +1379,21 @@ class CoreModule:
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "message": {"type": "string", "description": "Reminder message"},
-                        "date": {"type": "string", "description": "Reminder date (YYYY-MM-DD)"},
-                        "time": {"type": "string", "description": "Reminder time (HH:MM)"}
+                        "message": {
+                            "type": "string",
+                            "description": "Reminder message",
+                        },
+                        "date": {
+                            "type": "string",
+                            "description": "Reminder date (YYYY-MM-DD)",
+                        },
+                        "time": {
+                            "type": "string",
+                            "description": "Reminder time (HH:MM)",
+                        },
                     },
-                    "required": ["message", "date", "time"]
-                }
+                    "required": ["message", "date", "time"],
+                },
             },
             {
                 "name": "add_task",
@@ -1301,11 +1402,17 @@ class CoreModule:
                     "type": "object",
                     "properties": {
                         "task": {"type": "string", "description": "Task description"},
-                        "priority": {"type": "string", "description": "Task priority (low, medium, high)"},
-                        "due_date": {"type": "string", "description": "Optional due date (YYYY-MM-DD)"}
+                        "priority": {
+                            "type": "string",
+                            "description": "Task priority (low, medium, high)",
+                        },
+                        "due_date": {
+                            "type": "string",
+                            "description": "Optional due date (YYYY-MM-DD)",
+                        },
                     },
-                    "required": ["task"]
-                }
+                    "required": ["task"],
+                },
             },
             {
                 "name": "add_shopping_item",
@@ -1313,15 +1420,39 @@ class CoreModule:
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "item": {"type": "string", "description": "Item to add to shopping list"},
-                        "quantity": {"type": "string", "description": "Optional quantity"}
+                        "item": {
+                            "type": "string",
+                            "description": "Item to add to shopping list",
+                        },
+                        "quantity": {
+                            "type": "string",
+                            "description": "Optional quantity",
+                        },
                     },
-                    "required": ["item"]
-                }
+                    "required": ["item"],
+                },
             },
             {
                 "name": "get_current_time",
                 "description": "Get the current date and time",
-                "parameters": {"type": "object", "properties": {}}
-            }
+                "parameters": {"type": "object", "properties": {}},
+            },
+            {
+                "name": "ask_for_clarification",
+                "description": "🔍 CRITICAL: Use this function when user's request is unclear, ambiguous, or missing essential information. DO NOT guess or ask in text - use this function instead! Examples: weather without location, music without specification, timer without duration, reminder without details. This provides better user experience by properly handling unclear requests.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "question": {
+                            "type": "string",
+                            "description": "Clear, specific question asking for the missing information. Examples: 'What city would you like the weather for?', 'What song or artist should I play?', 'How long should the timer be?'",
+                        },
+                        "context": {
+                            "type": "string",
+                            "description": "What you understood from the user's request so far",
+                        },
+                    },
+                    "required": ["question"],
+                },
+            },
         ]

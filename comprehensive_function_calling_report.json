@@ -4,15 +4,15 @@
     "successful_tests": 16,
     "success_rate": 64.0,
     "function_calling_coverage": 60.0,
-    "avg_reasoning_quality": 2.52,
-    "avg_execution_time": 1.934051513671875e-05,
-    "total_test_time": 56.80230498313904
+    "avg_reasoning_quality": 2.36,
+    "avg_execution_time": 4.886627197265625e-05,
+    "total_test_time": 58.822245359420776
   },
   "categories": {
     "weather": {
       "total": 3,
-      "success": 2,
-      "function_calls": 2
+      "success": 3,
+      "function_calls": 3
     },
     "core": {
       "total": 8,
@@ -51,8 +51,8 @@
     },
     "nl": {
       "total": 2,
-      "success": 2,
-      "function_calls": 2
+      "success": 1,
+      "function_calls": 1
     },
     "context": {
       "total": 1,
@@ -63,26 +63,26 @@
   "detailed_results": [
     {
       "test_name": "weather_current_simple",
-      "success": false,
-      "function_calls_detected": false,
-      "ai_reasoning_quality": 1,
-      "execution_time": 2.1696090698242188e-05,
-      "error_message": "Required function execution not detected"
+      "success": true,
+      "function_calls_detected": true,
+      "ai_reasoning_quality": 2,
+      "execution_time": 0.0003151893615722656,
+      "error_message": null
     },
     {
       "test_name": "weather_forecast",
       "success": true,
       "function_calls_detected": true,
-      "ai_reasoning_quality": 2,
-      "execution_time": 2.6702880859375e-05,
+      "ai_reasoning_quality": 1,
+      "execution_time": 4.1484832763671875e-05,
       "error_message": null
     },
     {
       "test_name": "weather_multiple_cities",
       "success": true,
       "function_calls_detected": true,
-      "ai_reasoning_quality": 1,
-      "execution_time": 1.9550323486328125e-05,
+      "ai_reasoning_quality": 2,
+      "execution_time": 0.0003185272216796875,
       "error_message": null
     },
     {
@@ -90,7 +90,7 @@
       "success": true,
       "function_calls_detected": true,
       "ai_reasoning_quality": 5,
-      "execution_time": 1.5735626220703125e-05,
+      "execution_time": 2.0742416381835938e-05,
       "error_message": null
     },
     {
@@ -98,7 +98,7 @@
       "success": true,
       "function_calls_detected": true,
       "ai_reasoning_quality": 2,
-      "execution_time": 1.6450881958007812e-05,
+      "execution_time": 1.7404556274414062e-05,
       "error_message": null
     },
     {
@@ -106,15 +106,15 @@
       "success": true,
       "function_calls_detected": true,
       "ai_reasoning_quality": 3,
-      "execution_time": 1.52587890625e-05,
+      "execution_time": 1.621246337890625e-05,
       "error_message": null
     },
     {
       "test_name": "core_reminder_simple",
       "success": true,
       "function_calls_detected": true,
-      "ai_reasoning_quality": 2,
-      "execution_time": 1.5020370483398438e-05,
+      "ai_reasoning_quality": 1,
+      "execution_time": 3.3855438232421875e-05,
       "error_message": null
     },
     {
@@ -122,7 +122,7 @@
       "success": false,
       "function_calls_detected": false,
       "ai_reasoning_quality": 2,
-      "execution_time": 1.430511474609375e-05,
+      "execution_time": 4.029273986816406e-05,
       "error_message": "Required function execution not detected"
     },
     {
@@ -130,7 +130,7 @@
       "success": false,
       "function_calls_detected": false,
       "ai_reasoning_quality": 2,
-      "execution_time": 1.5735626220703125e-05,
+      "execution_time": 2.574920654296875e-05,
       "error_message": "Required function execution not detected"
     },
     {
@@ -138,7 +138,7 @@
       "success": true,
       "function_calls_detected": true,
       "ai_reasoning_quality": 1,
-      "execution_time": 1.9073486328125e-05,
+      "execution_time": 1.8358230590820312e-05,
       "error_message": null
     },
     {
@@ -146,15 +146,15 @@
       "success": true,
       "function_calls_detected": true,
       "ai_reasoning_quality": 1,
-      "execution_time": 1.6450881958007812e-05,
+      "execution_time": 3.5762786865234375e-05,
       "error_message": null
     },
     {
       "test_name": "search_web_simple",
       "success": true,
       "function_calls_detected": true,
-      "ai_reasoning_quality": 4,
-      "execution_time": 1.621246337890625e-05,
+      "ai_reasoning_quality": 2,
+      "execution_time": 3.4332275390625e-05,
       "error_message": null
     },
     {
@@ -162,7 +162,7 @@
       "success": false,
       "function_calls_detected": false,
       "ai_reasoning_quality": 3,
-      "execution_time": 1.6450881958007812e-05,
+      "execution_time": 1.8358230590820312e-05,
       "error_message": "Required function execution not detected"
     },
     {
@@ -170,7 +170,7 @@
       "success": true,
       "function_calls_detected": true,
       "ai_reasoning_quality": 2,
-      "execution_time": 3.3855438232421875e-05,
+      "execution_time": 2.8133392333984375e-05,
       "error_message": null
     },
     {
@@ -178,7 +178,7 @@
       "success": false,
       "function_calls_detected": false,
       "ai_reasoning_quality": 1,
-      "execution_time": 1.5974044799804688e-05,
+      "execution_time": 2.0265579223632812e-05,
       "error_message": "Required function execution not detected"
     },
     {
@@ -186,23 +186,23 @@
       "success": false,
       "function_calls_detected": false,
       "ai_reasoning_quality": 3,
-      "execution_time": 1.33514404296875e-05,
+      "execution_time": 3.814697265625e-05,
       "error_message": "Required function execution not detected"
     },
     {
       "test_name": "api_custom_call",
       "success": false,
       "function_calls_detected": false,
-      "ai_reasoning_quality": 1,
-      "execution_time": 1.9550323486328125e-05,
+      "ai_reasoning_quality": 2,
+      "execution_time": 1.71661376953125e-05,
       "error_message": "Required function execution not detected"
     },
     {
       "test_name": "web_browse",
       "success": true,
       "function_calls_detected": true,
-      "ai_reasoning_quality": 3,
-      "execution_time": 1.71661376953125e-05,
+      "ai_reasoning_quality": 1,
+      "execution_time": 3.8623809814453125e-05,
       "error_message": null
     },
     {
@@ -210,15 +210,15 @@
       "success": true,
       "function_calls_detected": true,
       "ai_reasoning_quality": 2,
-      "execution_time": 2.09808349609375e-05,
+      "execution_time": 1.9788742065429688e-05,
       "error_message": null
     },
     {
       "test_name": "multi_search_and_task",
       "success": true,
       "function_calls_detected": true,
-      "ai_reasoning_quality": 2,
-      "execution_time": 1.621246337890625e-05,
+      "ai_reasoning_quality": 3,
+      "execution_time": 2.9802322387695312e-05,
       "error_message": null
     },
     {
@@ -226,7 +226,7 @@
       "success": false,
       "function_calls_detected": false,
       "ai_reasoning_quality": 3,
-      "execution_time": 1.621246337890625e-05,
+      "execution_time": 1.6927719116210938e-05,
       "error_message": "Required function execution not detected"
     },
     {
@@ -234,7 +234,7 @@
       "success": false,
       "function_calls_detected": false,
       "ai_reasoning_quality": 5,
-      "execution_time": 2.5272369384765625e-05,
+      "execution_time": 1.8358230590820312e-05,
       "error_message": "Required function execution not detected"
     },
     {
@@ -242,41 +242,32 @@
       "success": true,
       "function_calls_detected": true,
       "ai_reasoning_quality": 4,
-      "execution_time": 1.9550323486328125e-05,
+      "execution_time": 2.2649765014648438e-05,
       "error_message": null
     },
     {
       "test_name": "nl_colloquial_timer",
-      "success": true,
-      "function_calls_detected": true,
+      "success": false,
+      "function_calls_detected": false,
       "ai_reasoning_quality": 5,
-      "execution_time": 3.24249267578125e-05,
-      "error_message": null
+      "execution_time": 2.002716064453125e-05,
+      "error_message": "Required function execution not detected"
     },
     {
       "test_name": "context_followup_weather",
       "success": true,
       "function_calls_detected": false,
-      "ai_reasoning_quality": 3,
-      "execution_time": 2.4318695068359375e-05,
+      "ai_reasoning_quality": 1,
+      "execution_time": 1.5497207641601562e-05,
       "error_message": null
     }
   ],
   "failed_tests": [
     {
-      "test_name": "weather_current_simple",
-      "error_message": "Required function execution not detected",
-      "response_data": {
-        "text": "Chcesz, żebym sprawdziła pogodę w Warszawie?",
-        "command": "",
-        "params": {}
-      }
-    },
-    {
       "test_name": "core_shopping_list",
       "error_message": "Required function execution not detected",
       "response_data": {
-        "text": "Jasne, dodaję mleko do listy zakupów.",
+        "text": "Jasne, dodam mleko do listy zakupów.",
         "command": "",
         "params": {}
       }
@@ -285,7 +276,7 @@
       "test_name": "core_todo_add",
       "error_message": "Required function execution not detected",
       "response_data": {
-        "text": "Jasne, dodam to zadanie. Czy chcesz, żeby było o jakimś szczególnym priorytecie?",
+        "text": "Jasne, dodaję to zadanie. Chcesz, żebym też nadał mu jakieś priorytety?",
         "command": "",
         "params": {}
       }
@@ -294,7 +285,7 @@
       "test_name": "search_quick_info",
       "error_message": "Required function execution not detected",
       "response_data": {
-        "text": "Python to popularny język programowania, znany z czytelnej składni, wszechstronności i dużej społeczności. Jest używany do tworzenia stron internetowych, analizy danych, sztucznej inteligencji i automatyzacji. Chcesz, żebym znalazła coś bardziej szczegółowego?",
+        "text": "Python to popularny język programowania, znany z czytelnej składni i dużej wszechstronności, używany w web developmentie, analizie danych, sztucznej inteligencji i wielu innych dziedzinach.",
         "command": "",
         "params": {}
       }
@@ -303,7 +294,7 @@
       "test_name": "music_play_song",
       "error_message": "Required function execution not detected",
       "response_data": {
-        "text": "Chętnie, ale niestety nie mogę odtwarzać muzyki. Może chcesz posłuchać jej razem na jakiejś platformie?",
+        "text": "Chociaż nie mogę bezpośrednio odtwarzać muzyki, chętnie przypomnę Ci tekst albo opowiem o tej piosence. Chcesz, żebym przytoczyła jej słowa?",
         "command": "",
         "params": {}
       }
@@ -321,7 +312,7 @@
       "test_name": "api_custom_call",
       "error_message": "Required function execution not detected",
       "response_data": {
-        "text": "Oczywiście, podaj mi proszę lokalizację, dla której chcesz sprawdzić pogodę.",
+        "text": "Oczywiście, do którego miasta i kraju chcesz zrobić to zapytanie?",
         "command": "",
         "params": {}
       }
@@ -330,7 +321,7 @@
       "test_name": "edge_invalid_city",
       "error_message": "Required function execution not detected",
       "response_data": {
-        "text": "Wygląda na to, że miasto XYZ123 nie istnieje, więc nie mogę podać aktualnej pogody. Może spróbujemy z innym miejscem?",
+        "text": "Wygląda na to, że miasto XYZ123 nie istnieje, więc nie mogę sprawdzić pogody. Może spróbujemy coś innego?",
         "command": "",
         "params": {}
       }
@@ -339,7 +330,16 @@
       "test_name": "edge_invalid_time_format",
       "error_message": "Required function execution not detected",
       "response_data": {
-        "text": "Jak długo chcesz, żeby ten timer trwał? Może kilka godzin albo jeszcze dłużej?",
+        "text": "Jak długo chcesz, żeby ten timer trwał?",
+        "command": "",
+        "params": {}
+      }
+    },
+    {
+      "test_name": "nl_colloquial_timer",
+      "error_message": "Required function execution not detected",
+      "response_data": {
+        "text": "Oczywiście, zaraz ustawiam timer na dwadzieścia minut.",
         "command": "",
         "params": {}
       }
