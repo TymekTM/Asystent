@@ -1,3 +1,5 @@
+# LEGACY CODEBASE LOOK AT [NEW REPOSITORY](https://github.com/TymekTM/Gaja)
+
 # Gaja - Advanced AI Assistant System (v1.2.0)
 
 Gaja is a powerful AI assistant system that provides interactive natural language processing through text, voice, and web interfaces. It's designed to be modular, extensible, and adaptable to various usage scenarios. With its new Daily Briefing capability and enhanced API, version 1.2.0 brings even more functionality to users.
