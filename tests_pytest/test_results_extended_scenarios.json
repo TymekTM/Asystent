@@ -1,0 +1,208 @@
+{
+  "created": 1750776949.7011013,
+  "duration": 0.11894726753234863,
+  "exitcode": 1,
+  "root": "F:\\Asystent",
+  "environment": {},
+  "summary": { "error": 1, "total": 1, "collected": 18, "deselected": 17 },
+  "collectors": [
+    {
+      "nodeid": "",
+      "outcome": "passed",
+      "result": [
+        {
+          "nodeid": "tests_pytest/test_server_memory_sessions.py",
+          "type": "Module"
+        }
+      ]
+    },
+    {
+      "nodeid": "tests_pytest/test_server_memory_sessions.py::TestMemoryManager",
+      "outcome": "passed",
+      "result": [
+        {
+          "nodeid": "tests_pytest/test_server_memory_sessions.py::TestMemoryManager::test_short_term_memory_persistence",
+          "type": "Coroutine",
+          "lineno": 20,
+          "deselected": true
+        },
+        {
+          "nodeid": "tests_pytest/test_server_memory_sessions.py::TestMemoryManager::test_mid_term_memory_daily_reset",
+          "type": "Coroutine",
+          "lineno": 38,
+          "deselected": true
+        },
+        {
+          "nodeid": "tests_pytest/test_server_memory_sessions.py::TestMemoryManager::test_long_term_memory_persistence",
+          "type": "Coroutine",
+          "lineno": 52,
+          "deselected": true
+        },
+        {
+          "nodeid": "tests_pytest/test_server_memory_sessions.py::TestMemoryManager::test_memory_fallback_handling",
+          "type": "Coroutine",
+          "lineno": 69,
+          "deselected": true
+        }
+      ]
+    },
+    {
+      "nodeid": "tests_pytest/test_server_memory_sessions.py::TestHabitLearning",
+      "outcome": "passed",
+      "result": [
+        {
+          "nodeid": "tests_pytest/test_server_memory_sessions.py::TestHabitLearning::test_habit_recognition",
+          "type": "Coroutine",
+          "lineno": 85,
+          "deselected": true
+        },
+        {
+          "nodeid": "tests_pytest/test_server_memory_sessions.py::TestHabitLearning::test_habit_suggestions",
+          "type": "Coroutine",
+          "lineno": 103,
+          "deselected": true
+        },
+        {
+          "nodeid": "tests_pytest/test_server_memory_sessions.py::TestHabitLearning::test_behavior_logging",
+          "type": "Coroutine",
+          "lineno": 114,
+          "deselected": true
+        }
+      ]
+    },
+    {
+      "nodeid": "tests_pytest/test_server_memory_sessions.py::TestAIAndLLMFallback",
+      "outcome": "passed",
+      "result": [
+        {
+          "nodeid": "tests_pytest/test_server_memory_sessions.py::TestAIAndLLMFallback::test_gpt_nano_backend",
+          "type": "Coroutine",
+          "lineno": 137,
+          "deselected": true
+        },
+        {
+          "nodeid": "tests_pytest/test_server_memory_sessions.py::TestAIAndLLMFallback::test_api_error_handling",
+          "type": "Coroutine",
+          "lineno": 148,
+          "deselected": true
+        },
+        {
+          "nodeid": "tests_pytest/test_server_memory_sessions.py::TestAIAndLLMFallback::test_fallback_metadata",
+          "type": "Coroutine",
+          "lineno": 163,
+          "deselected": true
+        },
+        {
+          "nodeid": "tests_pytest/test_server_memory_sessions.py::TestAIAndLLMFallback::test_token_limit_handling",
+          "type": "Coroutine",
+          "lineno": 177,
+          "deselected": true
+        }
+      ]
+    },
+    {
+      "nodeid": "tests_pytest/test_server_memory_sessions.py::TestSessionAndUserLogic",
+      "outcome": "passed",
+      "result": [
+        {
+          "nodeid": "tests_pytest/test_server_memory_sessions.py::TestSessionAndUserLogic::test_separate_user_sessions",
+          "type": "Coroutine",
+          "lineno": 194,
+          "deselected": true
+        },
+        {
+          "nodeid": "tests_pytest/test_server_memory_sessions.py::TestSessionAndUserLogic::test_no_data_mixing",
+          "type": "Coroutine",
+          "lineno": 215,
+          "deselected": true
+        },
+        {
+          "nodeid": "tests_pytest/test_server_memory_sessions.py::TestSessionAndUserLogic::test_multiple_active_users",
+          "type": "Coroutine",
+          "lineno": 245,
+          "deselected": true
+        },
+        {
+          "nodeid": "tests_pytest/test_server_memory_sessions.py::TestSessionAndUserLogic::test_user_switching_simulation",
+          "type": "Coroutine",
+          "lineno": 266,
+          "deselected": true
+        }
+      ]
+    },
+    {
+      "nodeid": "tests_pytest/test_server_memory_sessions.py::TestExtendedScenarios",
+      "outcome": "passed",
+      "result": [
+        {
+          "nodeid": "tests_pytest/test_server_memory_sessions.py::TestExtendedScenarios::test_plugin_memory_immediate_use",
+          "type": "Coroutine",
+          "lineno": 298
+        },
+        {
+          "nodeid": "tests_pytest/test_server_memory_sessions.py::TestExtendedScenarios::test_plugin_fallback_chain",
+          "type": "Coroutine",
+          "lineno": 315,
+          "deselected": true
+        },
+        {
+          "nodeid": "tests_pytest/test_server_memory_sessions.py::TestExtendedScenarios::test_response_time_consistency",
+          "type": "Coroutine",
+          "lineno": 326,
+          "deselected": true
+        }
+      ]
+    },
+    {
+      "nodeid": "tests_pytest/test_server_memory_sessions.py",
+      "outcome": "passed",
+      "result": [
+        {
+          "nodeid": "tests_pytest/test_server_memory_sessions.py::TestMemoryManager",
+          "type": "Class"
+        },
+        {
+          "nodeid": "tests_pytest/test_server_memory_sessions.py::TestHabitLearning",
+          "type": "Class"
+        },
+        {
+          "nodeid": "tests_pytest/test_server_memory_sessions.py::TestAIAndLLMFallback",
+          "type": "Class"
+        },
+        {
+          "nodeid": "tests_pytest/test_server_memory_sessions.py::TestSessionAndUserLogic",
+          "type": "Class"
+        },
+        {
+          "nodeid": "tests_pytest/test_server_memory_sessions.py::TestExtendedScenarios",
+          "type": "Class"
+        }
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "nodeid": "tests_pytest/test_server_memory_sessions.py::TestExtendedScenarios::test_plugin_memory_immediate_use",
+      "lineno": 298,
+      "outcome": "error",
+      "keywords": [
+        "test_plugin_memory_immediate_use",
+        "slow",
+        "integration",
+        "asyncio",
+        "pytestmark",
+        "TestExtendedScenarios",
+        "test_server_memory_sessions.py",
+        "tests_pytest",
+        "Asystent",
+        ""
+      ],
+      "setup": {
+        "duration": 0.00284539999847766,
+        "outcome": "failed",
+        "longrepr": "file F:\\Asystent\\tests_pytest\\test_server_memory_sessions.py, line 299\n      @pytest.mark.asyncio\n      @pytest.mark.integration\n      @pytest.mark.slow\n      async def test_plugin_memory_immediate_use(self, http_session, server_helper, test_user_id):\n          \"\"\"Odpowied\u017a z pluginu + zapis wspomnienia + natychmiastowe u\u017cycie tej wiedzy\"\"\"\n          # Get weather (plugin response) and store it\n          response1 = await server_helper.make_query_request(\n              http_session, test_user_id, \"Jaka jest pogoda? Zapami\u0119taj odpowied\u017a.\"\n          )\n          assert \"ai_response\" in response1\n\n          # Immediately ask about stored weather information\n          response2 = await server_helper.make_query_request(\n              http_session, test_user_id, \"Jak\u0105 pogod\u0119 sprawdza\u0142em przed chwil\u0105?\"\n          )\n          assert \"ai_response\" in response2\nE       fixture 'http_session' not found\n>       available fixtures: _class_event_loop, _function_event_loop, _module_event_loop, _package_event_loop, _session_event_loop, _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, client_app, cov, doctest_namespace, event_loop, event_loop_policy, extra, extras, faker, include_metadata_in_junit_xml, json_metadata, metadata, mock_ai_module, mock_audio_components, mock_config, mock_db_manager, mock_plugin, mock_plugin_manager, mock_websocket, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, sample_chat_data, sample_plugin_data, server_app, session_mocker, temp_config_dir, testrun_uid, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, worker_id\n>       use 'pytest --fixtures [testpath]' for help on them.\n\nF:\\Asystent\\tests_pytest\\test_server_memory_sessions.py:299"
+      },
+      "teardown": { "duration": 0.00033230000190087594, "outcome": "passed" }
+    }
+  ]
+}

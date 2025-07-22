@@ -1,0 +1,239 @@
+{
+  "created": 1750776949.2594752,
+  "duration": 0.10030293464660645,
+  "exitcode": 5,
+  "root": "F:\\Asystent",
+  "environment": {},
+  "summary": { "total": 0, "collected": 22, "deselected": 22 },
+  "collectors": [
+    {
+      "nodeid": "",
+      "outcome": "passed",
+      "result": [
+        {
+          "nodeid": "tests_pytest/test_server_comprehensive_implementation.py",
+          "type": "Module"
+        }
+      ]
+    },
+    {
+      "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestAPIAndClientCommunication",
+      "outcome": "passed",
+      "result": [
+        {
+          "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestAPIAndClientCommunication::test_server_accepts_post_queries",
+          "type": "Coroutine",
+          "lineno": 35,
+          "deselected": true
+        },
+        {
+          "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestAPIAndClientCommunication::test_server_handles_connection_errors",
+          "type": "Coroutine",
+          "lineno": 52,
+          "deselected": true
+        },
+        {
+          "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestAPIAndClientCommunication::test_response_time_performance",
+          "type": "Coroutine",
+          "lineno": 64,
+          "deselected": true
+        },
+        {
+          "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestAPIAndClientCommunication::test_json_response_format",
+          "type": "Coroutine",
+          "lineno": 88,
+          "deselected": true
+        },
+        {
+          "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestAPIAndClientCommunication::test_multiple_concurrent_clients",
+          "type": "Coroutine",
+          "lineno": 112,
+          "deselected": true
+        }
+      ]
+    },
+    {
+      "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestIntentParser",
+      "outcome": "passed",
+      "result": [
+        {
+          "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestIntentParser::test_intent_classification",
+          "type": "Coroutine",
+          "lineno": 143,
+          "deselected": true
+        },
+        {
+          "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestIntentParser::test_unknown_intent_fallback",
+          "type": "Coroutine",
+          "lineno": 166,
+          "deselected": true
+        },
+        {
+          "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestIntentParser::test_ambiguous_queries",
+          "type": "Coroutine",
+          "lineno": 182,
+          "deselected": true
+        },
+        {
+          "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestIntentParser::test_multilingual_support",
+          "type": "Coroutine",
+          "lineno": 199,
+          "deselected": true
+        }
+      ]
+    },
+    {
+      "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestQueryRouting",
+      "outcome": "passed",
+      "result": [
+        {
+          "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestQueryRouting::test_plugin_routing",
+          "type": "Coroutine",
+          "lineno": 226,
+          "deselected": true
+        }
+      ]
+    },
+    {
+      "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestPlugins",
+      "outcome": "passed",
+      "result": [
+        {
+          "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestPlugins::test_plugin_response_time",
+          "type": "Coroutine",
+          "lineno": 254,
+          "deselected": true
+        },
+        {
+          "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestPlugins::test_plugin_error_handling",
+          "type": "Coroutine",
+          "lineno": 277,
+          "deselected": true
+        }
+      ]
+    },
+    {
+      "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestDebugEndpoints",
+      "outcome": "passed",
+      "result": [
+        {
+          "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestDebugEndpoints::test_ping_endpoint",
+          "type": "Coroutine",
+          "lineno": 307,
+          "deselected": true
+        },
+        {
+          "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestDebugEndpoints::test_debug_endpoint",
+          "type": "Coroutine",
+          "lineno": 319,
+          "deselected": true
+        }
+      ]
+    },
+    {
+      "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestStabilityAndResilience",
+      "outcome": "passed",
+      "result": [
+        {
+          "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestStabilityAndResilience::test_high_load_stability",
+          "type": "Coroutine",
+          "lineno": 335,
+          "deselected": true
+        },
+        {
+          "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestStabilityAndResilience::test_interrupted_requests",
+          "type": "Coroutine",
+          "lineno": 365,
+          "deselected": true
+        },
+        {
+          "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestStabilityAndResilience::test_multiclient_operation",
+          "type": "Coroutine",
+          "lineno": 386,
+          "deselected": true
+        }
+      ]
+    },
+    {
+      "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestFreeVsPaidLimits",
+      "outcome": "passed",
+      "result": [
+        {
+          "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestFreeVsPaidLimits::test_rate_limiting_free_user",
+          "type": "Coroutine",
+          "lineno": 426,
+          "deselected": true
+        },
+        {
+          "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestFreeVsPaidLimits::test_premium_user_no_limits",
+          "type": "Coroutine",
+          "lineno": 456,
+          "deselected": true
+        }
+      ]
+    },
+    {
+      "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestScenarios",
+      "outcome": "passed",
+      "result": [
+        {
+          "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestScenarios::test_weather_queries_multiple_users",
+          "type": "Coroutine",
+          "lineno": 487,
+          "deselected": true
+        },
+        {
+          "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestScenarios::test_random_queries_fallback",
+          "type": "Coroutine",
+          "lineno": 508,
+          "deselected": true
+        },
+        {
+          "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestScenarios::test_user_id_switching",
+          "type": "Coroutine",
+          "lineno": 533,
+          "deselected": true
+        }
+      ]
+    },
+    {
+      "nodeid": "tests_pytest/test_server_comprehensive_implementation.py",
+      "outcome": "passed",
+      "result": [
+        {
+          "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestAPIAndClientCommunication",
+          "type": "Class"
+        },
+        {
+          "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestIntentParser",
+          "type": "Class"
+        },
+        {
+          "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestQueryRouting",
+          "type": "Class"
+        },
+        {
+          "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestPlugins",
+          "type": "Class"
+        },
+        {
+          "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestDebugEndpoints",
+          "type": "Class"
+        },
+        {
+          "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestStabilityAndResilience",
+          "type": "Class"
+        },
+        {
+          "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestFreeVsPaidLimits",
+          "type": "Class"
+        },
+        {
+          "nodeid": "tests_pytest/test_server_comprehensive_implementation.py::TestScenarios",
+          "type": "Class"
+        }
+      ]
+    }
+  ],
+  "tests": []
+}

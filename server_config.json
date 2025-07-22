@@ -1,0 +1,83 @@
+{
+  "server": {
+    "host": "127.0.0.1",
+    "port": 8001,
+    "debug": false,
+    "environment": "production"
+  },
+  "database": {
+    "url": "sqlite:///./server_data.db",
+    "echo": false,
+    "pool_size": 20,
+    "max_overflow": 30,
+    "pool_timeout": 30
+  },
+  "ai": {
+    "provider": "openai",
+    "model": "gpt-4.1-nano",
+    "temperature": 0.7,
+    "max_tokens": 1000,
+    "rate_limit_per_minute": 60
+  },
+  "api_keys": {
+    "_comment": "API keys are loaded from environment variables for security",
+    "openai": "",
+    "anthropic": "",
+    "deepseek": ""
+  },
+  "security": {
+    "cors_origins": [
+      "http://localhost:3000",
+      "http://127.0.0.1:3000",
+      "http://localhost:8000",
+      "http://127.0.0.1:8000"
+    ],
+    "max_connections_per_user": 5,
+    "request_timeout_seconds": 30,
+    "max_request_size_mb": 10,
+    "rate_limiting": {
+      "enabled": true,
+      "requests_per_minute": 100,
+      "burst_limit": 20
+    },
+    "ssl": {
+      "enabled": false,
+      "cert_file": "",
+      "key_file": ""
+    }
+  },
+  "plugins": {
+    "auto_load": true,
+    "default_enabled": [
+      "weather_module",
+      "search_module"
+    ],
+    "security": {
+      "whitelist_enabled": false,
+      "allowed_plugins": [],
+      "max_file_size_mb": 1,
+      "timeout_seconds": 10,
+      "sandbox_enabled": true
+    }
+  },
+  "logging": {
+    "level": "INFO",
+    "file": "logs/server_{time:YYYY-MM-DD}.log",
+    "retention_days": 30,
+    "rotation": "1 day",
+    "max_size": "100 MB",
+    "sensitive_data_masking": true
+  },
+  "monitoring": {
+    "metrics_enabled": true,
+    "health_check_interval": 60,
+    "performance_tracking": true
+  },
+  "ssl_enabled": true,
+  "ssl_cert_path": "ssl/certificate.pem",
+  "ssl_key_path": "ssl/private_key.pem",
+  "port": 8443,
+  "host": "127.0.0.1",
+  "secure_headers": true,
+  "force_https": true
+}

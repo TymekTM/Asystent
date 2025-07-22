@@ -5,6 +5,7 @@ This Tauri application displays a small overlay indicating when Gaja is listenin
 ## Setup
 
 1. Install dependencies:
+
    ```bash
    cd overlay
    npm install
@@ -12,11 +13,13 @@ This Tauri application displays a small overlay indicating when Gaja is listenin
    ```
 
 2. Run in development:
+
    ```bash
    npm run tauri dev
    ```
 
    The overlay polls the web server at `http://localhost:5001` by default. Set the `GAJA_PORT` environment variable to override the port (use `5000` for packaged builds):
+
    ```bash
    GAJA_PORT=5000 npm run tauri dev
    ```

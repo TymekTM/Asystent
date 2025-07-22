@@ -3,414 +3,350 @@
 /* Base HTML and Body styles for fullscreen transparent overlay */
 html,
 body {
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   margin: 0;
   padding: 0;
   overflow: hidden; /* Prevent scrollbars on the overlay itself */
-  background-color: transparent; /* Crucial for the overlay */
+  background: transparent !important; /* Crucial for the overlay */
+  background-color: transparent !important; /* Crucial for the overlay */
   color: var(--text, #2E2E2E); /* Default text color from Gaja branding */
   font-family: var(--gaja-font-family, 'Poppins', 'Inter', sans-serif); /* Default font */
+  border: none;
+  outline: none;
+  box-sizing: border-box;
+}
+
+/* Prevent any potential white bars or borders */
+* {
+  box-sizing: border-box;
+  border: none;
+  outline: none;
 }
 
 #root {
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: flex-start; /* Align content to the top */
   align-items: center; /* Center horizontally */
-  background-color: transparent; /* Ensure root is also transparent */
-  padding-top: 3vh; /* Reduced space from the top of the screen */
+  background: transparent !important; /* Ensure root is also transparent */
+  background-color: transparent !important; /* Ensure root is also transparent */
+  /* Eliminate white bar at top when window is borderless */
+  padding: 0;
+  margin: 0;
+  border: none;
+  outline: none;
 }
 
 /* Styles for the overlay elements from App.jsx */
 .overlay-container {
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start; /* Align content to the top */
+  justify-content: flex-start; /* Align to top */
   align-items: center;
-  padding: 20px;
+  padding: 5px 0 0 0; /* Minimal top padding - move everything higher */
   box-sizing: border-box;
   background-color: transparent; /* Ensure container is transparent */
   text-align: center;
-  max-width: 1400px; /* Increased max width for better use of screen space */
-  margin: 0 auto; /* Center the container horizontally */
-}
-
-.status-indicator {
-  /* Enhanced modern floating pill design for status indicators */
-  background-color: rgba(176, 217, 232, 0.6); /* gaja-blue with alpha */
-  color: var(--gaja-charcoal);
-  padding: 0.8rem 1.8rem;
-  border-radius: 50px; /* Pill shape */
-  margin-bottom: 1.25rem;
-  font-size: 1.25rem;
-  font-weight: 600;
-  box-shadow: 
-    0 10px 25px rgba(0, 0, 0, 0.15),
-    0 3px 8px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  min-width: 180px; /* Slightly reduced minimum width */
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-  transform-origin: center;
-}
-
-.status-icon {
-  font-size: 1.4rem;
-  display: inline-block;
-}
-
-.status-text {
-  display: inline-block;
-}
-
-.status-indicator.listening {
-  background: linear-gradient(135deg, rgba(120, 220, 160, 0.7), rgba(80, 180, 120, 0.5));
-  border: 1px solid rgba(120, 220, 160, 0.4);
-}
-
-.status-indicator.speaking {
-  background: linear-gradient(135deg, rgba(255, 180, 100, 0.7), rgba(255, 140, 60, 0.5));
-  border: 1px solid rgba(255, 180, 100, 0.4);
-}
-
-.status-indicator.wakeword {
-  background: linear-gradient(135deg, rgba(255, 130, 130, 0.7), rgba(220, 80, 80, 0.5));
-  border: 1px solid rgba(255, 130, 130, 0.4);
-}
-
-.text-display {
-  /* Enhanced modern floating glass card design */
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.5));
-  color: var(--gaja-charcoal);
-  padding: 2rem 3rem;
-  border-radius: 28px;
-  font-size: 1.9rem;
-  font-weight: 500;
-  line-height: 1.6;
-  letter-spacing: -0.01em;
-  box-shadow: 
-    0 15px 35px rgba(0, 0, 0, 0.15),
-    0 3px 10px rgba(0, 0, 0, 0.05),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(18px);
-  max-width: 85%; /* Slightly larger maximum width */
-  margin-top: 1.5rem; /* Reduced top margin to move it higher */
   position: relative;
-  overflow: hidden; /* Keep the pseudo-elements contained */
-  transition: all 0.4s ease;
-  transform: translateY(0); /* For animation purposes */
-  animation: float 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); /* Improved float-in animation */
-  border-left: 4px solid var(--gaja-mint); /* Add modern accent border */
+  overflow: hidden;
 }
 
-/* Add enhanced shimmer effect to the text display */
-.text-display::before {
+/* Wide gradient background - wider than tall, starts off-screen */
+.overlay-background {
+  position: absolute;
+  top: -50px; /* Start off-screen at the top */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px; /* Much wider */
+  height: 350px; /* Less tall */
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse,
+    rgba(60, 60, 60, 0.6) 0%,
+    rgba(40, 40, 40, 0.4) 60%,
+    rgba(20, 20, 20, 0.2) 80%,
+    transparent 100%
+  );
+  backdrop-filter: blur(4px);
+  z-index: 1;
+  animation: fadeInBackground 0.4s ease-out;
+}
+
+@keyframes fadeInBackground {
+  from { opacity: 0; transform: translateX(-50%) scale(0.8); }
+  to { opacity: 1; transform: translateX(-50%) scale(1); }
+}
+
+/* Main Gaja ball - positioned higher */
+.gaja-ball {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  z-index: 10;
+  margin-top: 15px; /* Much higher position */
+  transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.gaja-ball.active {
+  animation: slideDownBall 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.gaja-ball.hidden {
+  animation: slideUpBall 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes slideDownBall {
+  from {
+    transform: translateY(-200px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideUpBall {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-200px);
+    opacity: 0;
+  }
+}
+
+/* Inner ball design with wave animation */
+.gaja-ball-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 50%, #81C784 100%);
+  border: 3px solid #2E7D32;
+  box-shadow:
+    0 8px 25px rgba(0, 0, 0, 0.3),
+    inset 0 2px 4px rgba(255, 255, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+  animation: gentlePulse 2s ease-in-out infinite;
+}
+
+@keyframes gentlePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* Animated waves flowing over the ball */
+.gaja-ball-inner::before,
+.gaja-ball-inner::after {
   content: '';
   position: absolute;
   top: 0;
   left: -100%;
-  width: 100%;
+  width: 200%;
   height: 100%;
   background: linear-gradient(
     90deg,
-    transparent,
-    rgba(255, 255, 255, 0.3),
-    transparent
+    transparent 0%,
+    rgba(139, 195, 74, 0.4) 25%,
+    rgba(205, 220, 57, 0.6) 50%,
+    rgba(139, 195, 74, 0.4) 75%,
+    transparent 100%
   );
-  transition: 0.5s;
-  pointer-events: none;
-  animation: shimmer 3s infinite;
+  border-radius: 50%;
+  animation: waveFlow 3s linear infinite;
 }
 
-.text-display::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 4px;
+.gaja-ball-inner::after {
+  animation-delay: -1.5s;
   background: linear-gradient(
     90deg,
-    var(--gaja-mint),
-    var(--gaja-blue),
-    var(--gaja-mint)
+    transparent 0%,
+    rgba(76, 175, 80, 0.3) 25%,
+    rgba(129, 199, 132, 0.5) 50%,
+    rgba(76, 175, 80, 0.3) 75%,
+    transparent 100%
   );
-  opacity: 0.7;
-  transform: scaleX(0.98); /* Slightly shorter than the container */
-  border-radius: 0 0 2px 2px;
 }
 
-@keyframes shimmer {
-  0% { left: -100%; }
-  50% { left: 100%; }
-  100% { left: 100%; }
+@keyframes waveFlow {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(50%);
+  }
 }
 
-@keyframes float {
-  0% { transform: translateY(-20px); opacity: 0; }
-  70% { transform: translateY(5px); opacity: 0.9; }
-  100% { transform: translateY(0); opacity: 1; }
+/* Remove the smile - no longer needed */
+.gaja-smile {
+  display: none;
 }
 
-/* Enhanced animation styles for status indicators */
-.speaking-animation .status-indicator.speaking,
-.listening-animation .status-indicator.listening,
-.wakeword-animation .status-indicator.wakeword {
-    animation: pulse-active-status 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
-    position: relative;
-}
-
-/* Add subtle glow effect to active status indicators */
-.speaking-animation .status-indicator.speaking {
-    box-shadow: 
-        0 10px 25px rgba(0, 0, 0, 0.15),
-        0 3px 8px rgba(0, 0, 0, 0.1),
-        0 0 15px rgba(255, 180, 100, 0.4);
-}
-
-.listening-animation .status-indicator.listening {
-    box-shadow:
-        0 10px 25px rgba(0, 0, 0, 0.15),
-        0 3px 8px rgba(0, 0, 0, 0.1),
-        0 0 15px rgba(120, 220, 160, 0.4);
-}
-
-.wakeword-animation .status-indicator.wakeword {
-    box-shadow:
-        0 10px 25px rgba(0, 0, 0, 0.15),
-        0 3px 8px rgba(0, 0, 0, 0.1),
-        0 0 15px rgba(255, 130, 130, 0.4);
-}
-
-/* Add dot indicator for active states */
-.status-indicator.speaking::after,
-.status-indicator.listening::after,
-.status-indicator.wakeword::after {
-    content: '';
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    margin-left: 12px;
-    background-color: currentColor;
-    animation: blink 1.5s infinite;
-}
-
-@keyframes pulse-active-status {
-  0% { transform: scale(1); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12); }
-  50% { transform: scale(1.03); box-shadow: 0 12px 25px rgba(0, 0, 0, 0.18); }
-  100% { transform: scale(1); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12); }
-}
-
-@keyframes blink {
-  0% { opacity: 1; }
-  50% { opacity: 0.3; }
-  100% { opacity: 1; }
-}
-
-
-/* Copied from gaja-branding.css, excluding :root and body as they are handled above */
-
-/* Grid system - 12 column layout */
-.gaja-grid {
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: 1.5rem;
-}
-
-/* Form elements */
-.form-control, .form-select {
-  border-radius: var(--gaja-border-radius-xl);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  padding: 0.75rem 1rem;
-  background-color: rgba(255, 255, 255, 0.8);
-}
-
-/* Module cards */
-.module-card {
-  border-radius: var(--gaja-border-radius-xl);
-  transition: all 0.3s ease;
+/* Status text below the ball */
+.gaja-status-text {
+  margin-top: 15px;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+  z-index: 10;
   position: relative;
+  animation: fadeInText 0.5s ease-out 0.3s both;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 6px 14px;
+  border-radius: 16px;
+  backdrop-filter: blur(5px);
 }
 
-.module-card:hover {
-  transform: translateY(-5px);
+@keyframes fadeInText {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.module-card .card-header {
-  background-color: var(--gaja-blue);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+/* Response text - dynamic font size based on content length */
+.gaja-response-text {
+  margin-top: 20px;
+  max-width: 500px; /* Fit within wider background */
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
+  border-radius: 16px;
+  padding: 16px 20px;
+  font-weight: 500;
+  color: #2E2E2E;
+  box-shadow:
+    0 8px 25px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  z-index: 10;
+  position: relative;
+  animation: slideInResponse 0.6s ease-out 0.5s both;
+  line-height: 1.4;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  /* Dynamic font size will be set via JavaScript */
+  font-size: 1.1rem; /* Default size */
 }
 
-/* Active module pulse effect */
-.module-card.active::before {
-  content: "";
-  position: absolute;
-  top: -5px;
-  left: -5px;
-  right: -5px;
-  bottom: -5px;
-  border-radius: var(--gaja-border-radius-xl);
-  border: 2px solid var(--gaja-mint);
-  animation: pulse 2s infinite;
-  z-index: -1;
+/* Dynamic font size classes for different text lengths */
+.gaja-response-text.short-text {
+  font-size: 1.3rem; /* 0-50 characters */
 }
 
-@keyframes pulse {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.05); opacity: 0.5; }
-  100% { transform: scale(1); opacity: 1; }
+.gaja-response-text.medium-text {
+  font-size: 1.1rem; /* 51-150 characters */
 }
 
-/* Status badges & indicators from gaja-branding, might be useful */
-.badge {
-  border-radius: 1rem;
-  padding: 0.4rem 0.8rem;
+.gaja-response-text.long-text {
+  font-size: 1.0rem; /* 151-300 characters */
 }
 
-.badge.pulse {
-  animation: pulse-badge 2s infinite;
+.gaja-response-text.very-long-text {
+  font-size: 0.9rem; /* 301+ characters */
 }
 
-@keyframes pulse-badge {
-  0% { opacity: 1; }
-  50% { opacity: 0.6; }
-  100% { opacity: 1; }
+@keyframes slideInResponse {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
-.status-panel {
-  background-color: rgba(152, 230, 192, 0.2);
-  border-radius: var(--gaja-border-radius-xl);
-  padding: 1rem 1.5rem;
-  color: var(--text);
+.gaja-response-text p {
+  margin: 0;
+  line-height: 1.4;
 }
 
-/* Ensure dark mode overrides from gaja-branding are also present if you plan to support it */
-[data-bs-theme="dark"] {
-  --bg: #1b1b1b;
-  --text: #eeeeee;
-  --card: rgba(42, 42, 42, 0.8);
-  /* The overlay body is transparent, so --bg might not be directly visible on body,
-     but components using --bg will pick this up. */
-}
-
-[data-bs-theme="dark"] .overlay-container,
-[data-bs-theme="dark"] .status-indicator,
-[data-bs-theme="dark"] .text-display {
-    color: var(--text); /* Ensure text color updates for dark mode */
-}
-
-[data-bs-theme="dark"] .status-indicator {
-  background: linear-gradient(135deg, rgba(60, 60, 70, 0.8), rgba(40, 40, 50, 0.6));
-  border: 1px solid rgba(80, 80, 95, 0.4);
-  color: #eef1f7;
-}
-
-[data-bs-theme="dark"] .status-indicator.listening {
-  background: linear-gradient(135deg, rgba(60, 160, 110, 0.7), rgba(40, 120, 80, 0.5));
-  border: 1px solid rgba(80, 180, 120, 0.3);
-}
-
-[data-bs-theme="dark"] .status-indicator.speaking {
-  background: linear-gradient(135deg, rgba(180, 130, 70, 0.7), rgba(150, 100, 50, 0.5));
-  border: 1px solid rgba(200, 150, 80, 0.3);
-}
-
-[data-bs-theme="dark"] .status-indicator.wakeword {
-  background: linear-gradient(135deg, rgba(180, 80, 80, 0.7), rgba(150, 60, 60, 0.5));
-  border: 1px solid rgba(200, 90, 90, 0.3);
-}
-
-[data-bs-theme="dark"] .text-display {
-  background: linear-gradient(135deg, rgba(50, 50, 60, 0.85), rgba(30, 30, 40, 0.6));
-  color: #eef1f7;
-  box-shadow: 
-    0 10px 30px rgba(0, 0, 0, 0.25),
-    0 1px 8px rgba(0, 0, 0, 0.15),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
-}
-
-[data-bs-theme="dark"] .status-indicator.wakeword {
-  background-color: rgba(120, 80, 80, 0.7);
-}
-
-[data-bs-theme="dark"] .text-display {
-  background-color: rgba(30, 30, 30, 0.75); /* Darker semi-transparent background */
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-/* Enhanced responsive styles for different screen sizes */
+/* Responsive adjustments for different screen sizes */
 @media (max-width: 768px) {
-  .text-display {
-    font-size: 1.6rem;
-    padding: 1.5rem 2rem;
-    max-width: 90%;
-    border-left-width: 3px;
+  .overlay-background {
+    width: 450px;
+    height: 280px;
+    top: -40px;
   }
-  
-  .status-indicator {
-    font-size: 1.1rem;
-    padding: 0.6rem 1.5rem;
-    margin-bottom: 1rem;
+
+  .gaja-response-text {
+    max-width: 400px;
   }
-  
-  #root {
-    padding-top: 2.5vh;
+
+  .gaja-response-text.short-text {
+    font-size: 1.2rem;
+  }
+
+  .gaja-response-text.medium-text {
+    font-size: 1.0rem;
+  }
+
+  .gaja-response-text.long-text {
+    font-size: 0.9rem;
+  }
+
+  .gaja-response-text.very-long-text {
+    font-size: 0.8rem;
+  }
+
+  .gaja-status-text {
+    font-size: 1.2rem;
+  }
+
+  .gaja-ball {
+    width: 80px;
+    height: 80px;
+    margin-top: 10px;
   }
 }
 
 @media (max-width: 480px) {
-  .text-display {
-    font-size: 1.4rem;
-    padding: 1.2rem 1.8rem;
-    max-width: 95%;
-    border-left-width: 3px;
-    margin-top: 1rem;
+  .overlay-background {
+    width: 350px;
+    height: 220px;
+    top: -30px;
   }
-  
-  .status-indicator {
-    font-size: 0.95rem;
-    padding: 0.5rem 1.3rem;
-    min-width: 150px;
-  }
-  
-  .status-icon {
-    font-size: 1.3rem;
-  }
-  
-  #root {
-    padding-top: 2vh;
-  }
-}
 
-/* Ultra-wide screen adjustments */
-@media (min-width: 2000px) {
-  .text-display {
-    max-width: 55%;
-    font-size: 2.1rem;
-    padding: 2.5rem 3.5rem;
-    border-left-width: 5px;
+  .gaja-response-text {
+    max-width: 300px;
+    padding: 12px 16px;
   }
-  
-  .status-indicator {
-    font-size: 1.5rem;
-    padding: 1rem 2rem;
-    min-width: 220px;
-    margin-bottom: 2rem;
+
+  .gaja-response-text.short-text {
+    font-size: 1.1rem;
   }
-  
-  #root {
-    padding-top: 4vh;
+
+  .gaja-response-text.medium-text {
+    font-size: 0.9rem;
+  }
+
+  .gaja-response-text.long-text {
+    font-size: 0.8rem;
+  }
+
+  .gaja-response-text.very-long-text {
+    font-size: 0.75rem;
+  }
+
+  .gaja-status-text {
+    font-size: 1.1rem;
+  }
+
+  .gaja-ball {
+    width: 70px;
+    height: 70px;
+    margin-top: 8px;
   }
 }

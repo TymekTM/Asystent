@@ -1,246 +1,261 @@
+#!/usr/bin/env python3
 """
-Skrypt do budowania pojedynczego pliku EXE z automatycznym pobieraniem zależności
+GAJA Assistant Build Script - Client-Server Architecture
+Builds separate executables for server and client components.
 """
 
+import argparse
 import os
-import sys
-import subprocess
 import shutil
+import subprocess
+import sys
 from pathlib import Path
 
-def clean_build():
-    """Czyści poprzednie pliki build"""
-    print("🧹 Czyszczenie poprzednich build...")
-    
-    paths_to_remove = ['build', 'dist', '__pycache__']
-    
-    for path in paths_to_remove:
-        if os.path.exists(path):
-            if os.path.isdir(path):
-                shutil.rmtree(path)
-                print(f"   Usunięto folder: {path}")
-            else:
-                os.remove(path)
-                print(f"   Usunięto plik: {path}")
+# Set UTF-8 encoding for Windows console
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
-def install_build_dependencies():
-    """Instaluje pakiety potrzebne do kompilacji"""
-    print("📦 Instalowanie zależności do kompilacji...")
-    
-    result = subprocess.run([
-        sys.executable, "-m", "pip", "install", "-r", "requirements_build.txt"
-    ], capture_output=True, text=True)
-    
-    if result.returncode != 0:
-        print(f"❌ Błąd instalacji zależności: {result.stderr}")
+
+def run_command(cmd, description=""):
+    """Run a command and handle errors gracefully."""
+    print(f"[BUILD] {description}")
+    print(f"   Running: {' '.join(cmd)}")
+
+    try:
+        result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+        if result.stdout:
+            print(f"   Output: {result.stdout.strip()}")
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"   [ERROR] Error: {e}")
+        if e.stdout:
+            print(f"   Stdout: {e.stdout}")
+        if e.stderr:
+            print(f"   Stderr: {e.stderr}")
         return False
-    
-    print("✅ Zależności zainstalowane")
+
+
+def check_dependencies():
+    """Check and install build dependencies."""
+    print("[CHECK] Checking build dependencies...")
+
+    # Check if PyInstaller is installed
+    try:
+        import PyInstaller
+
+        print(f"   [OK] PyInstaller {PyInstaller.__version__} is available")
+    except ImportError:
+        print("   [BUILD] Installing PyInstaller...")
+        if not run_command(
+            [sys.executable, "-m", "pip", "install", "pyinstaller"],
+            "Installing PyInstaller",
+        ):
+            return False
+
     return True
 
+
 def build_overlay():
-    """Buduje overlay Tauri"""
-    print("🖼️ Budowanie overlay...")
-    
+    """Build the Rust overlay if available."""
     overlay_dir = Path("overlay")
     if not overlay_dir.exists():
-        print("⚠️ Folder overlay nie istnieje, pomijam budowanie overlay")
+        print("   [WARN] Overlay directory not found, skipping...")
         return True
-    
-    # Sprawdź czy overlay.exe już istnieje
-    overlay_exe = overlay_dir / "target" / "release" / "Gaja Overlay.exe"
-    if overlay_exe.exists():
-        print(f"✅ Overlay już zbudowany: {overlay_exe}")
-        return True
-    
-    # Instaluj npm dependencies
-    print("   📦 Instalowanie npm dependencies...")
-    result = subprocess.run([
-        "npm", "install"
-    ], cwd=overlay_dir, capture_output=True, text=True)
-    
-    if result.returncode != 0:
-        print(f"⚠️ Ostrzeżenie npm install: {result.stderr}")
-    
-    # Buduj overlay
-    print("   🔨 Kompilowanie overlay...")
-    result = subprocess.run([
-        "npm", "run", "tauri", "build"
-    ], cwd=overlay_dir, capture_output=True, text=True)
-    
-    if result.returncode != 0:
-        print(f"❌ Błąd kompilacji overlay: {result.stderr}")
-        return False
-    
-    # Sprawdź czy plik został utworzony
-    if overlay_exe.exists():
-        size_mb = overlay_exe.stat().st_size / (1024 * 1024)
-        print(f"✅ Overlay zbudowany: {overlay_exe}")
-        print(f"📏 Rozmiar overlay: {size_mb:.1f} MB")
-        return True
-    else:
-        print("❌ Plik overlay.exe nie został utworzony")
+
+    print("[RUST] Building Rust overlay...")
+    if not run_command(["cargo", "build", "--release"], "Building Rust overlay"):
+        print("   [WARN] Overlay build failed, continuing without it...")
         return False
 
-def build_exe():
-    """Buduje pojedynczy plik EXE"""
-    print("🔨 Budowanie pliku EXE...")
-    
-    # Uruchom PyInstaller
-    result = subprocess.run([
-        sys.executable, "-m", "PyInstaller", 
-        "--clean",
-        "gaja.spec"
-    ], capture_output=True, text=True)
-    
-    if result.returncode != 0:
-        print(f"❌ Błąd kompilacji: {result.stderr}")
+    return True
+
+
+def clean_build():
+    """Clean previous build artifacts."""
+    print("[CLEAN] Cleaning previous build artifacts...")
+
+    dirs_to_clean = ["build", "dist", "__pycache__"]
+    for dir_name in dirs_to_clean:
+        if os.path.exists(dir_name):
+            print(f"   Removing {dir_name}/")
+            shutil.rmtree(dir_name)
+
+    # Remove .spec cache files
+    for spec_file in Path(".").glob("*.spec"):
+        spec_cache = spec_file.with_suffix(".spec.bak")
+        if spec_cache.exists():
+            spec_cache.unlink()
+
+
+def build_component(component):
+    """Build a specific component (client or legacy only - server uses Docker)."""
+    if component == "client":
+        spec_file = "gaja_client.spec"
+        exe_name = "GajaClient.exe"
+        description = "client component (plug-and-play with runtime dependencies)"
+    elif component == "legacy":
+        spec_file = "gaja.spec"
+        exe_name = "Gaja.exe"
+        description = "legacy unified component"
+    else:
+        print(f"[ERROR] Unknown component: {component}")
+        print(
+            "[INFO] Server should be run via Docker: docker-compose up gaja-server-cpu"
+        )
         return False
-    
-    # Sprawdź czy plik został utworzony
-    exe_path = Path("dist/Gaja.exe")
+
+    print(f"[BUILD] Building {description} using PyInstaller...")
+
+    if not os.path.exists(spec_file):
+        print(f"   [ERROR] Spec file {spec_file} not found!")
+        return False
+
+    cmd = [sys.executable, "-m", "PyInstaller", "--clean", spec_file]
+
+    if not run_command(cmd, f"Building {description}"):
+        return False
+
+    # Check if the EXE was created
+    exe_path = Path(f"dist/{exe_name}")
     if exe_path.exists():
         size_mb = exe_path.stat().st_size / (1024 * 1024)
-        print(f"✅ EXE utworzony: {exe_path}")
-        print(f"📏 Rozmiar: {size_mb:.1f} MB")
+        print(
+            f"   [OK] {description.capitalize()} built successfully: {exe_path} ({size_mb:.1f} MB)"
+        )
         return True
     else:
-        print("❌ Plik EXE nie został utworzony")
+        print(f"   [ERROR] EXE not found at expected location: {exe_path}")
         return False
 
-def create_release_package():
-    """Tworzy pakiet release z instrukcjami"""
-    print("📦 Tworzenie pakietu release...")
-    
-    release_dir = Path("release")
-    release_dir.mkdir(exist_ok=True)
-    
-    # Skopiuj EXE
-    exe_source = Path("dist/Gaja.exe")
-    exe_dest = release_dir / "Gaja.exe"
-    
-    if exe_source.exists():
-        shutil.copy2(exe_source, exe_dest)
-        print(f"   Skopiowano: {exe_dest}")
-    
-    # Skopiuj overlay jeśli istnieje
-    overlay_source = Path("overlay/target/release/Gaja Overlay.exe")
-    overlay_dest = release_dir / "overlay" / "Gaja Overlay.exe"
-    
-    if overlay_source.exists():
-        overlay_dest.parent.mkdir(exist_ok=True)
-        shutil.copy2(overlay_source, overlay_dest)
-        print(f"   Skopiowano: {overlay_dest}")
-    else:
-        print("⚠️ Overlay nie został znaleziony, aplikacja będzie działać bez overlay")
-    
-    # Utwórz README dla użytkownika
-    readme_content = """# Gaja - Asystent AI
 
-## Instalacja i pierwsze uruchomienie
+def verify_architecture():
+    """Verify that the client-server architecture components exist."""
+    print("[CHECK] Verifying client-server architecture...")
 
-1. **Pobierz**: Gaja.exe (ten plik)
-2. **Uruchom**: Kliknij dwukrotnie na Gaja.exe
-3. **Poczekaj**: Przy pierwszym uruchomieniu aplikacja sprawdzi dostępne pakiety Python
-4. **Automatyczne doinstalowanie**: Jeśli brakuje pakietów, zostaną pobrane do folderu `dependencies`
-5. **Gotowe**: Aplikacja uruchomi się automatycznie
+    required_components = {
+        "server/server_main.py": "Server main module",
+        "client/client_main.py": "Client main module",
+        "main.py": "Unified entry point",
+    }
 
-## Jak to działa
+    missing_components = []
+    for component, description in required_components.items():
+        if not os.path.exists(component):
+            missing_components.append(f"{description} ({component})")
+            print(f"   [ERROR] Missing: {description} ({component})")
+        else:
+            print(f"   [OK] Found: {description}")
 
-- **EXE zawiera**: Podstawowe biblioteki (Flask, OpenAI, requests, etc.)
-- **Automatyczne doinstalowanie**: Brakujące pakiety pobierają się do folderu `dependencies`
-- **Pierwsze uruchomienie**: 1-3 minuty (sprawdzanie + ewentualne pobieranie)
-- **Kolejne uruchomienia**: Szybkie (pakiety już dostępne)
-- **Overlay**: Opcjonalny wizualny overlay pokazujący status asystenta
+    if missing_components:
+        print("[ERROR] Architecture verification failed. Missing components:")
+        for component in missing_components:
+            print(f"   - {component}")
+        return False
 
-## Struktura plików po pierwszym uruchomieniu
+    print("[OK] Architecture verification successful!")
+    return True
 
-```
-Gaja.exe                     # Główna aplikacja
-overlay/                     # Folder z overlay (opcjonalny)
-├── Gaja Overlay.exe        # Wizualny overlay 
-dependencies/                # Folder z dodatkowymi pakietami (tworzy się automatycznie)
-├── packages/               # Dodatkowe pakiety Python
-├── cache/                  # Cache instalatora
-├── installation.lock       # Znacznik sprawdzenia zależności
-└── deps_config.json       # Konfiguracja pakietów
-```
-
-## Wymagania
-
-- **System**: Windows 10+ (64-bit)
-- **Python**: Systemowy Python 3.11+ (jeśli nie ma, aplikacja poprosi o instalację)
-- **Połączenie internetowe**: Tylko przy pierwszym uruchomieniu (dla brakujących pakietów)
-- **Miejsce na dysku**: ~100MB dla aplikacji + ~500MB dla dodatkowych pakietów
-
-## Rozwiązywanie problemów
-
-- **"Brak Pythona"**: Zainstaluj Python z python.org
-- **Błąd pobierania pakietów**: Sprawdź połączenie internetowe
-- **Aplikacja nie startuje**: Uruchom jako administrator
-- **Błędy pakietów**: Usuń folder `dependencies` i uruchom ponownie
-
-## Co robi aplikacja przy pierwszym uruchomieniu?
-
-1. Sprawdza czy potrzebne pakiety są już zainstalowane w systemie
-2. Jeśli brakuje pakietów - instaluje je do folderu `dependencies` obok EXE
-3. Konfiguruje ścieżki do zainstalowanych pakietów
-4. Uruchamia główną aplikację
-
-Wersja: 2.1.0
-Data: 2025
-"""
-    
-    readme_path = release_dir / "README.md"
-    readme_path.write_text(readme_content, encoding='utf-8')
-    print(f"   Utworzono: {readme_path}")
-    
-    print(f"🎉 Pakiet release gotowy w folderze: {release_dir}")
 
 def main():
-    """Główna funkcja build"""
-    print("🚀 Rozpoczynam budowanie aplikacji Gaja")
-    print("=" * 50)
-    
-    try:
-        # Krok 1: Czyszczenie
-        clean_build()
-        print()
-        
-        # Krok 2: Instalacja zależności
-        if not install_build_dependencies():
-            return False
-        print()
-        
-        # Krok 3: Budowanie overlay
-        if not build_overlay():
-            print("⚠️ Overlay nie został zbudowany, kontynuuję bez overlay")
-        print()
-        
-        # Krok 4: Kompilacja
-        if not build_exe():
-            return False
-        print()
-        
-        # Krok 5: Pakiet release
-        create_release_package()
-        print()
-        
-        print("🎉 Build zakończony pomyślnie!")
-        print("📁 Sprawdź folder 'release' - tam znajdziesz gotową aplikację")
-        
-        return True
-        
-    except Exception as e:
-        print(f"❌ Nieoczekiwany błąd: {e}")
-        return False
+    """Main build process - builds CLIENT as EXE (server runs in Docker)."""
+    parser = argparse.ArgumentParser(
+        description="Build GAJA Assistant Client EXE (server runs in Docker)"
+    )
+    parser.add_argument(
+        "--component",
+        choices=["client", "legacy"],
+        default="client",
+        help="Component to build (server runs in Docker)",
+    )
+    parser.add_argument(
+        "--skip-overlay", action="store_true", help="Skip building Rust overlay"
+    )
+    parser.add_argument(
+        "--skip-verification",
+        action="store_true",
+        help="Skip architecture verification",
+    )
+
+    args = parser.parse_args()
+
+    print("[START] GAJA Assistant Build Process - Client EXE (Server via Docker)")
+    print("=" * 60)
+
+    # Change to script directory
+    script_dir = Path(__file__).parent
+    os.chdir(script_dir)
+    print(f"[INFO] Working directory: {os.getcwd()}")
+
+    # Verify architecture unless skipped
+    if not args.skip_verification:
+        if not verify_architecture():
+            print("[ERROR] Architecture verification failed!")
+            return 1
+
+    # Check dependencies
+    if not check_dependencies():
+        print("[ERROR] Dependency check failed!")
+        return 1
+
+    # Clean previous builds
+    clean_build()
+
+    # Build overlay (optional)
+    if not args.skip_overlay:
+        build_overlay()  # Build components based on selection
+    success = True
+
+    if args.component == "client":
+        print("\n[CLIENT] Building PLUG-AND-PLAY CLIENT EXE...")
+        print("[INFO] Client will download ML dependencies at first run")
+        print(
+            "[INFO] Server should be run via Docker: docker-compose up gaja-server-cpu"
+        )
+        success = build_component("client")
+    elif args.component == "legacy":
+        print("\n[LEGACY] Building LEGACY unified component...")
+        print("[WARN] Legacy mode includes both client and server in EXE")
+        success = build_component("legacy")
+
+    if not success:
+        print("[ERROR] Build failed!")
+        return 1
+
+    print("=" * 60)
+    print("[SUCCESS] Build completed successfully!")
+
+    # Show results
+    if args.component == "client":
+        client_exe = Path("dist/GajaClient.exe")
+        if client_exe.exists():
+            print(
+                f"   [CLIENT] Client EXE: {client_exe} ({client_exe.stat().st_size / (1024*1024):.1f} MB)"
+            )
+
+    if args.component == "legacy":
+        legacy_exe = Path("dist/Gaja.exe")
+        if legacy_exe.exists():
+            print(
+                f"   [LEGACY] Legacy EXE: {legacy_exe} ({legacy_exe.stat().st_size / (1024*1024):.1f} MB)"
+            )
+
+    print("\n[USAGE] How to run:")
+    if args.component == "client":
+        print("   1. Start server: docker-compose up gaja-server-cpu")
+        print("   2. Run client: GajaClient.exe")
+        print("   3. Client will connect to server at ws://localhost:8001/ws/")
+    if args.component == "legacy":
+        print("   Legacy unified: Gaja.exe (includes both client and server)")
+
+    print("\n[DOCKER] Server management:")
+    print("   Start server: docker-compose up gaja-server-cpu")
+    print("   Stop server:  docker-compose down")
+    print("   View logs:    docker-compose logs -f gaja-server-cpu")
+    print("   Rebuild:      docker-compose build gaja-server-cpu")
+
+    return 0
+
 
 if __name__ == "__main__":
-    success = main()
-    
-    if not success:
-        print("\n❌ Build zakończony niepowodzeniem")
-        sys.exit(1)
-    else:
-        print("\n✅ Build zakończony pomyślnie!")
-        sys.exit(0)
+    sys.exit(main())

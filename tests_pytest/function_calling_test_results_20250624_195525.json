@@ -1,0 +1,332 @@
+{
+  "test_metadata": {
+    "test_type": "function_calling_comprehensive",
+    "start_time": "2025-06-24T19:55:08.536225",
+    "end_time": "2025-06-24T19:55:25.859058",
+    "duration_seconds": 17.322833,
+    "server_url": "http://localhost:8001",
+    "test_user_id": "func_test_user_a92c87ff"
+  },
+  "results": {
+    "core_functions": {
+      "get_current_time": {
+        "success": true,
+        "response_time": 0.750415,
+        "expected_function": "get_current_time",
+        "function_called": "ai_response_only",
+        "has_function_calls": false,
+        "function_calls": [],
+        "error": null
+      },
+      "add_task": {
+        "success": true,
+        "response_time": 0.682876,
+        "expected_function": "add_task",
+        "function_called": "ai_response_only",
+        "has_function_calls": false,
+        "function_calls": [],
+        "error": null
+      },
+      "view_tasks": {
+        "success": true,
+        "response_time": 0.771404,
+        "expected_function": "view_tasks",
+        "function_called": "ai_response_only",
+        "has_function_calls": false,
+        "function_calls": [],
+        "error": null
+      },
+      "add_event": {
+        "success": true,
+        "response_time": 0.536312,
+        "expected_function": "add_event",
+        "function_called": "ai_response_only",
+        "has_function_calls": false,
+        "function_calls": [],
+        "error": null
+      },
+      "view_calendar": {
+        "success": true,
+        "response_time": 1.230001,
+        "expected_function": "view_calendar",
+        "function_called": "ai_response_only",
+        "has_function_calls": false,
+        "function_calls": [],
+        "error": null
+      },
+      "set_timer": {
+        "success": true,
+        "response_time": 0.758472,
+        "expected_function": "set_timer",
+        "function_called": "ai_response_only",
+        "has_function_calls": false,
+        "function_calls": [],
+        "error": null
+      },
+      "view_timers": {
+        "success": true,
+        "response_time": 0.758858,
+        "expected_function": "view_timers",
+        "function_called": "ai_response_only",
+        "has_function_calls": false,
+        "function_calls": [],
+        "error": null
+      },
+      "add_shopping_item": {
+        "success": true,
+        "response_time": 0.531665,
+        "expected_function": "add_item",
+        "function_called": "ai_response_only",
+        "has_function_calls": false,
+        "function_calls": [],
+        "error": null
+      },
+      "view_shopping_list": {
+        "success": true,
+        "response_time": 0.680856,
+        "expected_function": "view_list",
+        "function_called": "ai_response_only",
+        "has_function_calls": false,
+        "function_calls": [],
+        "error": null
+      }
+    },
+    "weather_functions": {
+      "current_weather": {
+        "success": false,
+        "response_time": 0.566749,
+        "expected_function": "get_weather",
+        "function_called": null,
+        "has_function_calls": false,
+        "function_calls": [],
+        "error": null
+      },
+      "weather_with_provider": {
+        "success": false,
+        "response_time": 0.667652,
+        "expected_function": "get_weather",
+        "function_called": null,
+        "has_function_calls": false,
+        "function_calls": [],
+        "error": null
+      },
+      "weather_forecast": {
+        "success": false,
+        "response_time": 0.802948,
+        "expected_function": "get_weather",
+        "function_called": null,
+        "has_function_calls": false,
+        "function_calls": [],
+        "error": null
+      }
+    },
+    "search_functions": {
+      "web_search": {
+        "success": false,
+        "response_time": 0.818956,
+        "expected_function": "search",
+        "function_called": null,
+        "has_function_calls": false,
+        "function_calls": [],
+        "error": null
+      },
+      "news_search": {
+        "success": false,
+        "response_time": 0.745883,
+        "expected_function": "search_news",
+        "function_called": null,
+        "has_function_calls": false,
+        "function_calls": [],
+        "error": null
+      },
+      "search_with_engine": {
+        "success": false,
+        "response_time": 0.641439,
+        "expected_function": "search",
+        "function_called": null,
+        "has_function_calls": false,
+        "function_calls": [],
+        "error": null
+      }
+    },
+    "memory_functions": {
+      "remember_preference": {
+        "success": false,
+        "response_time": 0.574627,
+        "expected_function": "store_memory",
+        "function_called": null,
+        "has_function_calls": false,
+        "function_calls": [],
+        "error": null
+      },
+      "recall_preference": {
+        "success": true,
+        "response_time": 0.561627,
+        "expected_function": "search_memory",
+        "function_called": "implicit_memory",
+        "has_function_calls": false,
+        "function_calls": [],
+        "error": null
+      },
+      "remember_fact": {
+        "success": true,
+        "response_time": 0.533393,
+        "expected_function": "store_memory",
+        "function_called": "implicit_memory",
+        "has_function_calls": false,
+        "function_calls": [],
+        "error": null
+      },
+      "context_recall": {
+        "success": false,
+        "response_time": 0.42227,
+        "expected_function": "search_memory",
+        "function_called": null,
+        "has_function_calls": false,
+        "function_calls": [],
+        "error": null
+      }
+    },
+    "error_handling": {
+      "invalid_date_format": {
+        "graceful_handling": false,
+        "response_time": 0.517496,
+        "has_function_calls": false,
+        "function_calls": [],
+        "response_success": true,
+        "error": null
+      },
+      "missing_parameters": {
+        "graceful_handling": false,
+        "response_time": 0.593809,
+        "has_function_calls": false,
+        "function_calls": [],
+        "response_success": true,
+        "error": null
+      },
+      "invalid_location": {
+        "graceful_handling": true,
+        "response_time": 0.542154,
+        "has_function_calls": false,
+        "function_calls": [],
+        "response_success": true,
+        "error": null
+      },
+      "empty_search_query": {
+        "graceful_handling": true,
+        "response_time": 0.528959,
+        "has_function_calls": false,
+        "function_calls": [],
+        "response_success": true,
+        "error": null
+      }
+    },
+    "edge_cases": {
+      "multiple_functions_single_request": {
+        "success": false,
+        "response_time": 0.540752,
+        "function_count": 0,
+        "has_function_calls": false,
+        "function_calls": [],
+        "error": null
+      },
+      "function_with_context": {
+        "success": false,
+        "response_time": 0.523321,
+        "function_count": 0,
+        "has_function_calls": false,
+        "function_calls": [],
+        "error": null
+      },
+      "complex_date_parsing": {
+        "success": false,
+        "response_time": 0.521358,
+        "function_count": 0,
+        "has_function_calls": false,
+        "function_calls": [],
+        "error": null
+      },
+      "chained_operations": {
+        "success": false,
+        "response_time": 0.497504,
+        "function_count": 0,
+        "has_function_calls": false,
+        "function_calls": [],
+        "error": null
+      }
+    },
+    "performance_metrics": {
+      "function_call_times": [
+        0.750415, 0.682876, 0.771404, 0.536312, 1.230001, 0.758472, 0.758858,
+        0.531665, 0.680856, 0.566749, 0.667652, 0.802948, 0.818956, 0.745883,
+        0.641439, 0.574627, 0.561627, 0.533393, 0.42227, 0.517496, 0.593809,
+        0.542154, 0.528959, 0.540752, 0.523321, 0.521358, 0.497504
+      ],
+      "successful_calls": 27,
+      "failed_calls": 0,
+      "total_calls": 27,
+      "average_response_time": 0.6408057777777778,
+      "max_response_time": 1.230001,
+      "min_response_time": 0.42227,
+      "total_test_duration": 17.322833,
+      "success_rate": 100.0
+    }
+  },
+  "summary": {
+    "total_tests": 19,
+    "successful_tests": 11,
+    "failed_tests": 8,
+    "categories": {
+      "core_functions": {
+        "total": 9,
+        "successful": 9,
+        "success_rate": 100.0
+      },
+      "weather_functions": {
+        "total": 3,
+        "successful": 0,
+        "success_rate": 0.0
+      },
+      "search_functions": {
+        "total": 3,
+        "successful": 0,
+        "success_rate": 0.0
+      },
+      "memory_functions": {
+        "total": 4,
+        "successful": 2,
+        "success_rate": 50.0
+      },
+      "error_handling": {
+        "total": 4,
+        "graceful": 2,
+        "graceful_rate": 50.0
+      },
+      "edge_cases": {
+        "total": 4,
+        "successful": 0,
+        "success_rate": 0.0
+      }
+    },
+    "overall_success_rate": 57.89473684210527,
+    "performance_summary": {
+      "function_call_times": [
+        0.750415, 0.682876, 0.771404, 0.536312, 1.230001, 0.758472, 0.758858,
+        0.531665, 0.680856, 0.566749, 0.667652, 0.802948, 0.818956, 0.745883,
+        0.641439, 0.574627, 0.561627, 0.533393, 0.42227, 0.517496, 0.593809,
+        0.542154, 0.528959, 0.540752, 0.523321, 0.521358, 0.497504
+      ],
+      "successful_calls": 27,
+      "failed_calls": 0,
+      "total_calls": 27,
+      "average_response_time": 0.6408057777777778,
+      "max_response_time": 1.230001,
+      "min_response_time": 0.42227,
+      "total_test_duration": 17.322833,
+      "success_rate": 100.0
+    },
+    "recommendations": [
+      "Function calling system needs significant improvements"
+    ]
+  }
+}

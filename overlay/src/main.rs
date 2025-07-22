@@ -32,12 +32,12 @@ struct AssistantStatusResponse {
 #[derive(Debug, Clone, Serialize)] // Added Clone and Serialize
 pub struct OverlayState {
     visible: bool,
-    status: String, 
-    text: String,   
+    status: String,
+    text: String,
     is_listening: bool,
     is_speaking: bool,
     wake_word_detected: bool,
-    #[serde(skip_serializing)] 
+    #[serde(skip_serializing)]
     last_activity_time: Instant,
 }
 
@@ -50,7 +50,7 @@ impl OverlayState {
             is_listening: false,
             is_speaking: false,
             wake_word_detected: false,
-            last_activity_time: Instant::now(), 
+            last_activity_time: Instant::now(),
         }
     }
 }
@@ -95,7 +95,7 @@ async fn update_status(
         overlay_state.is_speaking = is_speaking;
         overlay_state.wake_word_detected = wake_word_detected;
     }
-    
+
     window.emit("status-update", serde_json::json!({
         "status": status,
         "text": text,
@@ -103,7 +103,7 @@ async fn update_status(
         "is_speaking": is_speaking,
         "wake_word_detected": wake_word_detected
     })).map_err(|e| e.to_string())?;
-    
+
     Ok(())
 }
 
@@ -114,39 +114,60 @@ fn get_state(state: tauri::State<Arc<Mutex<OverlayState>>>) -> Result<OverlaySta
 
 async fn poll_assistant_status(app_handle: AppHandle, state: Arc<Mutex<OverlayState>>) {
     let client = reqwest::Client::new();
-    let ports = vec!["5000", "5001"]; // Try both ports
+    // ONLY try client ports - NEVER connect to main server (8001)
+    let ports = vec!["5001", "5000"];
     let mut working_port = None;
-    
+
     // First, find which port is working
     for port in &ports {
         let test_url = format!("http://localhost:{}/api/status", port);
-        if let Ok(response) = client.get(&test_url).send().await {
-            if response.status().is_success() {
-                working_port = Some(port.to_string());
-                println!("[Rust] Found working port: {}", port);
-                break;
+        println!("[Rust] Testing connection to CLIENT port {}", port);
+        match client.get(&test_url).timeout(std::time::Duration::from_secs(2)).send().await {
+            Ok(response) => {
+                if response.status().is_success() {
+                    working_port = Some(port.to_string());
+                    println!("[Rust] Found working CLIENT port: {}", port);
+                    break;
+                } else {
+                    println!("[Rust] Client port {} returned status: {}", port, response.status());
+                }
+            }
+            Err(e) => {
+                println!("[Rust] Client port {} connection failed: {}", port, e);
             }
         }
     }
-    
-    let current_port = working_port.unwrap_or_else(|| {
+
+    let current_port = working_port.clone().unwrap_or_else(|| {
+        println!("[Rust] No CLIENT connection found, using fallback port 5001");
         std::env::var("GAJA_PORT").unwrap_or_else(|_| {
-            if cfg!(debug_assertions) { "5001".to_string() } else { "5000".to_string() }
+            "5001".to_string() // Always default to client port, never server port
         })
     });
-      // Try SSE first, fallback to polling if not available
+
+    // Show connection status in UI
+    {
+        let mut state_guard = state.lock().unwrap();
+        if working_port.is_some() {
+            state_guard.status = format!("Connected to CLIENT port {}", current_port);
+        } else {
+            state_guard.status = "Waiting for client...".to_string();
+        }
+    }
+
+    // Try SSE first, fallback to polling if not available
     let sse_url = format!("http://localhost:{}/status/stream", current_port);
-    
+
     println!("[Rust] Attempting to connect to SSE stream: {}", sse_url);
-    
+
     // Try to establish SSE connection
-    match client.get(&sse_url).send().await {
+    match client.get(&sse_url).timeout(std::time::Duration::from_secs(5)).send().await {
         Ok(response) => {
             if response.status().is_success() {
                 println!("[Rust] Successfully connected to SSE stream");
                 handle_sse_stream(response, app_handle.clone(), state.clone()).await;
             } else {
-                println!("[Rust] SSE not available, falling back to polling");
+                println!("[Rust] SSE not available (status: {}), falling back to polling", response.status());
                 handle_polling(client, current_port, app_handle, state).await;
             }
         }
@@ -160,7 +181,7 @@ async fn poll_assistant_status(app_handle: AppHandle, state: Arc<Mutex<OverlaySt
 async fn handle_sse_stream(response: reqwest::Response, app_handle: AppHandle, state: Arc<Mutex<OverlayState>>) {
     let mut stream = response.bytes_stream();
     let mut buffer = String::new();
-    
+
     while let Some(chunk) = stream.next().await {
         match chunk {
             Ok(bytes) => {
@@ -170,7 +191,7 @@ async fn handle_sse_stream(response: reqwest::Response, app_handle: AppHandle, s
                 while let Some(pos) = buffer.find("\n\n") {
                     let message = buffer[..pos].to_string();
                     buffer.drain(..pos + 2);
-                    
+
                     if message.starts_with("data: ") {
                         let json_str = &message[6..]; // Remove "data: " prefix
                           match serde_json::from_str::<serde_json::Value>(json_str) {
@@ -199,16 +220,22 @@ async fn handle_sse_stream(response: reqwest::Response, app_handle: AppHandle, s
 }
 
 async fn handle_polling(client: reqwest::Client, mut current_port: String, app_handle: AppHandle, state: Arc<Mutex<OverlayState>>) {
-    println!("[Rust] Using polling mode");
-    
+    println!("[Rust] Using polling mode on CLIENT port {}", current_port);
+
     loop {
-        sleep(Duration::from_millis(500)).await; // Poll every 500ms
-        
-        let poll_url = format!("http://localhost:{}/api/status", current_port);        match client.get(&poll_url).send().await {
+        sleep(Duration::from_millis(1000)).await; // Poll every 1 second
+
+        let poll_url = format!("http://localhost:{}/api/status", current_port);
+        match client.get(&poll_url).timeout(Duration::from_secs(3)).send().await {
             Ok(response) => {
                 if response.status().is_success() {
                     match response.json::<serde_json::Value>().await {
                         Ok(data) => {
+                            // Update connection status
+                            {
+                                let mut state_guard = state.lock().unwrap();
+                                state_guard.status = format!("Connected to CLIENT port {}", current_port);
+                            }
                             process_status_data(data, app_handle.clone(), state.clone()).await;
                         }
                         Err(e) => {
@@ -216,25 +243,35 @@ async fn handle_polling(client: reqwest::Client, mut current_port: String, app_h
                         }
                     }
                 } else {
-                    eprintln!("[Rust] Status endpoint returned error: {}", response.status());
+                    eprintln!("[Rust] CLIENT status endpoint returned error: {}", response.status());
                 }
             }
             Err(e) => {
-                eprintln!("[Rust] Failed to connect to status endpoint on port {}: {}. Trying other ports...", current_port, e);
-                
-                // Try the other port if connection fails
-                for test_port in &["5000", "5001"] {
+                println!("[Rust] Failed to connect to CLIENT port {}: {}", current_port, e);
+
+                // Update UI to show waiting for client
+                {
+                    let mut state_guard = state.lock().unwrap();
+                    state_guard.status = "Waiting for client to start...".to_string();
+                    state_guard.text = "Start the Gaja client first".to_string();
+                }
+
+                // Try only client ports if connection fails
+                for test_port in &["5001", "5000"] {
                     if test_port != &current_port {
                         let test_url = format!("http://localhost:{}/api/status", test_port);
-                        if let Ok(response) = client.get(&test_url).send().await {
+                        if let Ok(response) = client.get(&test_url).timeout(Duration::from_secs(2)).send().await {
                             if response.status().is_success() {
-                                eprintln!("[Rust] Successfully connected to port {}, switching...", test_port);
+                                println!("[Rust] Successfully reconnected to CLIENT port {}, switching...", test_port);
                                 current_port = test_port.to_string();
                                 break;
                             }
                         }
                     }
                 }
+
+                // Wait longer before retrying when no client available
+                sleep(Duration::from_secs(10)).await;
             }
         }
     }
@@ -244,7 +281,7 @@ async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, sta
     println!("[Rust] Processing status data: {}", data);
     let mut state_guard = state.lock().unwrap();
     let window = app_handle.get_window("main").unwrap();
-    
+
     // Extract data from JSON
     let status = data.get("status").and_then(|v| v.as_str()).unwrap_or("Unknown").to_string();
     let current_text = data.get("text").and_then(|v| v.as_str()).unwrap_or("").to_string();
@@ -268,9 +305,9 @@ async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, sta
     }
 
     if changed {
-        println!("[Rust] Status update: listening={}, speaking={}, wake_word={}, text='{}', visible={}", 
+        println!("[Rust] Status update: listening={}, speaking={}, wake_word={}, text='{}', visible={}",
                 is_listening, is_speaking, wake_word_detected, current_text, should_be_visible);
-        
+
         state_guard.status = status.clone();
         state_guard.text = current_text.clone();
         state_guard.is_listening = is_listening;
@@ -294,7 +331,7 @@ async fn process_status_data(data: serde_json::Value, app_handle: AppHandle, sta
         });
         state_guard.last_activity_time = Instant::now();
     }    // Auto-hide logic - only hide after longer period and when truly inactive
-    if state_guard.visible && state_guard.last_activity_time.elapsed() > Duration::from_secs(30) 
+    if state_guard.visible && state_guard.last_activity_time.elapsed() > Duration::from_secs(30)
         && current_text.is_empty() && !is_listening && !is_speaking && !wake_word_detected {
         if window.is_visible().unwrap_or(false) {
             println!("[Rust] Auto-hiding window due to prolonged inactivity and no relevant status.");
@@ -309,11 +346,11 @@ pub fn run() {
     let state = Arc::new(Mutex::new(OverlayState::new()));
 
     let app_result = tauri::Builder::default()
-        .manage(state.clone()) 
+        .manage(state.clone())
         .setup(move |app| {
             let main_window = app.get_window("main").unwrap();
             let app_handle = app.handle();
-            let state_clone_for_poll = state.clone(); 
+            let state_clone_for_poll = state.clone();
 
             // Get primary monitor and set window to its size and position
             match main_window.primary_monitor() { // Changed from app.get_primary_monitor()
@@ -329,10 +366,11 @@ pub fn run() {
                     eprintln!("Error getting primary monitor: {}", e);
                 }
             }            set_click_through(&main_window, true);
-            
+
             // Force show window for debugging
             main_window.show().unwrap_or_else(|e| eprintln!("Failed to show window: {}", e));
-            main_window.set_focus().unwrap_or_else(|e| eprintln!("Failed to focus window: {}", e));
+            // Remove focus call to prevent window from stealing focus
+            // main_window.set_focus().unwrap_or_else(|e| eprintln!("Failed to focus window: {}", e));
 
             tauri::async_runtime::spawn(async move {
                 poll_assistant_status(app_handle, state_clone_for_poll).await;

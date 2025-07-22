@@ -1,16 +1,5 @@
 {
 	"version": "2.0.0",
 	"tasks": [
-		{
-			"label": "Build EXE",
-			"type": "shell",
-			"command": "python",
-			"args": [
-				"build.py"
-			],
-			"group": "build",
-			"problemMatcher": [],
-			"isBackground": false
-		}
 	]
 }

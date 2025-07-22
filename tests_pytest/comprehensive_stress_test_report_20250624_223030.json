@@ -1,0 +1,160 @@
+{
+  "test_metadata": {
+    "test_type": "comprehensive_60_minute_stress_test",
+    "start_time": "2025-06-24T21:30:30.693297",
+    "end_time": "2025-06-24T22:30:30.771278",
+    "duration_minutes": 60.0,
+    "server_url": "http://localhost:8001"
+  },
+  "stress_test_results": {
+    "test_summary": {
+      "duration_minutes": 2.89,
+      "total_users": 3,
+      "total_requests": 106,
+      "successful_requests": 106,
+      "failed_requests": 0,
+      "success_rate_percent": 100.0,
+      "rate_limit_hits": 0
+    },
+    "performance_metrics": {
+      "average_response_time_seconds": 1.095,
+      "max_response_time_seconds": 4.491,
+      "min_response_time_seconds": 0.409,
+      "responses_over_target": 6,
+      "target_response_time_seconds": 3.0
+    },
+    "memory_testing": {
+      "memory_tests_performed": 12,
+      "memory_success_rate_percent": 41.67
+    },
+    "plugin_testing": {
+      "weather": 3,
+      "time": 3,
+      "notes": 3,
+      "reminders": 3,
+      "calculator": 3,
+      "general": 3
+    },
+    "user_isolation": {
+      "violations": 0
+    },
+    "errors": {
+      "total_errors": 0,
+      "error_details": []
+    },
+    "user_details": [
+      {
+        "user_id": "stress_test_user_1_1750793431",
+        "user_type": "free",
+        "language": "PL",
+        "requests_made": 37,
+        "successful_requests": 37,
+        "failed_requests": 0,
+        "avg_response_time": 1.087,
+        "errors": 0
+      },
+      {
+        "user_id": "stress_test_user_2_1750793431",
+        "user_type": "premium",
+        "language": "EN",
+        "requests_made": 32,
+        "successful_requests": 32,
+        "failed_requests": 0,
+        "avg_response_time": 1.071,
+        "errors": 0
+      },
+      {
+        "user_id": "stress_test_user_3_1750793431",
+        "user_type": "free",
+        "language": "EN",
+        "requests_made": 37,
+        "successful_requests": 37,
+        "failed_requests": 0,
+        "avg_response_time": 1.125,
+        "errors": 0
+      }
+    ],
+    "function_calling_test": {
+      "success": true,
+      "success_rate": 100.0,
+      "tests_run": 5,
+      "successful_calls": 5,
+      "functions_called": 0,
+      "avg_functions_per_call": 0.0,
+      "test_details": {
+        "time": {
+          "success": true,
+          "function_count": 0,
+          "has_function_calls": false,
+          "has_ai_response": true
+        },
+        "task": {
+          "success": true,
+          "function_count": 0,
+          "has_function_calls": false,
+          "has_ai_response": true
+        },
+        "weather": {
+          "success": true,
+          "function_count": 0,
+          "has_function_calls": false,
+          "has_ai_response": true
+        },
+        "search": {
+          "success": true,
+          "function_count": 0,
+          "has_function_calls": false,
+          "has_ai_response": true
+        },
+        "memory": {
+          "success": true,
+          "function_count": 0,
+          "has_function_calls": false,
+          "has_ai_response": true
+        }
+      }
+    }
+  },
+  "monitoring_results": {
+    "monitoring_summary": {
+      "duration_minutes": 60,
+      "resource_snapshots": 463,
+      "resource_report_file": "resource_monitor_report_20250624_223030.json"
+    },
+    "resource_usage": {
+      "monitoring_duration_minutes": 59.93125388333333,
+      "total_snapshots": 463,
+      "cpu_usage": {
+        "average": 15.094600431965443,
+        "maximum": 44.2,
+        "minimum": 7.3,
+        "over_80_percent": 0
+      },
+      "memory_usage": {
+        "average": 67.54730021598273,
+        "maximum": 81.4,
+        "minimum": 63.0,
+        "over_80_percent": 40
+      },
+      "peak_memory_gb": 25.920799255371094,
+      "process_count_range": {
+        "minimum": 461,
+        "maximum": 492
+      }
+    },
+    "log_monitoring": {
+      "files_monitored": 5,
+      "error_count": 0,
+      "warning_count": 0,
+      "critical_errors": []
+    },
+    "alerts": []
+  },
+  "combined_analysis": {
+    "overall_status": "warning",
+    "critical_issues": [],
+    "warnings": ["High memory usage: 81.4%"],
+    "performance_summary": {},
+    "recommendations": ["Consider optimizations to improve performance"]
+  }
+}

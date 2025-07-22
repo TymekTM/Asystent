@@ -7,7 +7,7 @@
     "distDir": "./dist"
   },
   "package": {
-    "productName": "Gaja Overlay",
+    "productName": "Asystent Overlay",
     "version": "0.1.0"
   },
   "tauri": {
@@ -41,8 +41,8 @@
       "deb": {
         "depends": []
       },
-      "externalBin": [
-      ],      "icon": [
+      "externalBin": [],
+      "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
         "icons/128x128@2x.png",
@@ -73,9 +73,10 @@
     },
     "updater": {
       "active": false
-    },    "windows": [
+    },
+    "windows": [
       {
-        "fullscreen": true,
+        "fullscreen": false,
         "height": 1080,
         "resizable": false,
         "title": "Gaja Overlay",
@@ -85,10 +86,12 @@
         "alwaysOnTop": true,
         "skipTaskbar": true,
         "focus": false,
-        "maximized": false,
+        "maximized": true,
         "visible": true,
         "center": false,
-        "label": "main"
+        "label": "main",
+        "x": 0,
+        "y": 0
       }
     ]
   }

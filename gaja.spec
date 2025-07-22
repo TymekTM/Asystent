@@ -52,7 +52,7 @@ if os.path.exists('resources/sounds'):
 
 # Include overlay executable if it exists
 overlay_dest_dir = 'overlay'  # Define destination directory for overlay files
-overlay_exe = 'overlay/target/release/Gaja Overlay.exe'
+overlay_exe = 'overlay/target/release/Asystent Overlay.exe'
 if os.path.exists(overlay_exe):
     datas.append((overlay_exe, overlay_dest_dir))
     # Also include the webview2 loader if it exists
@@ -62,10 +62,10 @@ if os.path.exists(overlay_exe):
         print(f"Overlay będzie bundled: {overlay_exe} oraz WebView2Loader.dll")
     else:
         print(f"Overlay będzie bundled: {overlay_exe}")
-        print(f"OSTRZEŻENIE: Nie znaleziono WebView2Loader.dll obok Gaja Overlay.exe. Upewnij się, że jest on zbędny lub dodaj go ręcznie.")
+        print(f"OSTRZEŻENIE: Nie znaleziono WebView2Loader.dll obok Asystent Overlay.exe. Upewnij się, że jest on zbędny lub dodaj go ręcznie.")
 
 else:
-    print(f"BŁĄD: Nie znaleziono pliku Gaja Overlay.exe w oczekiwanej lokalizacji: {overlay_exe}")
+    print(f"BŁĄD: Nie znaleziono pliku Asystent Overlay.exe w oczekiwanej lokalizacji: {overlay_exe}")
     print("Upewnij się, że overlay został zbudowany przed uruchomieniem PyInstallera.")
     # Możesz zdecydować, czy chcesz przerwać build, jeśli overlay jest krytyczny
     # sys.exit(1)
@@ -101,7 +101,6 @@ a = Analysis(
         'database_models',
         'assistant',
         'ai_module',
-        'intent_system',
         'performance_monitor',
         'prompt_builder',
         'prompts',
@@ -139,7 +138,6 @@ a = Analysis(
         'openwakeword',
         'whisper',
         'tqdm',
-        # 'joblib' removed from excludes - needed for intent_system
         
         # Audio packages - let dependency manager handle native libs
         'sounddevice',  # Added back to excludes - dependency manager handles it

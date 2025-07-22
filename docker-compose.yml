@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  gaja-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gaja-assistant-server
+    ports:
+      - "8001:8001"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-sk-test-key}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-super-secret-jwt-key-for-production-minimum-32-chars-long}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-32-character-encryption-key-here-ok}
+      - GAJA_DB_ENCRYPTION_KEY=${GAJA_DB_ENCRYPTION_KEY:-test-encryption-key-for-database}
+      - SERVER_HOST=0.0.0.0
+      - SERVER_PORT=8001
+      - SSL_ENABLED=false
+      - PRODUCTION=true
+      - DEBUG=false
+    volumes:
+      - ./databases:/app/databases
+      - ./logs:/app/logs
+      - ./ssl:/app/ssl
+      - ./data:/app/data
+      - ./server/server_data.db:/app/server/server_data.db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 60s  # Zwiększono z 30s na 60s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - gaja-network
+
+networks:
+  gaja-network:
+    driver: bridge

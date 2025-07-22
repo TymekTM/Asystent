@@ -1,25 +1,177 @@
-*.log
-/screenshots/
-/user_data/
-assistant_memory.db
-*.pyc
+# Python
 __pycache__/
-.VSCodeCounter
-/.hf_cache
-/.cuda_alias
-/__pycache__
-transcribe_audio.py
-/build
-/dist
-user_data.zip
-modules.zip
-resources.zip
-/release
-/Gaja_test
-/overlay/node_modules
-/overlay/target
+*.py[cod]
+*$py.class
+*.pyc
+*.so
+.Python
+*.pyo
+*.pyd
+
+# Distribution / packaging
+build/
+dist/
+dist_*/
+*.egg-info/
+*.egg
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+MANIFEST
+dependencies/
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs and tools
+.vscode/
+.idea/
+.VSCodeCounter/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Project specific
+*.log
+logs/
+temp/
+tmp/
+*.tmp
+
+# Test artifacts
+.pytest_cache/
+.coverage
+.tox/
+.cache
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+coverage.xml
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+gaja_memory.db
+server_data.db
+
+# Large model files and caches (use Git LFS for these)
+*.bin
+*.model
+*.pth
+*.ckpt
+*.safetensors
+*.onnx
+*.pb
+*.h5
+*.weights
+.hf_cache/
+.cuda_alias/
+
+# Build directories and executables
+build/
+release/
+*.exe
+*.dll
+*.so
+*.dylib
+*.lib
+*.rlib
+*.pdb
+target/
+
+# Migration backup (too large for git)
+.migration_backup/
+
+# Configuration files with secrets
+*secret*
+*private*
+admin_credentials.txt
+.env.local
+.env.production
+
+# User data directories
+user_data/
+data/logs/
+data/cache/
+data/history/
+screenshots/
+
+# Poetry
+poetry.lock
+assistant_memory.db
+
+# User data and config
+user_data/
 config.json
 plugins_state.json
-*.db
-user_data/
-gaja_memory.db
+secrets.json
+
+# Audio cache
+*.mp3
+*.wav
+*.ogg
+resources/sounds/temp_*
+
+# Screenshots and archives
+screenshots/
+*.zip
+commits_all.txt
+
+# Node.js and Tauri (overlay)
+node_modules/
+target/
+dist/
+npm-debug.log*
+
+# Specific folders
+.hf_cache/
+.cuda_alias/
+release/
+Gaja_test/
+
+# Build outputs
+/overlay/node_modules
+/overlay/target
+/overlay/dist
+/client/.hf_cache
+
+# Environment files with sensitive data
+.env
+.env.local
+.env.production
+
+# Admin credentials file
+admin_credentials.txt
+
+# API Keys and sensitive configuration files
+**/config.json
+**/client_config.json
+**/server_config.json
+configs/api_keys.json
+configs/auth_config.json
+/dependencies
+.env
