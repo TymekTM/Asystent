@@ -1,3 +1,5 @@
+# LEGACY CODEBASE FOR ARCHIVING RESONS CHECK OUT NEW REPO [HERE](https://github.com/TymekTM/Gaja)
+
 # 🤖 GAJA Assistant
 
 [![Coverage](./coverage.svg)](./coverage.svg)
